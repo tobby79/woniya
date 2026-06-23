@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>원이야 - 갤러리 템플릿</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<style>
+
+  :root{
+    --char:#2B2B2E;
+    --char-soft:#5A5A60;
+    --line:#E4E2DD;
+    --paper:#FFFFFF;
+    --bg:#F7F6F3;
+    --bg-warm:#EFEDE8;
+    --accent:#2B2B2E;
+    --ink:#2B2B2E;
+    --ink-soft:#75737A;
+
+    --serif:'Noto Serif KR',serif;
+    --body:'Pretendard',sans-serif;
+  }
+
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    font-family:var(--body);
+    color:var(--ink);
+    background:var(--bg);
+    overflow-x:hidden;
+    line-height:1.8;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  /* ── 상단바: 얇고 미니멀 ── */
+  .topbar{position:fixed;top:0;left:0;right:0;z-index:40;display:flex;align-items:center;justify-content:space-between;padding:18px 28px;background:rgba(247,246,243,.0);transition:background .4s ease,box-shadow .4s ease,padding .4s ease}
+  .topbar.solid{background:rgba(247,246,243,.92);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);box-shadow:0 1px 0 var(--line);padding:14px 28px}
+  .topbar .brand{font-family:var(--serif);font-weight:600;font-size:1.2rem;color:#fff;text-decoration:none;letter-spacing:.5px;transition:color .4s ease}
+  .topbar.solid .brand{color:var(--char)}
+  .menu-btn{width:40px;height:40px;border:none;background:transparent;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:6px;cursor:pointer}
+  .menu-btn span{width:24px;height:1.5px;background:#fff;transition:transform .3s ease,opacity .3s ease,background .4s ease}
+  .topbar.solid .menu-btn span{background:var(--char)}
+  .menu-btn.open span{background:var(--char)}
+  .menu-btn.open span:nth-child(1){transform:translateY(7.5px) rotate(45deg)}
+  .menu-btn.open span:nth-child(2){opacity:0}
+  .menu-btn.open span:nth-child(3){transform:translateY(-7.5px) rotate(-45deg)}
+  .menu-panel{position:absolute;top:60px;right:20px;left:20px;background:var(--paper);border:1px solid var(--line);box-shadow:0 24px 54px -20px rgba(43,43,46,.25);padding:10px;display:flex;flex-direction:column;opacity:0;visibility:hidden;transform:translateY(-10px);transition:opacity .3s ease,transform .3s ease,visibility .3s}
+  .menu-panel.open{opacity:1;visibility:visible;transform:none}
+  .menu-panel a{padding:14px 18px;text-decoration:none;color:var(--char);font-weight:500;font-size:.98rem;letter-spacing:.3px}
+  .menu-panel a:hover{background:var(--bg)}
+  .menu-panel a.menu-cta{background:var(--char);color:#fff;text-align:center;margin-top:6px}
+
+  /* ── 공통 ── */
+  .wrap{max-width:680px;margin:0 auto;padding:0 28px;position:relative}
+  .reveal{opacity:0;transform:translateY(24px);transition:opacity 1.1s ease,transform 1.1s cubic-bezier(.2,.7,.3,1)}
+  .reveal.in{opacity:1;transform:none}
+
+  .sec-label{font-size:.78rem;letter-spacing:3px;text-transform:uppercase;color:var(--ink-soft);font-weight:600;margin-bottom:12px}
+  .sec-title{font-family:var(--serif);font-weight:600;font-size:1.9rem;color:var(--char);letter-spacing:-.3px;line-height:1.4}
+
+  /* ── 1. 메인 배너: 풀스크린 ── */
+  .banner{position:relative;height:100vh;min-height:560px;display:flex;align-items:flex-end;overflow:hidden}
+  .banner .bg{position:absolute;inset:0;z-index:0}
+  .banner .bg img{width:100%;height:100%;object-fit:cover;display:block}
+  .banner .bg::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(20,20,22,.28) 0%,transparent 32%,transparent 50%,rgba(20,20,22,.72) 100%)}
+  .banner .bg.placeholder{background:linear-gradient(135deg,#3a3a40,#5a5a62)}
+  .banner .content{position:relative;z-index:2;width:100%;max-width:680px;margin:0 auto;padding:0 28px 64px;color:#fff}
+  .banner .eyebrow{font-size:.82rem;letter-spacing:3px;text-transform:uppercase;font-weight:600;opacity:.9;margin-bottom:18px}
+  .banner h1{font-family:var(--serif);font-weight:600;font-size:clamp(2.6rem,9vw,3.6rem);line-height:1.25;letter-spacing:-.5px}
+  .banner p{margin-top:18px;font-size:1.05rem;opacity:.92;max-width:420px;font-weight:300}
+  .banner .scroll-line{position:absolute;left:50%;bottom:28px;transform:translateX(-50%);z-index:2;width:1px;height:46px;background:rgba(255,255,255,.5);overflow:hidden}
+  .banner .scroll-line::after{content:"";position:absolute;top:-46px;left:0;width:1px;height:46px;background:#fff;animation:scrolldown 2s infinite}
+  @keyframes scrolldown{0%{top:-46px}60%,100%{top:46px}}
+
+  /* ── 2. 갤러리 (앨범) — 가로 슬라이드 ── */
+  .gallery{padding:90px 0 70px}
+  .gallery .sec-head{margin-bottom:36px;display:flex;align-items:flex-end;justify-content:space-between;gap:20px}
+  .gallery .g-count{font-family:var(--serif);font-size:.9rem;color:var(--ink-soft);white-space:nowrap}
+  .gallery-rail{display:flex;gap:24px;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;padding-bottom:14px;scrollbar-width:thin}
+  .gallery-rail::-webkit-scrollbar{height:4px}
+  .gallery-rail::-webkit-scrollbar-track{background:var(--line)}
+  .gallery-rail::-webkit-scrollbar-thumb{background:var(--char-soft)}
+  .art{position:relative;flex:0 0 78%;max-width:420px;scroll-snap-align:center}
+  .art .frame{overflow:hidden;background:var(--bg-warm);aspect-ratio:4/5}
+  .art .frame img{width:100%;height:100%;object-fit:cover;display:block;transition:transform 1.2s cubic-bezier(.2,.7,.3,1)}
+  .art:hover .frame img{transform:scale(1.03)}
+  .art .meta{display:flex;align-items:baseline;gap:14px;margin-top:14px}
+  .art .meta .no{font-family:var(--serif);font-size:.9rem;color:var(--ink-soft)}
+  .art .meta .cap{font-family:var(--serif);font-size:1.1rem;color:var(--char)}
+  .art .meta .line{flex:1;height:1px;background:var(--line)}
+  .gallery-hint{margin-top:18px;font-size:.8rem;color:var(--ink-soft);letter-spacing:.5px;text-align:center}
+  .gallery-hint .arrow{display:inline-block;margin:0 4px}
+
+  /* ── 3. 우리 원 둘러보기 ── */
+  .tour{padding:70px 0}
+  .tour .sec-head{margin-bottom:40px}
+  .space{margin-bottom:60px}
+  .space:last-child{margin-bottom:0}
+  .space .frame{overflow:hidden;background:var(--bg-warm);aspect-ratio:3/2}
+  .space .frame img{width:100%;height:100%;object-fit:cover;display:block;transition:transform 1.2s cubic-bezier(.2,.7,.3,1)}
+  .space:hover .frame img{transform:scale(1.03)}
+  .space .frame.placeholder{background:linear-gradient(135deg,#d8d6d0,#c4c2bc)}
+  .space .info{margin-top:20px}
+  .space .info .idx{font-family:var(--serif);font-size:.85rem;color:var(--ink-soft);letter-spacing:1px}
+  .space .info h3{font-family:var(--serif);font-weight:600;font-size:1.5rem;color:var(--char);margin:6px 0 10px;letter-spacing:-.3px}
+  .space .info p{color:var(--char-soft);font-size:.98rem;line-height:1.75;max-width:480px;font-weight:300}
+
+  /* ── 4. 우리 원 선생님 ── */
+  .staff{padding:70px 0}
+  .staff .sec-head{margin-bottom:40px}
+  .staff-grid{display:grid;grid-template-columns:1fr 1fr;gap:30px 24px}
+  .person{text-align:left}
+  .person .portrait{aspect-ratio:3/4;overflow:hidden;background:var(--bg-warm);margin-bottom:14px}
+  .person .portrait img{width:100%;height:100%;object-fit:cover;display:block;filter:grayscale(.3);transition:filter .6s ease,transform 1.1s cubic-bezier(.2,.7,.3,1)}
+  .person:hover .portrait img{filter:grayscale(0);transform:scale(1.03)}
+  .person .name{font-family:var(--serif);font-weight:600;font-size:1.15rem;color:var(--char)}
+  .person .role{font-size:.85rem;color:var(--ink-soft);margin-top:2px;letter-spacing:.3px}
+  .person .msg{font-size:.9rem;color:var(--char-soft);margin-top:10px;line-height:1.65;font-weight:300;font-style:italic;font-family:var(--serif)}
+
+  /* ── 5. 원장 한마디 ── */
+  .director{padding:90px 0;text-align:center}
+  .director .quote-mark{font-family:var(--serif);font-size:3.5rem;color:var(--line);line-height:.6;margin-bottom:10px}
+  .director .msg{font-family:var(--serif);font-weight:400;font-size:1.5rem;line-height:1.9;color:var(--char);max-width:520px;margin:0 auto;letter-spacing:-.2px}
+  .director .who{display:flex;flex-direction:column;align-items:center;gap:14px;margin-top:36px}
+  .director .who .portrait{width:64px;height:64px;border-radius:50%;overflow:hidden;background:var(--bg-warm)}
+  .director .who .portrait img{width:100%;height:100%;object-fit:cover;display:block;filter:grayscale(.3)}
+  .director .who .name{font-size:.9rem;color:var(--ink-soft);letter-spacing:.5px}
+  .director .who .name strong{display:block;font-family:var(--serif);font-weight:600;font-size:1.05rem;color:var(--char);margin-top:2px}
+
+  /* ── 6. 안내 (공지·일정·FAQ) ── */
+  .info-desk{padding:70px 0 40px}
+  .info-desk .sec-head{margin-bottom:34px}
+  .info-tabs{display:flex;gap:0;border-bottom:1px solid var(--line);margin-bottom:30px}
+  .info-tab{padding:12px 22px;border:none;background:transparent;color:var(--ink-soft);font-family:var(--body);font-size:.96rem;font-weight:600;cursor:pointer;position:relative;letter-spacing:.3px;transition:color .25s}
+  .info-tab.active{color:var(--char)}
+  .info-tab.active::after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:2px;background:var(--char)}
+  .info-panel{display:none}
+  .info-panel.active{display:block;animation:fade .5s ease}
+  @keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+  .notice-list{list-style:none}
+  .notice-item{display:flex;align-items:baseline;gap:16px;padding:18px 2px;border-bottom:1px solid var(--line)}
+  .notice-item .tag{flex:none;font-size:.72rem;font-weight:600;letter-spacing:.5px;color:var(--char);min-width:46px}
+  .notice-item .n-title{flex:1;font-weight:500;font-size:1rem;color:var(--char)}
+  .notice-item .n-date{color:var(--ink-soft);font-size:.82rem;font-family:var(--serif)}
+  .more-link{display:inline-block;margin-top:18px;color:var(--char);font-weight:600;text-decoration:none;font-size:.9rem;border-bottom:1px solid var(--char);padding-bottom:2px}
+
+  .cal{border:1px solid var(--line);padding:24px 22px}
+  .cal-head{font-family:var(--serif);font-weight:600;font-size:1.2rem;margin-bottom:16px;color:var(--char)}
+  .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px}
+  .cal-grid .dow{font-size:.75rem;color:var(--ink-soft);padding:6px 0;font-weight:600;text-align:center}
+  .day-cell{position:relative;padding:11px 0;font-size:.88rem;text-align:center;color:var(--char)}
+  .day-cell.muted{color:var(--line)}
+  .day-cell.ev{font-weight:700;color:var(--char)}
+  .day-cell.ev::after{content:"";position:absolute;left:50%;bottom:5px;width:4px;height:4px;border-radius:50%;background:var(--char);transform:translateX(-50%)}
+  .event-list{list-style:none;margin-top:20px}
+  .event-list li{display:flex;align-items:baseline;gap:14px;padding:12px 2px;border-bottom:1px solid var(--line);font-size:.95rem}
+  .event-list li:last-child{border-bottom:none}
+  .event-list .e-date{font-weight:600;color:var(--char);font-size:.84rem;min-width:46px;font-family:var(--serif)}
+
+  .faq-item{border-bottom:1px solid var(--line)}
+  .faq-q{width:100%;border:none;background:transparent;text-align:left;padding:20px 2px;font-size:1rem;font-weight:500;color:var(--char);cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:12px;font-family:var(--body)}
+  .faq-q .sign{flex:none;font-family:var(--serif);font-size:1.3rem;color:var(--ink-soft);transition:transform .35s ease;line-height:1}
+  .faq-item.open .faq-q .sign{transform:rotate(45deg)}
+  .faq-a{max-height:0;overflow:hidden;transition:max-height .4s ease}
+  .faq-a p{padding:0 2px 20px;color:var(--char-soft);font-size:.94rem;line-height:1.8;font-weight:300}
+
+  /* ── 7. 마무리 ── */
+  .finale{padding:100px 0 150px;text-align:center}
+  .finale .quote-mark{font-family:var(--serif);font-size:2.5rem;color:var(--line);line-height:.6;margin-bottom:14px}
+  .finale h2{font-family:var(--serif);font-weight:600;font-size:2rem;line-height:1.5;letter-spacing:-.3px;color:var(--char)}
+  .finale p{color:var(--char-soft);margin:18px 0 40px;font-size:1rem;font-weight:300}
+  .btn-big{display:inline-block;background:var(--char);color:#fff;font-weight:500;font-size:1rem;padding:18px 50px;text-decoration:none;letter-spacing:.5px;transition:opacity .3s ease,transform .3s ease;border:none;cursor:pointer;font-family:var(--body)}
+  .btn-big:hover{opacity:.85;transform:translateY(-2px)}
+
+  /* ── 플로팅 ── */
+  .float{position:fixed;right:24px;bottom:24px;z-index:30;transform:translateY(120px);transition:transform .5s cubic-bezier(.22,.9,.3,1)}
+  .float.show{transform:translateY(0)}
+  .float.hide{transform:translateY(120px)}
+  .float a{display:flex;align-items:center;gap:9px;background:var(--char);color:#fff;font-weight:500;padding:15px 26px;text-decoration:none;box-shadow:0 12px 30px -8px rgba(43,43,46,.5);font-size:.94rem;letter-spacing:.3px}
+  .float a .dot{width:7px;height:7px;border-radius:50%;background:#fff;animation:blink 2s infinite}
+  @keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+
+  /* ── 모달 ── */
+  .csl-overlay{position:fixed;inset:0;z-index:50;background:rgba(20,20,22,.55);display:none;align-items:center;justify-content:center;padding:20px}
+  .csl-overlay.open{display:flex}
+  .csl-panel{position:relative;width:100%;max-width:400px;max-height:88vh;overflow-y:auto;background:var(--paper);padding:38px 32px 32px}
+  .csl-close{position:absolute;top:18px;right:18px;width:34px;height:34px;border:none;background:transparent;font-size:1.4rem;line-height:1;color:var(--ink-soft);cursor:pointer}
+  .csl-title{font-family:var(--serif);font-weight:600;font-size:1.4rem;margin-bottom:6px;color:var(--char)}
+  .csl-sub{font-size:.85rem;color:var(--ink-soft);margin-bottom:24px}
+  .csl-field{margin-bottom:18px;text-align:left}
+  .csl-field label{display:block;font-size:.8rem;font-weight:600;color:var(--char-soft);margin-bottom:7px;letter-spacing:.3px}
+  .csl-field input[type=text],.csl-field input[type=tel],.csl-field select{
+    width:100%;border:none;border-bottom:1.5px solid var(--line);border-radius:0;padding:10px 2px;
+    font-family:var(--body);font-size:.96rem;color:var(--char);background:transparent;outline:none;transition:border-color .25s;
+  }
+  .csl-field input:focus,.csl-field select:focus{border-color:var(--char)}
+  .csl-consent label{display:flex;align-items:flex-start;gap:8px;font-size:.82rem;font-weight:400;color:var(--char-soft);line-height:1.5}
+  .csl-consent input{margin-top:3px;flex:none}
+  .csl-submit{width:100%;margin-top:10px}
+  .csl-msg.error{margin-top:12px;font-size:.84rem;color:#B0413E;text-align:center}
+  .csl-done{text-align:center;font-family:var(--serif);font-size:1.3rem;color:var(--char);padding:36px 0;line-height:1.8}
+
+  footer{text-align:center;padding:40px 28px 50px;color:var(--ink-soft);font-size:.8rem;border-top:1px solid var(--line)}
+  footer .demo-tag{display:inline-block;font-size:.72rem;letter-spacing:2px;text-transform:uppercase;color:var(--ink-soft);margin-bottom:12px}
+
+  a:focus-visible,.info-tab:focus-visible{outline:2px solid var(--char);outline-offset:3px}
+
+  @media (max-width:480px){
+    .staff-grid{grid-template-columns:1fr 1fr;gap:20px 16px}
+    .art:nth-child(even),.art:nth-child(odd){padding-left:0;padding-right:0}
+  }
+
+  @media (prefers-reduced-motion:reduce){
+    *{transition:none!important;animation:none!important;scroll-behavior:auto!important}
+    .reveal{opacity:1;transform:none}
+  }
+
+</style>
+</head>
+<body>
+
+<nav class="topbar" id="topbar">
+  <a class="brand" href="#top" id="brandLink"></a>
+  <button class="menu-btn" id="menuBtn" aria-label="메뉴 열기" aria-expanded="false">
+    <span></span><span></span><span></span>
+  </button>
+  <div class="menu-panel" id="menuPanel"></div>
+</nav>
+<span id="top"></span>
+
+<header class="banner" id="banner"></header>
+<section class="gallery wrap" id="gallery"></section>
+<section class="tour wrap" id="tour"></section>
+<section class="staff wrap" id="staff"></section>
+<section class="director wrap" id="director"></section>
+<section class="info-desk wrap" id="infoDesk"></section>
+<section class="finale wrap" id="finale"></section>
+<footer id="footerEl"></footer>
+
+<div class="float" id="float"><a href="#finale"><span class="dot"></span>입소 상담</a></div>
+
+<div class="csl-overlay" id="cslOverlay">
+  <div class="csl-panel">
+    <button type="button" class="csl-close" id="cslCloseBtn" aria-label="닫기">×</button>
+    <div id="cslFormWrap">
+      <h3 class="csl-title">입소 상담 신청</h3>
+      <p class="csl-sub">편하게 남겨주시면 연락드릴게요.</p>
+      <form id="cslForm">
+        <div class="csl-field">
+          <label for="csl-name">학부모 이름</label>
+          <input type="text" id="csl-name" required>
+        </div>
+        <div class="csl-field">
+          <label for="csl-phone">연락처</label>
+          <input type="tel" id="csl-phone" placeholder="010-0000-0000" required>
+        </div>
+        <div class="csl-field">
+          <label for="csl-kind">신청 종류</label>
+          <select id="csl-kind" required>
+            <option value="consult">상담</option>
+            <option value="waiting">대기</option>
+            <option value="info_session">설명회</option>
+          </select>
+        </div>
+        <div class="csl-field">
+          <label for="csl-class">희망 반</label>
+          <select id="csl-class">
+            <option value="">선택 안 함</option>
+            <option value="만3세">만 3세</option>
+            <option value="만4세">만 4세</option>
+            <option value="만5세">만 5세</option>
+          </select>
+        </div>
+        <div class="csl-field">
+          <label for="csl-time">희망 시간</label>
+          <input type="text" id="csl-time" placeholder="예: 평일 오후 2시">
+        </div>
+        <div class="csl-field csl-consent">
+          <label>
+            <input type="checkbox" id="csl-consent" required>
+            상담 신청 처리를 위해 이름·연락처 등 개인정보 수집에 동의합니다.
+          </label>
+        </div>
+        <button type="submit" class="btn-big csl-submit">신청하기</button>
+        <div class="csl-msg error" id="cslError"></div>
+      </form>
+    </div>
+    <div id="cslDoneWrap" hidden>
+      <p class="csl-done">접수되었습니다.<br>곧 연락드리겠습니다.</p>
+    </div>
+  </div>
+</div>
+
+<script src="supabase-config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+var SAMPLE_SPACES = [
+  { name:'놀이방', desc:'블록과 역할놀이로 상상력이 자라는 우리 반의 공간입니다.', photo:null },
+  { name:'바깥 놀이터', desc:'안전한 모래밭과 미끄럼틀에서 마음껏 뛰노는 시간.', photo:null },
+  { name:'그림책 도서관', desc:'포근한 쿠션에 앉아 선생님과 그림책을 읽습니다.', photo:null },
+  { name:'급식실', desc:'영양 가득한 식단을 친구들과 함께 나눕니다.', photo:null }
+];
+
+function mapRowToData(row){
+  const media = row.center_media || [];
+  const byType = (type) => media
+    .filter(m => m.media_type === type)
+    .sort((a,b) => a.sort_order - b.sort_order);
+  const hero = byType('hero')[0] || null;
+  return {
+    center: { id: row.id, slug: row.slug, name: row.name, theme: row.theme, menu: row.menu, hero: row.hero, director: row.director },
+    heroPhoto: hero ? hero.photo_url : null,
+    album: { items: byType('album').map(m => ({ label: m.title, photo: m.photo_url })) },
+    teachers: { items: byType('teacher').map(m => ({ name: m.title, role: m.subtitle, photo: m.photo_url, message: m.caption })) },
+    notices: row.notices, schedule: row.schedule, faqs: row.faqs, finale: row.finale, footer: row.footer
+  };
+}
+
+(async function(){
+  let data;
+  const cfg = window.__SUPABASE_CONFIG__;
+  const client = supabase.createClient(cfg.url, cfg.anonKey);
+  try {
+    const slug = new URLSearchParams(location.search).get('slug') || 'haetsal';
+    const { data: row, error } = await client.from('centers').select('*, center_media(*)').eq('slug', slug).single();
+    if (error) throw error;
+    data = mapRowToData(row);
+
+    async function signPath(path){
+      if (!path || /^https?:\/\//.test(path)) return path;
+      const { data: signed } = await client.storage.from('center-images').createSignedUrl(path, 3600);
+      return signed ? signed.signedUrl : path;
+    }
+    data.heroPhoto = await signPath(data.heroPhoto);
+    for (const it of data.album.items){ it.photo = await signPath(it.photo); }
+    for (const tc of data.teachers.items){ tc.photo = await signPath(tc.photo); }
+    for (let i=0;i<SAMPLE_SPACES.length;i++){
+      if (data.album.items[i]) SAMPLE_SPACES[i].photo = data.album.items[i].photo;
+    }
+  } catch (e) {
+    console.error(e);
+    document.body.innerHTML = '<p style="padding:40px;font-family:sans-serif">원 데이터를 불러오지 못했어요. supabase-config.js를 확인해주세요.</p>';
+    return;
+  }
+
+  const $ = (id)=>document.getElementById(id);
+  const c = data.center;
+
+  $('brandLink').textContent = c.name.replace(/\s*어린이집$/,'') || c.name;
+  $('menuPanel').innerHTML = c.menu.map(m => `<a href="${m.href}"${m.cta?' class="menu-cta"':''}>${m.label}</a>`).join('');
+
+  // 1. 메인 배너
+  const h = c.hero;
+  $('banner').innerHTML = `
+    <div class="bg ${data.heroPhoto ? '' : 'placeholder'}">${data.heroPhoto ? `<img alt="${c.name}" src="${data.heroPhoto}">` : ''}</div>
+    <div class="content">
+      <div class="eyebrow reveal">${h.eyebrow}</div>
+      <h1 class="reveal">${h.title} ${h.title_accent}</h1>
+      <p class="reveal">${h.subtitle}</p>
+    </div>
+    <div class="scroll-line"></div>`;
+
+  // 2. 갤러리 (앨범) — 가로 슬라이드
+  const al = data.album;
+  $('gallery').innerHTML = `
+    <div class="sec-head reveal">
+      <div>
+        <div class="sec-label">Gallery</div>
+        <h2 class="sec-title">우리들의 순간</h2>
+      </div>
+      <div class="g-count">${String(al.items.length).padStart(2,'0')} 점</div>
+    </div>
+    <div class="gallery-rail">${al.items.map((it,i)=>`
+      <figure class="art">
+        <div class="frame"><img loading="lazy" alt="${it.label}" src="${it.photo}"></div>
+        <figcaption class="meta">
+          <span class="no">${String(i+1).padStart(2,'0')}</span>
+          <span class="cap">${it.label}</span>
+          <span class="line"></span>
+        </figcaption>
+      </figure>`).join('')}</div>
+    <div class="gallery-hint reveal"><span class="arrow">←</span> 옆으로 넘겨보세요 <span class="arrow">→</span></div>`;
+
+  // 3. 우리 원 둘러보기
+  $('tour').innerHTML = `
+    <div class="sec-head reveal">
+      <div class="sec-label">Spaces</div>
+      <h2 class="sec-title">우리 원 둘러보기</h2>
+    </div>
+    ${SAMPLE_SPACES.map((sp,i)=>`
+      <div class="space reveal">
+        <div class="frame ${sp.photo ? '' : 'placeholder'}">${sp.photo ? `<img loading="lazy" alt="${sp.name}" src="${sp.photo}">` : ''}</div>
+        <div class="info">
+          <div class="idx">0${i+1} — Space</div>
+          <h3>${sp.name}</h3>
+          <p>${sp.desc}</p>
+        </div>
+      </div>`).join('')}`;
+
+  // 4. 우리 원 선생님
+  const t = data.teachers;
+  $('staff').innerHTML = `
+    <div class="sec-head reveal">
+      <div class="sec-label">People</div>
+      <h2 class="sec-title">우리 원 선생님</h2>
+    </div>
+    <div class="staff-grid">${t.items.map(tc=>`
+      <div class="person reveal">
+        <div class="portrait"><img loading="lazy" alt="${tc.name}" src="${tc.photo}"></div>
+        <div class="name">${tc.name}</div>
+        <div class="role">${tc.role}</div>
+        <div class="msg">“${tc.message}”</div>
+      </div>`).join('')}</div>`;
+
+  // 5. 원장 한마디
+  const d = c.director;
+  $('director').innerHTML = `
+    <div class="quote-mark reveal">"</div>
+    <p class="msg reveal">${d.message}</p>
+    <div class="who reveal">
+      <div class="portrait"><img alt="${d.photo_alt}" src="${d.photo}"></div>
+      <div class="name">${d.sign_label}<strong>${d.sign_name}</strong></div>
+    </div>`;
+
+  // 6. 안내
+  const n = data.notices, s = data.schedule, f = data.faqs;
+  const noticeHtml = `<ul class="notice-list">${n.items.map(it=>`
+    <li class="notice-item"><span class="tag">${it.tag}</span>
+      <span class="n-title">${it.title}</span><span class="n-date">${it.date}</span></li>`).join('')}</ul>
+    <a class="more-link" href="#infoDesk">${n.more}</a>`;
+
+  const dows = ['일','월','화','수','목','금','토'];
+  let cells = dows.map(w=>`<span class="dow">${w}</span>`).join('');
+  for(let day=1; day<=s.days_in_month; day++){ cells += `<span class="day-cell${s.event_days.includes(day)?' ev':''}">${day}</span>`; }
+  for(let m=1; m<=s.trailing_muted; m++){ cells += `<span class="day-cell muted">${m}</span>`; }
+  const scheduleHtml = `<div class="cal"><div class="cal-head">${s.month_label}</div>
+    <div class="cal-grid">${cells}</div>
+    <ul class="event-list">${s.events.map(e=>`<li><span class="e-date">${e.date}</span> ${e.title}</li>`).join('')}</ul></div>`;
+
+  const faqHtml = f.items.map(it=>`
+    <div class="faq-item"><button class="faq-q" aria-expanded="false">${it.q}<span class="sign">+</span></button>
+      <div class="faq-a"><p>${it.a}</p></div></div>`).join('');
+
+  $('infoDesk').innerHTML = `
+    <div class="sec-head reveal">
+      <div class="sec-label">Information</div>
+      <h2 class="sec-title">안내</h2>
+    </div>
+    <div class="info-tabs reveal">
+      <button class="info-tab active" data-tab="notice">공지</button>
+      <button class="info-tab" data-tab="schedule">일정</button>
+      <button class="info-tab" data-tab="faq">FAQ</button>
+    </div>
+    <div class="info-panel active" data-panel="notice">${noticeHtml}</div>
+    <div class="info-panel" data-panel="schedule">${scheduleHtml}</div>
+    <div class="info-panel" data-panel="faq">${faqHtml}</div>`;
+
+  // 7. 마무리
+  const fin = data.finale;
+  $('finale').innerHTML = `
+    <div class="quote-mark reveal">"</div>
+    <h2 class="reveal">${fin.title}</h2>
+    <p class="reveal">${fin.subtitle}</p>
+    <button type="button" id="cslOpenBtn" class="btn-big reveal">${fin.cta}</button>`;
+
+  $('footerEl').innerHTML = `<div class="demo-tag">${data.footer.tag}</div><div>${data.footer.text}</div>`;
+  document.title = `원이야 - ${c.name}`;
+
+  initInteractions();
+  initConsultationForm(client, c.id);
+})();
+
+function initInteractions(){
+  var io = new IntersectionObserver(function(entries){
+    entries.forEach(function(e){ if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target);} });
+  },{threshold:0.12});
+  document.querySelectorAll('.reveal').forEach(function(el){ io.observe(el); });
+
+  // 상단바: 스크롤하면 solid
+  var topbar = document.getElementById('topbar');
+  var banner = document.getElementById('banner');
+  var tbio = new IntersectionObserver(function(entries){
+    entries.forEach(function(e){ topbar.classList.toggle('solid', !e.isIntersecting); });
+  },{rootMargin:'-80px 0px 0px 0px',threshold:0});
+  tbio.observe(banner);
+
+  // 안내 탭
+  var infoTabs = document.querySelectorAll('.info-tab');
+  var infoPanels = document.querySelectorAll('.info-panel');
+  infoTabs.forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var tab = btn.getAttribute('data-tab');
+      infoTabs.forEach(function(b){ b.classList.remove('active'); });
+      infoPanels.forEach(function(p){ p.classList.remove('active'); });
+      btn.classList.add('active');
+      document.querySelector('.info-panel[data-panel="'+tab+'"]').classList.add('active');
+    });
+  });
+
+  // 플로팅
+  var floatEl=document.getElementById('float');
+  var finale=document.getElementById('finale');
+  var bio=new IntersectionObserver(function(entries){
+    entries.forEach(function(e){
+      if(e.target===banner){ if(e.isIntersecting){ floatEl.classList.remove('show'); } else { floatEl.classList.add('show'); } }
+      if(e.target===finale){ if(e.isIntersecting){ floatEl.classList.add('hide'); } else { floatEl.classList.remove('hide'); } }
+    });
+  },{threshold:0.4});
+  bio.observe(banner); bio.observe(finale);
+
+  // 메뉴
+  var menuBtn=document.getElementById('menuBtn');
+  var menuPanel=document.getElementById('menuPanel');
+  function closeMenu(){ menuBtn.classList.remove('open'); menuPanel.classList.remove('open'); menuBtn.setAttribute('aria-expanded','false'); }
+  menuBtn.addEventListener('click',function(){
+    var open=menuPanel.classList.toggle('open');
+    menuBtn.classList.toggle('open',open);
+    menuBtn.setAttribute('aria-expanded',open?'true':'false');
+  });
+  menuPanel.querySelectorAll('a').forEach(function(a){ a.addEventListener('click',closeMenu); });
+  document.addEventListener('click',function(e){ if(!menuPanel.contains(e.target) && !menuBtn.contains(e.target)) closeMenu(); });
+
+  // FAQ
+  document.querySelectorAll('.faq-item').forEach(function(item){
+    var q=item.querySelector('.faq-q');
+    var a=item.querySelector('.faq-a');
+    q.addEventListener('click',function(){
+      var open=item.classList.toggle('open');
+      q.setAttribute('aria-expanded',open?'true':'false');
+      a.style.maxHeight = open ? (a.scrollHeight+'px') : null;
+    });
+  });
+}
+
+function initConsultationForm(client, centerId){
+  var overlay = document.getElementById('cslOverlay');
+  var openBtn = document.getElementById('cslOpenBtn');
+  var closeBtn = document.getElementById('cslCloseBtn');
+  var form = document.getElementById('cslForm');
+  var errorEl = document.getElementById('cslError');
+  var formWrap = document.getElementById('cslFormWrap');
+  var doneWrap = document.getElementById('cslDoneWrap');
+
+  function openModal(){ overlay.classList.add('open'); formWrap.hidden = false; doneWrap.hidden = true; form.reset(); errorEl.textContent = ''; }
+  function closeModal(){ overlay.classList.remove('open'); }
+
+  if (openBtn) openBtn.addEventListener('click', openModal);
+  closeBtn.addEventListener('click', closeModal);
+  overlay.addEventListener('click', function(e){ if (e.target === overlay) closeModal(); });
+  document.addEventListener('keydown', function(e){ if (e.key === 'Escape' && overlay.classList.contains('open')) closeModal(); });
+
+  form.addEventListener('submit', async function(e){
+    e.preventDefault();
+    errorEl.textContent = '';
+    if (!document.getElementById('csl-consent').checked){ errorEl.textContent = '개인정보 수집 동의가 필요해요.'; return; }
+    var payload = {
+      center_id: centerId,
+      parent_name: document.getElementById('csl-name').value,
+      phone: document.getElementById('csl-phone').value,
+      kind: document.getElementById('csl-kind').value,
+      wish_class: document.getElementById('csl-class').value || null,
+      wish_time: document.getElementById('csl-time').value || null,
+      consent_at: new Date().toISOString()
+    };
+    var submitBtn = form.querySelector('.csl-submit');
+    submitBtn.disabled = true;
+    var { error } = await client.from('consultations').insert(payload);
+    submitBtn.disabled = false;
+    if (error){ console.error(error); errorEl.textContent = '접수 중 문제가 생겼어요. 다시 시도해주세요.'; return; }
+    formWrap.hidden = true;
+    doneWrap.hidden = false;
+  });
+}
+</script>
+</body>
+</html>

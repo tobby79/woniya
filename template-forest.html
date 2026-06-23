@@ -1,0 +1,1675 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>원이야 - 숲 템플릿</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Gaegu:wght@700&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" as="style" crossorigin
+    href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+  <style>
+    :root {
+      --bark: #2F3D2A;
+      --moss: #4A6B3A;
+      --leaf: #7BA05B;
+      --leaf-light: #A8C686;
+      --sun: #F4D58D;
+      --sun-warm: #E8B864;
+      --soil: #5C4A3A;
+      --paper: #FBFBF4;
+      --paper-warm: #F4F1E4;
+      --ink: #26331F;
+      --ink-soft: #566049;
+      --canopy-top: #DCE8CC;
+      --canopy-bottom: #EEF2E0;
+
+      --display: 'Gowun Batang', serif;
+      --hand: 'Gaegu', cursive;
+      --body: 'Pretendard', sans-serif;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box
+    }
+
+    html {
+      scroll-behavior: smooth
+    }
+
+    body {
+      font-family: var(--body);
+      color: var(--ink);
+      background: var(--canopy-bottom);
+      overflow-x: hidden;
+      line-height: 1.75;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── 숲 배경 ── */
+    .forest-bg {
+      position: fixed;
+      inset: 0;
+      z-index: -3;
+      background: linear-gradient(180deg, var(--canopy-top) 0%, var(--canopy-bottom) 60%);
+      transition: background 1.4s ease;
+    }
+
+    .light-rays {
+      position: fixed;
+      inset: 0;
+      z-index: -2;
+      pointer-events: none;
+      background:
+        linear-gradient(118deg, transparent 38%, rgba(244, 213, 141, .16) 42%, transparent 46%),
+        linear-gradient(122deg, transparent 55%, rgba(244, 213, 141, .1) 59%, transparent 63%),
+        linear-gradient(110deg, transparent 70%, rgba(244, 213, 141, .12) 73%, transparent 77%);
+      opacity: .9;
+      transition: opacity 1.4s ease;
+    }
+
+    .leaf-float {
+      position: fixed;
+      z-index: 1;
+      pointer-events: none;
+      will-change: transform
+    }
+
+    .leaf-float svg {
+      display: block;
+      filter: drop-shadow(0 4px 6px rgba(47, 61, 42, .15))
+    }
+
+    /* ── 상단바 ── */
+    .topbar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 40;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 22px;
+      background: rgba(251, 251, 244, .74);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      box-shadow: 0 1px 0 rgba(74, 107, 58, .14)
+    }
+
+    .topbar .brand {
+      font-family: var(--display);
+      font-weight: 700;
+      font-size: 1.3rem;
+      color: var(--bark);
+      text-decoration: none;
+      letter-spacing: -.5px;
+      display: flex;
+      align-items: center;
+      gap: 8px
+    }
+
+    .topbar .brand::before {
+      content: "";
+      width: 18px;
+      height: 18px;
+      background: var(--leaf);
+      border-radius: 0 50% 50% 50%;
+      transform: rotate(45deg);
+      flex: none
+    }
+
+    .menu-btn {
+      width: 42px;
+      height: 42px;
+      border: none;
+      background: transparent;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      gap: 5px;
+      cursor: pointer;
+      border-radius: 10px
+    }
+
+    .menu-btn span {
+      width: 23px;
+      height: 2.5px;
+      background: var(--bark);
+      border-radius: 2px;
+      transition: transform .3s ease, opacity .3s ease
+    }
+
+    .menu-btn.open span:nth-child(1) {
+      transform: translateY(7.5px) rotate(45deg)
+    }
+
+    .menu-btn.open span:nth-child(2) {
+      opacity: 0
+    }
+
+    .menu-btn.open span:nth-child(3) {
+      transform: translateY(-7.5px) rotate(-45deg)
+    }
+
+    .menu-panel {
+      position: absolute;
+      top: 64px;
+      right: 16px;
+      left: 16px;
+      background: var(--paper);
+      border-radius: 22px;
+      box-shadow: 0 24px 54px -18px rgba(47, 61, 42, .42);
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(-10px);
+      transition: opacity .3s ease, transform .3s ease, visibility .3s;
+      border: 1px solid rgba(123, 160, 91, .16)
+    }
+
+    .menu-panel.open {
+      opacity: 1;
+      visibility: visible;
+      transform: none
+    }
+
+    .menu-panel a {
+      padding: 14px 18px;
+      text-decoration: none;
+      color: var(--ink);
+      font-weight: 600;
+      border-radius: 14px;
+      font-size: 1rem
+    }
+
+    .menu-panel a:hover {
+      background: var(--paper-warm)
+    }
+
+    .menu-panel a.menu-cta {
+      background: var(--moss);
+      color: #fff;
+      text-align: center;
+      margin-top: 6px
+    }
+
+    /* ── 공통 ── */
+    .wrap {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 0 24px;
+      position: relative
+    }
+
+    .reveal {
+      opacity: 0;
+      transform: translateY(30px);
+      transition: opacity 1s ease, transform 1s cubic-bezier(.22, .9, .3, 1)
+    }
+
+    .reveal.in {
+      opacity: 1;
+      transform: none
+    }
+
+    /* ── 히어로: 숲 입구 ── */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 14vh 24px 8vh;
+      position: relative
+    }
+
+    .hero .eyebrow {
+      font-family: var(--hand);
+      font-size: 1.4rem;
+      color: var(--moss);
+      letter-spacing: .5px;
+      margin-bottom: 16px;
+      font-weight: 700
+    }
+
+    .hero h1 {
+      font-family: var(--display);
+      font-weight: 700;
+      font-size: clamp(2.7rem, 12vw, 4rem);
+      line-height: 1.3;
+      letter-spacing: -1px;
+      color: var(--bark)
+    }
+
+    .hero h1 .glow {
+      color: var(--moss);
+      position: relative;
+      display: inline-block
+    }
+
+    .hero h1 .glow::after {
+      content: "";
+      position: absolute;
+      left: -4%;
+      right: -4%;
+      bottom: 8px;
+      height: 16px;
+      background: var(--leaf-light);
+      opacity: .5;
+      z-index: -1;
+      border-radius: 8px;
+      transform: rotate(-1.2deg)
+    }
+
+    .hero p {
+      margin-top: 24px;
+      font-size: 1.06rem;
+      color: var(--ink-soft);
+      max-width: 380px
+    }
+
+    .hero .enter-cue {
+      margin-top: 56px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      font-family: var(--hand);
+      font-size: 1.1rem;
+      color: var(--moss);
+      font-weight: 700
+    }
+
+    .hero .enter-cue .path {
+      width: 2px;
+      height: 50px;
+      background: linear-gradient(180deg, var(--leaf), transparent);
+      position: relative
+    }
+
+    .hero .enter-cue .path::after {
+      content: "";
+      position: absolute;
+      left: 50%;
+      top: 0;
+      width: 8px;
+      height: 8px;
+      border-radius: 0 50% 50% 50%;
+      background: var(--leaf);
+      transform: translateX(-50%) rotate(45deg);
+      animation: walk 1.8s infinite
+    }
+
+    @keyframes walk {
+      0% {
+        opacity: 0;
+        transform: translate(-50%, 0) rotate(45deg)
+      }
+
+      30% {
+        opacity: 1
+      }
+
+      80% {
+        opacity: 0;
+        transform: translate(-50%, 42px) rotate(45deg)
+      }
+
+      100% {
+        opacity: 0
+      }
+    }
+
+    /* ── 타임라인 시작: 원장 표지판 ── */
+    .trail-start {
+      padding: 30px 0 10px;
+      text-align: center
+    }
+
+    .trail-start .signpost {
+      display: inline-flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 18px;
+      background: var(--paper);
+      border-radius: 20px;
+      padding: 30px 32px;
+      box-shadow: 0 20px 44px -20px rgba(74, 107, 58, .4);
+      border: 1px solid rgba(123, 160, 91, .16);
+      max-width: 440px
+    }
+
+    .trail-start .portrait {
+      width: 96px;
+      height: 96px;
+      border-radius: 48% 52% 50% 50%;
+      background: linear-gradient(135deg, var(--leaf-light), var(--leaf));
+      overflow: hidden;
+      box-shadow: 0 0 0 6px rgba(168, 198, 134, .25)
+    }
+
+    .trail-start .portrait img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block
+    }
+
+    .trail-start .badge {
+      font-family: var(--hand);
+      font-weight: 700;
+      color: var(--moss);
+      font-size: 1.1rem
+    }
+
+    .trail-start .msg {
+      font-family: var(--display);
+      font-weight: 400;
+      font-size: 1.18rem;
+      line-height: 1.8;
+      color: var(--ink)
+    }
+
+    .trail-start .sign {
+      color: var(--ink-soft);
+      font-size: .9rem
+    }
+
+    .trail-start .sign strong {
+      font-family: var(--display);
+      font-weight: 700;
+      color: var(--bark);
+      margin-left: 4px
+    }
+
+    /* ── 핵심: 세로 타임라인 (숲길) ── */
+    .timeline {
+      position: relative;
+      padding: 50px 0 40px
+    }
+
+    .timeline-head {
+      text-align: center;
+      margin-bottom: 30px
+    }
+
+    .timeline-head .eyebrow {
+      font-family: var(--hand);
+      font-size: 1.25rem;
+      color: var(--moss);
+      font-weight: 700
+    }
+
+    .timeline-head .eyebrow::before {
+      content: "🌿 "
+    }
+
+    .timeline-head h2 {
+      font-family: var(--display);
+      font-weight: 700;
+      font-size: 2rem;
+      color: var(--bark);
+      letter-spacing: -.5px;
+      margin-top: 4px
+    }
+
+    .trail-line {
+      position: absolute;
+      left: 50%;
+      top: 130px;
+      bottom: 70px;
+      width: 3px;
+      transform: translateX(-50%);
+      background: repeating-linear-gradient(180deg, var(--leaf) 0 10px, transparent 10px 22px);
+      opacity: .4;
+      z-index: 0
+    }
+
+    .stop {
+      position: relative;
+      margin: 0 0 54px;
+      z-index: 1
+    }
+
+    .stop .node {
+      position: absolute;
+      left: 50%;
+      top: 6px;
+      transform: translateX(-50%);
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: var(--paper);
+      border: 2.5px solid var(--leaf);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--hand);
+      font-weight: 700;
+      color: var(--moss);
+      font-size: 1.05rem;
+      z-index: 3;
+      box-shadow: 0 8px 18px -8px rgba(74, 107, 58, .5)
+    }
+
+    .stop .card {
+      width: calc(50% - 38px);
+      background: var(--paper);
+      border-radius: 18px;
+      overflow: hidden;
+      box-shadow: 0 18px 40px -18px rgba(74, 107, 58, .45);
+      border: 1px solid rgba(123, 160, 91, .14);
+      position: relative
+    }
+
+    .stop.left .card {
+      margin-right: auto
+    }
+
+    .stop.right .card {
+      margin-left: auto
+    }
+
+    .stop .card::before {
+      content: "";
+      position: absolute;
+      top: 24px;
+      width: 30px;
+      height: 2px;
+      background: var(--leaf);
+      opacity: .5;
+      z-index: 2
+    }
+
+    .stop.left .card::before {
+      right: -30px
+    }
+
+    .stop.right .card::before {
+      left: -30px
+    }
+
+    .stop .card .pic {
+      aspect-ratio: 4/3;
+      overflow: hidden;
+      background: var(--leaf-light);
+      position: relative
+    }
+
+    .stop .card .pic img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block
+    }
+
+    .stop .card .pic .cap {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      padding: 14px 14px 12px;
+      background: linear-gradient(180deg, transparent, rgba(38, 51, 31, .62));
+      color: #fff;
+      font-family: var(--hand);
+      font-weight: 700;
+      font-size: 1.05rem;
+      line-height: 1.35
+    }
+
+    .stop .card .body {
+      padding: 14px 16px 16px
+    }
+
+    .stop .card .time {
+      font-family: var(--hand);
+      font-weight: 700;
+      color: var(--moss);
+      font-size: 1.02rem
+    }
+
+    .stop .card .title {
+      font-family: var(--display);
+      font-weight: 700;
+      font-size: 1.15rem;
+      color: var(--bark);
+      margin: 2px 0 6px;
+      letter-spacing: -.3px;
+      line-height: 1.3
+    }
+
+    .stop .card .note {
+      font-size: .88rem;
+      color: var(--ink-soft);
+      line-height: 1.55
+    }
+
+    .trail-end {
+      text-align: center;
+      padding: 10px 0 20px;
+      position: relative;
+      z-index: 1
+    }
+
+    .trail-end .glade {
+      display: inline-block;
+      font-family: var(--hand);
+      font-weight: 700;
+      color: var(--sun-warm);
+      font-size: 1.15rem;
+      background: var(--paper);
+      padding: 12px 24px;
+      border-radius: 30px;
+      box-shadow: 0 12px 28px -14px rgba(232, 184, 100, .5)
+    }
+
+    .trail-end .glade::before {
+      content: "☀️ "
+    }
+
+    /* ── 더 둘러보기: 탭 ── */
+    .explore {
+      padding: 60px 0 40px
+    }
+
+    .explore-head {
+      text-align: center;
+      margin-bottom: 26px
+    }
+
+    .explore-head .eyebrow {
+      font-family: var(--hand);
+      font-size: 1.2rem;
+      color: var(--moss);
+      font-weight: 700
+    }
+
+    .explore-head h2 {
+      font-family: var(--display);
+      font-weight: 700;
+      font-size: 1.85rem;
+      color: var(--bark);
+      letter-spacing: -.5px;
+      margin-top: 4px
+    }
+
+    .tab-bar {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-bottom: 26px
+    }
+
+    .tab-btn {
+      padding: 9px 18px;
+      border-radius: 30px;
+      border: 1.5px solid rgba(123, 160, 91, .3);
+      background: var(--paper);
+      color: var(--ink-soft);
+      font-weight: 700;
+      font-size: .9rem;
+      cursor: pointer;
+      font-family: var(--body);
+      transition: all .2s
+    }
+
+    .tab-btn.active {
+      background: var(--moss);
+      color: #fff;
+      border-color: var(--moss)
+    }
+
+    .tab-panel {
+      display: none
+    }
+
+    .tab-panel.active {
+      display: block;
+      animation: fadein .5s ease
+    }
+
+    @keyframes fadein {
+      from {
+        opacity: 0;
+        transform: translateY(12px)
+      }
+
+      to {
+        opacity: 1;
+        transform: none
+      }
+    }
+
+    .polaroids {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px
+    }
+
+    .polaroid {
+      background: var(--paper);
+      padding: 9px 9px 13px;
+      border-radius: 8px;
+      box-shadow: 0 16px 34px -16px rgba(74, 107, 58, .45);
+      transition: transform .4s ease, box-shadow .4s ease
+    }
+
+    .polaroid .pic {
+      border-radius: 5px;
+      aspect-ratio: 1/1;
+      overflow: hidden;
+      background: var(--leaf-light)
+    }
+
+    .polaroid .pic img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block
+    }
+
+    .polaroid .label {
+      font-family: var(--hand);
+      font-weight: 700;
+      font-size: 1rem;
+      margin-top: 10px;
+      color: var(--bark);
+      text-align: center
+    }
+
+    .polaroid:nth-child(odd) {
+      transform: rotate(-2deg)
+    }
+
+    .polaroid:nth-child(even) {
+      transform: rotate(2deg);
+      margin-top: 18px
+    }
+
+    .polaroid:hover,
+    .polaroid:focus-within {
+      transform: rotate(0) scale(1.04);
+      box-shadow: 0 24px 44px -16px rgba(74, 107, 58, .5);
+      z-index: 2
+    }
+
+    .cards {
+      display: flex;
+      flex-direction: column;
+      gap: 16px
+    }
+
+    .flip {
+      perspective: 1200px;
+      height: 128px
+    }
+
+    .flip-inner {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      transition: transform .7s cubic-bezier(.4, .2, .2, 1);
+      transform-style: preserve-3d;
+      cursor: pointer
+    }
+
+    .flip.flipped .flip-inner {
+      transform: rotateY(180deg)
+    }
+
+    .face {
+      position: absolute;
+      inset: 0;
+      backface-visibility: hidden;
+      border-radius: 18px;
+      display: flex;
+      align-items: center;
+      padding: 20px 22px;
+      box-shadow: 0 16px 38px -18px rgba(74, 107, 58, .42)
+    }
+
+    .front {
+      background: var(--paper);
+      gap: 18px;
+      border-left: 5px solid var(--leaf)
+    }
+
+    .front .avatar {
+      width: 84px;
+      height: 84px;
+      border-radius: 46% 54% 50% 50%;
+      background: linear-gradient(135deg, var(--leaf-light), var(--leaf));
+      flex: none;
+      overflow: hidden
+    }
+
+    .front .avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block
+    }
+
+    .front .t-info {
+      flex: 1;
+      min-width: 0;
+      text-align: left
+    }
+
+    .front .name {
+      font-family: var(--display);
+      font-weight: 700;
+      font-size: 1.25rem;
+      color: var(--bark)
+    }
+
+    .front .role {
+      color: var(--ink-soft);
+      font-size: .88rem;
+      margin-top: 2px
+    }
+
+    .front .tap {
+      font-family: var(--hand);
+      color: var(--moss);
+      font-size: .92rem;
+      margin-top: 7px;
+      font-weight: 700
+    }
+
+    .back {
+      background: linear-gradient(135deg, var(--moss), var(--bark));
+      color: var(--paper-warm);
+      transform: rotateY(180deg);
+      font-family: var(--display);
+      font-size: 1.18rem;
+      line-height: 1.6;
+      justify-content: center;
+      text-align: center
+    }
+
+    .notice-list {
+      list-style: none
+    }
+
+    .notice-item {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      background: var(--paper);
+      border-radius: 16px;
+      padding: 15px 18px;
+      margin-bottom: 12px;
+      box-shadow: 0 12px 28px -18px rgba(74, 107, 58, .4);
+      border: 1px solid rgba(123, 160, 91, .12)
+    }
+
+    .notice-item .tag {
+      flex: none;
+      font-size: .74rem;
+      font-weight: 700;
+      padding: 5px 11px;
+      border-radius: 30px;
+      color: #fff
+    }
+
+    .tag-event {
+      background: var(--leaf)
+    }
+
+    .tag-info {
+      background: var(--sun-warm)
+    }
+
+    .tag-must {
+      background: var(--soil)
+    }
+
+    .notice-item .n-title {
+      font-weight: 600;
+      font-size: 1rem;
+      line-height: 1.4
+    }
+
+    .notice-item .n-date {
+      color: var(--ink-soft);
+      font-size: .82rem;
+      margin-top: 3px
+    }
+
+    .more-link {
+      display: inline-block;
+      margin-top: 8px;
+      color: var(--moss);
+      font-weight: 700;
+      text-decoration: none;
+      font-size: .92rem
+    }
+
+    .cal {
+      background: var(--paper);
+      border-radius: 22px;
+      padding: 22px 20px;
+      box-shadow: 0 18px 44px -22px rgba(74, 107, 58, .4);
+      border: 1px solid rgba(123, 160, 91, .12)
+    }
+
+    .cal-head {
+      font-family: var(--display);
+      font-weight: 700;
+      font-size: 1.25rem;
+      margin-bottom: 14px;
+      color: var(--bark)
+    }
+
+    .cal-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 4px
+    }
+
+    .cal-grid .dow {
+      font-size: .78rem;
+      color: var(--ink-soft);
+      padding: 6px 0;
+      font-weight: 600
+    }
+
+    .cal-grid .dow:first-child {
+      color: var(--soil)
+    }
+
+    .day-cell {
+      position: relative;
+      padding: 10px 0;
+      font-size: .9rem;
+      border-radius: 10px;
+      text-align: center
+    }
+
+    .day-cell.muted {
+      color: #cdd4c2
+    }
+
+    .day-cell.ev {
+      background: #EDF3E2;
+      color: var(--moss);
+      font-weight: 700
+    }
+
+    .day-cell.ev::after {
+      content: "";
+      position: absolute;
+      left: 50%;
+      bottom: 5px;
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: var(--leaf);
+      transform: translateX(-50%)
+    }
+
+    .event-list {
+      list-style: none;
+      margin-top: 18px
+    }
+
+    .event-list li {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 11px 4px;
+      border-bottom: 1px solid var(--paper-warm);
+      font-size: .95rem
+    }
+
+    .event-list li:last-child {
+      border-bottom: none
+    }
+
+    .event-list .e-date {
+      font-weight: 700;
+      color: var(--moss);
+      font-size: .86rem;
+      min-width: 46px
+    }
+
+    .faq-item {
+      background: var(--paper);
+      border-radius: 16px;
+      margin-bottom: 12px;
+      overflow: hidden;
+      box-shadow: 0 12px 28px -20px rgba(74, 107, 58, .4);
+      border: 1px solid rgba(123, 160, 91, .12)
+    }
+
+    .faq-q {
+      width: 100%;
+      border: none;
+      background: transparent;
+      text-align: left;
+      padding: 17px 20px;
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--ink);
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      font-family: var(--body)
+    }
+
+    .faq-q .chev {
+      flex: none;
+      width: 11px;
+      height: 11px;
+      border-right: 2.5px solid var(--leaf);
+      border-bottom: 2.5px solid var(--leaf);
+      transform: rotate(45deg);
+      transition: transform .35s ease;
+      margin-top: -4px
+    }
+
+    .faq-item.open .faq-q .chev {
+      transform: rotate(-135deg);
+      margin-top: 2px
+    }
+
+    .faq-a {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height .4s ease
+    }
+
+    .faq-a p {
+      padding: 0 20px 18px;
+      color: var(--ink-soft);
+      font-size: .94rem;
+      line-height: 1.7
+    }
+
+    /* ── 마무리 ── */
+    .finale {
+      padding: 80px 0 150px;
+      text-align: center
+    }
+
+    .finale h2 {
+      font-family: var(--display);
+      font-weight: 700;
+      font-size: 2.1rem;
+      line-height: 1.4;
+      letter-spacing: -.5px;
+      color: var(--bark)
+    }
+
+    .finale p {
+      color: var(--ink-soft);
+      margin: 18px 0 36px;
+      font-size: 1rem
+    }
+
+    .btn-big {
+      display: inline-block;
+      background: var(--moss);
+      color: #fff;
+      font-weight: 700;
+      font-size: 1.1rem;
+      padding: 18px 46px;
+      border-radius: 8px 30px 30px 30px;
+      text-decoration: none;
+      box-shadow: 0 16px 34px -10px rgba(74, 107, 58, .6);
+      transition: transform .3s ease, box-shadow .3s ease;
+      border: none;
+      cursor: pointer;
+      font-family: var(--body)
+    }
+
+    .btn-big:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 22px 40px -10px rgba(74, 107, 58, .7)
+    }
+
+    /* ── 플로팅 CTA ── */
+    .float {
+      position: fixed;
+      left: 50%;
+      bottom: 24px;
+      transform: translateX(-50%) translateY(120px);
+      z-index: 30;
+      transition: transform .5s cubic-bezier(.22, .9, .3, 1)
+    }
+
+    .float.show {
+      transform: translateX(-50%) translateY(0)
+    }
+
+    .float.hide {
+      transform: translateX(-50%) translateY(120px)
+    }
+
+    .float a {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--bark);
+      color: var(--paper-warm);
+      font-weight: 700;
+      padding: 14px 28px;
+      border-radius: 30px;
+      text-decoration: none;
+      box-shadow: 0 12px 30px -8px rgba(38, 51, 31, .5);
+      font-size: .98rem
+    }
+
+    .float a .pulse {
+      width: 9px;
+      height: 9px;
+      border-radius: 0 50% 50% 50%;
+      background: var(--leaf);
+      transform: rotate(45deg);
+      animation: leafpulse 1.8s infinite
+    }
+
+    @keyframes leafpulse {
+
+      0%,
+      100% {
+        transform: rotate(45deg) scale(1)
+      }
+
+      50% {
+        transform: rotate(45deg) scale(1.3)
+      }
+    }
+
+    /* ── 모달 ── */
+    .csl-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 50;
+      background: rgba(38, 51, 31, .5);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px
+    }
+
+    .csl-overlay.open {
+      display: flex
+    }
+
+    .csl-panel {
+      position: relative;
+      width: 100%;
+      max-width: 390px;
+      max-height: 88vh;
+      overflow-y: auto;
+      background: var(--paper);
+      border-radius: 24px;
+      padding: 32px 28px;
+      box-shadow: 0 30px 60px -20px rgba(38, 51, 31, .55)
+    }
+
+    .csl-close {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      width: 34px;
+      height: 34px;
+      border: none;
+      background: var(--paper-warm);
+      border-radius: 50%;
+      font-size: 1.2rem;
+      line-height: 1;
+      color: var(--ink-soft);
+      cursor: pointer
+    }
+
+    .csl-title {
+      font-family: var(--display);
+      font-weight: 700;
+      font-size: 1.4rem;
+      margin-bottom: 22px;
+      letter-spacing: -.5px;
+      color: var(--bark)
+    }
+
+    .csl-field {
+      margin-bottom: 16px;
+      text-align: left
+    }
+
+    .csl-field label {
+      display: block;
+      font-size: .85rem;
+      font-weight: 700;
+      color: var(--ink-soft);
+      margin-bottom: 6px
+    }
+
+    .csl-field input[type=text],
+    .csl-field input[type=tel],
+    .csl-field select {
+      width: 100%;
+      border: 1.5px solid rgba(123, 160, 91, .3);
+      border-radius: 14px;
+      padding: 12px 14px;
+      font-family: var(--body);
+      font-size: .96rem;
+      color: var(--ink);
+      background: var(--paper-warm);
+      outline: none;
+    }
+
+    .csl-field input:focus,
+    .csl-field select:focus {
+      border-color: var(--leaf)
+    }
+
+    .csl-consent label {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      font-size: .85rem;
+      font-weight: 400;
+      color: var(--ink-soft);
+      line-height: 1.5
+    }
+
+    .csl-consent input {
+      margin-top: 3px;
+      flex: none
+    }
+
+    .csl-submit {
+      width: 100%;
+      margin-top: 6px
+    }
+
+    .csl-msg.error {
+      margin-top: 12px;
+      font-size: .85rem;
+      color: #C0392B;
+      text-align: center
+    }
+
+    .csl-done {
+      text-align: center;
+      font-family: var(--display);
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: var(--bark);
+      padding: 30px 0;
+      line-height: 1.7
+    }
+
+    footer {
+      text-align: center;
+      padding: 34px 22px 44px;
+      color: var(--ink-soft);
+      font-size: .82rem
+    }
+
+    footer .demo-tag {
+      display: inline-block;
+      background: var(--paper);
+      border: 1px solid rgba(123, 160, 91, .2);
+      border-radius: 30px;
+      padding: 6px 16px;
+      margin-bottom: 14px;
+      font-family: var(--hand);
+      font-weight: 700;
+      color: var(--moss)
+    }
+
+    a:focus-visible,
+    .flip-inner:focus-visible,
+    .tab-btn:focus-visible {
+      outline: 3px solid var(--leaf);
+      outline-offset: 3px;
+      border-radius: 8px
+    }
+
+    @media (max-width:480px) {
+      .trail-line {
+        left: 28px
+      }
+
+      .stop .node {
+        left: 28px;
+        transform: none;
+        width: 42px;
+        height: 42px
+      }
+
+      .stop .card {
+        width: calc(100% - 70px) !important;
+        margin-left: auto !important;
+        margin-right: 0 !important
+      }
+
+      .stop.left .card::before,
+      .stop.right .card::before {
+        left: -30px !important;
+        right: auto !important;
+        top: 24px
+      }
+    }
+
+    @media (prefers-reduced-motion:reduce) {
+      * {
+        transition: none !important;
+        animation: none !important;
+        scroll-behavior: auto !important
+      }
+
+      .reveal {
+        opacity: 1;
+        transform: none
+      }
+
+      .leaf-float {
+        display: none
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <nav class="topbar" id="topbar">
+    <a class="brand" href="#top" id="brandLink"></a>
+    <button class="menu-btn" id="menuBtn" aria-label="메뉴 열기" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+    <div class="menu-panel" id="menuPanel"></div>
+  </nav>
+  <span id="top"></span>
+
+  <div class="forest-bg"></div>
+  <div class="light-rays"></div>
+
+  <header class="hero wrap" id="hero"></header>
+  <section class="trail-start wrap" id="greeting"></section>
+  <main class="timeline wrap" id="timeline"></main>
+  <section class="explore wrap" id="explore"></section>
+  <section class="finale wrap" id="finale"></section>
+  <footer id="footerEl"></footer>
+
+  <div class="float" id="float"><a href="#finale"><span class="pulse"></span>입소 상담</a></div>
+
+  <div class="csl-overlay" id="cslOverlay">
+    <div class="csl-panel">
+      <button type="button" class="csl-close" id="cslCloseBtn" aria-label="닫기">×</button>
+      <div id="cslFormWrap">
+        <h3 class="csl-title">입소 상담 신청</h3>
+        <form id="cslForm">
+          <div class="csl-field">
+            <label for="csl-name">학부모 이름</label>
+            <input type="text" id="csl-name" required>
+          </div>
+          <div class="csl-field">
+            <label for="csl-phone">연락처</label>
+            <input type="tel" id="csl-phone" placeholder="010-0000-0000" required>
+          </div>
+          <div class="csl-field">
+            <label for="csl-kind">신청 종류</label>
+            <select id="csl-kind" required>
+              <option value="consult">상담</option>
+              <option value="waiting">대기</option>
+              <option value="info_session">설명회</option>
+            </select>
+          </div>
+          <div class="csl-field">
+            <label for="csl-class">희망 반</label>
+            <select id="csl-class">
+              <option value="">선택 안 함</option>
+              <option value="만3세">만 3세</option>
+              <option value="만4세">만 4세</option>
+              <option value="만5세">만 5세</option>
+            </select>
+          </div>
+          <div class="csl-field">
+            <label for="csl-time">희망 시간</label>
+            <input type="text" id="csl-time" placeholder="예: 평일 오후 2시">
+          </div>
+          <div class="csl-field csl-consent">
+            <label>
+              <input type="checkbox" id="csl-consent" required>
+              상담 신청 처리를 위해 이름·연락처 등 개인정보 수집에 동의합니다.
+            </label>
+          </div>
+          <button type="submit" class="btn-big csl-submit">신청하기</button>
+          <div class="csl-msg error" id="cslError"></div>
+        </form>
+      </div>
+      <div id="cslDoneWrap" hidden>
+        <p class="csl-done">접수되었습니다.<br>곧 연락드릴게요.</p>
+      </div>
+    </div>
+  </div>
+
+  <script src="supabase-config.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    function mapRowToData(row) {
+      const media = row.center_media || [];
+      const byType = (type) => media
+        .filter(m => m.media_type === type)
+        .sort((a, b) => a.sort_order - b.sort_order);
+      return {
+        center: { id: row.id, slug: row.slug, name: row.name, theme: row.theme, menu: row.menu, hero: row.hero, director: row.director },
+        day_story: byType('day_story').map(m => ({ slot: m.slot, time: m.time_label, title: m.title, photo: m.photo_url, photo_alt: m.photo_alt, caption: m.caption, note: m.note })),
+        album: { items: byType('album').map(m => ({ label: m.title, photo: m.photo_url })) },
+        teachers: { items: byType('teacher').map(m => ({ name: m.title, role: m.subtitle, photo: m.photo_url, message: m.caption })) },
+        notices: row.notices, schedule: row.schedule, faqs: row.faqs, finale: row.finale, footer: row.footer
+      };
+    }
+
+    (async function () {
+      let data;
+      const cfg = window.__SUPABASE_CONFIG__;
+      const client = supabase.createClient(cfg.url, cfg.anonKey);
+      try {
+        const slug = new URLSearchParams(location.search).get('slug') || 'haetsal';
+        const { data: row, error } = await client.from('centers').select('*, center_media(*)').eq('slug', slug).single();
+        if (error) throw error;
+        data = mapRowToData(row);
+
+        // Storage 경로를 서명 URL로 변환
+        async function signPath(path){
+          if (!path || /^https?:\/\//.test(path)) return path;
+          const { data: signed } = await client.storage.from('center-images').createSignedUrl(path, 3600);
+          return signed ? signed.signedUrl : path;
+        }
+        for (const m of data.day_story){ m.photo = await signPath(m.photo); }
+        for (const it of data.album.items){ it.photo = await signPath(it.photo); }
+        for (const tc of data.teachers.items){ tc.photo = await signPath(tc.photo); }
+      } catch (e) {
+        console.error(e);
+        document.body.innerHTML = '<p style="padding:40px;font-family:sans-serif">원 데이터를 불러오지 못했어요. supabase-config.js를 확인해주세요.</p>';
+        return;
+      }
+
+      const $ = (id) => document.getElementById(id);
+      const c = data.center;
+
+      $('brandLink').textContent = c.name.replace(/\s*어린이집$/, '') || c.name;
+      $('menuPanel').innerHTML = c.menu.map(m => `<a href="${m.href}"${m.cta ? ' class="menu-cta"' : ''}>${m.label}</a>`).join('');
+
+      const h = c.hero;
+      $('hero').innerHTML = `
+    <div class="eyebrow reveal">${h.eyebrow}</div>
+    <h1 class="reveal">${h.title}<br><span class="glow">${h.title_accent}</span></h1>
+    <p class="reveal">${h.subtitle}</p>
+    <div class="enter-cue reveal"><span>숲길을 따라 걸어요</span><span class="path"></span></div>`;
+
+      const d = c.director;
+      $('greeting').innerHTML = `
+    <div class="signpost reveal">
+      <div class="portrait"><img alt="${d.photo_alt}" src="${d.photo}"></div>
+      <div class="badge">${d.badge}</div>
+      <p class="msg">${d.message}</p>
+      <div class="sign">${d.sign_label}<strong>${d.sign_name}</strong></div>
+    </div>`;
+
+      const stops = data.day_story.map((m, i) => {
+        const side = i % 2 === 0 ? 'left' : 'right';
+        return `
+      <div class="stop ${side} reveal">
+        <div class="node">${i + 1}</div>
+        <div class="card">
+          <div class="pic">
+            <img loading="lazy" alt="${m.photo_alt}" src="${m.photo}">
+            <div class="cap">${m.caption}</div>
+          </div>
+          <div class="body">
+            <div class="time">${m.time}</div>
+            <div class="title">${m.title}</div>
+            <div class="note">${m.note}</div>
+          </div>
+        </div>
+      </div>`;
+      }).join('');
+      $('timeline').innerHTML = `
+    <div class="trail-line"></div>
+    <div class="timeline-head reveal">
+      <div class="eyebrow">아이의 하루</div>
+      <h2>숲길 따라 하루 산책</h2>
+    </div>
+    ${stops}
+    <div class="trail-end reveal"><span class="glade">햇살 비치는 빈터에 도착했어요</span></div>`;
+
+      const al = data.album, t = data.teachers, n = data.notices, s = data.schedule, f = data.faqs;
+
+      const ALBUM_LIMIT = 12;
+      const visibleItems = al.items.slice(0, ALBUM_LIMIT);
+      const hiddenItems = al.items.slice(ALBUM_LIMIT);
+      const albumHtml = `<div class="polaroids">${visibleItems.map(it => `
+    <div class="polaroid" tabindex="0"><div class="pic"><img loading="lazy" alt="${it.label}" src="${it.photo}"></div><div class="label">${it.label}</div></div>`).join('')}</div>
+    ${hiddenItems.length ? `<div class="polaroids album-hidden" hidden>${hiddenItems.map(it => `
+    <div class="polaroid" tabindex="0"><div class="pic"><img loading="lazy" alt="${it.label}" src="${it.photo}"></div><div class="label">${it.label}</div></div>`).join('')}</div>
+    <button type="button" class="more-link album-more-btn" style="background:none;border:none;cursor:pointer;font-family:inherit" onclick="this.previousElementSibling.hidden=false;this.remove();">더 보기 (총 ${al.items.length}장)</button>` : ''}`;
+
+      const teacherHtml = `<div class="cards">${t.items.map(tc => `
+    <div class="flip" tabindex="0" role="button" aria-label="${tc.name} 카드 뒤집기"><div class="flip-inner">
+      <div class="face front"><div class="avatar"><img alt="${tc.name}" src="${tc.photo}"></div>
+        <div class="t-info"><div class="name">${tc.name}</div><div class="role">${tc.role}</div><div class="tap">눌러서 한마디 보기</div></div></div>
+      <div class="face back">${tc.message}</div></div></div>`).join('')}</div>`;
+
+      const noticeHtml = `<ul class="notice-list">${n.items.map(it => `
+    <li class="notice-item"><span class="tag tag-${it.tag_type}">${it.tag}</span>
+      <div><div class="n-title">${it.title}</div><div class="n-date">${it.date}</div></div></li>`).join('')}</ul>
+    <a class="more-link" href="#explore">${n.more}</a>`;
+
+      const dows = ['일', '월', '화', '수', '목', '금', '토'];
+      let cells = dows.map(w => `<span class="dow">${w}</span>`).join('');
+      for (let day = 1; day <= s.days_in_month; day++) { cells += `<span class="day-cell${s.event_days.includes(day) ? ' ev' : ''}">${day}</span>`; }
+      for (let m = 1; m <= s.trailing_muted; m++) { cells += `<span class="day-cell muted">${m}</span>`; }
+      const scheduleHtml = `<div class="cal"><div class="cal-head">${s.month_label}</div>
+    <div class="cal-grid">${cells}</div>
+    <ul class="event-list">${s.events.map(e => `<li><span class="e-date">${e.date}</span> ${e.title}</li>`).join('')}</ul></div>`;
+
+      const faqHtml = `<div class="faq-wrap">${f.items.map(it => `
+    <div class="faq-item"><button class="faq-q" aria-expanded="false">${it.q}<span class="chev"></span></button>
+      <div class="faq-a"><p>${it.a}</p></div></div>`).join('')}</div>`;
+
+      $('explore').innerHTML = `
+    <div class="explore-head reveal">
+      <div class="eyebrow">🍃 우리 원 더 알아보기</div>
+      <h2>둘러보기</h2>
+    </div>
+    <div class="tab-bar reveal">
+      <button class="tab-btn active" data-tab="album">앨범</button>
+      <button class="tab-btn" data-tab="teachers">선생님</button>
+      <button class="tab-btn" data-tab="notice">공지</button>
+      <button class="tab-btn" data-tab="schedule">일정</button>
+      <button class="tab-btn" data-tab="faq">FAQ</button>
+    </div>
+    <div class="tab-panel active" data-panel="album">${albumHtml}</div>
+    <div class="tab-panel" data-panel="teachers">${teacherHtml}</div>
+    <div class="tab-panel" data-panel="notice">${noticeHtml}</div>
+    <div class="tab-panel" data-panel="schedule">${scheduleHtml}</div>
+    <div class="tab-panel" data-panel="faq">${faqHtml}</div>`;
+
+      const fin = data.finale;
+      $('finale').innerHTML = `
+    <h2 class="reveal">${fin.title}</h2>
+    <p class="reveal">${fin.subtitle}</p>
+    <button type="button" id="cslOpenBtn" class="btn-big reveal">${fin.cta}</button>`;
+
+      $('footerEl').innerHTML = `<div class="demo-tag">${data.footer.tag}</div><div>${data.footer.text}</div>`;
+      document.title = `원이야 - ${c.name}`;
+
+      initInteractions();
+      initConsultationForm(client, c.id);
+    })();
+
+    function initInteractions() {
+      var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+      var io = new IntersectionObserver(function (entries) {
+        entries.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
+      }, { threshold: 0.12 });
+      document.querySelectorAll('.reveal').forEach(function (el) { io.observe(el); });
+
+      var bg = document.querySelector('.forest-bg');
+      var rays = document.querySelector('.light-rays');
+      var depths = [
+        { top: '#DCE8CC', bot: '#EEF2E0', rays: .9 },
+        { top: '#C4D8B0', bot: '#DCE8CC', rays: .8 },
+        { top: '#A8C690', bot: '#C4D8B0', rays: .7 },
+        { top: '#8CB074', bot: '#A8C690', rays: .65 },
+        { top: '#F4E8C4', bot: '#DCE8CC', rays: 1 }
+      ];
+      var stops = Array.prototype.slice.call(document.querySelectorAll('.stop'));
+      var current = -1;
+      var dio = new IntersectionObserver(function (entries) {
+        entries.forEach(function (e) {
+          if (e.isIntersecting) {
+            var idx = stops.indexOf(e.target);
+            var step = Math.min(idx, depths.length - 1);
+            if (step !== current) {
+              current = step; var p = depths[step];
+              bg.style.background = 'linear-gradient(180deg,' + p.top + ' 0%,' + p.bot + ' 60%)';
+              rays.style.opacity = p.rays;
+            }
+          }
+        });
+      }, { rootMargin: '-45% 0px -45% 0px' });
+      stops.forEach(function (s) { dio.observe(s); });
+
+      // 떠다니는 나뭇잎
+      if(!reduce){
+        var leafColors = ['#7BA05B','#A8C686','#4A6B3A','#E8B864'];
+        for(var i=0;i<5;i++){
+          (function(idx){
+            var leaf = document.createElement('div');
+            leaf.className = 'leaf-float';
+            var size = 14 + Math.random()*12;
+            var col = leafColors[idx % leafColors.length];
+            leaf.innerHTML = '<svg width="'+size+'" height="'+size+'" viewBox="0 0 24 24"><path d="M12 2 Q22 8 12 22 Q2 8 12 2Z" fill="'+col+'"/><path d="M12 4 V20" stroke="rgba(255,255,255,.4)" stroke-width="1"/></svg>';
+            leaf.style.top = '0px';
+            document.body.appendChild(leaf);
+            var baseX = Math.random()*100;
+            var y = -40 - Math.random()*window.innerHeight;
+            var speed = 0.4+Math.random()*0.5, sway = 14+Math.random()*22, phase = Math.random()*6.28, rot = Math.random()*360;
+            function fall(){
+              y += speed; phase += 0.015; rot += 0.4;
+              if(y > window.innerHeight + 40){ y = -40; baseX = Math.random()*100; }
+              leaf.style.left = baseX + '%';
+              leaf.style.transform = 'translate('+(Math.sin(phase)*sway)+'px,'+y+'px) rotate('+rot+'deg)';
+              requestAnimationFrame(fall);
+            }
+            fall();
+          })(i);
+        }
+      }
+
+      var tabBtns = document.querySelectorAll('.tab-btn');
+      var tabPanels = document.querySelectorAll('.tab-panel');
+      tabBtns.forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          var tab = btn.getAttribute('data-tab');
+          tabBtns.forEach(function (b) { b.classList.remove('active'); });
+          tabPanels.forEach(function (p) { p.classList.remove('active'); });
+          btn.classList.add('active');
+          document.querySelector('.tab-panel[data-panel="' + tab + '"]').classList.add('active');
+        });
+      });
+
+      document.querySelectorAll('.flip').forEach(function (card) {
+        function toggle() { card.classList.toggle('flipped'); }
+        card.addEventListener('click', toggle);
+        card.addEventListener('keydown', function (ev) { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); toggle(); } });
+      });
+
+      var floatEl = document.getElementById('float');
+      var hero = document.querySelector('.hero');
+      var finale = document.getElementById('finale');
+      var fio = new IntersectionObserver(function (entries) {
+        entries.forEach(function (e) {
+          if (e.target === hero) { if (e.isIntersecting) { floatEl.classList.remove('show'); } else { floatEl.classList.add('show'); } }
+          if (e.target === finale) { if (e.isIntersecting) { floatEl.classList.add('hide'); } else { floatEl.classList.remove('hide'); } }
+        });
+      }, { threshold: 0.4 });
+      fio.observe(hero); fio.observe(finale);
+
+      var menuBtn = document.getElementById('menuBtn');
+      var menuPanel = document.getElementById('menuPanel');
+      function closeMenu() { menuBtn.classList.remove('open'); menuPanel.classList.remove('open'); menuBtn.setAttribute('aria-expanded', 'false'); }
+      menuBtn.addEventListener('click', function () {
+        var open = menuPanel.classList.toggle('open');
+        menuBtn.classList.toggle('open', open);
+        menuBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+      });
+      menuPanel.querySelectorAll('a').forEach(function (a) { a.addEventListener('click', closeMenu); });
+      document.addEventListener('click', function (e) { if (!menuPanel.contains(e.target) && !menuBtn.contains(e.target)) closeMenu(); });
+
+      document.querySelectorAll('.faq-item').forEach(function (item) {
+        var q = item.querySelector('.faq-q');
+        var a = item.querySelector('.faq-a');
+        q.addEventListener('click', function () {
+          var open = item.classList.toggle('open');
+          q.setAttribute('aria-expanded', open ? 'true' : 'false');
+          a.style.maxHeight = open ? (a.scrollHeight + 'px') : null;
+        });
+      });
+    }
+
+    function initConsultationForm(client, centerId) {
+      var overlay = document.getElementById('cslOverlay');
+      var openBtn = document.getElementById('cslOpenBtn');
+      var closeBtn = document.getElementById('cslCloseBtn');
+      var form = document.getElementById('cslForm');
+      var errorEl = document.getElementById('cslError');
+      var formWrap = document.getElementById('cslFormWrap');
+      var doneWrap = document.getElementById('cslDoneWrap');
+
+      function openModal() { overlay.classList.add('open'); formWrap.hidden = false; doneWrap.hidden = true; form.reset(); errorEl.textContent = ''; }
+      function closeModal() { overlay.classList.remove('open'); }
+
+      if (openBtn) openBtn.addEventListener('click', openModal);
+      closeBtn.addEventListener('click', closeModal);
+      overlay.addEventListener('click', function (e) { if (e.target === overlay) closeModal(); });
+      document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && overlay.classList.contains('open')) closeModal(); });
+
+      form.addEventListener('submit', async function (e) {
+        e.preventDefault();
+        errorEl.textContent = '';
+        if (!document.getElementById('csl-consent').checked) { errorEl.textContent = '개인정보 수집 동의가 필요해요.'; return; }
+        var payload = {
+          center_id: centerId,
+          parent_name: document.getElementById('csl-name').value,
+          phone: document.getElementById('csl-phone').value,
+          kind: document.getElementById('csl-kind').value,
+          wish_class: document.getElementById('csl-class').value || null,
+          wish_time: document.getElementById('csl-time').value || null,
+          consent_at: new Date().toISOString()
+        };
+        var submitBtn = form.querySelector('.csl-submit');
+        submitBtn.disabled = true;
+        var { error } = await client.from('consultations').insert(payload);
+        submitBtn.disabled = false;
+        if (error) { console.error(error); errorEl.textContent = '접수 중 문제가 생겼어요. 다시 시도해주세요.'; return; }
+        formWrap.hidden = true;
+        doneWrap.hidden = false;
+      });
+    }
+  </script>
+</body>
+
+</html>

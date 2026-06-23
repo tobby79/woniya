@@ -386,6 +386,20 @@
   async function handleFiles(files){
     if (!currentCenter || files.length === 0) return;
     uploadError.textContent = '';
+
+    // 타입별 최대 개수 제한
+    var LIMITS = { hero: 1, album: 100, day_story: 12, teacher: 30 };
+    var limit = LIMITS[selectedType] || 100;
+    var countRes = await client.from('center_media')
+      .select('id', { count: 'exact', head: true })
+      .eq('center_id', currentCenter.id)
+      .eq('media_type', selectedType);
+    var currentCount = countRes.count || 0;
+    if (currentCount + files.length > limit) {
+      uploadError.textContent = '이 유형은 최대 ' + limit + '장까지 올릴 수 있어요. (현재 ' + currentCount + '장)';
+      return;
+    }
+
     uploadProgress.style.display = 'block';
     progressBar.style.width = '0%';
 
