@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>원이야 - 우리 동네 원 검색</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Gaegu:wght@700&display=swap" rel="stylesheet">
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<style>
+
+  :root{
+    --cream:#FBF6EE;
+    --ink:#403733;
+    --ink-soft:#6E625B;
+    --coral:#FF8A6B;
+    --coral-deep:#F2715A;
+    --sage:#9CB89A;
+    --paper:#FFFFFF;
+    --display:'Gowun Dodum',sans-serif;
+    --hand:'Gaegu',cursive;
+    --body:'Pretendard',sans-serif;
+  }
+
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{
+    font-family:var(--body);
+    color:var(--ink);
+    background:var(--cream);
+    line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+    padding-bottom:60px;
+  }
+
+  .topbar{position:sticky;top:0;left:0;right:0;z-index:40;display:flex;align-items:center;justify-content:space-between;padding:14px 20px;background:rgba(255,250,243,.86);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);box-shadow:0 1px 0 rgba(180,140,110,.12)}
+  .topbar .brand{font-family:var(--display);font-size:1.25rem;color:var(--ink);text-decoration:none;letter-spacing:-.5px}
+
+  .wrap{max-width:560px;margin:0 auto;padding:0 22px}
+
+  .search-head{padding:30px 0 18px;text-align:center}
+  .section-eyebrow{font-family:var(--hand);font-size:1.15rem;color:var(--sage);font-weight:700}
+  .section-title{font-family:var(--display);font-size:1.7rem;margin:6px 0 22px;letter-spacing:-.5px}
+
+  .search-box{position:relative}
+  .search-box input{
+    width:100%;border:none;border-radius:30px;padding:16px 20px;
+    background:var(--paper);font-family:var(--body);font-size:1rem;color:var(--ink);
+    box-shadow:0 14px 32px -18px rgba(120,80,60,.4);outline:none;
+  }
+  .search-box input:focus{box-shadow:0 0 0 2px var(--coral),0 14px 32px -18px rgba(120,80,60,.4)}
+  .search-box input::placeholder{color:var(--ink-soft)}
+
+  .result-count{margin:18px 2px 14px;color:var(--ink-soft);font-size:.9rem;font-weight:600}
+
+  .card-list{display:flex;flex-direction:column;gap:16px}
+  .card{
+    display:flex;gap:16px;align-items:center;text-decoration:none;color:var(--ink);
+    background:var(--paper);border-radius:22px;padding:16px;
+    box-shadow:0 16px 36px -20px rgba(120,80,60,.4);
+    transition:transform .25s ease,box-shadow .25s ease;
+  }
+  .card:hover,.card:focus-visible{transform:translateY(-3px);box-shadow:0 22px 42px -18px rgba(120,80,60,.5)}
+
+  .thumb{flex:none;width:84px;height:84px;border-radius:16px;overflow:hidden;background:linear-gradient(135deg,#ffe7d4,#ffc4ac);display:flex;align-items:center;justify-content:center}
+  .thumb img{width:100%;height:100%;object-fit:cover;display:block}
+
+  .info{flex:1;min-width:0}
+  .info .name{font-family:var(--display);font-size:1.18rem;letter-spacing:-.3px}
+  .info .region{color:var(--ink-soft);font-size:.86rem;margin-top:3px}
+
+  .chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+  .chip{font-size:.74rem;font-weight:700;padding:4px 10px;border-radius:30px;white-space:nowrap}
+  .chip.badge{background:#FFF1EA;color:var(--coral-deep)}
+  .chip.tag{background:#EEF4ED;color:var(--sage)}
+
+  .empty{text-align:center;color:var(--ink-soft);padding:60px 0;font-size:.96rem}
+
+  a:focus-visible{outline:3px solid var(--coral);outline-offset:3px;border-radius:8px}
+
+</style>
+</head>
+<body>
+
+<nav class="topbar">
+  <a class="brand" href="search.html">원이야</a>
+</nav>
+
+<div class="wrap">
+  <header class="search-head">
+    <div class="section-eyebrow">동네에서 찾기</div>
+    <h1 class="section-title">우리 동네 어린이집·유치원</h1>
+    <div class="search-box">
+      <input id="regionInput" type="search" placeholder="지역명으로 검색 (예: 강남구)" aria-label="지역명 검색">
+    </div>
+  </header>
+
+  <div class="result-count" id="resultCount"></div>
+  <div class="card-list" id="cardList"></div>
+</div>
+
+<script src="supabase-config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+(async function(){
+  // 사실 배지(badges)의 내부 key → 화면 표시 라벨. 있다/없다만 표시, 등급·점수 없음.
+  const BADGE_LABELS = {
+    licensed: '정식 인가',
+    cctv: 'CCTV',
+    meal_open: '식단 공개',
+    shuttle: '통학 차량',
+    extended_care: '시간 연장 보육',
+    evaluated: '평가인증'
+  };
+
+  const listEl = document.getElementById('cardList');
+  const countEl = document.getElementById('resultCount');
+  const input = document.getElementById('regionInput');
+
+  let centers = [];
+  try {
+    const cfg = window.__SUPABASE_CONFIG__;
+    const client = supabase.createClient(cfg.url, cfg.anonKey);
+    const { data, error } = await client
+      .from('centers')
+      .select('slug, name, region, address, badges, tags, director')
+      .eq('status', 'published')
+      .order('name'); // 거리·품질이 아닌 중립 기준(이름순). 위치 검색은 추후 lat/lng 도입 시 거리순으로 교체.
+    if (error) throw error;
+    centers = data || [];
+  } catch (e) {
+    console.error(e);
+    listEl.innerHTML = '<p class="empty">원 목록을 불러오지 못했어요. supabase-config.js의 URL/키를 확인해주세요.</p>';
+    return;
+  }
+
+  function render(list){
+    countEl.textContent = list.length + '곳';
+    if (list.length === 0){
+      listEl.innerHTML = '<p class="empty">조건에 맞는 원이 없어요.</p>';
+      return;
+    }
+    listEl.innerHTML = list.map(function(c){
+      var badgeChips = Object.keys(c.badges || {})
+        .filter(function(k){ return c.badges[k]; })
+        .map(function(k){ return '<span class="chip badge">' + (BADGE_LABELS[k] || k) + '</span>'; })
+        .join('');
+      var tagChips = (c.tags || [])
+        .map(function(t){ return '<span class="chip tag">' + t + '</span>'; })
+        .join('');
+      var photo = c.director && c.director.photo ? c.director.photo : '';
+      var locationText = [c.region, c.address].filter(Boolean).join(' · ');
+      return '' +
+        '<a class="card" href="index.html?slug=' + encodeURIComponent(c.slug) + '">' +
+          '<div class="thumb">' + (photo ? '<img src="' + photo + '" alt="' + c.name + '">' : '') + '</div>' +
+          '<div class="info">' +
+            '<div class="name">' + c.name + '</div>' +
+            '<div class="region">' + locationText + '</div>' +
+            '<div class="chips">' + badgeChips + tagChips + '</div>' +
+          '</div>' +
+        '</a>';
+    }).join('');
+  }
+
+  render(centers);
+
+  input.addEventListener('input', function(){
+    var q = input.value.trim().toLowerCase();
+    var filtered = !q ? centers : centers.filter(function(c){
+      return (c.region || '').toLowerCase().includes(q) ||
+             (c.address || '').toLowerCase().includes(q);
+    });
+    render(filtered);
+  });
+})();
+</script>
+</body>
+</html>
