@@ -226,7 +226,7 @@
     const client = supabase.createClient(cfg.url, cfg.anonKey);
     const { data, error } = await client
       .from('centers')
-      .select('slug, name, region, address, badges, tags, director, template')
+      .select('slug, name, region, address, badges, tags, director, template, card_image')
       .eq('status', 'published')
       .order('name'); // 거리·품질이 아닌 중립 기준(이름순). 위치 검색은 추후 lat/lng 도입 시 거리순으로 교체.
     if (error) throw error;
@@ -239,6 +239,9 @@
     for (const center of centers){
       if (center.director && center.director.photo){
         center.director.photo = await signPath(center.director.photo);
+      }
+      if (center.card_image){
+        center.card_image = await signPath(center.card_image);
       }
     }
   } catch (e) {
@@ -287,7 +290,7 @@
       var tagChips = (c.tags || [])
         .map(function(t){ return '<span>' + escapeHtml(t) + '</span>'; })
         .join('');
-      var photo = c.director && c.director.photo ? c.director.photo : '';
+      var photo = c.card_image || (c.director && c.director.photo) || '';
       var locationText = [c.region, c.address].filter(Boolean).join(' · ');
       var templateFile = TEMPLATE_FILES[c.template] || 'home.html';
       return '' +

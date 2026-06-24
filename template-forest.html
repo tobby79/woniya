@@ -1365,15 +1365,32 @@
   <script>
     function mapRowToData(row) {
       const media = row.center_media || [];
-      const byType = (type) => media
-        .filter(m => m.media_type === type)
-        .sort((a, b) => a.sort_order - b.sort_order);
+      const byType = (type) => {
+        const seen = new Set();
+        return media
+          .filter(m => m.media_type === type)
+          .sort((a, b) => a.sort_order - b.sort_order)
+          .filter(m => { // DB에 중복 sort_order 행이 들어간 경우 방어 (같은 사진이 2번 보이는 문제)
+            if (seen.has(m.sort_order)) return false;
+            seen.add(m.sort_order);
+            return true;
+          });
+      };
       return {
-        center: { id: row.id, slug: row.slug, name: row.name, theme: row.theme, menu: row.menu, hero: row.hero, director: row.director },
+        center: {
+          id: row.id, slug: row.slug, name: row.name, theme: row.theme,
+          menu: row.menu || [],
+          hero: row.hero || { eyebrow:'', title:'', title_accent:'', subtitle:'' },
+          director: row.director || { badge:'', photo:'', photo_alt:'', message:'', sign_label:'', sign_name:'', scroll_cue:'' }
+        },
         day_story: byType('day_story').map(m => ({ slot: m.slot, time: m.time_label, title: m.title, photo: m.photo_url, photo_alt: m.photo_alt, caption: m.caption, note: m.note })),
         album: { items: byType('album').map(m => ({ label: m.title, photo: m.photo_url })) },
         teachers: { items: byType('teacher').map(m => ({ name: m.title, role: m.subtitle, photo: m.photo_url, message: m.caption })) },
-        notices: row.notices, schedule: row.schedule, faqs: row.faqs, finale: row.finale, footer: row.footer
+        notices: row.notices || { eyebrow:'', title:'', items:[], more:'' },
+        schedule: row.schedule || { eyebrow:'', title:'', month_label:'', days_in_month:30, event_days:[], trailing_muted:0, events:[] },
+        faqs: row.faqs || { eyebrow:'', title:'', items:[] },
+        finale: row.finale || { title:'', subtitle:'', cta:'입소 상담' },
+        footer: row.footer || { tag:'원이야', text:'' }
       };
     }
 
@@ -1408,7 +1425,7 @@
       const c = data.center;
 
       WoniyaTopbar.init({ centerName: c.name.replace(/\s*어린이집$/, '') || c.name });
-      $('menuPanel').innerHTML = c.menu.map(m => `<a href="${esc(m.href)}"${m.cta ? ' class="menu-cta"' : ''}>${esc(m.label)}</a>`).join('');
+      $('menuPanel').innerHTML = (c.menu || []).map(m => `<a href="${esc(m.href)}"${m.cta ? ' class="menu-cta"' : ''}>${esc(m.label)}</a>`).join('');
 
       const h = c.hero;
       $('hero').innerHTML = `
@@ -1426,7 +1443,7 @@
       <div class="sign">${esc(d.sign_label)}<strong>${esc(d.sign_name)}</strong></div>
     </div>`;
 
-      const stops = data.day_story.map((m, i) => {
+      const stops = (data.day_story || []).map((m, i) => {
         const side = i % 2 === 0 ? 'left' : 'right';
         return `
       <div class="stop ${side} reveal">
@@ -1456,34 +1473,35 @@
       const al = data.album, t = data.teachers, n = data.notices, s = data.schedule, f = data.faqs;
 
       const ALBUM_LIMIT = 12;
-      const visibleItems = al.items.slice(0, ALBUM_LIMIT);
-      const hiddenItems = al.items.slice(ALBUM_LIMIT);
+      const albumItems = al?.items || [];
+      const visibleItems = albumItems.slice(0, ALBUM_LIMIT);
+      const hiddenItems = albumItems.slice(ALBUM_LIMIT);
       const albumHtml = `<div class="polaroids">${visibleItems.map(it => `
     <div class="polaroid" tabindex="0"><div class="pic"><img loading="lazy" alt="${esc(it.label)}" src="${esc(it.photo)}"></div><div class="label">${esc(it.label)}</div></div>`).join('')}</div>
     ${hiddenItems.length ? `<div class="polaroids album-hidden" hidden>${hiddenItems.map(it => `
     <div class="polaroid" tabindex="0"><div class="pic"><img loading="lazy" alt="${esc(it.label)}" src="${esc(it.photo)}"></div><div class="label">${esc(it.label)}</div></div>`).join('')}</div>
-    <button type="button" class="more-link album-more-btn" style="background:none;border:none;cursor:pointer;font-family:inherit" onclick="this.previousElementSibling.hidden=false;this.remove();">더 보기 (총 ${al.items.length}장)</button>` : ''}`;
+    <button type="button" class="more-link album-more-btn" style="background:none;border:none;cursor:pointer;font-family:inherit" onclick="this.previousElementSibling.hidden=false;this.remove();">더 보기 (총 ${albumItems.length}장)</button>` : ''}`;
 
-      const teacherHtml = `<div class="cards">${t.items.map(tc => `
+      const teacherHtml = `<div class="cards">${(t?.items || []).map(tc => `
     <div class="flip" tabindex="0" role="button" aria-label="${esc(tc.name)} 카드 뒤집기"><div class="flip-inner">
       <div class="face front"><div class="avatar"><img alt="${esc(tc.name)}" src="${esc(tc.photo)}"></div>
         <div class="t-info"><div class="name">${esc(tc.name)}</div><div class="role">${esc(tc.role)}</div><div class="tap">눌러서 한마디 보기</div></div></div>
       <div class="face back">${esc(tc.message)}</div></div></div>`).join('')}</div>`;
 
-      const noticeHtml = `<ul class="notice-list">${n.items.map(it => `
+      const noticeHtml = `<ul class="notice-list">${(n?.items || []).map(it => `
     <li class="notice-item"><span class="tag tag-${esc(it.tag_type)}">${esc(it.tag)}</span>
       <div><div class="n-title">${esc(it.title)}</div><div class="n-date">${esc(it.date)}</div></div></li>`).join('')}</ul>
-    <a class="more-link" href="#explore">${esc(n.more)}</a>`;
+    <a class="more-link" href="#explore">${esc(n?.more)}</a>`;
 
       const dows = ['일', '월', '화', '수', '목', '금', '토'];
       let cells = dows.map(w => `<span class="dow">${w}</span>`).join('');
-      for (let day = 1; day <= s.days_in_month; day++) { cells += `<span class="day-cell${s.event_days.includes(day) ? ' ev' : ''}">${day}</span>`; }
-      for (let m = 1; m <= s.trailing_muted; m++) { cells += `<span class="day-cell muted">${m}</span>`; }
-      const scheduleHtml = `<div class="cal"><div class="cal-head">${esc(s.month_label)}</div>
+      for (let day = 1; day <= (s?.days_in_month || 0); day++) { cells += `<span class="day-cell${(s?.event_days || []).includes(day) ? ' ev' : ''}">${day}</span>`; }
+      for (let m = 1; m <= (s?.trailing_muted || 0); m++) { cells += `<span class="day-cell muted">${m}</span>`; }
+      const scheduleHtml = `<div class="cal"><div class="cal-head">${esc(s?.month_label)}</div>
     <div class="cal-grid">${cells}</div>
-    <ul class="event-list">${s.events.map(e => `<li><span class="e-date">${esc(e.date)}</span> ${esc(e.title)}</li>`).join('')}</ul></div>`;
+    <ul class="event-list">${(s?.events || []).map(e => `<li><span class="e-date">${esc(e.date)}</span> ${esc(e.title)}</li>`).join('')}</ul></div>`;
 
-      const faqHtml = `<div class="faq-wrap">${f.items.map(it => `
+      const faqHtml = `<div class="faq-wrap">${(f?.items || []).map(it => `
     <div class="faq-item"><button class="faq-q" aria-expanded="false">${esc(it.q)}<span class="chev"></span></button>
       <div class="faq-a"><p>${esc(it.a)}</p></div></div>`).join('')}</div>`;
 
@@ -1505,13 +1523,13 @@
     <div class="tab-panel" data-panel="schedule">${scheduleHtml}</div>
     <div class="tab-panel" data-panel="faq">${faqHtml}</div>`;
 
-      const fin = data.finale;
+      const fin = data.finale || {};
       $('finale').innerHTML = `
     <h2 class="reveal">${esc(fin.title)}</h2>
     <p class="reveal">${esc(fin.subtitle)}</p>
     <button type="button" id="cslOpenBtn" class="btn-big reveal">${esc(fin.cta)}</button>`;
 
-      $('footerEl').innerHTML = `<div class="demo-tag">${esc(data.footer.tag)}</div><div>${esc(data.footer.text)}</div>`;
+      $('footerEl').innerHTML = `<div class="demo-tag">${esc(data.footer?.tag)}</div><div>${esc(data.footer?.text)}</div>`;
       document.title = `원이야 - ${esc(c.name) || '원이야'}`;
 
       initInteractions();

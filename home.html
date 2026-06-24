@@ -472,9 +472,17 @@
 // album/teachers의 eyebrow·title·sub는 아직 centers 테이블에 컬럼이 없어 고정 문구로 채운다.
 function mapRowToData(row){
   const media = row.center_media || [];
-  const byType = (type) => media
-    .filter(m => m.media_type === type)
-    .sort((a,b) => a.sort_order - b.sort_order);
+  const byType = (type) => {
+    const seen = new Set();
+    return media
+      .filter(m => m.media_type === type)
+      .sort((a,b) => a.sort_order - b.sort_order)
+      .filter(m => { // DB에 중복 sort_order 행이 들어간 경우 방어 (같은 사진이 2번 보이는 문제)
+        if (seen.has(m.sort_order)) return false;
+        seen.add(m.sort_order);
+        return true;
+      });
+  };
 
   return {
     center: {
@@ -482,9 +490,9 @@ function mapRowToData(row){
       slug: row.slug,
       name: row.name,
       theme: row.theme,
-      menu: row.menu,
-      hero: row.hero,
-      director: row.director
+      menu: row.menu || [],
+      hero: row.hero || { eyebrow:'', title:'', title_accent:'', subtitle:'' },
+      director: row.director || { badge:'', photo:'', photo_alt:'', message:'', sign_label:'', sign_name:'', scroll_cue:'' }
     },
     day_story: byType('day_story').map(m => ({
       slot: m.slot,
@@ -506,11 +514,11 @@ function mapRowToData(row){
       title: '우리 반 선생님',
       items: byType('teacher').map(m => ({ name: m.title, role: m.subtitle, photo: m.photo_url, message: m.caption }))
     },
-    notices: row.notices,
-    schedule: row.schedule,
-    faqs: row.faqs,
-    finale: row.finale,
-    footer: row.footer
+    notices: row.notices || { eyebrow:'', title:'', items:[], more:'' },
+    schedule: row.schedule || { eyebrow:'', title:'', month_label:'', days_in_month:30, event_days:[], trailing_muted:0, events:[] },
+    faqs: row.faqs || { eyebrow:'', title:'', items:[] },
+    finale: row.finale || { title:'', subtitle:'', cta:'입소 상담' },
+    footer: row.footer || { tag:'원이야', text:'' }
   };
 }
 
@@ -556,12 +564,12 @@ function mapRowToData(row){
   // ── 상단바 / 메뉴 ──
   const c = data.center;
   WoniyaTopbar.init({ centerName: c.name.replace(/\s*어린이집$/,'') || c.name });
-  $('menuPanel').innerHTML = c.menu.map(m =>
+  $('menuPanel').innerHTML = (c.menu || []).map(m =>
     `<a href="${esc(m.href)}"${m.cta?' class="menu-cta"':''}>${esc(m.label)}</a>`).join('');
 
   // ── 히어로 ──
   const h = c.hero;
-  const cloudMenu = c.menu.filter(m=>!m.cta)
+  const cloudMenu = (c.menu || []).filter(m=>!m.cta)
     .map(m=>`<a class="cloud-link" href="${esc(m.href)}">${esc(m.label)}</a>`).join('');
   $('hero').innerHTML = `
     <div class="eyebrow reveal">${esc(h.eyebrow)}</div>
@@ -580,7 +588,7 @@ function mapRowToData(row){
 
   // ── 하루 스토리 ──
   const frameCls = ['frame','frame alt','frame alt2','frame alt3','frame'];
-  $('day').innerHTML = data.day_story.map((m,i)=>`
+  $('day').innerHTML = (data.day_story || []).map((m,i)=>`
     <section class="moment" data-time="${esc(m.slot)}">
       <div class="time reveal">${esc(m.time)}</div>
       <div class="title reveal">${esc(m.title)}</div>
@@ -594,12 +602,13 @@ function mapRowToData(row){
   // ── 앨범 벽 ──
   const al = data.album;
   const ALBUM_LIMIT = 12;
-  const visibleItems = al.items.slice(0, ALBUM_LIMIT);
-  const hiddenItems = al.items.slice(ALBUM_LIMIT);
+  const albumItems = al?.items || [];
+  const visibleItems = albumItems.slice(0, ALBUM_LIMIT);
+  const hiddenItems = albumItems.slice(ALBUM_LIMIT);
   $('albumSec').innerHTML = `
-    <div class="section-eyebrow reveal">${esc(al.eyebrow)}</div>
-    <h2 class="section-title reveal">${esc(al.title)}</h2>
-    <p class="section-sub reveal">${esc(al.sub)}</p>
+    <div class="section-eyebrow reveal">${esc(al?.eyebrow)}</div>
+    <h2 class="section-title reveal">${esc(al?.title)}</h2>
+    <p class="section-sub reveal">${esc(al?.sub)}</p>
     <div class="polaroids">${visibleItems.map((it,i)=>`
       <div class="polaroid p${i+1} reveal" tabindex="0">
         <div class="pic"><img loading="lazy" alt="${esc(it.label)}" src="${esc(it.photo)}"></div>
@@ -610,14 +619,14 @@ function mapRowToData(row){
         <div class="pic"><img loading="lazy" alt="${esc(it.label)}" src="${esc(it.photo)}"></div>
         <div class="label">${esc(it.label)}</div>
       </div>`).join('')}</div>
-    <button type="button" class="more-link album-more-btn" style="background:none;border:none;cursor:pointer;font-family:inherit" onclick="this.previousElementSibling.hidden=false;this.remove();">더 보기 (총 ${al.items.length}장)</button>`:''}`;
+    <button type="button" class="more-link album-more-btn" style="background:none;border:none;cursor:pointer;font-family:inherit" onclick="this.previousElementSibling.hidden=false;this.remove();">더 보기 (총 ${albumItems.length}장)</button>`:''}`;
 
   // ── 선생님 카드 ──
   const t = data.teachers;
   $('teachersSec').innerHTML = `
-    <div class="section-eyebrow reveal">${esc(t.eyebrow)}</div>
-    <h2 class="section-title reveal">${esc(t.title)}</h2>
-    <div class="cards">${t.items.map(tc=>`
+    <div class="section-eyebrow reveal">${esc(t?.eyebrow)}</div>
+    <h2 class="section-title reveal">${esc(t?.title)}</h2>
+    <div class="cards">${(t?.items || []).map(tc=>`
       <div class="flip reveal" tabindex="0" role="button" aria-label="${esc(tc.name)} 카드 뒤집기">
         <div class="flip-inner">
           <div class="face front">
@@ -635,49 +644,49 @@ function mapRowToData(row){
   // ── 공지사항 ──
   const n = data.notices;
   $('notice').innerHTML = `
-    <div class="section-eyebrow reveal">${esc(n.eyebrow)}</div>
-    <h2 class="section-title reveal">${esc(n.title)}</h2>
-    <ul class="notice-list">${n.items.map(it=>`
+    <div class="section-eyebrow reveal">${esc(n?.eyebrow)}</div>
+    <h2 class="section-title reveal">${esc(n?.title)}</h2>
+    <ul class="notice-list">${(n?.items || []).map(it=>`
       <li class="notice-item reveal">
         <span class="tag tag-${esc(it.tag_type)}">${esc(it.tag)}</span>
         <div><div class="n-title">${esc(it.title)}</div><div class="n-date">${esc(it.date)}</div></div>
       </li>`).join('')}</ul>
-    <a class="more-link reveal" href="#notice">${esc(n.more)}</a>`;
+    <a class="more-link reveal" href="#notice">${esc(n?.more)}</a>`;
 
   // ── 행사 일정 (달력) ──
   const s = data.schedule;
   const dows = ['일','월','화','수','목','금','토'];
   let cells = dows.map(w=>`<span class="dow">${w}</span>`).join('');
-  for(let day=1; day<=s.days_in_month; day++){
-    const ev = s.event_days.includes(day) ? ' ev' : '';
+  for(let day=1; day<=(s?.days_in_month || 0); day++){
+    const ev = (s?.event_days || []).includes(day) ? ' ev' : '';
     cells += `<span class="day-cell${ev}">${day}</span>`;
   }
-  for(let m=1; m<=s.trailing_muted; m++){
+  for(let m=1; m<=(s?.trailing_muted || 0); m++){
     cells += `<span class="day-cell muted">${m}</span>`;
   }
   $('schedule').innerHTML = `
-    <div class="section-eyebrow reveal">${esc(s.eyebrow)}</div>
-    <h2 class="section-title reveal">${esc(s.title)}</h2>
+    <div class="section-eyebrow reveal">${esc(s?.eyebrow)}</div>
+    <h2 class="section-title reveal">${esc(s?.title)}</h2>
     <div class="cal reveal">
-      <div class="cal-head">${esc(s.month_label)}</div>
+      <div class="cal-head">${esc(s?.month_label)}</div>
       <div class="cal-grid">${cells}</div>
-      <ul class="event-list">${s.events.map(e=>`
+      <ul class="event-list">${(s?.events || []).map(e=>`
         <li class="reveal"><span class="e-date">${esc(e.date)}</span> ${esc(e.title)}</li>`).join('')}</ul>
     </div>`;
 
   // ── FAQ ──
   const f = data.faqs;
   $('faq').innerHTML = `
-    <div class="section-eyebrow reveal">${esc(f.eyebrow)}</div>
-    <h2 class="section-title reveal">${esc(f.title)}</h2>
-    <div class="faq-list">${f.items.map(it=>`
+    <div class="section-eyebrow reveal">${esc(f?.eyebrow)}</div>
+    <h2 class="section-title reveal">${esc(f?.title)}</h2>
+    <div class="faq-list">${(f?.items || []).map(it=>`
       <div class="faq-item reveal">
         <button class="faq-q" aria-expanded="false">${esc(it.q)}<span class="chev"></span></button>
         <div class="faq-a"><p>${esc(it.a)}</p></div>
       </div>`).join('')}</div>`;
 
   // ── 마무리 ──
-  const fin = data.finale;
+  const fin = data.finale || {};
   $('finale').innerHTML = `
     <h2 class="reveal">${esc(fin.title)}</h2>
     <p class="reveal">${esc(fin.subtitle)}</p>
@@ -685,8 +694,8 @@ function mapRowToData(row){
 
   // ── 푸터 ──
   $('footerEl').innerHTML = `
-    <div class="demo-tag">${esc(data.footer.tag)}</div>
-    <div>${esc(data.footer.text)}</div>`;
+    <div class="demo-tag">${esc(data.footer?.tag)}</div>
+    <div>${esc(data.footer?.text)}</div>`;
 
   document.title = `원이야 - ${esc(c.name) || '원이야'}`;
 
