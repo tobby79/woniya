@@ -123,7 +123,7 @@
     const client = supabase.createClient(cfg.url, cfg.anonKey);
     const { data, error } = await client
       .from('centers')
-      .select('slug, name, region, address, badges, tags, director')
+      .select('slug, name, region, address, badges, tags, director, template')
       .eq('status', 'published')
       .order('name'); // 거리·품질이 아닌 중립 기준(이름순). 위치 검색은 추후 lat/lng 도입 시 거리순으로 교체.
     if (error) throw error;
@@ -133,6 +133,13 @@
     listEl.innerHTML = '<p class="empty">원 목록을 불러오지 못했어요. supabase-config.js의 URL/키를 확인해주세요.</p>';
     return;
   }
+
+  const TEMPLATE_FILES = {
+    sunshine: 'index.html',
+    forest: 'template-forest.html',
+    carnival: 'template-carnival.html',
+    gallery: 'template-gallery.html'
+  };
 
   function render(list){
     countEl.textContent = list.length + '곳';
@@ -150,8 +157,9 @@
         .join('');
       var photo = c.director && c.director.photo ? c.director.photo : '';
       var locationText = [c.region, c.address].filter(Boolean).join(' · ');
+      var templateFile = TEMPLATE_FILES[c.template] || 'index.html';
       return '' +
-        '<a class="card" href="index.html?slug=' + encodeURIComponent(c.slug) + '">' +
+        '<a class="card" href="' + templateFile + '?slug=' + encodeURIComponent(c.slug) + '">' +
           '<div class="thumb">' + (photo ? '<img src="' + photo + '" alt="' + c.name + '">' : '') + '</div>' +
           '<div class="info">' +
             '<div class="name">' + c.name + '</div>' +
