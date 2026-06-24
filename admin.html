@@ -37,6 +37,10 @@
   .topbar-inner{max-width:560px;margin:0 auto;padding:0 22px;display:flex;align-items:center;justify-content:space-between}
   .topbar .brand{font-family:var(--display);font-size:1.25rem;color:var(--ink);text-decoration:none;letter-spacing:-.5px}
   .topbar .who{display:flex;align-items:center;gap:12px;font-size:.85rem;color:var(--ink-soft)}
+  .center-links{display:flex;align-items:center;gap:12px}
+  .topbar-link{color:var(--ink-soft);font-size:.85rem;text-decoration:none;transition:color .2s ease}
+  .topbar-link:hover{color:var(--coral)}
+  .topbar-sep{color:var(--ink-soft);opacity:.3}
 
   .wrap{max-width:480px;margin:0 auto;padding:40px 22px 60px}
 
@@ -145,6 +149,12 @@
   <div class="topbar-inner">
     <a class="brand" href="admin.html">원이야 콘솔</a>
     <div class="who" id="whoBox" hidden>
+      <span class="center-links" id="centerLinks" hidden>
+        <a href="javascript:void(0)" class="topbar-link" id="viewSiteBtn">내 페이지 보기</a>
+        <span class="topbar-sep">|</span>
+        <a href="javascript:void(0)" class="topbar-link" id="changeTemplateBtn">템플릿 변경</a>
+        <span class="topbar-sep">|</span>
+      </span>
       <span id="userEmail"></span>
       <button class="btn ghost" id="logoutBtn">로그아웃</button>
     </div>
@@ -277,6 +287,9 @@
   var adminView    = document.getElementById('adminView');
   var whoBox       = document.getElementById('whoBox');
   var userEmailEl  = document.getElementById('userEmail');
+  var centerLinks      = document.getElementById('centerLinks');
+  var viewSiteBtn       = document.getElementById('viewSiteBtn');
+  var changeTemplateBtn = document.getElementById('changeTemplateBtn');
   var loginForm    = document.getElementById('loginForm');
   var loginError   = document.getElementById('loginError');
   var logoutBtn    = document.getElementById('logoutBtn');
@@ -304,6 +317,12 @@
 
   var TYPE_LABELS = { hero:'대표', day_story:'하루', album:'앨범', teacher:'교사' };
   var KIND_LABELS = { consult:'상담', waiting:'대기', info_session:'설명회' };
+  var TEMPLATE_FILES = {
+    sunshine: 'index.html',
+    forest: 'template-forest.html',
+    carnival: 'template-carnival.html',
+    gallery: 'template-gallery.html'
+  };
 
   // ── 이미지 압축 (Canvas API) ──
   function compressImage(file){
@@ -516,6 +535,7 @@
     loginView.hidden = false;
     adminView.hidden = true;
     whoBox.hidden = true;
+    centerLinks.hidden = true;
     loginForm.reset();
     loginError.textContent = '';
   }
@@ -537,11 +557,21 @@
       centerPanel.hidden = true;
       photoSection.hidden = true;
       consultSection.hidden = true;
+      centerLinks.hidden = true;
       return;
     }
     currentCenter = res.data;
     noCenter.hidden = true;
     centerPanel.hidden = false;
+
+    var templateFile = TEMPLATE_FILES[currentCenter.template] || 'index.html';
+    viewSiteBtn.onclick = function(){
+      window.open(templateFile + '?slug=' + encodeURIComponent(currentCenter.slug), '_blank');
+    };
+    changeTemplateBtn.onclick = function(){
+      location.href = 'template-select.html?slug=' + encodeURIComponent(currentCenter.slug) + '&auth=true';
+    };
+    centerLinks.hidden = false;
     document.getElementById('f-name').value    = currentCenter.name || '';
     document.getElementById('f-intro').value   = currentCenter.intro || '';
     document.getElementById('f-address').value = currentCenter.address || '';
