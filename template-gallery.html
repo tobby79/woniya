@@ -498,7 +498,11 @@ function initInteractions(){
   var io = new IntersectionObserver(function(entries){
     entries.forEach(function(e){ if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target);} });
   },{threshold:0.12});
-  document.querySelectorAll('.reveal').forEach(function(el){ io.observe(el); });
+  var revealEls = document.querySelectorAll('.reveal');
+  revealEls.forEach(function(el){ io.observe(el); });
+  requestAnimationFrame(function(){
+    revealEls.forEach(function(el){ el.classList.add('in'); });
+  });
 
   // 상단바: 스크롤하면 solid (topbar.js가 만든 nav + 별도 menuBtn 둘 다 토글)
   var topbar = document.getElementById('topbar');
