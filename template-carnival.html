@@ -55,7 +55,7 @@
   .balloon svg{display:block;filter:drop-shadow(0 8px 14px rgba(0,0,0,.08))}
 
   /* ── 상단바 ── */
-  .topbar{position:fixed;top:0;left:0;right:0;z-index:40;display:flex;align-items:center;justify-content:space-between;padding:14px 22px;background:rgba(255,255,255,.85);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);box-shadow:0 2px 0 rgba(255,90,95,.14)}
+  .topbar{position:fixed;top:0;left:0;right:0;z-index:40;padding:14px 0;background:rgba(255,255,255,.85);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);box-shadow:0 2px 0 rgba(255,90,95,.14)}
   .topbar .brand{font-family:var(--display);font-size:1.4rem;color:var(--red);text-decoration:none;letter-spacing:-.5px;display:flex;align-items:center;gap:9px}
   .topbar .brand .gate{width:22px;height:22px;flex:none;display:grid;grid-template-columns:1fr 1fr;gap:2px}
   .topbar .brand .gate i{display:block;border-radius:3px}
@@ -68,7 +68,7 @@
   .menu-btn.open span:nth-child(1){transform:translateY(8px) rotate(45deg)}
   .menu-btn.open span:nth-child(2){opacity:0}
   .menu-btn.open span:nth-child(3){transform:translateY(-8px) rotate(-45deg)}
-  .menu-panel{position:absolute;top:66px;right:16px;left:16px;background:var(--paper);border-radius:22px;box-shadow:0 24px 54px -18px rgba(45,42,62,.4);padding:12px;display:flex;flex-direction:column;opacity:0;visibility:hidden;transform:translateY(-10px);transition:opacity .3s ease,transform .3s ease,visibility .3s;border:2px solid var(--bg-warm)}
+  .menu-panel{position:fixed;top:66px;right:16px;left:16px;z-index:41;background:var(--paper);border-radius:22px;box-shadow:0 24px 54px -18px rgba(45,42,62,.4);padding:12px;display:flex;flex-direction:column;opacity:0;visibility:hidden;transform:translateY(-10px);transition:opacity .3s ease,transform .3s ease,visibility .3s;border:2px solid var(--bg-warm)}
   .menu-panel.open{opacity:1;visibility:visible;transform:none}
   .menu-panel a{padding:14px 18px;text-decoration:none;color:var(--ink);font-weight:700;border-radius:14px;font-size:1rem}
   .menu-panel a:hover{background:var(--bg-warm)}
@@ -290,13 +290,11 @@
 </head>
 <body>
 
-<nav class="topbar" id="topbar">
-  <a class="brand" href="#top" id="brandLink"><span class="gate"><i></i><i></i><i></i><i></i></span></a>
-  <button class="menu-btn" id="menuBtn" aria-label="메뉴 열기" aria-expanded="false">
-    <span></span><span></span><span></span>
-  </button>
-  <div class="menu-panel" id="menuPanel"></div>
-</nav>
+<!-- topbar.js가 nav(brand+홈아이콘+이 메뉴버튼)를 만들어 body 최상단에 삽입 -->
+<button class="menu-btn" id="menuBtn" aria-label="메뉴 열기" aria-expanded="false">
+  <span></span><span></span><span></span>
+</button>
+<div class="menu-panel" id="menuPanel"></div>
 <span id="top"></span>
 
 <div class="park-bg"></div>
@@ -365,6 +363,7 @@
 
 <script src="supabase-config.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="topbar.js"></script>
 <script>
 var SAMPLE_SPACES = [
   { name:'놀이방', tag:'신나는 공간', desc:'블록과 역할놀이로 상상력이 자라는 우리 반 아지트예요.', photo:null },
@@ -415,7 +414,7 @@ function mapRowToData(row){
   const $ = (id)=>document.getElementById(id);
   const c = data.center;
 
-  $('brandLink').insertAdjacentHTML('beforeend', ' ' + (c.name.replace(/\s*어린이집$/,'') || c.name));
+  WoniyaTopbar.init({ centerName: c.name.replace(/\s*어린이집$/,'') || c.name });
   $('menuPanel').innerHTML = c.menu.map(m => `<a href="${m.href}"${m.cta?' class="menu-cta"':''}>${m.label}</a>`).join('');
 
   // 히어로 + 풍선 메뉴

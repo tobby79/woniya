@@ -92,10 +92,7 @@
       left: 0;
       right: 0;
       z-index: 40;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 14px 22px;
+      padding: 14px 0;
       background: rgba(251, 251, 244, .74);
       backdrop-filter: blur(12px);
       -webkit-backdrop-filter: blur(12px);
@@ -159,10 +156,11 @@
     }
 
     .menu-panel {
-      position: absolute;
+      position: fixed;
       top: 64px;
       right: 16px;
       left: 16px;
+      z-index: 41;
       background: var(--paper);
       border-radius: 22px;
       box-shadow: 0 24px 54px -18px rgba(47, 61, 42, .42);
@@ -1290,13 +1288,11 @@
 
 <body>
 
-  <nav class="topbar" id="topbar">
-    <a class="brand" href="#top" id="brandLink"></a>
-    <button class="menu-btn" id="menuBtn" aria-label="메뉴 열기" aria-expanded="false">
-      <span></span><span></span><span></span>
-    </button>
-    <div class="menu-panel" id="menuPanel"></div>
-  </nav>
+  <!-- topbar.js가 nav(brand+홈아이콘+이 메뉴버튼)를 만들어 body 최상단에 삽입 -->
+  <button class="menu-btn" id="menuBtn" aria-label="메뉴 열기" aria-expanded="false">
+    <span></span><span></span><span></span>
+  </button>
+  <div class="menu-panel" id="menuPanel"></div>
   <span id="top"></span>
 
   <div class="forest-bg"></div>
@@ -1364,6 +1360,7 @@
 
   <script src="supabase-config.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="topbar.js"></script>
   <script>
     function mapRowToData(row) {
       const media = row.center_media || [];
@@ -1407,7 +1404,7 @@
       const $ = (id) => document.getElementById(id);
       const c = data.center;
 
-      $('brandLink').textContent = c.name.replace(/\s*어린이집$/, '') || c.name;
+      WoniyaTopbar.init({ centerName: c.name.replace(/\s*어린이집$/, '') || c.name });
       $('menuPanel').innerHTML = c.menu.map(m => `<a href="${m.href}"${m.cta ? ' class="menu-cta"' : ''}>${m.label}</a>`).join('');
 
       const h = c.hero;

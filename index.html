@@ -176,14 +176,14 @@
   .cloud svg{display:block}
 
   /* ── 상단 메뉴바 ── */
-  .topbar{position:fixed;top:0;left:0;right:0;z-index:40;display:flex;align-items:center;justify-content:space-between;padding:12px 20px;background:rgba(255,250,243,.72);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);box-shadow:0 1px 0 rgba(180,140,110,.12)}
+  .topbar{position:fixed;top:0;left:0;right:0;z-index:40;padding:12px 0;background:rgba(255,250,243,.72);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);box-shadow:0 1px 0 rgba(180,140,110,.12)}
   .topbar .brand{font-family:var(--display);font-size:1.25rem;color:var(--ink);text-decoration:none;letter-spacing:-.5px}
   .menu-btn{width:40px;height:40px;border:none;background:transparent;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:5px;cursor:pointer;border-radius:10px}
   .menu-btn span{width:22px;height:2.5px;background:var(--ink);border-radius:2px;transition:transform .3s ease,opacity .3s ease}
   .menu-btn.open span:nth-child(1){transform:translateY(7.5px) rotate(45deg)}
   .menu-btn.open span:nth-child(2){opacity:0}
   .menu-btn.open span:nth-child(3){transform:translateY(-7.5px) rotate(-45deg)}
-  .menu-panel{position:absolute;top:62px;right:14px;left:14px;background:var(--paper);border-radius:20px;box-shadow:0 22px 50px -18px rgba(120,80,60,.4);padding:10px;display:flex;flex-direction:column;opacity:0;visibility:hidden;transform:translateY(-10px);transition:opacity .3s ease,transform .3s ease,visibility .3s}
+  .menu-panel{position:fixed;top:62px;right:14px;left:14px;z-index:41;background:var(--paper);border-radius:20px;box-shadow:0 22px 50px -18px rgba(120,80,60,.4);padding:10px;display:flex;flex-direction:column;opacity:0;visibility:hidden;transform:translateY(-10px);transition:opacity .3s ease,transform .3s ease,visibility .3s}
   .menu-panel.open{opacity:1;visibility:visible;transform:none}
   .menu-panel a{padding:14px 16px;text-decoration:none;color:var(--ink);font-weight:600;border-radius:12px;font-size:1rem}
   .menu-panel a:hover{background:var(--cream)}
@@ -384,14 +384,11 @@
 </head>
 <body>
 
-<!-- 상단 메뉴바 (껍데기만, 내용은 JS가 채움) -->
-<nav class="topbar" id="topbar">
-  <a class="brand" href="#top" id="brandLink"></a>
-  <button class="menu-btn" id="menuBtn" aria-label="메뉴 열기" aria-expanded="false">
-    <span></span><span></span><span></span>
-  </button>
-  <div class="menu-panel" id="menuPanel"></div>
-</nav>
+<!-- topbar.js가 nav(brand+홈아이콘+이 메뉴버튼)를 만들어 body 최상단에 삽입 -->
+<button class="menu-btn" id="menuBtn" aria-label="메뉴 열기" aria-expanded="false">
+  <span></span><span></span><span></span>
+</button>
+<div class="menu-panel" id="menuPanel"></div>
 <span id="top"></span>
 
 <div class="sky"></div>
@@ -469,6 +466,7 @@
 
 <script src="supabase-config.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="topbar.js"></script>
 <script>
 // center_media(행 단위)를 기존 haetsal.json 모양(day_story[]/album.items[]/teachers.items[])으로 되돌린다.
 // album/teachers의 eyebrow·title·sub는 아직 centers 테이블에 컬럼이 없어 고정 문구로 채운다.
@@ -556,7 +554,7 @@ function mapRowToData(row){
 
   // ── 상단바 / 메뉴 ──
   const c = data.center;
-  $('brandLink').textContent = c.name.replace(/\s*어린이집$/,'') || c.name;
+  WoniyaTopbar.init({ centerName: c.name.replace(/\s*어린이집$/,'') || c.name });
   $('menuPanel').innerHTML = c.menu.map(m =>
     `<a href="${m.href}"${m.cta?' class="menu-cta"':''}>${m.label}</a>`).join('');
 

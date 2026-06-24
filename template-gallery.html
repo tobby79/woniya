@@ -37,18 +37,18 @@
   }
 
   /* ── 상단바: 얇고 미니멀 ── */
-  .topbar{position:fixed;top:0;left:0;right:0;z-index:40;display:flex;align-items:center;justify-content:space-between;padding:18px 28px;background:rgba(247,246,243,.0);transition:background .4s ease,box-shadow .4s ease,padding .4s ease}
-  .topbar.solid{background:rgba(247,246,243,.92);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);box-shadow:0 1px 0 var(--line);padding:14px 28px}
+  .topbar{position:fixed;top:0;left:0;right:0;z-index:40;padding:18px 0;background:rgba(247,246,243,.0);transition:background .4s ease,box-shadow .4s ease,padding .4s ease}
+  .topbar.solid{background:rgba(247,246,243,.92);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);box-shadow:0 1px 0 var(--line);padding:14px 0}
   .topbar .brand{font-family:var(--serif);font-weight:600;font-size:1.2rem;color:#fff;text-decoration:none;letter-spacing:.5px;transition:color .4s ease}
   .topbar.solid .brand{color:var(--char)}
   .menu-btn{width:40px;height:40px;border:none;background:transparent;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:6px;cursor:pointer}
   .menu-btn span{width:24px;height:1.5px;background:#fff;transition:transform .3s ease,opacity .3s ease,background .4s ease}
-  .topbar.solid .menu-btn span{background:var(--char)}
+  .menu-btn.solid span{background:var(--char)}
   .menu-btn.open span{background:var(--char)}
   .menu-btn.open span:nth-child(1){transform:translateY(7.5px) rotate(45deg)}
   .menu-btn.open span:nth-child(2){opacity:0}
   .menu-btn.open span:nth-child(3){transform:translateY(-7.5px) rotate(-45deg)}
-  .menu-panel{position:absolute;top:60px;right:20px;left:20px;background:var(--paper);border:1px solid var(--line);box-shadow:0 24px 54px -20px rgba(43,43,46,.25);padding:10px;display:flex;flex-direction:column;opacity:0;visibility:hidden;transform:translateY(-10px);transition:opacity .3s ease,transform .3s ease,visibility .3s}
+  .menu-panel{position:fixed;top:60px;right:20px;left:20px;z-index:41;background:var(--paper);border:1px solid var(--line);box-shadow:0 24px 54px -20px rgba(43,43,46,.25);padding:10px;display:flex;flex-direction:column;opacity:0;visibility:hidden;transform:translateY(-10px);transition:opacity .3s ease,transform .3s ease,visibility .3s}
   .menu-panel.open{opacity:1;visibility:visible;transform:none}
   .menu-panel a{padding:14px 18px;text-decoration:none;color:var(--char);font-weight:500;font-size:.98rem;letter-spacing:.3px}
   .menu-panel a:hover{background:var(--bg)}
@@ -224,13 +224,11 @@
 </head>
 <body>
 
-<nav class="topbar" id="topbar">
-  <a class="brand" href="#top" id="brandLink"></a>
-  <button class="menu-btn" id="menuBtn" aria-label="메뉴 열기" aria-expanded="false">
-    <span></span><span></span><span></span>
-  </button>
-  <div class="menu-panel" id="menuPanel"></div>
-</nav>
+<!-- topbar.js가 nav(brand+홈아이콘+이 메뉴버튼)를 만들어 body 최상단에 삽입 -->
+<button class="menu-btn" id="menuBtn" aria-label="메뉴 열기" aria-expanded="false">
+  <span></span><span></span><span></span>
+</button>
+<div class="menu-panel" id="menuPanel"></div>
 <span id="top"></span>
 
 <header class="banner" id="banner"></header>
@@ -298,6 +296,7 @@
 
 <script src="supabase-config.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="topbar.js"></script>
 <script>
 var SAMPLE_SPACES = [
   { name:'놀이방', desc:'블록과 역할놀이로 상상력이 자라는 우리 반의 공간입니다.', photo:null },
@@ -351,7 +350,7 @@ function mapRowToData(row){
   const $ = (id)=>document.getElementById(id);
   const c = data.center;
 
-  $('brandLink').textContent = c.name.replace(/\s*어린이집$/,'') || c.name;
+  WoniyaTopbar.init({ centerName: c.name.replace(/\s*어린이집$/,'') || c.name });
   $('menuPanel').innerHTML = c.menu.map(m => `<a href="${m.href}"${m.cta?' class="menu-cta"':''}>${m.label}</a>`).join('');
 
   // 1. 메인 배너
@@ -481,11 +480,15 @@ function initInteractions(){
   },{threshold:0.12});
   document.querySelectorAll('.reveal').forEach(function(el){ io.observe(el); });
 
-  // 상단바: 스크롤하면 solid
+  // 상단바: 스크롤하면 solid (topbar.js가 만든 nav + 별도 menuBtn 둘 다 토글)
   var topbar = document.getElementById('topbar');
+  var menuBtnEl = document.getElementById('menuBtn');
   var banner = document.getElementById('banner');
   var tbio = new IntersectionObserver(function(entries){
-    entries.forEach(function(e){ topbar.classList.toggle('solid', !e.isIntersecting); });
+    entries.forEach(function(e){
+      topbar.classList.toggle('solid', !e.isIntersecting);
+      menuBtnEl.classList.toggle('solid', !e.isIntersecting);
+    });
   },{rootMargin:'-80px 0px 0px 0px',threshold:0});
   tbio.observe(banner);
 
