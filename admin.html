@@ -89,6 +89,33 @@
   .consult-item .detail{margin-top:5px;color:var(--ink-soft);font-size:.86rem}
   .consult-item .when{margin-top:3px;color:var(--ink-soft);font-size:.78rem}
 
+  /* ── 원 등록 신청 목록 ── */
+  .app-list{list-style:none}
+  .app-item{padding:16px 4px;border-bottom:1px solid #f1e9e0}
+  .app-item:last-child{border-bottom:none}
+  .app-item .row1{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+  .app-item .who{font-weight:700;font-size:.98rem}
+  .app-status{
+    font-size:.74rem;font-weight:700;border-radius:30px;padding:3px 10px;white-space:nowrap;
+    cursor:pointer;border:none;transition:background .15s,color .15s;
+  }
+  .app-status.new{background:#FFF1EA;color:var(--coral-deep)}
+  .app-status.checked{background:#EDF5ED;color:#4a8a4a}
+  .app-status.contacted{background:#E8EAF6;color:#3949AB}
+  .app-item .detail{margin-top:6px;color:var(--ink-soft);font-size:.86rem;line-height:1.5}
+  .app-item .msg-text{
+    margin-top:6px;padding:10px 12px;
+    background:var(--cream);border-radius:10px;
+    font-size:.84rem;color:var(--ink);line-height:1.6;
+  }
+  .app-item .when{margin-top:4px;color:var(--ink-soft);font-size:.78rem}
+  .app-count{
+    display:inline-flex;align-items:center;justify-content:center;
+    min-width:20px;height:20px;border-radius:99px;
+    background:var(--coral);color:#fff;font-size:.72rem;font-weight:700;
+    padding:0 5px;margin-left:6px;vertical-align:middle;
+  }
+
   /* ── 사진 업로드 ── */
   .upload-zone{
     border:2px dashed #f1e9e0;border-radius:18px;padding:28px 20px;
@@ -269,6 +296,16 @@
         <ul class="consult-list" id="consultList"></ul>
       </div>
     </div>
+
+    <!-- 원 등록 신청 목록 -->
+    <div id="appSection" hidden>
+      <div class="section-eyebrow" style="margin-top:40px">원 등록 신청</div>
+      <h2 class="section-title">등록 신청 목록<span class="app-count" id="appCount" hidden>0</span></h2>
+      <div class="panel">
+        <div id="appEmpty" class="no-center" hidden>아직 들어온 신청이 없어요.</div>
+        <ul class="app-list" id="appList"></ul>
+      </div>
+    </div>
   </section>
 
 </div>
@@ -300,6 +337,11 @@
   var consultSection = document.getElementById('consultSection');
   var consultList  = document.getElementById('consultList');
   var consultEmpty = document.getElementById('consultEmpty');
+
+  var appSection   = document.getElementById('appSection');
+  var appList      = document.getElementById('appList');
+  var appEmpty     = document.getElementById('appEmpty');
+  var appCount     = document.getElementById('appCount');
 
   var photoSection  = document.getElementById('photoSection');
   var uploadZone    = document.getElementById('uploadZone');
@@ -530,6 +572,67 @@
     }).join('');
   }
 
+  // ── 원 등록 신청 목록 ──
+  var APP_STATUS_LABELS = { new:'신규', checked:'확인', contacted:'연락완료' };
+
+  async function loadApplications(centerName){
+    var res = await client.from('center_applications')
+      .select('*')
+      .eq('center_name', centerName)
+      .order('consent_at', { ascending: false });
+
+    if (res.error || !res.data || res.data.length === 0){
+      appList.innerHTML = '';
+      appEmpty.hidden = false;
+      appCount.hidden = true;
+      return;
+    }
+
+    appEmpty.hidden = true;
+
+    // 신규 건수 배지
+    var newCount = res.data.filter(function(r){ return !r.status || r.status === 'new'; }).length;
+    if (newCount > 0){
+      appCount.textContent = newCount;
+      appCount.hidden = false;
+    } else {
+      appCount.hidden = true;
+    }
+
+    appList.innerHTML = res.data.map(function(row){
+      var status  = row.status || 'new';
+      var label   = APP_STATUS_LABELS[status] || status;
+      var when    = new Date(row.consent_at).toLocaleString('ko-KR');
+      var details = [];
+      if (row.region)  details.push(row.region);
+      if (row.phone)   details.push(row.phone);
+      return '<li class="app-item" data-app-id="' + row.id + '">' +
+        '<div class="row1">' +
+          '<span class="who">' + (row.director_name || '이름 없음') + '</span>' +
+          '<button class="app-status ' + status + '" data-app-id="' + row.id + '" data-status="' + status + '">' + label + '</button>' +
+        '</div>' +
+        (details.length ? '<div class="detail">' + details.join(' · ') + '</div>' : '') +
+        (row.message ? '<div class="msg-text">' + row.message + '</div>' : '') +
+        '<div class="when">' + when + '</div>' +
+      '</li>';
+    }).join('');
+
+    // 상태 변경 버튼 이벤트
+    appList.querySelectorAll('.app-status').forEach(function(btn){
+      btn.addEventListener('click', async function(){
+        var appId  = btn.dataset.appId;
+        var cur    = btn.dataset.status;
+        var next   = cur === 'new' ? 'checked' : cur === 'checked' ? 'contacted' : 'new';
+        btn.disabled = true;
+        var upRes = await client.from('center_applications')
+          .update({ status: next })
+          .eq('id', appId);
+        btn.disabled = false;
+        if (!upRes.error) loadApplications(centerName);
+      });
+    });
+  }
+
   // ── 인증 흐름 ──
   function showLoggedOut(){
     loginView.hidden = false;
@@ -557,6 +660,7 @@
       centerPanel.hidden = true;
       photoSection.hidden = true;
       consultSection.hidden = true;
+      appSection.hidden = true;
       centerLinks.hidden = true;
       return;
     }
@@ -582,6 +686,9 @@
 
     consultSection.hidden = false;
     loadConsultations(currentCenter.id);
+
+    appSection.hidden = false;
+    loadApplications(currentCenter.name);
   }
 
   client.auth.onAuthStateChange(function(_event, session){
