@@ -396,7 +396,7 @@ function mapRowToData(row){
     </div>
     <div class="gallery-rail">${albumItems.map((it,i)=>`
       <figure class="art">
-        <div class="frame"><img loading="lazy" alt="${esc(it.label)}" src="${esc(it.photo)}"></div>
+        <div class="frame"><img loading="eager" decoding="async" alt="${esc(it.label)}" src="${esc(it.photo)}"></div>
         <figcaption class="meta">
           <span class="no">${String(i+1).padStart(2,'0')}</span>
           <span class="cap">${esc(it.label)}</span>
@@ -413,7 +413,7 @@ function mapRowToData(row){
     </div>
     ${SAMPLE_SPACES.map((sp,i)=>`
       <div class="space reveal">
-        <div class="frame ${sp.photo ? '' : 'placeholder'}">${sp.photo ? `<img loading="lazy" alt="${sp.name}" src="${sp.photo}">` : ''}</div>
+        <div class="frame ${sp.photo ? '' : 'placeholder'}">${sp.photo ? `<img loading="eager" decoding="async" alt="${sp.name}" src="${sp.photo}">` : ''}</div>
         <div class="info">
           <div class="idx">0${i+1} — Space</div>
           <h3>${sp.name}</h3>
@@ -430,7 +430,7 @@ function mapRowToData(row){
     </div>
     <div class="staff-grid">${(t?.items || []).map(tc=>`
       <div class="person reveal">
-        <div class="portrait"><img loading="lazy" alt="${esc(tc.name)}" src="${esc(tc.photo)}"></div>
+        <div class="portrait"><img loading="eager" decoding="async" alt="${esc(tc.name)}" src="${esc(tc.photo)}"></div>
         <div class="name">${esc(tc.name)}</div>
         <div class="role">${esc(tc.role)}</div>
         <div class="msg">“${esc(tc.message)}”</div>

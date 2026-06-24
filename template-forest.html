@@ -1450,7 +1450,7 @@
         <div class="node">${i + 1}</div>
         <div class="card">
           <div class="pic">
-            <img loading="lazy" alt="${esc(m.photo_alt)}" src="${esc(m.photo)}">
+            <img loading="eager" decoding="async" alt="${esc(m.photo_alt)}" src="${esc(m.photo)}">
             <div class="cap">${esc(m.caption)}</div>
           </div>
           <div class="body">
@@ -1477,9 +1477,9 @@
       const visibleItems = albumItems.slice(0, ALBUM_LIMIT);
       const hiddenItems = albumItems.slice(ALBUM_LIMIT);
       const albumHtml = `<div class="polaroids">${visibleItems.map(it => `
-    <div class="polaroid" tabindex="0"><div class="pic"><img loading="lazy" alt="${esc(it.label)}" src="${esc(it.photo)}"></div><div class="label">${esc(it.label)}</div></div>`).join('')}</div>
+    <div class="polaroid" tabindex="0"><div class="pic"><img loading="eager" decoding="async" alt="${esc(it.label)}" src="${esc(it.photo)}"></div><div class="label">${esc(it.label)}</div></div>`).join('')}</div>
     ${hiddenItems.length ? `<div class="polaroids album-hidden" hidden>${hiddenItems.map(it => `
-    <div class="polaroid" tabindex="0"><div class="pic"><img loading="lazy" alt="${esc(it.label)}" src="${esc(it.photo)}"></div><div class="label">${esc(it.label)}</div></div>`).join('')}</div>
+    <div class="polaroid" tabindex="0"><div class="pic"><img loading="eager" decoding="async" alt="${esc(it.label)}" src="${esc(it.photo)}"></div><div class="label">${esc(it.label)}</div></div>`).join('')}</div>
     <button type="button" class="more-link album-more-btn" style="background:none;border:none;cursor:pointer;font-family:inherit" onclick="this.previousElementSibling.hidden=false;this.remove();">더 보기 (총 ${albumItems.length}장)</button>` : ''}`;
 
       const teacherHtml = `<div class="cards">${(t?.items || []).map(tc => `

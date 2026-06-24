@@ -482,7 +482,7 @@ function mapRowToData(row){
       <div class="flip-track" id="flipTrack">${SAMPLE_SPACES.map((sp,i)=>`
         <div class="page">
           <div class="photo">
-            ${sp.photo ? `<img loading="lazy" alt="${sp.name}" src="${sp.photo}">` : `<div style="width:100%;height:100%;background:linear-gradient(135deg,#FFE0C8,#FFD0E0)"></div>`}
+            ${sp.photo ? `<img loading="eager" decoding="async" alt="${sp.name}" src="${sp.photo}">` : `<div style="width:100%;height:100%;background:linear-gradient(135deg,#FFE0C8,#FFD0E0)"></div>`}
             <div class="ride-no">${i+1}</div>
             <div class="tagchip">${sp.tag}</div>
           </div>
@@ -530,12 +530,12 @@ function mapRowToData(row){
     </div>
     <div class="photo-grid">${visibleItems.map(it=>`
       <div class="snap reveal">
-        <img loading="lazy" alt="${esc(it.label)}" src="${esc(it.photo)}">
+        <img loading="eager" decoding="async" alt="${esc(it.label)}" src="${esc(it.photo)}">
         <div class="cap">${esc(it.label)}</div>
       </div>`).join('')}</div>
     ${hiddenItems.length?`<div class="photo-grid album-hidden" hidden>${hiddenItems.map(it=>`
       <div class="snap reveal">
-        <img loading="lazy" alt="${esc(it.label)}" src="${esc(it.photo)}">
+        <img loading="eager" decoding="async" alt="${esc(it.label)}" src="${esc(it.photo)}">
         <div class="cap">${esc(it.label)}</div>
       </div>`).join('')}</div>
     <button type="button" class="more-link album-more-btn" style="background:none;border:none;cursor:pointer;font-family:inherit" onclick="this.previousElementSibling.hidden=false;this.remove();">더 보기 (총 ${albumItems.length}장)</button>`:''}`;
