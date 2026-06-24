@@ -3,12 +3,12 @@
 하드코딩 홈페이지를 **데이터(JSON) + 템플릿(HTML)** 으로 분리한 첫 MVP 결과물입니다.
 
 ## 폴더 구성
-- `index.html` — 화면 템플릿. `haetsal.json`을 읽어 모든 섹션을 그립니다. (디자인·애니메이션 원본 유지)
+- `home.html` — 화면 템플릿. `haetsal.json`을 읽어 모든 섹션을 그립니다. (디자인·애니메이션 원본 유지)
 - `haetsal.json` — 원 데이터. 9번 데이터 모델 구조에 맞춰 분리.
 - `img/` — 원본에 박혀있던 사진 15개를 파일로 추출. JSON엔 경로만 둠.
 
 ## 실행 방법
-브라우저에서 `index.html`을 그냥 열면 `fetch`가 막힙니다. 로컬 서버로 여세요.
+브라우저에서 `home.html`을 그냥 열면 `fetch`가 막힙니다. 로컬 서버로 여세요.
 ```
 cd woniya-m1
 python3 -m http.server 8000
@@ -21,7 +21,7 @@ python3 -m http.server 8000
 이게 "빌더"의 뼈대 — 원장은 데이터만 넣으면 완성.
 
 ## 다음 단계: Supabase 연결
-`index.html` 안의 데이터 호출 한 줄만 바꾸면 됩니다.
+`home.html` 안의 데이터 호출 한 줄만 바꾸면 됩니다.
 ```js
 // 지금
 const res = await fetch('haetsal.json');

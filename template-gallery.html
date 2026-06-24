@@ -41,7 +41,7 @@
   .topbar.solid{background:rgba(247,246,243,.92);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);box-shadow:0 1px 0 var(--line);padding:14px 0}
   .topbar .brand{font-family:var(--serif);font-weight:600;font-size:1.2rem;color:#fff;text-decoration:none;letter-spacing:.5px;transition:color .4s ease}
   .topbar.solid .brand{color:var(--char)}
-  .menu-btn{width:40px;height:40px;border:none;background:transparent;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:6px;cursor:pointer}
+  .menu-btn{visibility:hidden;width:40px;height:40px;border:none;background:transparent;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:6px;cursor:pointer}
   .menu-btn span{width:24px;height:1.5px;background:#fff;transition:transform .3s ease,opacity .3s ease,background .4s ease}
   .menu-btn.solid span{background:var(--char)}
   .menu-btn.open span{background:var(--char)}
@@ -338,6 +338,7 @@ function mapRowToData(row){
     data.heroPhoto = await signPath(data.heroPhoto);
     for (const it of data.album.items){ it.photo = await signPath(it.photo); }
     for (const tc of data.teachers.items){ tc.photo = await signPath(tc.photo); }
+    if (data.center.director){ data.center.director.photo = await signPath(data.center.director.photo); }
     for (let i=0;i<SAMPLE_SPACES.length;i++){
       if (data.album.items[i]) SAMPLE_SPACES[i].photo = data.album.items[i].photo;
     }
@@ -348,19 +349,20 @@ function mapRowToData(row){
   }
 
   const $ = (id)=>document.getElementById(id);
+  const esc = (s)=> s==null ? '' : s;
   const c = data.center;
 
   WoniyaTopbar.init({ centerName: c.name.replace(/\s*어린이집$/,'') || c.name });
-  $('menuPanel').innerHTML = c.menu.map(m => `<a href="${m.href}"${m.cta?' class="menu-cta"':''}>${m.label}</a>`).join('');
+  $('menuPanel').innerHTML = c.menu.map(m => `<a href="${esc(m.href)}"${m.cta?' class="menu-cta"':''}>${esc(m.label)}</a>`).join('');
 
   // 1. 메인 배너
   const h = c.hero;
   $('banner').innerHTML = `
-    <div class="bg ${data.heroPhoto ? '' : 'placeholder'}">${data.heroPhoto ? `<img alt="${c.name}" src="${data.heroPhoto}">` : ''}</div>
+    <div class="bg ${data.heroPhoto ? '' : 'placeholder'}">${data.heroPhoto ? `<img alt="${esc(c.name)}" src="${esc(data.heroPhoto)}">` : ''}</div>
     <div class="content">
-      <div class="eyebrow reveal">${h.eyebrow}</div>
-      <h1 class="reveal">${h.title} ${h.title_accent}</h1>
-      <p class="reveal">${h.subtitle}</p>
+      <div class="eyebrow reveal">${esc(h.eyebrow)}</div>
+      <h1 class="reveal">${esc(h.title)} ${esc(h.title_accent)}</h1>
+      <p class="reveal">${esc(h.subtitle)}</p>
     </div>
     <div class="scroll-line"></div>`;
 
@@ -376,10 +378,10 @@ function mapRowToData(row){
     </div>
     <div class="gallery-rail">${al.items.map((it,i)=>`
       <figure class="art">
-        <div class="frame"><img loading="lazy" alt="${it.label}" src="${it.photo}"></div>
+        <div class="frame"><img loading="lazy" alt="${esc(it.label)}" src="${esc(it.photo)}"></div>
         <figcaption class="meta">
           <span class="no">${String(i+1).padStart(2,'0')}</span>
-          <span class="cap">${it.label}</span>
+          <span class="cap">${esc(it.label)}</span>
           <span class="line"></span>
         </figcaption>
       </figure>`).join('')}</div>
@@ -410,40 +412,40 @@ function mapRowToData(row){
     </div>
     <div class="staff-grid">${t.items.map(tc=>`
       <div class="person reveal">
-        <div class="portrait"><img loading="lazy" alt="${tc.name}" src="${tc.photo}"></div>
-        <div class="name">${tc.name}</div>
-        <div class="role">${tc.role}</div>
-        <div class="msg">“${tc.message}”</div>
+        <div class="portrait"><img loading="lazy" alt="${esc(tc.name)}" src="${esc(tc.photo)}"></div>
+        <div class="name">${esc(tc.name)}</div>
+        <div class="role">${esc(tc.role)}</div>
+        <div class="msg">“${esc(tc.message)}”</div>
       </div>`).join('')}</div>`;
 
   // 5. 원장 한마디
   const d = c.director;
   $('director').innerHTML = `
     <div class="quote-mark reveal">"</div>
-    <p class="msg reveal">${d.message}</p>
+    <p class="msg reveal">${esc(d.message)}</p>
     <div class="who reveal">
-      <div class="portrait"><img alt="${d.photo_alt}" src="${d.photo}"></div>
-      <div class="name">${d.sign_label}<strong>${d.sign_name}</strong></div>
+      <div class="portrait"><img alt="${esc(d.photo_alt)}" src="${esc(d.photo)}"></div>
+      <div class="name">${esc(d.sign_label)}<strong>${esc(d.sign_name)}</strong></div>
     </div>`;
 
   // 6. 안내
   const n = data.notices, s = data.schedule, f = data.faqs;
   const noticeHtml = `<ul class="notice-list">${n.items.map(it=>`
-    <li class="notice-item"><span class="tag">${it.tag}</span>
-      <span class="n-title">${it.title}</span><span class="n-date">${it.date}</span></li>`).join('')}</ul>
-    <a class="more-link" href="#infoDesk">${n.more}</a>`;
+    <li class="notice-item"><span class="tag">${esc(it.tag)}</span>
+      <span class="n-title">${esc(it.title)}</span><span class="n-date">${esc(it.date)}</span></li>`).join('')}</ul>
+    <a class="more-link" href="#infoDesk">${esc(n.more)}</a>`;
 
   const dows = ['일','월','화','수','목','금','토'];
   let cells = dows.map(w=>`<span class="dow">${w}</span>`).join('');
   for(let day=1; day<=s.days_in_month; day++){ cells += `<span class="day-cell${s.event_days.includes(day)?' ev':''}">${day}</span>`; }
   for(let m=1; m<=s.trailing_muted; m++){ cells += `<span class="day-cell muted">${m}</span>`; }
-  const scheduleHtml = `<div class="cal"><div class="cal-head">${s.month_label}</div>
+  const scheduleHtml = `<div class="cal"><div class="cal-head">${esc(s.month_label)}</div>
     <div class="cal-grid">${cells}</div>
-    <ul class="event-list">${s.events.map(e=>`<li><span class="e-date">${e.date}</span> ${e.title}</li>`).join('')}</ul></div>`;
+    <ul class="event-list">${s.events.map(e=>`<li><span class="e-date">${esc(e.date)}</span> ${esc(e.title)}</li>`).join('')}</ul></div>`;
 
   const faqHtml = f.items.map(it=>`
-    <div class="faq-item"><button class="faq-q" aria-expanded="false">${it.q}<span class="sign">+</span></button>
-      <div class="faq-a"><p>${it.a}</p></div></div>`).join('');
+    <div class="faq-item"><button class="faq-q" aria-expanded="false">${esc(it.q)}<span class="sign">+</span></button>
+      <div class="faq-a"><p>${esc(it.a)}</p></div></div>`).join('');
 
   $('infoDesk').innerHTML = `
     <div class="sec-head reveal">
@@ -463,12 +465,12 @@ function mapRowToData(row){
   const fin = data.finale;
   $('finale').innerHTML = `
     <div class="quote-mark reveal">"</div>
-    <h2 class="reveal">${fin.title}</h2>
-    <p class="reveal">${fin.subtitle}</p>
-    <button type="button" id="cslOpenBtn" class="btn-big reveal">${fin.cta}</button>`;
+    <h2 class="reveal">${esc(fin.title)}</h2>
+    <p class="reveal">${esc(fin.subtitle)}</p>
+    <button type="button" id="cslOpenBtn" class="btn-big reveal">${esc(fin.cta)}</button>`;
 
-  $('footerEl').innerHTML = `<div class="demo-tag">${data.footer.tag}</div><div>${data.footer.text}</div>`;
-  document.title = `원이야 - ${c.name}`;
+  $('footerEl').innerHTML = `<div class="demo-tag">${esc(data.footer.tag)}</div><div>${esc(data.footer.text)}</div>`;
+  document.title = `원이야 - ${esc(c.name) || '원이야'}`;
 
   initInteractions();
   initConsultationForm(client, c.id);

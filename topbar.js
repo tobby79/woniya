@@ -12,7 +12,8 @@ window.WoniyaTopbar = (function(){
       '.topbar-actions{display:flex;align-items:center;gap:16px}' +
       '.topbar-home{display:flex;color:var(--ink-soft);transition:color .2s ease}' +
       '.topbar-home:hover{color:var(--coral)}' +
-      '.topbar-home svg{width:22px;height:22px;display:block}';
+      '.topbar-home svg{width:22px;height:22px;display:block}' +
+      '.topbar-actions .menu-btn{visibility:visible}';
     document.head.appendChild(style);
   }
 
@@ -46,7 +47,7 @@ window.WoniyaTopbar = (function(){
 
     var home = document.createElement('a');
     home.className = 'topbar-home';
-    home.href = 'search.html';
+    home.href = 'index.html';
     home.setAttribute('aria-label', '검색으로');
     home.innerHTML = HOME_ICON_SVG;
     actions.appendChild(home);

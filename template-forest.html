@@ -122,6 +122,7 @@
     }
 
     .menu-btn {
+      visibility: hidden;
       width: 42px;
       height: 42px;
       border: none;
@@ -1395,6 +1396,7 @@
         for (const m of data.day_story){ m.photo = await signPath(m.photo); }
         for (const it of data.album.items){ it.photo = await signPath(it.photo); }
         for (const tc of data.teachers.items){ tc.photo = await signPath(tc.photo); }
+        if (data.center.director){ data.center.director.photo = await signPath(data.center.director.photo); }
       } catch (e) {
         console.error(e);
         document.body.innerHTML = '<p style="padding:40px;font-family:sans-serif">원 데이터를 불러오지 못했어요. supabase-config.js를 확인해주세요.</p>';
@@ -1402,25 +1404,26 @@
       }
 
       const $ = (id) => document.getElementById(id);
+      const esc = (s) => s == null ? '' : s;
       const c = data.center;
 
       WoniyaTopbar.init({ centerName: c.name.replace(/\s*어린이집$/, '') || c.name });
-      $('menuPanel').innerHTML = c.menu.map(m => `<a href="${m.href}"${m.cta ? ' class="menu-cta"' : ''}>${m.label}</a>`).join('');
+      $('menuPanel').innerHTML = c.menu.map(m => `<a href="${esc(m.href)}"${m.cta ? ' class="menu-cta"' : ''}>${esc(m.label)}</a>`).join('');
 
       const h = c.hero;
       $('hero').innerHTML = `
-    <div class="eyebrow reveal">${h.eyebrow}</div>
-    <h1 class="reveal">${h.title}<br><span class="glow">${h.title_accent}</span></h1>
-    <p class="reveal">${h.subtitle}</p>
+    <div class="eyebrow reveal">${esc(h.eyebrow)}</div>
+    <h1 class="reveal">${esc(h.title)}<br><span class="glow">${esc(h.title_accent)}</span></h1>
+    <p class="reveal">${esc(h.subtitle)}</p>
     <div class="enter-cue reveal"><span>숲길을 따라 걸어요</span><span class="path"></span></div>`;
 
       const d = c.director;
       $('greeting').innerHTML = `
     <div class="signpost reveal">
-      <div class="portrait"><img alt="${d.photo_alt}" src="${d.photo}"></div>
-      <div class="badge">${d.badge}</div>
-      <p class="msg">${d.message}</p>
-      <div class="sign">${d.sign_label}<strong>${d.sign_name}</strong></div>
+      <div class="portrait"><img alt="${esc(d.photo_alt)}" src="${esc(d.photo)}"></div>
+      <div class="badge">${esc(d.badge)}</div>
+      <p class="msg">${esc(d.message)}</p>
+      <div class="sign">${esc(d.sign_label)}<strong>${esc(d.sign_name)}</strong></div>
     </div>`;
 
       const stops = data.day_story.map((m, i) => {
@@ -1430,13 +1433,13 @@
         <div class="node">${i + 1}</div>
         <div class="card">
           <div class="pic">
-            <img loading="lazy" alt="${m.photo_alt}" src="${m.photo}">
-            <div class="cap">${m.caption}</div>
+            <img loading="lazy" alt="${esc(m.photo_alt)}" src="${esc(m.photo)}">
+            <div class="cap">${esc(m.caption)}</div>
           </div>
           <div class="body">
-            <div class="time">${m.time}</div>
-            <div class="title">${m.title}</div>
-            <div class="note">${m.note}</div>
+            <div class="time">${esc(m.time)}</div>
+            <div class="title">${esc(m.title)}</div>
+            <div class="note">${esc(m.note)}</div>
           </div>
         </div>
       </div>`;
@@ -1456,33 +1459,33 @@
       const visibleItems = al.items.slice(0, ALBUM_LIMIT);
       const hiddenItems = al.items.slice(ALBUM_LIMIT);
       const albumHtml = `<div class="polaroids">${visibleItems.map(it => `
-    <div class="polaroid" tabindex="0"><div class="pic"><img loading="lazy" alt="${it.label}" src="${it.photo}"></div><div class="label">${it.label}</div></div>`).join('')}</div>
+    <div class="polaroid" tabindex="0"><div class="pic"><img loading="lazy" alt="${esc(it.label)}" src="${esc(it.photo)}"></div><div class="label">${esc(it.label)}</div></div>`).join('')}</div>
     ${hiddenItems.length ? `<div class="polaroids album-hidden" hidden>${hiddenItems.map(it => `
-    <div class="polaroid" tabindex="0"><div class="pic"><img loading="lazy" alt="${it.label}" src="${it.photo}"></div><div class="label">${it.label}</div></div>`).join('')}</div>
+    <div class="polaroid" tabindex="0"><div class="pic"><img loading="lazy" alt="${esc(it.label)}" src="${esc(it.photo)}"></div><div class="label">${esc(it.label)}</div></div>`).join('')}</div>
     <button type="button" class="more-link album-more-btn" style="background:none;border:none;cursor:pointer;font-family:inherit" onclick="this.previousElementSibling.hidden=false;this.remove();">더 보기 (총 ${al.items.length}장)</button>` : ''}`;
 
       const teacherHtml = `<div class="cards">${t.items.map(tc => `
-    <div class="flip" tabindex="0" role="button" aria-label="${tc.name} 카드 뒤집기"><div class="flip-inner">
-      <div class="face front"><div class="avatar"><img alt="${tc.name}" src="${tc.photo}"></div>
-        <div class="t-info"><div class="name">${tc.name}</div><div class="role">${tc.role}</div><div class="tap">눌러서 한마디 보기</div></div></div>
-      <div class="face back">${tc.message}</div></div></div>`).join('')}</div>`;
+    <div class="flip" tabindex="0" role="button" aria-label="${esc(tc.name)} 카드 뒤집기"><div class="flip-inner">
+      <div class="face front"><div class="avatar"><img alt="${esc(tc.name)}" src="${esc(tc.photo)}"></div>
+        <div class="t-info"><div class="name">${esc(tc.name)}</div><div class="role">${esc(tc.role)}</div><div class="tap">눌러서 한마디 보기</div></div></div>
+      <div class="face back">${esc(tc.message)}</div></div></div>`).join('')}</div>`;
 
       const noticeHtml = `<ul class="notice-list">${n.items.map(it => `
-    <li class="notice-item"><span class="tag tag-${it.tag_type}">${it.tag}</span>
-      <div><div class="n-title">${it.title}</div><div class="n-date">${it.date}</div></div></li>`).join('')}</ul>
-    <a class="more-link" href="#explore">${n.more}</a>`;
+    <li class="notice-item"><span class="tag tag-${esc(it.tag_type)}">${esc(it.tag)}</span>
+      <div><div class="n-title">${esc(it.title)}</div><div class="n-date">${esc(it.date)}</div></div></li>`).join('')}</ul>
+    <a class="more-link" href="#explore">${esc(n.more)}</a>`;
 
       const dows = ['일', '월', '화', '수', '목', '금', '토'];
       let cells = dows.map(w => `<span class="dow">${w}</span>`).join('');
       for (let day = 1; day <= s.days_in_month; day++) { cells += `<span class="day-cell${s.event_days.includes(day) ? ' ev' : ''}">${day}</span>`; }
       for (let m = 1; m <= s.trailing_muted; m++) { cells += `<span class="day-cell muted">${m}</span>`; }
-      const scheduleHtml = `<div class="cal"><div class="cal-head">${s.month_label}</div>
+      const scheduleHtml = `<div class="cal"><div class="cal-head">${esc(s.month_label)}</div>
     <div class="cal-grid">${cells}</div>
-    <ul class="event-list">${s.events.map(e => `<li><span class="e-date">${e.date}</span> ${e.title}</li>`).join('')}</ul></div>`;
+    <ul class="event-list">${s.events.map(e => `<li><span class="e-date">${esc(e.date)}</span> ${esc(e.title)}</li>`).join('')}</ul></div>`;
 
       const faqHtml = `<div class="faq-wrap">${f.items.map(it => `
-    <div class="faq-item"><button class="faq-q" aria-expanded="false">${it.q}<span class="chev"></span></button>
-      <div class="faq-a"><p>${it.a}</p></div></div>`).join('')}</div>`;
+    <div class="faq-item"><button class="faq-q" aria-expanded="false">${esc(it.q)}<span class="chev"></span></button>
+      <div class="faq-a"><p>${esc(it.a)}</p></div></div>`).join('')}</div>`;
 
       $('explore').innerHTML = `
     <div class="explore-head reveal">
@@ -1504,12 +1507,12 @@
 
       const fin = data.finale;
       $('finale').innerHTML = `
-    <h2 class="reveal">${fin.title}</h2>
-    <p class="reveal">${fin.subtitle}</p>
-    <button type="button" id="cslOpenBtn" class="btn-big reveal">${fin.cta}</button>`;
+    <h2 class="reveal">${esc(fin.title)}</h2>
+    <p class="reveal">${esc(fin.subtitle)}</p>
+    <button type="button" id="cslOpenBtn" class="btn-big reveal">${esc(fin.cta)}</button>`;
 
-      $('footerEl').innerHTML = `<div class="demo-tag">${data.footer.tag}</div><div>${data.footer.text}</div>`;
-      document.title = `원이야 - ${c.name}`;
+      $('footerEl').innerHTML = `<div class="demo-tag">${esc(data.footer.tag)}</div><div>${esc(data.footer.text)}</div>`;
+      document.title = `원이야 - ${esc(c.name) || '원이야'}`;
 
       initInteractions();
       initConsultationForm(client, c.id);
