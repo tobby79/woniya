@@ -1307,6 +1307,8 @@
   <section class="trail-start wrap" id="greeting"></section>
   <main class="timeline wrap" id="timeline"></main>
   <section class="explore wrap" id="explore"></section>
+  <section class="info-block wrap" id="admissionsSec" hidden></section>
+  <section class="info-block wrap" id="directionsSec" hidden></section>
   <section class="finale wrap" id="finale"></section>
   <footer id="footerEl"></footer>
 
@@ -1363,7 +1365,24 @@
     </div>
   </div>
 
+  <style>
+    /* ── 입학안내 / 오시는 길 (M1 추가) — 각 템플릿 공통 변수(--paper/--ink/--ink-soft/--display) 기반 ── */
+    #admissionsSec[hidden],#directionsSec[hidden]{display:none}
+    .info-block{padding-top:46px;padding-bottom:14px}
+    .info-block .info-title{font-family:var(--display);font-size:1.55rem;color:var(--ink);letter-spacing:-.5px;margin-bottom:18px;text-align:center}
+    .adm-card{background:var(--paper);border-radius:18px;padding:4px 20px;box-shadow:0 16px 40px -22px rgba(120,80,60,.32)}
+    .adm-row{padding:15px 2px;border-bottom:1px solid rgba(120,80,60,.12)}
+    .adm-row:last-child{border-bottom:none}
+    .adm-label{font-family:var(--body);font-weight:700;font-size:.8rem;color:var(--ink-soft);letter-spacing:.3px;margin-bottom:4px}
+    .adm-value{font-size:1rem;color:var(--ink);line-height:1.6;white-space:pre-line}
+    .adm-row.adm-notes .adm-value{color:var(--ink-soft);font-size:.92rem}
+    .dir-map{height:280px;border-radius:16px;overflow:hidden;border:1px solid #f0d9d9;background:#faf0f0}
+    .dir-text{margin-top:16px;display:flex;flex-direction:column;gap:9px}
+    .dir-line{display:flex;align-items:flex-start;gap:9px;font-size:.96rem;color:var(--ink-soft);line-height:1.5}
+    .dir-line::before{content:"";flex:none;width:7px;height:7px;border-radius:50%;background:currentColor;opacity:.55;margin-top:8px}
+  </style>
   <script src="supabase-config.js"></script>
+  <script src="kakao-config.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="topbar.js"></script>
   <script>
@@ -1397,6 +1416,7 @@
       return {
         center: {
           id: row.id, slug: row.slug, name: row.name, theme: row.theme,
+          address: row.address, directions_text: row.directions_text,
           menu: row.menu || [],
           hero: row.hero || { eyebrow:'', title:'', title_accent:'', subtitle:'' },
           director: row.director || { badge:'', photo:'', photo_alt:'', message:'', sign_label:'', sign_name:'', scroll_cue:'' }
@@ -1408,6 +1428,7 @@
         schedule: row.schedule || { eyebrow:'', title:'', month_label:'', days_in_month:30, event_days:[], trailing_muted:0, events:[] },
         faqs: row.faqs || { eyebrow:'', title:'', items:[] },
         finale: row.finale || { title:'', subtitle:'', cta:'입소 상담' },
+        admission: (row.admissions || [])[0] || null,
         footer: row.footer || { tag:'원이야', text:'' }
       };
     }
@@ -1418,7 +1439,7 @@
       const client = supabase.createClient(cfg.url, cfg.anonKey);
       try {
         const slug = new URLSearchParams(location.search).get('slug') || 'haetsal';
-        const { data: row, error } = await client.from('centers').select('*, center_media(*)').eq('slug', slug).single();
+        const { data: row, error } = await client.from('centers').select('*, center_media(*), admissions(*)').eq('slug', slug).single();
         if (error) throw error;
         data = mapRowToData(row);
 
@@ -1575,6 +1596,7 @@
       document.title = `원이야 - ${esc(c.name) || '원이야'}`;
 
       initInteractions();
+      renderInfoSections(data, c, esc);
       initConsultationForm(client, c.id);
     })();
 
@@ -1715,6 +1737,77 @@
         });
       }, { rootMargin: '200px' });
       imgs.forEach(function(img){ observer.observe(img); });
+    }
+
+    // ── 입학안내(admissions) + 오시는 길(directions) 렌더 (M1) ──
+    function renderInfoSections(data, c, esc){
+      var admSec = document.getElementById('admissionsSec');
+      if (admSec){
+        var adm = data.admission;
+        var rows = adm ? [
+          ['모집 대상', adm.target],
+          ['정원 정보', adm.capacity_info],
+          ['모집 기간', adm.period],
+          ['입소 절차', adm.process],
+          ['준비물', adm.supplies],
+          ['기타 안내', adm.notes]
+        ].filter(function(r){ return r[1]; }) : [];
+        if (!rows.length){ admSec.hidden = true; }
+        else {
+          admSec.hidden = false;
+          admSec.innerHTML = '<h2 class="info-title">입학안내</h2>'
+            + '<div class="adm-card">' + rows.map(function(r){
+                return '<div class="adm-row' + (r[0] === '기타 안내' ? ' adm-notes' : '') + '">'
+                  + '<div class="adm-label">' + esc(r[0]) + '</div>'
+                  + '<div class="adm-value">' + esc(r[1]) + '</div></div>';
+              }).join('') + '</div>';
+        }
+      }
+      var dirSec = document.getElementById('directionsSec');
+      if (dirSec){
+        var text = (c.directions_text || '').trim();
+        if (!text){ dirSec.hidden = true; }
+        else {
+          dirSec.hidden = false;
+          var mapId = 'kakao-map-' + (c.slug || 'center');
+          var lines = text.split('/').map(function(s){ return s.trim(); }).filter(Boolean);
+          dirSec.innerHTML = '<h2 class="info-title">오시는 길</h2>'
+            + '<div class="dir-map" id="' + mapId + '"></div>'
+            + '<div class="dir-text">' + lines.map(function(l){ return '<div class="dir-line">' + esc(l) + '</div>'; }).join('') + '</div>';
+          loadKakaoMap(c.address, mapId);
+        }
+      }
+    }
+
+    // 카카오맵 JS SDK: 주소 검색 후 마커 표시. 키는 kakao-config.js(window.__KAKAO_CONFIG__)에서 주입.
+    function loadKakaoMap(address, containerId){
+      var cfg = window.__KAKAO_CONFIG__;
+      var container = document.getElementById(containerId);
+      if (!container || !address) return;
+      if (!cfg || !cfg.appkey){ console.warn('[kakao] appkey 없음 — 지도를 건너뜁니다.'); return; }
+      function render(){
+        kakao.maps.load(function(){
+          var map = new kakao.maps.Map(container, { center: new kakao.maps.LatLng(37.5665, 126.9780), level: 3 });
+          var geocoder = new kakao.maps.services.Geocoder();
+          geocoder.addressSearch(address, function(result, status){
+            if (status === kakao.maps.services.Status.OK){
+              var coords = new kakao.maps.LatLng(result[0].y, result[0].x);
+              map.setCenter(coords);
+              new kakao.maps.Marker({ map: map, position: coords });
+            }
+          });
+        });
+      }
+      if (window.kakao && window.kakao.maps){ render(); return; }
+      if (!window.__kakaoSDKPromise){
+        window.__kakaoSDKPromise = new Promise(function(resolve, reject){
+          var s = document.createElement('script');
+          s.src = 'https://dapi.kakao.com/v2/maps/sdk.js?appkey=' + encodeURIComponent(cfg.appkey) + '&libraries=services&autoload=false';
+          s.onload = resolve; s.onerror = reject;
+          document.head.appendChild(s);
+        });
+      }
+      window.__kakaoSDKPromise.then(render).catch(function(){ console.error('[kakao] SDK 로드 실패'); });
     }
 
     function initConsultationForm(client, centerId) {

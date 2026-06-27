@@ -1,5 +1,9 @@
 node_modules/
 .env
+.env.local
 .DS_Store
+
+# 빌드 시 생성되는 카카오맵 키 설정 (Vercel 환경변수에서 주입, 커밋 금지)
+kakao-config.js
 
 .vercel
