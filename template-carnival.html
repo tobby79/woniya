@@ -366,8 +366,11 @@
 <style>
   /* ── 입학안내 / 오시는 길 (M1 추가) — 각 템플릿 공통 변수(--paper/--ink/--ink-soft/--display) 기반 ── */
   #admissionsSec[hidden],#directionsSec[hidden]{display:none}
-  .info-block{padding-top:46px;padding-bottom:14px}
-  .info-block .info-title{font-family:var(--display);font-size:1.55rem;color:var(--ink);letter-spacing:-.5px;margin-bottom:18px;text-align:center}
+  .info-block{padding-top:46px;padding-bottom:14px;text-align:center}
+  .info-block .info-title{font-family:var(--display);font-size:1.55rem;color:var(--ink);letter-spacing:-.5px;margin-bottom:10px;text-align:center}
+  .info-lead{color:var(--ink-soft);font-size:.95rem;margin:0 0 18px}
+  .info-link-btn{display:inline-block;background:var(--paper);color:var(--ink);font-weight:700;font-size:1rem;text-decoration:none;padding:14px 30px;border-radius:50px;border:1.5px solid #f0d9d9;box-shadow:0 14px 34px -20px rgba(120,80,60,.5);transition:transform .25s ease}
+  .info-link-btn:hover{transform:translateY(-2px)}
   .adm-card{background:var(--paper);border-radius:18px;padding:4px 20px;box-shadow:0 16px 40px -22px rgba(120,80,60,.32)}
   .adm-row{padding:15px 2px;border-bottom:1px solid rgba(120,80,60,.12)}
   .adm-row:last-child{border-bottom:none}
@@ -490,6 +493,19 @@ function mapRowToData(row){
   const $ = (id)=>document.getElementById(id);
   const esc = (s)=> s==null ? '' : s;
   const c = data.center;
+  // M2: 공개형 새 페이지(입학안내/오시는 길) 메뉴 항목 런타임 주입 (DB 메뉴는 그대로 둠)
+  (function(){
+    var qs = c.slug ? ('?slug=' + encodeURIComponent(c.slug)) : '';
+    var extra = [];
+    if (data.admission) extra.push({ href: 'admissions.html' + qs, label: '입학안내' });
+    if ((c.directions_text || '').trim()) extra.push({ href: 'directions.html' + qs, label: '오시는 길' });
+    if (extra.length){
+      var m = (c.menu || []).slice();
+      var i = m.findIndex(function(x){ return x.cta; });
+      if (i < 0) i = m.length;
+      c.menu = m.slice(0, i).concat(extra, m.slice(i));
+    }
+  })();
 
   WoniyaTopbar.init({ centerName: c.name.replace(/\s*어린이집$/,'') || c.name });
   $('menuPanel').innerHTML = (c.menu || []).map(m => `<a href="${esc(m.href)}"${m.cta?' class="menu-cta"':''}>${esc(m.label)}</a>`).join('');
@@ -791,40 +807,26 @@ function initDeferredImages(){
 
 // ── 입학안내(admissions) + 오시는 길(directions) 렌더 (M1) ──
 function renderInfoSections(data, c, esc){
+  // M2: 입학안내·오시는 길은 공개형 새 페이지로 분리. 메인에는 요약+이동 버튼만 남긴다.
+  var qs = c.slug ? ('?slug=' + encodeURIComponent(c.slug)) : '';
   var admSec = document.getElementById('admissionsSec');
   if (admSec){
-    var adm = data.admission;
-    var rows = adm ? [
-      ['모집 대상', adm.target],
-      ['정원 정보', adm.capacity_info],
-      ['모집 기간', adm.period],
-      ['입소 절차', adm.process],
-      ['준비물', adm.supplies],
-      ['기타 안내', adm.notes]
-    ].filter(function(r){ return r[1]; }) : [];
-    if (!rows.length){ admSec.hidden = true; }
+    if (!data.admission){ admSec.hidden = true; }
     else {
       admSec.hidden = false;
       admSec.innerHTML = '<h2 class="info-title">입학안내</h2>'
-        + '<div class="adm-card">' + rows.map(function(r){
-            return '<div class="adm-row' + (r[0] === '기타 안내' ? ' adm-notes' : '') + '">'
-              + '<div class="adm-label">' + esc(r[0]) + '</div>'
-              + '<div class="adm-value">' + esc(r[1]) + '</div></div>';
-          }).join('') + '</div>';
+        + '<p class="info-lead">모집 대상·정원·입소 절차·준비물을 한 페이지에서 확인하세요.</p>'
+        + '<a class="info-link-btn" href="admissions.html' + qs + '">입학안내 보기 →</a>';
     }
   }
   var dirSec = document.getElementById('directionsSec');
   if (dirSec){
-    var text = (c.directions_text || '').trim();
-    if (!text){ dirSec.hidden = true; }
+    if (!(c.directions_text || '').trim()){ dirSec.hidden = true; }
     else {
       dirSec.hidden = false;
-      var mapId = 'kakao-map-' + (c.slug || 'center');
-      var lines = text.split('/').map(function(s){ return s.trim(); }).filter(Boolean);
       dirSec.innerHTML = '<h2 class="info-title">오시는 길</h2>'
-        + '<div class="dir-map" id="' + mapId + '"></div>'
-        + '<div class="dir-text">' + lines.map(function(l){ return '<div class="dir-line">' + esc(l) + '</div>'; }).join('') + '</div>';
-      loadKakaoMap(c.address, mapId);
+        + '<p class="info-lead">지도와 교통편·주차 안내를 확인하세요.</p>'
+        + '<a class="info-link-btn" href="directions.html' + qs + '">오시는 길 보기 →</a>';
     }
   }
 }

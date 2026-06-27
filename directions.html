@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>오시는 길 | 원이야</title>
+<meta name="description" content="원이야 오시는 길 안내입니다. 주소, 교통편, 주차 정보를 확인하세요.">
+<meta name="robots" content="index, follow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Gaegu:wght@700&family=Gowun+Dodum&display=swap" rel="stylesheet">
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<style>
+  /* ── 기본(웜 핑크) 팔레트 = home.html :root 상속 ── */
+  :root{
+    --cream:#FBF6EE;
+    --ink:#403733;
+    --ink-soft:#6E625B;
+    --coral:#FF8A6B;
+    --coral-deep:#F2715A;
+    --sage:#9CB89A;
+    --paper:#FFFFFF;
+    --line:#f0d9d9;
+    --display:'Gowun Dodum',sans-serif;
+    --hand:'Gaegu',cursive;
+    --body:'Pretendard',sans-serif;
+  }
+  /* ── data-theme 변수 블록 (home.html과 동일 — 원 theme 값 상속) ── */
+  [data-theme="natural"]{ --cream:#F4F0E8;--ink:#2E2A1E;--ink-soft:#6B6347;--coral:#7EA86A;--coral-deep:#5C8A47;--sage:#A89060 }
+  [data-theme="vivid"]{ --cream:#F0F8FF;--ink:#1A2E3A;--ink-soft:#4A6070;--coral:#FF6B35;--coral-deep:#E8501A;--sage:#4AABCC }
+  [data-theme="minimal"]{ --cream:#F7F7F5;--ink:#1A1A1A;--ink-soft:#666660;--coral:#2B4C8C;--coral-deep:#1A3470;--sage:#8C8C8A }
+
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{font-family:var(--body);color:var(--ink);background:var(--cream);line-height:1.7;-webkit-font-smoothing:antialiased;padding-bottom:40px}
+
+  .topbar{position:sticky;top:0;z-index:20;background:rgba(255,250,243,.82);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);box-shadow:0 1px 0 rgba(180,140,110,.12)}
+  .topbar .inner{max-width:560px;margin:0 auto;padding:12px 22px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+  .topbar .brand{font-family:var(--display);font-size:1.15rem;color:var(--ink);text-decoration:none;letter-spacing:-.5px}
+  .topbar .back{display:inline-flex;align-items:center;gap:6px;color:var(--ink-soft);text-decoration:none;font-weight:700;font-size:.9rem;border:1.5px solid var(--line);border-radius:50px;padding:8px 16px;background:rgba(255,255,255,.6);transition:color .2s ease,border-color .2s ease}
+  .topbar .back:hover{color:var(--coral-deep);border-color:var(--coral)}
+
+  .wrap{max-width:560px;margin:0 auto;padding:0 22px;position:relative}
+
+  .page-hero{text-align:center;padding:48px 22px 26px}
+  .page-hero .eyebrow{font-family:var(--hand);font-size:1.25rem;color:var(--coral-deep);font-weight:700;margin-bottom:8px}
+  .page-hero h1{font-family:var(--display);font-size:clamp(2.1rem,9vw,2.8rem);font-weight:400;letter-spacing:-1px}
+
+  .dir-map{height:320px;border-radius:18px;overflow:hidden;border:1px solid var(--line);background:#faf0f0}
+  .addr{margin-top:18px;background:var(--paper);border-radius:16px;padding:16px 18px;box-shadow:0 16px 40px -24px rgba(120,80,60,.4);font-size:1rem;color:var(--ink);display:flex;align-items:flex-start;gap:10px}
+  .addr .pin{flex:none;color:var(--coral-deep);font-weight:700}
+  .dir-text{margin-top:18px;display:flex;flex-direction:column;gap:12px}
+  .dir-line{display:flex;align-items:flex-start;gap:12px;background:var(--paper);border-radius:14px;padding:14px 16px;box-shadow:0 14px 34px -24px rgba(120,80,60,.4);font-size:.98rem;color:var(--ink);line-height:1.55}
+  .dir-line .ic{flex:none;width:26px;height:26px;border-radius:50%;background:var(--cream);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:.85rem}
+
+  .cta{text-align:center;padding:46px 22px 10px}
+  .cta h2{font-family:var(--display);font-size:1.5rem;letter-spacing:-.5px}
+  .cta p{color:var(--ink-soft);margin:10px 0 24px;font-size:.96rem}
+  .btn-big{display:inline-block;background:var(--coral);color:#fff;font-weight:700;font-size:1.05rem;padding:16px 40px;border-radius:50px;text-decoration:none;box-shadow:0 16px 34px -10px var(--coral-deep);transition:transform .3s ease}
+  .btn-big:hover{transform:translateY(-3px)}
+
+  .state{text-align:center;color:var(--ink-soft);padding:80px 22px;font-size:1rem}
+  a:focus-visible,.btn-big:focus-visible{outline:3px solid var(--coral);outline-offset:3px;border-radius:10px}
+</style>
+</head>
+<body data-theme="">
+
+<nav class="topbar">
+  <div class="inner">
+    <a class="brand" id="brandLink" href="index.html">원이야</a>
+    <a class="back" id="backLink" href="index.html">← 홈으로</a>
+  </div>
+</nav>
+
+<header class="page-hero">
+  <div class="eyebrow" id="heroEyebrow"></div>
+  <h1>오시는 길</h1>
+</header>
+
+<main class="wrap" id="content"></main>
+
+<section class="cta" id="ctaSec" hidden>
+  <h2>방문 전 상담을 원하시나요?</h2>
+  <p>편하신 시간에 맞춰 안내해 드릴게요.</p>
+  <a class="btn-big" id="consultLink" href="index.html">상담 신청하기</a>
+</section>
+
+<script src="supabase-config.js"></script>
+<script src="kakao-config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+var TEMPLATE_FILES = { sunshine:'home.html', forest:'template-forest.html', carnival:'template-carnival.html', gallery:'template-gallery.html' };
+
+// 카카오맵 JS SDK: 주소 검색 후 마커 표시 (home.html과 동일 패턴). 키는 kakao-config.js에서 주입.
+function loadKakaoMap(address, containerId){
+  var cfg = window.__KAKAO_CONFIG__;
+  var container = document.getElementById(containerId);
+  if (!container || !address) return;
+  if (!cfg || !cfg.appkey){ console.warn('[kakao] appkey 없음 — 지도를 건너뜁니다.'); return; }
+  function render(){
+    kakao.maps.load(function(){
+      var map = new kakao.maps.Map(container, { center: new kakao.maps.LatLng(37.5665, 126.9780), level: 3 });
+      var geocoder = new kakao.maps.services.Geocoder();
+      geocoder.addressSearch(address, function(result, status){
+        if (status === kakao.maps.services.Status.OK){
+          var coords = new kakao.maps.LatLng(result[0].y, result[0].x);
+          map.setCenter(coords);
+          new kakao.maps.Marker({ map: map, position: coords });
+        }
+      });
+    });
+  }
+  if (window.kakao && window.kakao.maps){ render(); return; }
+  if (!window.__kakaoSDKPromise){
+    window.__kakaoSDKPromise = new Promise(function(resolve, reject){
+      var s = document.createElement('script');
+      s.src = 'https://dapi.kakao.com/v2/maps/sdk.js?appkey=' + encodeURIComponent(cfg.appkey) + '&libraries=services&autoload=false';
+      s.onload = resolve; s.onerror = reject;
+      document.head.appendChild(s);
+    });
+  }
+  window.__kakaoSDKPromise.then(render).catch(function(){ console.error('[kakao] SDK 로드 실패'); });
+}
+
+(async function(){
+  var content = document.getElementById('content');
+  var esc = function(s){ return String(s==null?'':s).replace(/[&<>"']/g, function(ch){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]; }); };
+
+  var cfg = window.__SUPABASE_CONFIG__;
+  var client = supabase.createClient(cfg.url, cfg.anonKey);
+  var slug = new URLSearchParams(location.search).get('slug') || 'haetsal';
+
+  var center;
+  try {
+    var res = await client.from('centers').select('name, address, directions_text, theme, template, slug').eq('slug', slug).single();
+    if (res.error) throw res.error;
+    center = res.data;
+  } catch (e) {
+    console.error(e);
+    content.innerHTML = '<p class="state">오시는 길을 불러오지 못했어요.</p>';
+    return;
+  }
+
+  if (center.theme) document.body.setAttribute('data-theme', center.theme);
+
+  var mainFile = TEMPLATE_FILES[center.template] || 'home.html';
+  var mainUrl = mainFile + '?slug=' + encodeURIComponent(center.slug);
+  document.getElementById('brandLink').href = mainUrl;
+  document.getElementById('brandLink').textContent = (center.name || '원이야').replace(/\s*(어린이집|유치원)$/,'') || center.name;
+  document.getElementById('backLink').href = mainUrl;
+  document.getElementById('consultLink').href = mainUrl + '#finale';
+  document.getElementById('heroEyebrow').textContent = center.name || '';
+
+  document.title = (center.name || '원') + ' - 오시는 길 | 원이야';
+  var metaDesc = document.querySelector('meta[name="description"]');
+  if (metaDesc) metaDesc.setAttribute('content', (center.name || '원') + ' 오시는 길 안내입니다. 주소, 교통편, 주차 정보를 확인하세요.');
+
+  var dirText = (center.directions_text || '').trim();
+  if (!center.address && !dirText) {
+    content.innerHTML = '<p class="state">오시는 길 정보가 아직 등록되지 않았어요.</p>';
+    return;
+  }
+
+  var mapId = 'kakao-map-' + (center.slug || 'center');
+  var html = '<div class="dir-map" id="' + mapId + '"></div>';
+  if (center.address) html += '<div class="addr"><span class="pin">◎</span><span>' + esc(center.address) + '</span></div>';
+  if (dirText){
+    var lines = dirText.split('/').map(function(s){ return s.trim(); }).filter(Boolean);
+    html += '<div class="dir-text">' + lines.map(function(l){ return '<div class="dir-line"><span class="ic">›</span><span>' + esc(l) + '</span></div>'; }).join('') + '</div>';
+  }
+  content.innerHTML = html;
+
+  loadKakaoMap(center.address, mapId);
+  document.getElementById('ctaSec').hidden = false;
+})();
+</script>
+</body>
+</html>
