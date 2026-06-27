@@ -87,6 +87,20 @@
 
   /* ── 히어로 ── */
   .hero{min-height:100vh;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:15vh 24px 7vh;position:relative}
+  /* 히어로 사진 배경 + 하단 페이드 (carnival — 사진 있을 때만) */
+  .hero .hero-bg{position:absolute;inset:0;z-index:0;overflow:hidden}
+  .hero .hero-bg img{width:100%;height:100%;object-fit:cover;display:block}
+  .hero .hero-bg::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(255,249,240,.2) 0%,transparent 30%,transparent 52%,var(--bg) 100%)}
+  .hero>*:not(.hero-bg):not(.confetti){position:relative;z-index:2}
+  .hero.has-photo .eyebrow,.hero.has-photo h1{text-shadow:0 2px 12px rgba(0,0,0,.18)}
+  /* 색종이(confetti) 오버레이 — 순수 CSS */
+  .hero .confetti{position:absolute;inset:0;z-index:1;pointer-events:none;opacity:.55;background-repeat:no-repeat;background-image:
+    radial-gradient(circle at 18% 22%,var(--red) 0 4px,transparent 5px),
+    radial-gradient(circle at 72% 14%,var(--yellow) 0 5px,transparent 6px),
+    radial-gradient(circle at 86% 42%,var(--blue) 0 4px,transparent 5px),
+    radial-gradient(circle at 34% 58%,var(--mint) 0 4px,transparent 5px),
+    radial-gradient(circle at 58% 78%,var(--purple) 0 5px,transparent 6px),
+    radial-gradient(circle at 12% 74%,var(--yellow-deep) 0 4px,transparent 5px)}
   .bunting{display:flex;gap:0;margin-bottom:28px}
   .bunting i{width:0;height:0;border-left:13px solid transparent;border-right:13px solid transparent;border-top:22px solid;filter:drop-shadow(0 4px 4px rgba(0,0,0,.08))}
   .bunting i:nth-child(5n+1){border-top-color:var(--red)}
@@ -422,6 +436,7 @@ function mapRowToData(row){
     };
   });
   return {
+    heroPhoto: (byType('hero')[0] || {}).photo_url || null,
     center: {
       id: row.id, slug: row.slug, name: row.name, theme: row.theme,
       address: row.address, directions_text: row.directions_text,
@@ -477,7 +492,9 @@ function mapRowToData(row){
     const resolveSignedPath = await signPaths([]
       .concat((data.album?.items || []).map(it => it.photo))
       .concat((data.teachers?.items || []).map(tc => tc.photo))
-      .concat(data.center.director ? [data.center.director.photo] : []));
+      .concat(data.center.director ? [data.center.director.photo] : [])
+      .concat(data.heroPhoto ? [data.heroPhoto] : []));
+    if (data.heroPhoto){ data.heroPhoto = resolveSignedPath(data.heroPhoto); }
     for (const it of data.album.items){ it.photo = resolveSignedPath(it.photo); }
     for (const tc of data.teachers.items){ tc.photo = resolveSignedPath(tc.photo); }
     if (data.center.director){ data.center.director.photo = resolveSignedPath(data.center.director.photo); }
@@ -520,13 +537,19 @@ function mapRowToData(row){
     {label:'포토존', href:'#photozone'},
     {label:'안내데스크', href:'#desk'}
   ];
+  // 입학안내·오시는 길은 데이터 있을 때만 풍선 메뉴에 추가
+  if (data.admission) balloonItems.push({ label:'입학안내', href:'admissions.html?slug=' + encodeURIComponent(c.slug || '') });
+  if ((c.directions_text || '').trim()) balloonItems.push({ label:'오시는 길', href:'directions.html?slug=' + encodeURIComponent(c.slug || '') });
   const balloonMenu = balloonItems.map(b=>`
     <a class="bln" href="${b.href}">
       <span class="bln-body"><span class="shine"></span></span>
       <span class="bln-label">${b.label}</span>
       <span class="string"></span>
     </a>`).join('');
+  if (data.heroPhoto) $('hero').classList.add('has-photo');
   $('hero').innerHTML = `
+    ${data.heroPhoto ? `<div class="hero-bg"><img alt="${esc(c.name)}" src="${esc(data.heroPhoto)}"></div>` : ''}
+    <div class="confetti" aria-hidden="true"></div>
     <div class="bunting reveal">${bunting}</div>
     <div class="eyebrow reveal">${esc(h.eyebrow)}</div>
     <h1 class="reveal">${esc(h.title)}<br><span class="pop">${esc(h.title_accent)}</span></h1>

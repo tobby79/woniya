@@ -329,6 +329,14 @@
       }
     }
 
+    /* ── 히어로 사진: 비정형 나뭇잎 프레임 (forest 고유) ── */
+    .hero-photo{position:relative;width:min(280px,72vw);aspect-ratio:1/1.08;margin:0 auto 18px;clip-path:url(#leafClip);background:linear-gradient(140deg,var(--leaf-light),var(--leaf))}
+    .hero-photo img{width:100%;height:100%;object-fit:cover;display:block}
+    /* ── 나뭇잎 메뉴 버튼 (forest 고유) ── */
+    .leaf-menu{display:flex;flex-wrap:wrap;justify-content:center;gap:12px;margin-top:34px;max-width:430px;margin-left:auto;margin-right:auto}
+    .leaf-btn{font-family:var(--body);font-weight:700;font-size:.92rem;color:#fff;text-decoration:none;padding:13px 22px;background:var(--leaf);border-radius:2px 20px 2px 20px;box-shadow:0 8px 18px -8px rgba(74,107,58,.65);transition:transform .2s ease,background .2s ease}
+    .leaf-btn:hover{transform:translateY(-2px);background:var(--moss)}
+
     /* ── 타임라인 시작: 원장 표지판 ── */
     .trail-start {
       padding-top: 30px;
@@ -1302,6 +1310,8 @@
 
   <div class="forest-bg"></div>
   <div class="light-rays"></div>
+  <!-- 나뭇잎 비정형 프레임 clipPath (CSS clip-path: url(#leafClip)에서 참조) -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs><clipPath id="leafClip" clipPathUnits="objectBoundingBox"><path d="M0.5,0.02 C0.86,0.12 0.98,0.42 0.5,0.98 C0.02,0.42 0.14,0.12 0.5,0.02 Z"/></clipPath></defs></svg>
 
   <header class="hero wrap" id="hero"></header>
   <section class="trail-start wrap" id="greeting"></section>
@@ -1417,6 +1427,7 @@
         };
       });
       return {
+        heroPhoto: (byType('hero')[0] || {}).photo_url || null,
         center: {
           id: row.id, slug: row.slug, name: row.name, theme: row.theme,
           address: row.address, directions_text: row.directions_text,
@@ -1475,7 +1486,9 @@
           .concat((data.day_story || []).map(m => m.photo))
           .concat((data.album?.items || []).map(it => it.photo))
           .concat((data.teachers?.items || []).map(tc => tc.photo))
-          .concat(data.center.director ? [data.center.director.photo] : []));
+          .concat(data.center.director ? [data.center.director.photo] : [])
+          .concat(data.heroPhoto ? [data.heroPhoto] : []));
+        if (data.heroPhoto){ data.heroPhoto = resolveSignedPath(data.heroPhoto); }
         for (const m of data.day_story){ m.photo = resolveSignedPath(m.photo); }
         for (const it of data.album.items){ it.photo = resolveSignedPath(it.photo); }
         for (const tc of data.teachers.items){ tc.photo = resolveSignedPath(tc.photo); }
@@ -1507,10 +1520,14 @@
       $('menuPanel').innerHTML = (c.menu || []).map(m => `<a href="${esc(m.href)}"${m.cta ? ' class="menu-cta"' : ''}>${esc(m.label)}</a>`).join('');
 
       const h = c.hero;
+      const leafMenu = (c.menu || []).filter(m => !m.cta)
+        .map(m => `<a class="leaf-btn" href="${esc(m.href)}">${esc(m.label)}</a>`).join('');
       $('hero').innerHTML = `
+    <div class="hero-photo reveal">${data.heroPhoto ? `<img alt="${esc(c.name)}" src="${esc(data.heroPhoto)}">` : ''}</div>
     <div class="eyebrow reveal">${esc(h.eyebrow)}</div>
     <h1 class="reveal">${esc(h.title)}<br><span class="glow">${esc(h.title_accent)}</span></h1>
     <p class="reveal">${esc(h.subtitle)}</p>
+    <nav class="leaf-menu reveal" aria-label="바로가기">${leafMenu}</nav>
     <div class="enter-cue reveal"><span>숲길을 따라 걸어요</span><span class="path"></span></div>`;
 
       const d = c.director;

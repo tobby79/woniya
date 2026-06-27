@@ -195,7 +195,14 @@
   .reveal.in{opacity:1;transform:none}
 
   /* ── 히어로 ── */
-  .hero{min-height:82vh;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:8vh 22px 4vh}
+  .hero{min-height:82vh;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:8vh 22px 4vh;position:relative;overflow:hidden}
+  .hero>*{position:relative;z-index:2}
+  .hero .hero-bg{position:absolute;inset:0;z-index:0;overflow:hidden}
+  .hero .hero-bg img{width:100%;height:100%;object-fit:cover;display:block}
+  .hero.has-photo .eyebrow,.hero.has-photo h1{text-shadow:0 2px 14px rgba(0,0,0,.28)}
+  /* 햇살 빛줄기 + 하단 페이드 (사진 없을 때도 웜 톤 유지) */
+  .hero::before{content:'';position:absolute;inset:0;z-index:1;pointer-events:none;background:linear-gradient(160deg,rgba(255,220,100,.35) 0%,transparent 40%),linear-gradient(175deg,rgba(255,200,80,.2) 10%,transparent 50%),linear-gradient(155deg,rgba(255,230,120,.25) 5%,transparent 35%)}
+  .hero::after{content:'';position:absolute;bottom:0;left:0;right:0;height:40%;z-index:1;pointer-events:none;background:linear-gradient(to bottom,transparent,var(--cream))}
   .hero .eyebrow{font-family:var(--hand);font-size:1.35rem;color:var(--coral-deep);letter-spacing:.5px;margin-bottom:10px;font-weight:700}
   .hero h1{font-family:var(--display);font-size:clamp(2.7rem,11vw,3.8rem);font-weight:400;line-height:1.18;letter-spacing:-1px}
   .hero h1 .glow{color:var(--coral-deep)}
@@ -521,6 +528,7 @@ function mapRowToData(row){
   });
 
   return {
+    heroPhoto: (byType('hero')[0] || {}).photo_url || null,
     center: {
       id: row.id,
       slug: row.slug,
@@ -607,7 +615,9 @@ function mapRowToData(row){
       .concat((data.day_story || []).map(m => m.photo))
       .concat((data.album?.items || []).map(it => it.photo))
       .concat((data.teachers?.items || []).map(tc => tc.photo))
-      .concat(data.center.director ? [data.center.director.photo] : []));
+      .concat(data.center.director ? [data.center.director.photo] : [])
+      .concat(data.heroPhoto ? [data.heroPhoto] : []));
+    if (data.heroPhoto){ data.heroPhoto = resolveSignedPath(data.heroPhoto); }
     for (const m of data.day_story){ m.photo = resolveSignedPath(m.photo); }
     for (const it of data.album.items){ it.photo = resolveSignedPath(it.photo); }
     for (const tc of data.teachers.items){ tc.photo = resolveSignedPath(tc.photo); }
@@ -647,7 +657,9 @@ function mapRowToData(row){
   const h = c.hero;
   const cloudMenu = (c.menu || []).filter(m=>!m.cta)
     .map(m=>`<a class="cloud-link" href="${esc(m.href)}">${esc(m.label)}</a>`).join('');
+  if (data.heroPhoto) $('hero').classList.add('has-photo');
   $('hero').innerHTML = `
+    ${data.heroPhoto ? `<div class="hero-bg"><img alt="${esc(c.name)}" src="${esc(data.heroPhoto)}"></div>` : ''}
     <div class="eyebrow reveal">${esc(h.eyebrow)}</div>
     <h1 class="reveal">${esc(h.title)}<br><span class="glow">${esc(h.title_accent)}</span></h1>
     <p class="reveal">${esc(h.subtitle)}</p>

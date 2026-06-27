@@ -74,6 +74,10 @@
   .banner p{margin-top:18px;font-size:1.05rem;opacity:.92;max-width:420px;font-weight:300}
   .banner .scroll-line{position:absolute;left:50%;bottom:28px;transform:translateX(-50%);z-index:2;width:1px;height:46px;background:rgba(255,255,255,.5);overflow:hidden}
   .banner .scroll-line::after{content:"";position:absolute;top:-46px;left:0;width:1px;height:46px;background:#fff;animation:scrolldown 2s infinite}
+  /* 액자형 메뉴 버튼 (gallery 고유 — 모노톤·세련) */
+  .banner .frame-menu{display:flex;flex-wrap:wrap;gap:10px;margin-top:26px}
+  .banner .frame-btn{font-size:.84rem;font-weight:600;letter-spacing:.5px;color:#fff;text-decoration:none;padding:10px 16px;border:1px solid rgba(255,255,255,.45);border-radius:8px;background:rgba(255,255,255,.08);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);transition:background .2s ease,border-color .2s ease}
+  .banner .frame-btn:hover{background:rgba(255,255,255,.2);border-color:#fff}
   @keyframes scrolldown{0%{top:-46px}60%,100%{top:46px}}
 
   /* ── 2. 갤러리 (앨범) — 가로 슬라이드 ── */
@@ -454,6 +458,7 @@ function mapRowToData(row){
       <div class="eyebrow reveal">${esc(h.eyebrow)}</div>
       <h1 class="reveal">${esc(h.title)} ${esc(h.title_accent)}</h1>
       <p class="reveal">${esc(h.subtitle)}</p>
+      <nav class="frame-menu reveal" aria-label="바로가기">${(c.menu||[]).filter(m=>!m.cta).map(m=>`<a class="frame-btn" href="${esc(m.href)}">${esc(m.label)}</a>`).join('')}</nav>
     </div>
     <div class="scroll-line"></div>`;
 
