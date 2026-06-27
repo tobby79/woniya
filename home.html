@@ -553,16 +553,40 @@ function mapRowToData(row){
     if (error) throw error;
     data = mapRowToData(row);
 
-    // Storage 경로를 서명 URL로 변환
-    async function signPath(path){
-      if (!path || /^https?:\/\//.test(path)) return path;
-      const { data: signed } = await client.storage.from('center-images').createSignedUrl(path, 3600);
-      return signed ? signed.signedUrl : path;
+    // Storage 경로를 한 번의 batch 서명 요청으로 변환
+    async function signPaths(paths){
+      const unique = Array.from(new Set(paths.filter(function(path){
+        return path && !/^https?:\/\//.test(path);
+      })));
+      const signedMap = new Map();
+      if (unique.length){
+        const res = await fetch(cfg.url + '/storage/v1/object/sign/center-images', {
+          method: 'POST',
+          headers: {
+            apikey: cfg.anonKey,
+            Authorization: 'Bearer ' + cfg.anonKey,
+            'content-type': 'application/json'
+          },
+          body: JSON.stringify({ paths: unique, expiresIn: 3600 })
+        });
+        if (!res.ok) throw new Error('Failed to sign center images');
+        const signed = await res.json();
+        (signed || []).forEach(function(item, index){
+          const signedUrl = item.signedURL ? cfg.url + '/storage/v1' + item.signedURL : (item.signedUrl || unique[index]);
+          signedMap.set(item.path || unique[index], signedUrl);
+        });
+      }
+      return function(path){ return signedMap.get(path) || path; };
     }
-    for (const m of data.day_story){ m.photo = await signPath(m.photo); }
-    for (const it of data.album.items){ it.photo = await signPath(it.photo); }
-    for (const tc of data.teachers.items){ tc.photo = await signPath(tc.photo); }
-    if (data.center.director){ data.center.director.photo = await signPath(data.center.director.photo); }
+    const resolveSignedPath = await signPaths([]
+      .concat((data.day_story || []).map(m => m.photo))
+      .concat((data.album?.items || []).map(it => it.photo))
+      .concat((data.teachers?.items || []).map(tc => tc.photo))
+      .concat(data.center.director ? [data.center.director.photo] : []));
+    for (const m of data.day_story){ m.photo = resolveSignedPath(m.photo); }
+    for (const it of data.album.items){ it.photo = resolveSignedPath(it.photo); }
+    for (const tc of data.teachers.items){ tc.photo = resolveSignedPath(tc.photo); }
+    if (data.center.director){ data.center.director.photo = resolveSignedPath(data.center.director.photo); }
 
     const themeParam = new URLSearchParams(location.search).get('theme') || (data.center.theme || '');
     if (themeParam) document.documentElement.setAttribute('data-theme', themeParam);
@@ -607,7 +631,7 @@ function mapRowToData(row){
       <div class="time reveal">${esc(m.time)}</div>
       <div class="title reveal">${esc(m.title)}</div>
       <div class="${frameCls[i]||'frame'} reveal">
-        <img class="frame-img" loading="lazy" alt="${esc(m.photo_alt)}" src="${esc(m.photo)}">
+        <img class="frame-img" alt="${esc(m.photo_alt)}" data-src="${esc(m.photo)}">
         <div class="cap">${esc(m.caption)}</div>
       </div>
       <p class="note reveal">${esc(m.note)}</p>
@@ -625,12 +649,12 @@ function mapRowToData(row){
     <p class="section-sub reveal">${esc(al?.sub)}</p>
     <div class="polaroids">${visibleItems.map((it,i)=>`
       <div class="polaroid p${i+1} reveal" tabindex="0">
-        <div class="pic"><img loading="lazy" alt="${esc(it.label)}" src="${esc(it.photo)}"></div>
+        <div class="pic"><img alt="${esc(it.label)}" data-src="${esc(it.photo)}"></div>
         <div class="label">${esc(it.label)}</div>
       </div>`).join('')}</div>
     ${hiddenItems.length?`<div class="polaroids album-hidden" hidden>${hiddenItems.map((it,i)=>`
       <div class="polaroid reveal" tabindex="0">
-        <div class="pic"><img loading="lazy" alt="${esc(it.label)}" src="${esc(it.photo)}"></div>
+        <div class="pic"><img alt="${esc(it.label)}" data-src="${esc(it.photo)}"></div>
         <div class="label">${esc(it.label)}</div>
       </div>`).join('')}</div>
     <button type="button" class="more-link album-more-btn" style="background:none;border:none;cursor:pointer;font-family:inherit" onclick="this.previousElementSibling.hidden=false;this.remove();">더 보기 (총 ${albumItems.length}장)</button>`:''}`;
@@ -644,7 +668,7 @@ function mapRowToData(row){
       <div class="flip reveal" tabindex="0" role="button" aria-label="${esc(tc.name)} 카드 뒤집기">
         <div class="flip-inner">
           <div class="face front">
-            <div class="avatar"><img alt="${esc(tc.name)}" src="${esc(tc.photo)}"></div>
+            <div class="avatar"><img alt="${esc(tc.name)}" data-src="${esc(tc.photo)}"></div>
             <div class="t-info">
               <div class="name">${esc(tc.name)}</div>
               <div class="role">${esc(tc.role)}</div>
@@ -722,6 +746,7 @@ function mapRowToData(row){
 
 function initInteractions(){
   var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  initDeferredImages();
 
   var io = new IntersectionObserver(function(entries){
     entries.forEach(function(e){ if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target);} });
@@ -808,6 +833,28 @@ function initInteractions(){
       a.style.maxHeight = open ? (a.scrollHeight+'px') : null;
     });
   });
+}
+
+function initDeferredImages(){
+  var imgs = document.querySelectorAll('img[data-src]');
+  if (!imgs.length) return;
+  function load(img){
+    if (!img.dataset.src) return;
+    img.src = img.dataset.src;
+    img.removeAttribute('data-src');
+  }
+  if (!('IntersectionObserver' in window)){
+    imgs.forEach(load);
+    return;
+  }
+  var observer = new IntersectionObserver(function(entries){
+    entries.forEach(function(entry){
+      if (!entry.isIntersecting) return;
+      load(entry.target);
+      observer.unobserve(entry.target);
+    });
+  }, { rootMargin: '200px' });
+  imgs.forEach(function(img){ observer.observe(img); });
 }
 
 function initConsultationForm(client, centerId){

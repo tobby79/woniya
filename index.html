@@ -213,6 +213,10 @@
   const chipsEl   = document.getElementById('chips');
   const input     = document.getElementById('regionInput');
   const searchBtn = document.getElementById('searchBtn');
+  const pageCache = window.__WONIYA_INDEX_CACHE || (window.__WONIYA_INDEX_CACHE = {
+    centers: null,
+    signedUrls: new Map()
+  });
 
   function escapeHtml(s){
     return String(s == null ? '' : s).replace(/[&<>"']/g, function(ch){
@@ -222,27 +226,57 @@
 
   let centers = [];
   try {
-    const cfg = window.__SUPABASE_CONFIG__;
-    const client = supabase.createClient(cfg.url, cfg.anonKey);
-    const { data, error } = await client
-      .from('centers')
-      .select('slug, name, region, address, badges, tags, director, template, card_image')
-      .eq('status', 'published')
-      .order('name'); // 거리·품질이 아닌 중립 기준(이름순). 위치 검색은 추후 lat/lng 도입 시 거리순으로 교체.
-    if (error) throw error;
-    centers = data || [];
-    async function signPath(path){
-      if (!path || /^https?:\/\//.test(path)) return path;
-      const { data: signed } = await client.storage.from('center-images').createSignedUrl(path, 3600);
-      return signed ? signed.signedUrl : path;
-    }
-    for (const center of centers){
-      if (center.director && center.director.photo){
-        center.director.photo = await signPath(center.director.photo);
+    if (pageCache.centers) {
+      centers = pageCache.centers;
+    } else {
+      const cfg = window.__SUPABASE_CONFIG__;
+      const client = supabase.createClient(cfg.url, cfg.anonKey);
+      const { data, error } = await client
+        .from('centers')
+        .select('slug, name, region, address, badges, tags, director, template, card_image')
+        .eq('status', 'published')
+        .order('name'); // 거리·품질이 아닌 중립 기준(이름순). 위치 검색은 추후 lat/lng 도입 시 거리순으로 교체.
+      if (error) throw error;
+      centers = data || [];
+
+      function imagePathOf(center) {
+        return center.card_image || (center.director && center.director.photo) || '';
       }
-      if (center.card_image){
-        center.card_image = await signPath(center.card_image);
+      function needsSigning(path) {
+        return path && !/^https?:\/\//.test(path);
       }
+      async function signPaths(paths) {
+        const missing = Array.from(new Set(paths.filter(needsSigning)))
+          .filter(function(path){ return !pageCache.signedUrls.has(path); });
+        if (!missing.length) return;
+
+        const res = await fetch(cfg.url + '/storage/v1/object/sign/center-images', {
+          method: 'POST',
+          headers: {
+            apikey: cfg.anonKey,
+            Authorization: 'Bearer ' + cfg.anonKey,
+            'content-type': 'application/json'
+          },
+          body: JSON.stringify({ paths: missing, expiresIn: 3600 })
+        });
+        if (!res.ok) throw new Error('Failed to sign center card images');
+        const signed = await res.json();
+        (signed || []).forEach(function(item, index) {
+          const signedUrl = item.signedURL ? cfg.url + '/storage/v1' + item.signedURL : (item.signedUrl || missing[index]);
+          pageCache.signedUrls.set(item.path || missing[index], signedUrl);
+        });
+      }
+
+      await signPaths(centers.map(imagePathOf));
+      for (const center of centers) {
+        if (center.card_image && pageCache.signedUrls.has(center.card_image)) {
+          center.card_image = pageCache.signedUrls.get(center.card_image);
+        }
+        if (center.director && center.director.photo && pageCache.signedUrls.has(center.director.photo)) {
+          center.director.photo = pageCache.signedUrls.get(center.director.photo);
+        }
+      }
+      pageCache.centers = centers;
     }
   } catch (e) {
     console.error(e);
@@ -295,7 +329,7 @@
       var templateFile = TEMPLATE_FILES[c.template] || 'home.html';
       return '' +
         '<a class="ocard" href="' + templateFile + '?slug=' + encodeURIComponent(c.slug) + '">' +
-          '<div class="photo">' + (photo ? '<img loading="lazy" src="' + photo + '" alt="' + escapeHtml(c.name) + '">' : '') + '</div>' +
+          '<div class="photo">' + (photo ? '<img src="' + photo + '" alt="' + escapeHtml(c.name) + '">' : '') + '</div>' +
           '<div class="body">' +
             '<div class="name">' + escapeHtml(c.name) + '</div>' +
             '<div class="meta">' + escapeHtml(locationText) + '</div>' +
