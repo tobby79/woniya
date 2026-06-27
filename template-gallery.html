@@ -318,6 +318,20 @@ function mapRowToData(row){
         return true;
       });
   };
+  const teacherFallbacks = [
+    { name: '김햇살 선생님', role: '만 3세 햇살반 담임', message: '아이의 속도에 맞춰 기다려 줄게요.' },
+    { name: '이초록 선생님', role: '만 4세 새싹반 담임', message: '매일의 작은 성장을 놓치지 않을게요.' },
+    { name: '박노을 선생님', role: '만 5세 열매반 담임', message: '마음껏 궁금해하는 아이로 도울게요.' }
+  ];
+  const teacherItems = byType('teacher').map((m, i) => {
+    const fallback = teacherFallbacks[i % teacherFallbacks.length];
+    return {
+      name: m.title || fallback.name,
+      role: m.subtitle || fallback.role,
+      photo: m.photo_url,
+      message: m.caption || fallback.message
+    };
+  });
   const hero = byType('hero')[0] || null;
   return {
     center: {
@@ -328,7 +342,7 @@ function mapRowToData(row){
     },
     heroPhoto: hero ? hero.photo_url : null,
     album: { items: byType('album').map(m => ({ label: m.title, photo: m.photo_url })) },
-    teachers: { items: byType('teacher').map(m => ({ name: m.title, role: m.subtitle, photo: m.photo_url, message: m.caption })) },
+    teachers: { items: teacherItems },
     notices: row.notices || { eyebrow:'', title:'', items:[], more:'' },
     schedule: row.schedule || { eyebrow:'', title:'', month_label:'', days_in_month:30, event_days:[], trailing_muted:0, events:[] },
     faqs: row.faqs || { eyebrow:'', title:'', items:[] },
