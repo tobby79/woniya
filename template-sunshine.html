@@ -239,7 +239,7 @@
   @keyframes drop{0%{opacity:0;transform:translate(-50%,0)}30%{opacity:1}80%{opacity:0;transform:translate(-50%,16px)}100%{opacity:0}}
 
   /* ── 원장 인사 (배경과 어우러지게) ── */
-  .director{padding-top:60px;padding-bottom:30px;text-align:center}
+  .director{padding-top:60px;padding-bottom:40px;text-align:center}
   .director .badge{font-family:var(--hand);font-weight:700;color:var(--coral-deep);font-size:1.22rem;margin-bottom:26px}
   .director .portrait{width:144px;height:144px;border-radius:50%;margin:0 auto 24px;background:linear-gradient(135deg,#ffe7d4,#ffc4ac);display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.92);font-size:.78rem;box-shadow:0 0 0 9px rgba(255,255,255,.45),0 18px 38px -14px rgba(180,110,80,.45);overflow:hidden}
   .director .portrait span{border:1.5px dashed rgba(255,255,255,.9);border-radius:40px;padding:6px 13px}
@@ -426,11 +426,10 @@
 <!-- 아래 섹션들은 비어있고, JS가 haetsal.json을 읽어 채웁니다 -->
 <header class="hero" id="hero"></header>
 <section class="director wrap" id="greeting"></section>
-<main class="day wrap" id="day"></main>
-<section class="album wrap" id="albumSec"></section>
+<section class="facilities wrap" id="facilitiesSec"></section>
+<section class="album wrap" id="albumSec" hidden></section>
 <section class="teachers wrap" id="teachersSec"></section>
-<section class="block wrap" id="notice"></section>
-<section class="block wrap" id="schedule"></section>
+<section class="programs wrap" id="programSec"></section>
 <section class="block wrap" id="faq"></section>
 <section class="info-block wrap" id="admissionsSec" hidden></section>
 <section class="info-block wrap" id="directionsSec" hidden></section>
@@ -493,27 +492,6 @@
   </div>
 </div>
 
-<!-- 원 소개 모달 -->
-<div class="info-modal-overlay" id="introModal">
-  <div class="info-modal-panel">
-    <button class="info-modal-close" id="introModalClose">×</button>
-    <h3 class="info-modal-title">원 소개</h3>
-    <p class="info-modal-greeting" id="introGreeting"></p>
-    <div class="info-modal-motto" id="introMotto"></div>
-    <div class="info-modal-values" id="introValues"></div>
-  </div>
-</div>
-
-<!-- 교육프로그램 모달 -->
-<div class="info-modal-overlay" id="programModal">
-  <div class="info-modal-panel">
-    <button class="info-modal-close" id="programModalClose">×</button>
-    <h3 class="info-modal-title">교육프로그램</h3>
-    <p class="info-modal-prog-intro" id="programIntro"></p>
-    <div class="info-modal-prog-list" id="programList"></div>
-  </div>
-</div>
-
 <!-- 라이트박스 -->
 <div class="lightbox-overlay" id="lightbox">
   <button class="lightbox-close" id="lightboxClose">×</button>
@@ -540,28 +518,40 @@
   .dir-line{display:flex;align-items:flex-start;gap:9px;font-size:.96rem;color:var(--ink-soft);line-height:1.5}
   .dir-line::before{content:"";flex:none;width:7px;height:7px;border-radius:50%;background:currentColor;opacity:.55;margin-top:8px}
 
-  /* ── 원 소개 / 교육프로그램 / 라이트박스 공통 모달 ── */
-  .info-modal-overlay{position:fixed;inset:0;z-index:60;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center;padding:20px;overflow-y:auto}
-  .info-modal-overlay.open{display:flex}
-  .info-modal-panel{position:relative;width:100%;max-width:480px;max-height:88vh;overflow-y:auto;background:var(--paper);border-radius:24px;padding:36px 28px 32px;box-shadow:0 30px 60px -20px rgba(0,0,0,.45)}
-  .info-modal-close{position:absolute;top:16px;right:16px;width:36px;height:36px;border:none;background:var(--cream, #F7F7F5);border-radius:50%;font-size:1.3rem;line-height:1;color:var(--ink-soft);cursor:pointer;display:flex;align-items:center;justify-content:center}
-  .info-modal-title{font-family:var(--display);font-size:1.45rem;color:var(--ink);letter-spacing:-.5px;margin-bottom:20px}
-  .info-modal-greeting{font-size:1rem;color:var(--ink-soft);line-height:1.9;white-space:pre-line;margin-bottom:24px}
-  .info-modal-motto{font-family:var(--display);font-size:1.25rem;color:var(--ink);text-align:center;padding:18px;background:var(--cream, #F7F6F3);border-radius:14px;margin-bottom:20px}
-  .info-modal-values{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-bottom:8px}
-  .info-modal-value{font-size:.9rem;font-weight:700;color:#fff;background:var(--coral, #2B2B2E);padding:7px 18px;border-radius:30px}
-  .info-modal-prog-intro{font-size:.96rem;color:var(--ink-soft);line-height:1.75;margin-bottom:22px}
-  .info-modal-prog-list{display:flex;flex-direction:column;gap:14px}
-  .info-modal-prog-item{background:var(--cream, #F7F6F3);border-radius:14px;padding:16px 18px}
-  .info-modal-prog-name{font-weight:700;font-size:1rem;color:var(--ink);margin-bottom:4px}
-  .info-modal-prog-desc{font-size:.9rem;color:var(--ink-soft);line-height:1.65}
-
   /* ── 라이트박스 ── */
   .lightbox-overlay{position:fixed;inset:0;z-index:70;background:rgba(0,0,0,.88);display:none;align-items:center;justify-content:center;padding:20px}
   .lightbox-overlay.open{display:flex}
   .lightbox-img{max-width:min(680px,92vw);max-height:82vh;object-fit:contain;border-radius:8px;display:block}
   .lightbox-close{position:absolute;top:18px;right:18px;width:40px;height:40px;border:none;background:rgba(255,255,255,.15);border-radius:50%;font-size:1.5rem;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center}
   .lightbox-cap{position:absolute;bottom:24px;left:50%;transform:translateX(-50%);color:rgba(255,255,255,.85);font-size:.92rem;white-space:nowrap}
+
+  /* ── 원 소개 카드 (원장 인사말 통합) ── */
+  .philosophy-card{margin-top:40px;background:var(--paper);border-radius:22px;padding:28px 24px;box-shadow:0 18px 44px -22px rgba(120,80,60,.32);text-align:center}
+  .philosophy-motto{font-family:var(--display);font-size:1.25rem;color:var(--ink);margin-bottom:18px;line-height:1.6}
+  .philosophy-values{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+  .philosophy-value{font-size:.9rem;font-weight:700;color:#fff;background:var(--coral);padding:8px 20px;border-radius:30px}
+
+  /* ── 원 시설 소개 ── */
+  .facilities{padding-top:70px;padding-bottom:40px}
+  .fac-stats{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-top:24px;margin-bottom:36px}
+  .fac-stat{background:var(--paper);border-radius:16px;padding:18px;text-align:center;box-shadow:0 12px 28px -18px rgba(120,80,60,.32)}
+  .fac-stat .s-value{font-family:var(--display);font-size:1.6rem;color:var(--coral-deep);font-weight:400}
+  .fac-stat .s-label{font-size:.82rem;color:var(--ink-soft);margin-top:4px}
+  .fac-intro{color:var(--ink-soft);font-size:.96rem;line-height:1.75;margin-bottom:8px;text-align:center}
+  .fac-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:8px}
+  .fac-card{background:var(--paper);border-radius:16px;padding:18px 16px;box-shadow:0 12px 28px -18px rgba(120,80,60,.32)}
+  .fac-card .f-name{font-weight:700;font-size:.96rem;color:var(--ink);margin-bottom:6px}
+  .fac-card .f-desc{font-size:.86rem;color:var(--ink-soft);line-height:1.6}
+  .fac-more-btn{display:block;width:100%;margin-top:14px;padding:14px;background:none;border:1.5px solid var(--coral);border-radius:14px;color:var(--coral);font-weight:700;font-size:.95rem;cursor:pointer;font-family:var(--body)}
+
+  /* ── 교육프로그램 소개 ── */
+  .programs{padding-top:70px;padding-bottom:40px}
+  .prog-intro{color:var(--ink-soft);font-size:.96rem;line-height:1.75;margin-bottom:24px;text-align:center}
+  .prog-list{display:flex;flex-direction:column;gap:14px}
+  .prog-item{background:var(--paper);border-radius:18px;padding:20px 18px;box-shadow:0 12px 28px -18px rgba(120,80,60,.32);display:flex;gap:14px;align-items:flex-start}
+  .prog-num{font-family:var(--display);font-size:1.4rem;color:var(--coral);flex:none;min-width:32px}
+  .prog-body .p-name{font-weight:700;font-size:1rem;color:var(--ink);margin-bottom:4px}
+  .prog-body .p-desc{font-size:.9rem;color:var(--ink-soft);line-height:1.65}
 </style>
 <script src="supabase-config.js"></script>
 <script src="kakao-config.js"></script>
@@ -611,7 +601,8 @@ function mapRowToData(row){
       hero: row.hero || { eyebrow:'', title:'', title_accent:'', subtitle:'' },
       director: row.director || { badge:'', photo:'', photo_alt:'', message:'', sign_label:'', sign_name:'', scroll_cue:'' },
       philosophy: row.philosophy || null,
-      programs: row.programs || null
+      programs: row.programs || null,
+      facilities: row.facilities || null
     },
     day_story: byType('day_story').map(m => ({
       slot: m.slot,
@@ -653,7 +644,7 @@ function mapRowToData(row){
     const slug = new URLSearchParams(location.search).get('slug') || 'haetsal';
     const { data: row, error } = await client
       .from('centers')
-      .select('*, center_media(*), admissions(*), philosophy, programs')
+      .select('*, center_media(*), admissions(*), philosophy, programs, facilities')
       .eq('slug', slug)
       .single();
     if (error) throw error;
@@ -709,17 +700,20 @@ function mapRowToData(row){
 
   // ── 상단바 / 메뉴 ──
   const c = data.center;
-  // M2: 공개형 새 페이지(입학안내/오시는 길) 메뉴 항목 런타임 주입 (DB 메뉴는 그대로 둠)
+  // 새 홈 구조: 하루스토리(#day)·공지(#notice)·행사일정(#schedule) 섹션 제거 → 해당 메뉴 항목 정리 후
+  // 시설 소개/교육프로그램(인페이지 섹션) + 입학안내/오시는 길(새 페이지) 런타임 주입
   (function(){
     var qs = c.slug ? ('?slug=' + encodeURIComponent(c.slug)) : '';
+    c.menu = (c.menu || []).filter(function(m){
+      return m.href !== '#notice' && m.href !== '#schedule' && m.href !== '#day';
+    });
     var extra = [];
-    extra.unshift({ href:'#', label:'우리 반', id:'ourclassBtn' });
-    extra.unshift({ href:'#', label:'교육프로그램', id:'programModalOpenBtn' });
-    extra.unshift({ href:'#', label:'원 소개', id:'introModalOpenBtn' });
+    if (data.center.facilities) extra.push({ href:'#facilitiesSec', label:'시설 소개' });
+    if (data.center.programs) extra.push({ href:'#programSec', label:'교육프로그램' });
     if (data.admission) extra.push({ href: 'admissions.html' + qs, label: '입학안내' });
     if ((c.directions_text || '').trim()) extra.push({ href: 'directions.html' + qs, label: '오시는 길' });
     if (extra.length){
-      var m = (c.menu || []).slice();
+      var m = c.menu.slice();
       var i = m.findIndex(function(x){ return x.cta; });
       if (i < 0) i = m.length;
       c.menu = m.slice(0, i).concat(extra, m.slice(i));
@@ -741,27 +735,54 @@ function mapRowToData(row){
     <p class="reveal">${esc(h.subtitle)}</p>
     <nav class="cloud-menu reveal" aria-label="바로가기">${cloudMenu}</nav>`;
 
-  // ── 원장 인사말 ──
+  // ── 원장 인사말 + 원 소개(원훈·교육가치) 통합 ──
   const d = c.director;
+  const phil = data.center.philosophy;
   $('greeting').innerHTML = `
     <div class="badge reveal">${esc(d.badge)}</div>
     <div class="portrait reveal"><img alt="${esc(d.photo_alt)}" src="${esc(d.photo)}"></div>
     <p class="msg reveal">${esc(d.message)}</p>
     <div class="sign reveal">${esc(d.sign_label)}<strong>${esc(d.sign_name)}</strong></div>
-    <div class="scroll-cue reveal"><span>${esc(d.scroll_cue)}</span><span class="dot"></span></div>`;
+    ${phil ? `
+    <div class="philosophy-card reveal">
+      <div class="philosophy-motto">${esc(phil.motto)}</div>
+      <div class="philosophy-values">${(phil.values||[]).map(v=>`<span class="philosophy-value">${esc(v)}</span>`).join('')}</div>
+    </div>` : ''}`;
 
-  // ── 하루 스토리 ──
-  const frameCls = ['frame','frame alt','frame alt2','frame alt3','frame'];
-  $('day').innerHTML = (data.day_story || []).map((m,i)=>`
-    <section class="moment" data-time="${esc(m.slot)}">
-      <div class="time reveal">${esc(m.time)}</div>
-      <div class="title reveal">${esc(m.title)}</div>
-      <div class="${frameCls[i]||'frame'} reveal">
-        <img class="frame-img" alt="${esc(m.photo_alt)}" data-src="${esc(m.photo)}">
-        <div class="cap">${esc(m.caption)}</div>
-      </div>
-      <p class="note reveal">${esc(m.note)}</p>
-    </section>`).join('');
+  // ── 원 시설 소개 ──
+  const fac = data.center.facilities;
+  if (fac) {
+    const statsHtml = (fac.stats||[]).map(s=>`
+      <div class="fac-stat reveal">
+        <div class="s-value">${esc(s.value)}</div>
+        <div class="s-label">${esc(s.label)}</div>
+      </div>`).join('');
+    const FAC_LIMIT = 4;
+    const facItems = fac.items || [];
+    const visibleFac = facItems.slice(0, FAC_LIMIT);
+    const hiddenFac = facItems.slice(FAC_LIMIT);
+    const facCardsHtml = visibleFac.map(f=>`
+      <div class="fac-card reveal">
+        <div class="f-name">${esc(f.name)}</div>
+        <div class="f-desc">${esc(f.desc)}</div>
+      </div>`).join('');
+    const hiddenFacHtml = hiddenFac.length ? `
+      <div class="fac-grid fac-hidden" hidden>${hiddenFac.map(f=>`
+        <div class="fac-card reveal">
+          <div class="f-name">${esc(f.name)}</div>
+          <div class="f-desc">${esc(f.desc)}</div>
+        </div>`).join('')}</div>
+      <button type="button" class="fac-more-btn" onclick="this.previousElementSibling.hidden=false;this.remove();">시설 더 보기</button>` : '';
+    $('facilitiesSec').innerHTML = `
+      <div class="section-eyebrow reveal">우리 원 시설</div>
+      <h2 class="section-title reveal">안전하고 따뜻한 공간</h2>
+      <p class="fac-intro reveal">${esc(fac.intro)}</p>
+      <div class="fac-stats">${statsHtml}</div>
+      <div class="fac-grid">${facCardsHtml}</div>
+      ${hiddenFacHtml}`;
+  } else {
+    $('facilitiesSec').hidden = true;
+  }
 
   // ── 앨범 벽 ──
   const al = data.album;
@@ -805,38 +826,24 @@ function mapRowToData(row){
         </div>
       </div>`).join('')}</div>`;
 
-  // ── 공지사항 ──
-  const n = data.notices;
-  $('notice').innerHTML = `
-    <div class="section-eyebrow reveal">${esc(n?.eyebrow)}</div>
-    <h2 class="section-title reveal">${esc(n?.title)}</h2>
-    <ul class="notice-list">${(n?.items || []).map(it=>`
-      <li class="notice-item reveal">
-        <span class="tag tag-${esc(it.tag_type)}">${esc(it.tag)}</span>
-        <div><div class="n-title">${esc(it.title)}</div><div class="n-date">${esc(it.date)}</div></div>
-      </li>`).join('')}</ul>
-    <a class="more-link reveal" href="#notice">${esc(n?.more)}</a>`;
-
-  // ── 행사 일정 (달력) ──
-  const s = data.schedule;
-  const dows = ['일','월','화','수','목','금','토'];
-  let cells = dows.map(w=>`<span class="dow">${w}</span>`).join('');
-  for(let day=1; day<=(s?.days_in_month || 0); day++){
-    const ev = (s?.event_days || []).includes(day) ? ' ev' : '';
-    cells += `<span class="day-cell${ev}">${day}</span>`;
+  // ── 교육프로그램 소개 ──
+  const prog = data.center.programs;
+  if (prog) {
+    $('programSec').innerHTML = `
+      <div class="section-eyebrow reveal">교육프로그램</div>
+      <h2 class="section-title reveal">우리 원의 교육</h2>
+      <p class="prog-intro reveal">${esc(prog.intro)}</p>
+      <div class="prog-list">${(prog.items||[]).map((it,i)=>`
+        <div class="prog-item reveal">
+          <span class="prog-num">0${i+1}</span>
+          <div class="prog-body">
+            <div class="p-name">${esc(it.name)}</div>
+            <div class="p-desc">${esc(it.desc)}</div>
+          </div>
+        </div>`).join('')}</div>`;
+  } else {
+    $('programSec').hidden = true;
   }
-  for(let m=1; m<=(s?.trailing_muted || 0); m++){
-    cells += `<span class="day-cell muted">${m}</span>`;
-  }
-  $('schedule').innerHTML = `
-    <div class="section-eyebrow reveal">${esc(s?.eyebrow)}</div>
-    <h2 class="section-title reveal">${esc(s?.title)}</h2>
-    <div class="cal reveal">
-      <div class="cal-head">${esc(s?.month_label)}</div>
-      <div class="cal-grid">${cells}</div>
-      <ul class="event-list">${(s?.events || []).map(e=>`
-        <li class="reveal"><span class="e-date">${esc(e.date)}</span> ${esc(e.title)}</li>`).join('')}</ul>
-    </div>`;
 
   // ── FAQ ──
   const f = data.faqs;
@@ -866,8 +873,6 @@ function mapRowToData(row){
   // ─────────────────────────────────────────────
   // 2) 렌더가 끝난 뒤 인터랙션 초기화 (원본 동작 그대로)
   // ─────────────────────────────────────────────
-  window.__centerPhilosophy__ = data.center.philosophy;
-  window.__centerPrograms__ = data.center.programs;
   initInteractions();
   renderInfoSections(data, c, esc);
   initConsultationForm(client, c.id);
@@ -876,50 +881,6 @@ function mapRowToData(row){
 function initInteractions(){
   var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   initDeferredImages();
-
-  // ── 원 소개 모달 ──
-  (function(){
-    var overlay = document.getElementById('introModal');
-    var closeBtn = document.getElementById('introModalClose');
-    if (!overlay) return;
-    function open(phil){
-      if (!phil) return;
-      document.getElementById('introGreeting').textContent = phil.greeting || '';
-      document.getElementById('introMotto').textContent = phil.motto || '';
-      var valEl = document.getElementById('introValues');
-      valEl.innerHTML = (phil.values || []).map(function(v){
-        return '<span class="info-modal-value">'+v+'</span>';
-      }).join('');
-      overlay.classList.add('open');
-    }
-    function close(){ overlay.classList.remove('open'); }
-    var openBtn = document.getElementById('introModalOpenBtn');
-    if (openBtn) openBtn.addEventListener('click', function(){ open(window.__centerPhilosophy__); });
-    closeBtn.addEventListener('click', close);
-    overlay.addEventListener('click', function(e){ if(e.target===overlay) close(); });
-    document.addEventListener('keydown', function(e){ if(e.key==='Escape') close(); });
-  })();
-
-  // ── 교육프로그램 모달 ──
-  (function(){
-    var overlay = document.getElementById('programModal');
-    var closeBtn = document.getElementById('programModalClose');
-    if (!overlay) return;
-    function open(prog){
-      if (!prog) return;
-      document.getElementById('programIntro').textContent = prog.intro || '';
-      document.getElementById('programList').innerHTML = (prog.items || []).map(function(it){
-        return '<div class="info-modal-prog-item"><div class="info-modal-prog-name">'+it.name+'</div><div class="info-modal-prog-desc">'+it.desc+'</div></div>';
-      }).join('');
-      overlay.classList.add('open');
-    }
-    function close(){ overlay.classList.remove('open'); }
-    var openBtn = document.getElementById('programModalOpenBtn');
-    if (openBtn) openBtn.addEventListener('click', function(){ open(window.__centerPrograms__); });
-    closeBtn.addEventListener('click', close);
-    overlay.addEventListener('click', function(e){ if(e.target===overlay) close(); });
-    document.addEventListener('keydown', function(e){ if(e.key==='Escape') close(); });
-  })();
 
   // ── 라이트박스 ──
   (function(){
