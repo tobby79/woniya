@@ -233,11 +233,13 @@
 <span id="top"></span>
 
 <header class="banner" id="banner"></header>
-<section class="gallery wrap" id="gallery"></section>
-<section class="tour wrap" id="tour"></section>
-<section class="staff wrap" id="staff"></section>
-<section class="director wrap" id="director"></section>
-<section class="info-desk wrap" id="infoDesk"></section>
+<section class="director wrap" id="greeting"></section>
+<section class="overview wrap" id="overviewSec"></section>
+<section class="gallery wrap" id="day"></section>
+<section class="facilities wrap" id="facilitiesSec"></section>
+<section class="staff wrap" id="teachersSec"></section>
+<section class="programs wrap" id="programSec"></section>
+<section class="info-desk wrap" id="faq"></section>
 <section class="info-block wrap" id="admissionsSec" hidden></section>
 <section class="info-block wrap" id="directionsSec" hidden></section>
 <section class="finale wrap" id="finale"></section>
@@ -297,24 +299,41 @@
   </div>
 </div>
 
-<!-- 원 소개 모달 -->
-<div class="info-modal-overlay" id="introModal">
+<!-- 원장 인사말 모달 -->
+<div class="info-modal-overlay" id="directorModal">
   <div class="info-modal-panel">
-    <button class="info-modal-close" id="introModalClose">×</button>
-    <h3 class="info-modal-title">원 소개</h3>
-    <p class="info-modal-greeting" id="introGreeting"></p>
-    <div class="info-modal-motto" id="introMotto"></div>
-    <div class="info-modal-values" id="introValues"></div>
+    <div class="info-modal-header"><h3 class="info-modal-title">원장 인사말</h3></div>
+    <button class="info-modal-close" id="directorModalClose">×</button>
+    <div class="info-modal-body">
+      <div class="director-modal-photo" id="directorModalPhoto"></div>
+      <p class="info-modal-greeting" id="directorModalMsg"></p>
+      <div class="info-modal-motto" id="directorModalMotto"></div>
+      <div class="info-modal-values" id="directorModalValues" style="margin-top:16px"></div>
+    </div>
+  </div>
+</div>
+
+<!-- 시설 모달 -->
+<div class="info-modal-overlay" id="facilityModal">
+  <div class="info-modal-panel">
+    <div class="info-modal-header"><h3 class="info-modal-title">우리 원 시설</h3></div>
+    <button class="info-modal-close" id="facilityModalClose">×</button>
+    <div class="info-modal-body">
+      <p class="info-modal-prog-intro" id="facilityIntro"></p>
+      <div class="fac-modal-list" id="facilityList"></div>
+    </div>
   </div>
 </div>
 
 <!-- 교육프로그램 모달 -->
 <div class="info-modal-overlay" id="programModal">
   <div class="info-modal-panel">
+    <div class="info-modal-header"><h3 class="info-modal-title">교육프로그램</h3></div>
     <button class="info-modal-close" id="programModalClose">×</button>
-    <h3 class="info-modal-title">교육프로그램</h3>
-    <p class="info-modal-prog-intro" id="programIntro"></p>
-    <div class="info-modal-prog-list" id="programList"></div>
+    <div class="info-modal-body">
+      <p class="info-modal-prog-intro" id="programModalIntro"></p>
+      <div id="programModalList"></div>
+    </div>
   </div>
 </div>
 
@@ -344,21 +363,69 @@
   .dir-line{display:flex;align-items:flex-start;gap:9px;font-size:.96rem;color:var(--ink-soft);line-height:1.5}
   .dir-line::before{content:"";flex:none;width:7px;height:7px;border-radius:50%;background:currentColor;opacity:.55;margin-top:8px}
 
-  /* ── 원 소개 / 교육프로그램 / 라이트박스 공통 모달 ── */
-  .info-modal-overlay{position:fixed;inset:0;z-index:60;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center;padding:20px;overflow-y:auto}
+  /* ── 원장 인사말 미리보기 ── */
+  .director-preview{font-family:var(--serif);font-weight:400;font-size:1.3rem;line-height:1.8;color:var(--char);max-width:440px;margin:0 auto 8px;text-align:center}
+  .director-more-btn{background:none;border:none;color:var(--char);font-weight:600;font-size:.9rem;cursor:pointer;font-family:var(--body);margin-top:10px;text-decoration:none;border-bottom:1px solid var(--char);padding-bottom:2px}
+
+  /* ── 우리 원 현황 카드 ── */
+  .overview{padding-top:50px;padding-bottom:40px}
+  .overview-card{background:var(--paper);border-radius:8px;padding:32px 26px;border:1px solid var(--line)}
+  .overview-title{font-family:var(--serif);font-size:1.4rem;color:var(--char);text-align:center;margin-bottom:6px;letter-spacing:-.3px}
+  .overview-sub{font-size:.9rem;color:var(--ink-soft);text-align:center;margin-bottom:26px}
+  .overview-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;background:var(--line);border-radius:8px;overflow:hidden}
+  .overview-item{background:var(--paper);padding:20px 16px;text-align:center}
+  .overview-item .o-label{font-size:.78rem;color:var(--ink-soft);font-weight:600;margin-bottom:6px;letter-spacing:.3px}
+  .overview-item .o-value{font-family:var(--serif);font-size:1.25rem;color:var(--char);font-weight:600;line-height:1.3}
+  .overview-address{display:flex;align-items:flex-start;gap:8px;margin-top:20px;padding:16px 18px;background:var(--bg-warm);border-radius:8px;font-size:.92rem;color:var(--char);line-height:1.5}
+  .overview-address .addr-icon{flex:none;color:var(--char);font-weight:700}
+
+  /* ── 공통 모달 (원장/시설/교육프로그램) — 통일 규격 ── */
+  .info-modal-overlay{position:fixed;inset:0;z-index:60;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center;padding:20px}
   .info-modal-overlay.open{display:flex}
-  .info-modal-panel{position:relative;width:100%;max-width:480px;max-height:88vh;overflow-y:auto;background:var(--paper);border-radius:24px;padding:36px 28px 32px;box-shadow:0 30px 60px -20px rgba(0,0,0,.45)}
-  .info-modal-close{position:absolute;top:16px;right:16px;width:36px;height:36px;border:none;background:var(--cream, #F7F7F5);border-radius:50%;font-size:1.3rem;line-height:1;color:var(--ink-soft);cursor:pointer;display:flex;align-items:center;justify-content:center}
-  .info-modal-title{font-family:var(--display);font-size:1.45rem;color:var(--ink);letter-spacing:-.5px;margin-bottom:20px}
-  .info-modal-greeting{font-size:1rem;color:var(--ink-soft);line-height:1.9;white-space:pre-line;margin-bottom:24px}
-  .info-modal-motto{font-family:var(--display);font-size:1.25rem;color:var(--ink);text-align:center;padding:18px;background:var(--cream, #F7F6F3);border-radius:14px;margin-bottom:20px}
-  .info-modal-values{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-bottom:8px}
-  .info-modal-value{font-size:.9rem;font-weight:700;color:#fff;background:var(--coral, #2B2B2E);padding:7px 18px;border-radius:30px}
-  .info-modal-prog-intro{font-size:.96rem;color:var(--ink-soft);line-height:1.75;margin-bottom:22px}
-  .info-modal-prog-list{display:flex;flex-direction:column;gap:14px}
-  .info-modal-prog-item{background:var(--cream, #F7F6F3);border-radius:14px;padding:16px 18px}
-  .info-modal-prog-name{font-weight:700;font-size:1rem;color:var(--ink);margin-bottom:4px}
-  .info-modal-prog-desc{font-size:.9rem;color:var(--ink-soft);line-height:1.65}
+  .info-modal-panel{position:relative;width:92vw;max-width:520px;min-height:70vh;max-height:88vh;overflow-y:auto;background:var(--paper);border-radius:8px;box-shadow:0 30px 60px -20px rgba(0,0,0,.45);padding:0}
+  .info-modal-header{position:sticky;top:0;z-index:2;background:var(--paper);padding:28px 32px 18px;border-radius:8px 8px 0 0;border-bottom:1px solid var(--line)}
+  .info-modal-close{position:absolute;top:22px;right:24px;width:38px;height:38px;border:none;background:var(--bg-warm);border-radius:50%;font-size:1.4rem;color:var(--ink-soft);cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:3}
+  .info-modal-body{padding:20px 32px 36px}
+  .info-modal-title{font-family:var(--serif);font-size:1.45rem;color:var(--char);letter-spacing:-.3px;margin:0}
+  .director-modal-photo{width:120px;height:120px;border-radius:50%;margin:0 auto 24px;overflow:hidden;background:var(--bg-warm)}
+  .director-modal-photo img{width:100%;height:100%;object-fit:cover;display:block;filter:grayscale(.3)}
+  .info-modal-greeting{font-size:1rem;color:var(--char-soft);line-height:1.9;white-space:pre-line;margin-bottom:24px;text-align:center;font-family:var(--serif)}
+  .info-modal-motto{font-family:var(--serif);font-size:1.2rem;color:var(--char);text-align:center;padding:16px;background:var(--bg-warm);border-radius:8px}
+  .info-modal-values{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:16px}
+  .info-modal-value{font-size:.85rem;font-weight:600;color:#fff;background:var(--char);padding:8px 20px;border-radius:30px;letter-spacing:.3px}
+
+  /* ── 원 시설 (배지 + 썸네일 + 모달) ── */
+  .facilities{padding-top:70px;padding-bottom:40px}
+  .fac-badges{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin:20px 0 28px}
+  .fac-badge{font-size:.84rem;font-weight:600;color:var(--char);background:var(--paper);padding:8px 16px;border-radius:30px;border:1px solid var(--line);letter-spacing:.3px}
+  .fac-thumb-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
+  .fac-thumb{overflow:hidden;aspect-ratio:4/3;background:var(--bg-warm)}
+  .fac-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+  .fac-more-btn{display:block;width:100%;padding:14px;background:none;border:1px solid var(--char);border-radius:0;color:var(--char);font-weight:600;font-size:.92rem;cursor:pointer;font-family:var(--body);margin-top:4px;letter-spacing:.3px}
+  .info-modal-prog-intro{font-size:.96rem;color:var(--char-soft);line-height:1.75;margin-bottom:22px;font-weight:300}
+  .fac-modal-list{display:flex;flex-direction:column;gap:18px}
+  .fac-modal-item{background:var(--bg-warm);border-radius:8px;overflow:hidden}
+  .fac-modal-item .fm-img{aspect-ratio:16/9;overflow:hidden;background:var(--paper)}
+  .fac-modal-item .fm-img img{width:100%;height:100%;object-fit:cover;display:block}
+  .fac-modal-item .fm-body{padding:16px 18px}
+  .fac-modal-item .fm-name{font-weight:600;font-size:1.05rem;color:var(--char);margin-bottom:5px;font-family:var(--serif)}
+  .fac-modal-item .fm-desc{font-size:.9rem;color:var(--char-soft);line-height:1.6;font-weight:300}
+
+  /* ── 교육프로그램 (이미지 카드 + 모달) ── */
+  .programs{padding-top:70px;padding-bottom:40px}
+  .prog-card{background:var(--paper);border:1px solid var(--line);overflow:hidden;margin-bottom:14px}
+  .prog-card .prog-img{aspect-ratio:16/9;overflow:hidden;background:var(--bg-warm)}
+  .prog-card .prog-img img{width:100%;height:100%;object-fit:cover;display:block}
+  .prog-card .prog-body{padding:18px 18px 20px}
+  .prog-card .prog-name{font-weight:600;font-size:1.05rem;color:var(--char);margin-bottom:6px;font-family:var(--serif)}
+  .prog-card .prog-desc{font-size:.9rem;color:var(--char-soft);line-height:1.65;font-weight:300}
+  .prog-more-btn{display:block;width:100%;padding:14px;background:none;border:1px solid var(--char);border-radius:0;color:var(--char);font-weight:600;font-size:.92rem;cursor:pointer;font-family:var(--body);margin-top:4px;letter-spacing:.3px}
+  .prog-modal-item{background:var(--bg-warm);border-radius:8px;overflow:hidden;margin-bottom:18px}
+  .prog-modal-item .pm-img{aspect-ratio:16/9;overflow:hidden;background:var(--paper)}
+  .prog-modal-item .pm-img img{width:100%;height:100%;object-fit:cover;display:block}
+  .prog-modal-item .pm-body{padding:16px 18px}
+  .prog-modal-item .pm-name{font-weight:600;font-size:1.05rem;color:var(--char);margin-bottom:5px;font-family:var(--serif)}
+  .prog-modal-item .pm-desc{font-size:.9rem;color:var(--char-soft);line-height:1.6;font-weight:300}
 
   /* ── 라이트박스 ── */
   .lightbox-overlay{position:fixed;inset:0;z-index:70;background:rgba(0,0,0,.88);display:none;align-items:center;justify-content:center;padding:20px}
@@ -415,7 +482,8 @@ function mapRowToData(row){
       hero: row.hero || { eyebrow:'', title:'', title_accent:'', subtitle:'' },
       director: row.director || { badge:'', photo:'', photo_alt:'', message:'', sign_label:'', sign_name:'', scroll_cue:'' },
       philosophy: row.philosophy || null,
-      programs: row.programs || null
+      programs: row.programs || null,
+      facilities: row.facilities || null
     },
     heroPhoto: hero ? hero.photo_url : null,
     album: { items: byType('album').map(m => ({ label: m.title, photo: m.photo_url })) },
@@ -435,7 +503,7 @@ function mapRowToData(row){
   const client = supabase.createClient(cfg.url, cfg.anonKey);
   try {
     const slug = new URLSearchParams(location.search).get('slug') || 'haetsal';
-    const { data: row, error } = await client.from('centers').select('*, center_media(*), admissions(*), philosophy, programs').eq('slug', slug).single();
+    const { data: row, error } = await client.from('centers').select('*, center_media(*), admissions(*), philosophy, programs, facilities').eq('slug', slug).single();
     if (error) throw error;
     data = mapRowToData(row);
 
@@ -483,19 +551,16 @@ function mapRowToData(row){
   const $ = (id)=>document.getElementById(id);
   const esc = (s)=> s==null ? '' : s;
   const c = data.center;
-  // M2: 공개형 새 페이지(입학안내/오시는 길) 메뉴 항목 런타임 주입 (DB 메뉴는 그대로 둠)
-  // 버그 수정: DB 공통 메뉴(#day/#notice/#schedule/#faq)는 template-sunshine.html 기준이라 gallery 자체
-  // 섹션 ID(#gallery, #infoDesk)와 달라 클릭해도 스크롤이 안 됐다. 실제 섹션에 맞게 보정.
+  // sunshine 기준 구조 통일: 공지·행사일정 제거 → 메뉴 필터. 하루(#day)·FAQ(#faq) 섹션 유지.
+  // 시설 소개/교육프로그램(인페이지 섹션) + 입학안내/오시는 길(새 페이지) 런타임 주입
   (function(){
-    var HREF_FIX = { '#day':'#gallery', '#notice':'#infoDesk', '#schedule':'#infoDesk', '#faq':'#infoDesk' };
-    c.menu = (c.menu || []).map(function(m){
-      return HREF_FIX[m.href] ? Object.assign({}, m, { href: HREF_FIX[m.href] }) : m;
-    });
     var qs = c.slug ? ('?slug=' + encodeURIComponent(c.slug)) : '';
+    c.menu = (c.menu || []).filter(function(m){
+      return m.href !== '#notice' && m.href !== '#schedule';
+    });
     var extra = [];
-    extra.unshift({ href:'#', label:'우리 반', id:'ourclassBtn' });
-    extra.unshift({ href:'#', label:'교육프로그램', id:'programModalOpenBtn' });
-    extra.unshift({ href:'#', label:'원 소개', id:'introModalOpenBtn' });
+    extra.push({ href:'#facilitiesSec', label:'시설 소개' });
+    extra.push({ href:'#programSec', label:'교육프로그램' });
     if (data.admission) extra.push({ href: 'admissions.html' + qs, label: '입학안내' });
     if ((c.directions_text || '').trim()) extra.push({ href: 'directions.html' + qs, label: '오시는 길' });
     if (extra.length){
@@ -520,10 +585,39 @@ function mapRowToData(row){
       <nav class="frame-menu reveal" aria-label="바로가기">${(c.menu||[]).filter(m=>!m.cta).map(m=>`<a class="frame-btn" href="${esc(m.href)}">${esc(m.label)}</a>`).join('')}</nav>
     </div>`;
 
-  // 2. 갤러리 (앨범) — 가로 슬라이드
+  // 원장 인사말 (미리보기 + 모달)
+  const d = c.director;
+  const msgPreview = (d.message||'').replace(/<br\s*\/?>/gi,'\n').split('\n')[0];
+  $('greeting').innerHTML = `
+    <div class="quote-mark reveal">"</div>
+    <p class="msg reveal">${esc(msgPreview)}</p>
+    <div class="who reveal">
+      <div class="portrait"><img alt="${esc(d.photo_alt)}" src="${esc(d.photo)}"></div>
+      <div class="name">${esc(d.sign_label)}<strong>${esc(d.sign_name)}</strong></div>
+    </div>
+    <button type="button" class="director-more-btn reveal" id="directorModalOpenBtn" style="margin-top:24px">원장 인사말 더보기</button>`;
+
+  // 우리 원 현황 카드
+  const ovFac = data.center.facilities;
+  const ovStats = (ovFac && ovFac.stats) || [];
+  const OVERVIEW_LABEL_ALIASES = { '교직원':'선생님' };
+  const overviewItems = ovStats.map(function(s){ return { label: OVERVIEW_LABEL_ALIASES[s.label] || s.label, value:s.value }; });
+  if (overviewItems.length) {
+    $('overviewSec').innerHTML = `
+      <div class="overview-card reveal">
+        <h2 class="overview-title">우리 원 현황</h2>
+        <p class="overview-sub">한눈에 보는 ${esc(c.name)}</p>
+        <div class="overview-grid">
+          ${overviewItems.map(it=>`<div class="overview-item"><div class="o-label">${esc(it.label)}</div><div class="o-value">${esc(it.value)}</div></div>`).join('')}
+        </div>
+        ${c.address ? `<div class="overview-address"><span class="addr-icon">●</span><span>${esc(c.address)}</span></div>` : ''}
+      </div>`;
+  } else { document.getElementById('overviewSec').hidden = true; }
+
+  // 하루 — 갤러리(앨범) 가로 슬라이드 (gallery 고유)
   const al = data.album;
   const albumItems = al?.items || [];
-  $('gallery').innerHTML = `
+  $('day').innerHTML = `
     <div class="sec-head reveal">
       <div>
         <div class="sec-label">Gallery</div>
@@ -542,25 +636,25 @@ function mapRowToData(row){
       </figure>`).join('')}</div>
     <div class="gallery-hint reveal"><span class="arrow">←</span> 옆으로 넘겨보세요 <span class="arrow">→</span></div>`;
 
-  // 3. 우리 원 둘러보기
-  $('tour').innerHTML = `
+  // 우리 원 시설 (배지 + 썸네일 + 모달)
+  const fac = data.center.facilities;
+  if (fac) {
+    const badgesHtml = (fac.items||[]).map(ff=>`<span class="fac-badge">${esc(ff.name)}</span>`).join('');
+    const thumbHtml = albumItems.slice(0,4).map(it=>`<div class="fac-thumb"><img data-src="${esc(it.photo)}" alt="${esc(it.label)}"></div>`).join('');
+    $('facilitiesSec').innerHTML = `
     <div class="sec-head reveal">
-      <div class="sec-label">Spaces</div>
-      <h2 class="sec-title">우리 원 둘러보기</h2>
+      <div class="sec-label">Facilities</div>
+      <h2 class="sec-title">안전하고 따뜻한 공간</h2>
     </div>
-    ${SAMPLE_SPACES.map((sp,i)=>`
-      <div class="space reveal">
-        <div class="frame ${sp.photo ? '' : 'placeholder'}">${sp.photo ? `<img decoding="async" alt="${sp.name}" data-src="${sp.photo}">` : ''}</div>
-        <div class="info">
-          <div class="idx">0${i+1} — Space</div>
-          <h3>${sp.name}</h3>
-          <p>${sp.desc}</p>
-        </div>
-      </div>`).join('')}`;
+    <p class="fac-intro reveal" style="color:var(--char-soft);font-size:.96rem;line-height:1.75;margin-bottom:8px;font-weight:300">${esc(fac.intro)}</p>
+    <div class="fac-badges reveal">${badgesHtml}</div>
+    <div class="fac-thumb-grid reveal">${thumbHtml}</div>
+    <button type="button" class="fac-more-btn reveal" id="facilityModalOpenBtn">시설 전체 보기</button>`;
+  } else { document.getElementById('facilitiesSec').hidden = true; }
 
-  // 4. 우리 원 선생님
+  // 우리 원 선생님
   const t = data.teachers;
-  $('staff').innerHTML = `
+  $('teachersSec').innerHTML = `
     <div class="sec-head reveal">
       <div class="sec-label">People</div>
       <h2 class="sec-title">우리 원 선생님</h2>
@@ -570,51 +664,40 @@ function mapRowToData(row){
         <div class="portrait"><img decoding="async" alt="${esc(tc.name)}" data-src="${esc(tc.photo)}"></div>
         <div class="name">${esc(tc.name)}</div>
         <div class="role">${esc(tc.role)}</div>
-        <div class="msg">“${esc(tc.message)}”</div>
+        <div class="msg">"${esc(tc.message)}"</div>
       </div>`).join('')}</div>`;
 
-  // 5. 원장 한마디
-  const d = c.director;
-  $('director').innerHTML = `
-    <div class="quote-mark reveal">"</div>
-    <p class="msg reveal">${esc(d.message)}</p>
-    <div class="who reveal">
-      <div class="portrait"><img alt="${esc(d.photo_alt)}" src="${esc(d.photo)}"></div>
-      <div class="name">${esc(d.sign_label)}<strong>${esc(d.sign_name)}</strong></div>
-    </div>`;
+  // 교육프로그램 (이미지 카드 + 모달)
+  const prog = data.center.programs;
+  if (prog) {
+    const previewItems = (prog.items||[]).slice(0,2);
+    const cardsHtml = previewItems.map((it,i)=>{
+      const img = albumItems[i+4] || albumItems[i] || null;
+      return `<div class="prog-card reveal">
+        <div class="prog-img">${img?`<img data-src="${esc(img.photo)}" alt="${esc(it.name)}">`:''}</div>
+        <div class="prog-body"><div class="prog-name">${esc(it.name)}</div><div class="prog-desc">${esc(it.desc)}</div></div>
+      </div>`;
+    }).join('');
+    $('programSec').innerHTML = `
+    <div class="sec-head reveal">
+      <div class="sec-label">Programs</div>
+      <h2 class="sec-title">우리 원의 교육</h2>
+    </div>
+    <p class="prog-intro reveal" style="color:var(--char-soft);font-size:.96rem;line-height:1.75;margin-bottom:24px;font-weight:300">${esc(prog.intro)}</p>
+    ${cardsHtml}
+    <button type="button" class="prog-more-btn reveal" id="programModalOpenBtn">교육프로그램 전체 보기</button>`;
+  } else { document.getElementById('programSec').hidden = true; }
 
-  // 6. 안내
-  const n = data.notices, s = data.schedule, f = data.faqs;
-  const noticeHtml = `<ul class="notice-list">${(n?.items || []).map(it=>`
-    <li class="notice-item"><span class="tag">${esc(it.tag)}</span>
-      <span class="n-title">${esc(it.title)}</span><span class="n-date">${esc(it.date)}</span></li>`).join('')}</ul>
-    <a class="more-link" href="#infoDesk">${esc(n?.more)}</a>`;
-
-  const dows = ['일','월','화','수','목','금','토'];
-  let cells = dows.map(w=>`<span class="dow">${w}</span>`).join('');
-  for(let day=1; day<=(s?.days_in_month || 0); day++){ cells += `<span class="day-cell${(s?.event_days || []).includes(day)?' ev':''}">${day}</span>`; }
-  for(let m=1; m<=(s?.trailing_muted || 0); m++){ cells += `<span class="day-cell muted">${m}</span>`; }
-  const scheduleHtml = `<div class="cal"><div class="cal-head">${esc(s?.month_label)}</div>
-    <div class="cal-grid">${cells}</div>
-    <ul class="event-list">${(s?.events || []).map(e=>`<li><span class="e-date">${esc(e.date)}</span> ${esc(e.title)}</li>`).join('')}</ul></div>`;
-
-  const faqHtml = (f?.items || []).map(it=>`
-    <div class="faq-item"><button class="faq-q" aria-expanded="false">${esc(it.q)}<span class="sign">+</span></button>
-      <div class="faq-a"><p>${esc(it.a)}</p></div></div>`).join('');
-
-  $('infoDesk').innerHTML = `
+  // FAQ
+  const f = data.faqs;
+  $('faq').innerHTML = `
     <div class="sec-head reveal">
       <div class="sec-label">Information</div>
-      <h2 class="sec-title">안내</h2>
+      <h2 class="sec-title">자주 묻는 질문</h2>
     </div>
-    <div class="info-tabs reveal">
-      <button class="info-tab active" data-tab="notice">공지</button>
-      <button class="info-tab" data-tab="schedule">일정</button>
-      <button class="info-tab" data-tab="faq">FAQ</button>
-    </div>
-    <div class="info-panel active" data-panel="notice">${noticeHtml}</div>
-    <div class="info-panel" data-panel="schedule">${scheduleHtml}</div>
-    <div class="info-panel" data-panel="faq">${faqHtml}</div>`;
+    ${(f?.items || []).map(it=>`
+      <div class="faq-item reveal"><button class="faq-q" aria-expanded="false">${esc(it.q)}<span class="sign">+</span></button>
+        <div class="faq-a"><p>${esc(it.a)}</p></div></div>`).join('')}`;
 
   // 7. 마무리
   const fin = data.finale || {};
@@ -627,8 +710,11 @@ function mapRowToData(row){
   $('footerEl').innerHTML = `<div class="demo-tag">${esc(data.footer?.tag)}</div><div>${esc(data.footer?.text)}</div>`;
   document.title = `원이야 - ${esc(c.name) || '원이야'}`;
 
-  window.__centerPhilosophy__ = data.center.philosophy;
-  window.__centerPrograms__ = data.center.programs;
+  window.__directorData__ = c.director;
+  window.__philosophyData__ = data.center.philosophy;
+  window.__facilityData__ = data.center.facilities;
+  window.__programData__ = data.center.programs;
+  window.__albumImgs__ = data.album?.items || [];
   initInteractions();
   renderInfoSections(data, c, esc);
   initConsultationForm(client, c.id);
@@ -637,24 +723,55 @@ function mapRowToData(row){
 function initInteractions(){
   initDeferredImages();
 
-  // ── 원 소개 모달 ──
+  // ── 원장 인사말 모달 ──
   (function(){
-    var overlay = document.getElementById('introModal');
-    var closeBtn = document.getElementById('introModalClose');
+    var overlay = document.getElementById('directorModal');
+    var closeBtn = document.getElementById('directorModalClose');
+    var openBtn = document.getElementById('directorModalOpenBtn');
     if (!overlay) return;
-    function open(phil){
-      if (!phil) return;
-      document.getElementById('introGreeting').textContent = phil.greeting || '';
-      document.getElementById('introMotto').textContent = phil.motto || '';
-      var valEl = document.getElementById('introValues');
-      valEl.innerHTML = (phil.values || []).map(function(v){
-        return '<span class="info-modal-value">'+v+'</span>';
+    function open(){
+      var d = window.__directorData__;
+      var phil = window.__philosophyData__;
+      if (d) {
+        document.getElementById('directorModalMsg').textContent = (d.message || '').replace(/<br\s*\/?>/gi,'\n');
+        var photoEl = document.getElementById('directorModalPhoto');
+        if (photoEl) photoEl.innerHTML = d.photo ? '<img alt="'+(d.photo_alt||'')+'" src="'+d.photo+'">' : '';
+      }
+      var mottoEl = document.getElementById('directorModalMotto');
+      var valEl = document.getElementById('directorModalValues');
+      if (phil && mottoEl) { mottoEl.textContent = phil.motto || ''; mottoEl.hidden = !phil.motto; }
+      if (phil && valEl) { valEl.innerHTML = (phil.values||[]).map(function(v){ return '<span class="info-modal-value">'+v+'</span>'; }).join(''); }
+      overlay.classList.add('open');
+    }
+    function close(){ overlay.classList.remove('open'); }
+    if (openBtn) openBtn.addEventListener('click', open);
+    closeBtn.addEventListener('click', close);
+    overlay.addEventListener('click', function(e){ if(e.target===overlay) close(); });
+    document.addEventListener('keydown', function(e){ if(e.key==='Escape') close(); });
+  })();
+
+  // ── 시설 모달 ──
+  (function(){
+    var overlay = document.getElementById('facilityModal');
+    var closeBtn = document.getElementById('facilityModalClose');
+    var openBtn = document.getElementById('facilityModalOpenBtn');
+    if (!overlay) return;
+    function open(){
+      var fac = window.__facilityData__;
+      var albumImgs = window.__albumImgs__ || [];
+      if (!fac) return;
+      document.getElementById('facilityIntro').textContent = fac.intro || '';
+      document.getElementById('facilityList').innerHTML = (fac.items||[]).map(function(f, i){
+        var img = albumImgs[i] || null;
+        return '<div class="fac-modal-item">'
+          + (img ? '<div class="fm-img"><img src="'+img.photo+'" alt="'+f.name+'"></div>' : '')
+          + '<div class="fm-body"><div class="fm-name">'+f.name+'</div><div class="fm-desc">'+(f.desc||'')+'</div></div>'
+          + '</div>';
       }).join('');
       overlay.classList.add('open');
     }
     function close(){ overlay.classList.remove('open'); }
-    var openBtn = document.getElementById('introModalOpenBtn');
-    if (openBtn) openBtn.addEventListener('click', function(){ open(window.__centerPhilosophy__); });
+    if (openBtn) openBtn.addEventListener('click', open);
     closeBtn.addEventListener('click', close);
     overlay.addEventListener('click', function(e){ if(e.target===overlay) close(); });
     document.addEventListener('keydown', function(e){ if(e.key==='Escape') close(); });
@@ -664,18 +781,24 @@ function initInteractions(){
   (function(){
     var overlay = document.getElementById('programModal');
     var closeBtn = document.getElementById('programModalClose');
+    var openBtn = document.getElementById('programModalOpenBtn');
     if (!overlay) return;
-    function open(prog){
+    function open(){
+      var prog = window.__programData__;
+      var albumImgs = window.__albumImgs__ || [];
       if (!prog) return;
-      document.getElementById('programIntro').textContent = prog.intro || '';
-      document.getElementById('programList').innerHTML = (prog.items || []).map(function(it){
-        return '<div class="info-modal-prog-item"><div class="info-modal-prog-name">'+it.name+'</div><div class="info-modal-prog-desc">'+it.desc+'</div></div>';
+      document.getElementById('programModalIntro').textContent = prog.intro || '';
+      document.getElementById('programModalList').innerHTML = (prog.items||[]).map(function(it, i){
+        var img = albumImgs[i+4] || albumImgs[i] || null;
+        return '<div class="prog-modal-item">'
+          + (img ? '<div class="pm-img"><img src="'+img.photo+'" alt="'+it.name+'"></div>' : '')
+          + '<div class="pm-body"><div class="pm-name">'+it.name+'</div><div class="pm-desc">'+it.desc+'</div></div>'
+          + '</div>';
       }).join('');
       overlay.classList.add('open');
     }
     function close(){ overlay.classList.remove('open'); }
-    var openBtn = document.getElementById('programModalOpenBtn');
-    if (openBtn) openBtn.addEventListener('click', function(){ open(window.__centerPrograms__); });
+    if (openBtn) openBtn.addEventListener('click', open);
     closeBtn.addEventListener('click', close);
     overlay.addEventListener('click', function(e){ if(e.target===overlay) close(); });
     document.addEventListener('keydown', function(e){ if(e.key==='Escape') close(); });
@@ -815,9 +938,13 @@ function renderInfoSections(data, c, esc){
     if (!data.admission){ admSec.hidden = true; }
     else {
       admSec.hidden = false;
+      var adm = data.admission;
       admSec.innerHTML = '<h2 class="info-title">입학안내</h2>'
-        + '<p class="info-lead">모집 대상·정원·입소 절차·준비물을 한 페이지에서 확인하세요.</p>'
-        + '<a class="info-link-btn" href="admissions.html' + qs + '">입학안내 보기 →</a>';
+        + '<div class="adm-preview" style="background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:18px 20px;margin:0 0 16px;text-align:left">'
+        + (adm.target ? '<div style="font-size:.85rem;font-weight:600;color:var(--ink-soft);margin-bottom:4px">모집 대상</div><div style="font-size:.96rem;color:var(--char);margin-bottom:12px">'+esc(adm.target)+'</div>' : '')
+        + (adm.period ? '<div style="font-size:.85rem;font-weight:600;color:var(--ink-soft);margin-bottom:4px">모집 기간</div><div style="font-size:.96rem;color:var(--char)">'+esc(adm.period)+'</div>' : '')
+        + '</div>'
+        + '<a class="info-link-btn" href="admissions.html' + qs + '">입학안내 자세히 보기 →</a>';
     }
   }
   var dirSec = document.getElementById('directionsSec');
