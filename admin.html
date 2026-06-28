@@ -318,7 +318,7 @@
   var TYPE_LABELS = { hero:'대표', day_story:'하루', album:'앨범', teacher:'교사' };
   var KIND_LABELS = { consult:'상담', waiting:'대기', info_session:'설명회' };
   var TEMPLATE_FILES = {
-    sunshine: 'home.html',
+    sunshine: 'template-sunshine.html',
     forest: 'template-forest.html',
     carnival: 'template-carnival.html',
     gallery: 'template-gallery.html'
@@ -564,7 +564,7 @@
     noCenter.hidden = true;
     centerPanel.hidden = false;
 
-    var templateFile = TEMPLATE_FILES[currentCenter.template] || 'home.html';
+    var templateFile = TEMPLATE_FILES[currentCenter.template] || 'template-sunshine.html';
     viewSiteBtn.onclick = function(){
       window.open(templateFile + '?slug=' + encodeURIComponent(currentCenter.slug), '_blank');
     };

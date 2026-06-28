@@ -11,7 +11,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Gaegu:wght@700&family=Gowun+Dodum&display=swap" rel="stylesheet">
 <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
 <style>
-  /* ── 기본(웜 핑크) 팔레트 = home.html :root 상속 ── */
+  /* ── 기본(웜 핑크) 팔레트 = template-sunshine.html :root 상속 ── */
   :root{
     --cream:#FBF6EE;
     --ink:#403733;
@@ -25,7 +25,7 @@
     --hand:'Gaegu',cursive;
     --body:'Pretendard',sans-serif;
   }
-  /* ── data-theme 변수 블록 (home.html과 동일 — 원 theme 값 상속) ── */
+  /* ── data-theme 변수 블록 (template-sunshine.html과 동일 — 원 theme 값 상속) ── */
   [data-theme="natural"]{ --cream:#F4F0E8;--ink:#2E2A1E;--ink-soft:#6B6347;--coral:#7EA86A;--coral-deep:#5C8A47;--sage:#A89060 }
   [data-theme="vivid"]{ --cream:#F0F8FF;--ink:#1A2E3A;--ink-soft:#4A6070;--coral:#FF6B35;--coral-deep:#E8501A;--sage:#4AABCC }
   [data-theme="minimal"]{ --cream:#F7F7F5;--ink:#1A1A1A;--ink-soft:#666660;--coral:#2B4C8C;--coral-deep:#1A3470;--sage:#8C8C8A }
@@ -111,7 +111,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 // 템플릿 → 메인 페이지 파일 (index.html과 동일 매핑)
-var TEMPLATE_FILES = { sunshine:'home.html', forest:'template-forest.html', carnival:'template-carnival.html', gallery:'template-gallery.html' };
+var TEMPLATE_FILES = { sunshine:'template-sunshine.html', forest:'template-forest.html', carnival:'template-carnival.html', gallery:'template-gallery.html' };
 
 (async function(){
   var content = document.getElementById('content');
@@ -136,7 +136,7 @@ var TEMPLATE_FILES = { sunshine:'home.html', forest:'template-forest.html', carn
   if (center.theme) document.body.setAttribute('data-theme', center.theme);
 
   // 메인 페이지 경로 (홈으로 / 상담 신청)
-  var mainFile = TEMPLATE_FILES[center.template] || 'home.html';
+  var mainFile = TEMPLATE_FILES[center.template] || 'template-sunshine.html';
   var mainUrl = mainFile + '?slug=' + encodeURIComponent(center.slug);
   document.getElementById('brandLink').href = mainUrl;
   document.getElementById('brandLink').textContent = (center.name || '원이야').replace(/\s*(어린이집|유치원)$/,'') || center.name;

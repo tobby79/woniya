@@ -202,7 +202,7 @@
   };
 
   const TEMPLATE_FILES = {
-    sunshine: 'home.html',
+    sunshine: 'template-sunshine.html',
     forest: 'template-forest.html',
     carnival: 'template-carnival.html',
     gallery: 'template-gallery.html'
@@ -326,7 +326,7 @@
         .join('');
       var photo = c.card_image || (c.director && c.director.photo) || '';
       var locationText = [c.region, c.address].filter(Boolean).join(' · ');
-      var templateFile = TEMPLATE_FILES[c.template] || 'home.html';
+      var templateFile = TEMPLATE_FILES[c.template] || 'template-sunshine.html';
       return '' +
         '<a class="ocard" href="' + templateFile + '?slug=' + encodeURIComponent(c.slug) + '">' +
           '<div class="photo">' + (photo ? '<img src="' + photo + '" alt="' + escapeHtml(c.name) + '">' : '') + '</div>' +
