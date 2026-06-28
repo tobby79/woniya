@@ -90,9 +90,23 @@
   /* 히어로 사진 배경 + 하단 페이드 (carnival — 사진 있을 때만) */
   .hero .hero-bg{position:absolute;inset:0;z-index:0;overflow:hidden}
   .hero .hero-bg img{width:100%;height:100%;object-fit:cover;display:block}
-  .hero .hero-bg::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(255,249,240,.2) 0%,transparent 30%,transparent 52%,var(--bg) 100%)}
+  .hero .hero-bg::after{
+    content:"";
+    position:absolute;
+    inset:0;
+    background:linear-gradient(
+      180deg,
+      rgba(0,0,0,.36) 0%,
+      rgba(0,0,0,.29) 30%,
+      rgba(0,0,0,.29) 52%,
+      var(--bg) 100%
+    );
+  }
   .hero>*:not(.hero-bg):not(.confetti){position:relative;z-index:2}
-  .hero.has-photo .eyebrow,.hero.has-photo h1{text-shadow:0 2px 12px rgba(0,0,0,.18)}
+  .hero.has-photo .eyebrow,
+  .hero.has-photo h1,
+  .hero.has-photo p{text-shadow:0 2px 16px rgba(0,0,0,.55)}
+  .hero.has-photo p{color:var(--bg)}
   /* 색종이(confetti) 오버레이 — 순수 CSS */
   .hero .confetti{position:absolute;inset:0;z-index:1;pointer-events:none;opacity:.55;background-repeat:no-repeat;background-image:
     radial-gradient(circle at 18% 22%,var(--red) 0 4px,transparent 5px),

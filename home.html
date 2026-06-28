@@ -199,10 +199,30 @@
   .hero>*{position:relative;z-index:2}
   .hero .hero-bg{position:absolute;inset:0;z-index:0;overflow:hidden}
   .hero .hero-bg img{width:100%;height:100%;object-fit:cover;display:block}
-  .hero.has-photo .eyebrow,.hero.has-photo h1{text-shadow:0 2px 14px rgba(0,0,0,.28)}
-  /* 햇살 빛줄기 + 하단 페이드 (사진 없을 때도 웜 톤 유지) */
-  .hero::before{content:'';position:absolute;inset:0;z-index:1;pointer-events:none;background:linear-gradient(160deg,rgba(255,220,100,.35) 0%,transparent 40%),linear-gradient(175deg,rgba(255,200,80,.2) 10%,transparent 50%),linear-gradient(155deg,rgba(255,230,120,.25) 5%,transparent 35%)}
-  .hero::after{content:'';position:absolute;bottom:0;left:0;right:0;height:40%;z-index:1;pointer-events:none;background:linear-gradient(to bottom,transparent,var(--cream))}
+  /* 히어로 이미지 오버레이 */
+  .hero-bg::after{
+    content:'';
+    position:absolute;
+    inset:0;
+    background:linear-gradient(
+      180deg,
+      rgba(0,0,0,.45) 0%,
+      rgba(0,0,0,.25) 40%,
+      rgba(0,0,0,.10) 60%,
+      var(--cream) 100%
+    );
+    z-index:1;
+  }
+  .hero-bg img{position:relative;z-index:0}
+  /* 히어로 텍스트 색상 — 사진 있을 때만 */
+  .hero.has-photo .eyebrow{ color:var(--coral); }
+  .hero.has-photo h1{ color:rgba(255,250,245,.96); }
+  .hero.has-photo h1 .glow{ color:var(--coral); }
+  .hero.has-photo p{ color:rgba(255,245,235,.88); }
+  /* 햇살 빛줄기 + 하단 페이드 — 사진 없을 때(폴백)만 적용. 사진 있을 때는 .hero-bg::after가
+     텍스트 가독성용 어둡게 처리를 전담하므로, 이 웜톤 오버레이가 위에 겹쳐 가독성을 깎지 않게 분리. */
+  .hero:not(.has-photo)::before{content:'';position:absolute;inset:0;z-index:1;pointer-events:none;background:linear-gradient(160deg,rgba(255,220,100,.35) 0%,transparent 40%),linear-gradient(175deg,rgba(255,200,80,.2) 10%,transparent 50%),linear-gradient(155deg,rgba(255,230,120,.25) 5%,transparent 35%)}
+  .hero:not(.has-photo)::after{content:'';position:absolute;bottom:0;left:0;right:0;height:40%;z-index:1;pointer-events:none;background:linear-gradient(to bottom,transparent,var(--cream))}
   .hero .eyebrow{font-family:var(--hand);font-size:1.35rem;color:var(--coral-deep);letter-spacing:.5px;margin-bottom:10px;font-weight:700}
   .hero h1{font-family:var(--display);font-size:clamp(2.7rem,11vw,3.8rem);font-weight:400;line-height:1.18;letter-spacing:-1px}
   .hero h1 .glow{color:var(--coral-deep)}
@@ -219,7 +239,7 @@
   @keyframes drop{0%{opacity:0;transform:translate(-50%,0)}30%{opacity:1}80%{opacity:0;transform:translate(-50%,16px)}100%{opacity:0}}
 
   /* ── 원장 인사 (배경과 어우러지게) ── */
-  .director{padding-top:10px;padding-bottom:30px;text-align:center}
+  .director{padding-top:60px;padding-bottom:30px;text-align:center}
   .director .badge{font-family:var(--hand);font-weight:700;color:var(--coral-deep);font-size:1.22rem;margin-bottom:26px}
   .director .portrait{width:144px;height:144px;border-radius:50%;margin:0 auto 24px;background:linear-gradient(135deg,#ffe7d4,#ffc4ac);display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.92);font-size:.78rem;box-shadow:0 0 0 9px rgba(255,255,255,.45),0 18px 38px -14px rgba(180,110,80,.45);overflow:hidden}
   .director .portrait span{border:1.5px dashed rgba(255,255,255,.9);border-radius:40px;padding:6px 13px}
