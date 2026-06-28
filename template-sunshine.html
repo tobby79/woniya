@@ -426,6 +426,7 @@
 <!-- 아래 섹션들은 비어있고, JS가 haetsal.json을 읽어 채웁니다 -->
 <header class="hero" id="hero"></header>
 <section class="director wrap" id="greeting"></section>
+<section class="overview wrap" id="overviewSec"></section>
 <section class="day wrap" id="day"></section>
 <section class="facilities wrap" id="facilitiesSec"></section>
 <section class="teachers wrap" id="teachersSec"></section>
@@ -495,31 +496,44 @@
 <!-- 원장 인사말 모달 -->
 <div class="info-modal-overlay" id="directorModal">
   <div class="info-modal-panel">
+    <div class="info-modal-header">
+      <h3 class="info-modal-title">원장 인사말</h3>
+    </div>
     <button class="info-modal-close" id="directorModalClose">×</button>
-    <h3 class="info-modal-title">원장 인사말</h3>
-    <p class="info-modal-greeting" id="directorModalMsg"></p>
-    <div class="info-modal-motto" id="directorModalMotto" style="margin-top:24px"></div>
-    <div class="info-modal-values" id="directorModalValues" style="margin-top:16px"></div>
+    <div class="info-modal-body">
+      <div class="director-modal-photo" id="directorModalPhoto"></div>
+      <p class="info-modal-greeting" id="directorModalMsg"></p>
+      <div class="info-modal-motto" id="directorModalMotto"></div>
+      <div class="info-modal-values" id="directorModalValues" style="margin-top:16px"></div>
+    </div>
   </div>
 </div>
 
 <!-- 시설 모달 -->
 <div class="info-modal-overlay" id="facilityModal">
   <div class="info-modal-panel">
+    <div class="info-modal-header">
+      <h3 class="info-modal-title">우리 원 시설</h3>
+    </div>
     <button class="info-modal-close" id="facilityModalClose">×</button>
-    <h3 class="info-modal-title">우리 원 시설</h3>
-    <div class="fac-stats" id="facilityStats" style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:24px"></div>
-    <div class="fac-modal-list" id="facilityList"></div>
+    <div class="info-modal-body">
+      <p class="info-modal-prog-intro" id="facilityIntro"></p>
+      <div class="fac-modal-list" id="facilityList"></div>
+    </div>
   </div>
 </div>
 
 <!-- 교육프로그램 모달 -->
 <div class="info-modal-overlay" id="programModal">
   <div class="info-modal-panel">
+    <div class="info-modal-header">
+      <h3 class="info-modal-title">교육프로그램</h3>
+    </div>
     <button class="info-modal-close" id="programModalClose">×</button>
-    <h3 class="info-modal-title">교육프로그램</h3>
-    <p class="info-modal-prog-intro" id="programModalIntro" style="font-size:.96rem;color:var(--ink-soft);line-height:1.75;margin-bottom:22px"></p>
-    <div id="programModalList"></div>
+    <div class="info-modal-body">
+      <p class="info-modal-prog-intro" id="programModalIntro"></p>
+      <div id="programModalList"></div>
+    </div>
   </div>
 </div>
 
@@ -560,12 +574,28 @@
   .director-preview{font-family:var(--hand);font-weight:700;font-size:1.35rem;line-height:1.7;color:var(--ink);max-width:400px;margin:0 auto 8px}
   .director-more-btn{background:none;border:none;color:var(--coral-deep);font-weight:700;font-size:.95rem;cursor:pointer;font-family:var(--body);margin-top:8px;text-decoration:underline}
 
-  /* ── 공통 모달 (원장/시설/교육프로그램) ── */
+  /* ── 우리 원 현황 카드 ── */
+  .overview{padding-top:50px;padding-bottom:40px}
+  .overview-card{background:var(--paper);border-radius:24px;padding:32px 26px;box-shadow:0 20px 48px -24px rgba(120,80,60,.4)}
+  .overview-title{font-family:var(--display);font-size:1.4rem;color:var(--ink);text-align:center;margin-bottom:6px;letter-spacing:-.5px}
+  .overview-sub{font-size:.9rem;color:var(--ink-soft);text-align:center;margin-bottom:26px}
+  .overview-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;background:rgba(120,80,60,.12);border-radius:16px;overflow:hidden}
+  .overview-item{background:var(--paper);padding:20px 16px;text-align:center}
+  .overview-item .o-label{font-size:.78rem;color:var(--ink-soft);font-weight:700;margin-bottom:6px}
+  .overview-item .o-value{font-family:var(--display);font-size:1.25rem;color:var(--coral-deep);font-weight:400;line-height:1.3}
+  .overview-address{display:flex;align-items:flex-start;gap:8px;margin-top:20px;padding:16px 18px;background:var(--cream);border-radius:14px;font-size:.92rem;color:var(--ink);line-height:1.5}
+  .overview-address .addr-icon{flex:none;color:var(--coral);font-weight:700}
+
+  /* ── 공통 모달 (원장/시설/교육프로그램) — 통일 규격 ── */
   .info-modal-overlay{position:fixed;inset:0;z-index:60;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center;padding:20px}
   .info-modal-overlay.open{display:flex}
-  .info-modal-panel{position:relative;width:100%;max-width:480px;max-height:88vh;overflow-y:auto;background:var(--paper);border-radius:24px;padding:36px 28px 32px;box-shadow:0 30px 60px -20px rgba(0,0,0,.45)}
-  .info-modal-close{position:absolute;top:16px;right:16px;width:36px;height:36px;border:none;background:var(--cream);border-radius:50%;font-size:1.3rem;color:var(--ink-soft);cursor:pointer;display:flex;align-items:center;justify-content:center}
-  .info-modal-title{font-family:var(--display);font-size:1.45rem;color:var(--ink);letter-spacing:-.5px;margin-bottom:20px}
+  .info-modal-panel{position:relative;width:92vw;max-width:520px;min-height:70vh;max-height:88vh;overflow-y:auto;background:var(--paper);border-radius:24px;box-shadow:0 30px 60px -20px rgba(0,0,0,.45);padding:0}
+  .info-modal-header{position:sticky;top:0;z-index:2;background:var(--paper);padding:28px 32px 18px;border-radius:24px 24px 0 0}
+  .info-modal-close{position:absolute;top:24px;right:24px;width:38px;height:38px;border:none;background:var(--cream);border-radius:50%;font-size:1.4rem;color:var(--ink-soft);cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:3}
+  .info-modal-body{padding:8px 32px 36px}
+  .info-modal-title{font-family:var(--display);font-size:1.45rem;color:var(--ink);letter-spacing:-.5px;margin-bottom:0}
+  .director-modal-photo{width:120px;height:120px;border-radius:50%;margin:0 auto 24px;overflow:hidden;box-shadow:0 0 0 7px rgba(255,255,255,.5),0 16px 34px -14px rgba(180,110,80,.4)}
+  .director-modal-photo img{width:100%;height:100%;object-fit:cover;display:block}
   .info-modal-greeting{font-size:1rem;color:var(--ink-soft);line-height:1.9;white-space:pre-line;margin-bottom:24px}
   .info-modal-motto{font-family:var(--display);font-size:1.2rem;color:var(--ink);text-align:center;padding:16px;background:var(--cream);border-radius:14px}
   .info-modal-values{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
@@ -579,13 +609,14 @@
   .fac-thumb{border-radius:14px;overflow:hidden;aspect-ratio:4/3;background:var(--cream)}
   .fac-thumb img{width:100%;height:100%;object-fit:cover;display:block}
   .fac-more-btn{display:block;width:100%;padding:14px;background:none;border:1.5px solid var(--coral);border-radius:14px;color:var(--coral);font-weight:700;font-size:.95rem;cursor:pointer;font-family:var(--body);margin-top:4px}
-  .fac-stat{background:var(--cream);border-radius:14px;padding:16px;text-align:center}
-  .fac-stat .s-value{font-family:var(--display);font-size:1.5rem;color:var(--coral-deep)}
-  .fac-stat .s-label{font-size:.8rem;color:var(--ink-soft);margin-top:3px}
-  .fac-modal-list{display:flex;flex-direction:column;gap:12px}
-  .fac-modal-item{background:var(--cream);border-radius:14px;padding:16px 18px}
-  .fac-modal-item .f-name{font-weight:700;font-size:.96rem;color:var(--ink);margin-bottom:4px}
-  .fac-modal-item .f-desc{font-size:.88rem;color:var(--ink-soft);line-height:1.6}
+  .info-modal-prog-intro{font-size:.96rem;color:var(--ink-soft);line-height:1.75;margin-bottom:22px}
+  .fac-modal-list{display:flex;flex-direction:column;gap:18px}
+  .fac-modal-item{background:var(--cream);border-radius:16px;overflow:hidden}
+  .fac-modal-item .fm-img{aspect-ratio:16/9;overflow:hidden;background:var(--paper)}
+  .fac-modal-item .fm-img img{width:100%;height:100%;object-fit:cover;display:block}
+  .fac-modal-item .fm-body{padding:16px 18px}
+  .fac-modal-item .fm-name{font-weight:700;font-size:1.05rem;color:var(--ink);margin-bottom:5px}
+  .fac-modal-item .fm-desc{font-size:.9rem;color:var(--ink-soft);line-height:1.6}
 
   /* ── 교육프로그램 (이미지 카드 + 모달) ── */
   .programs{padding-top:70px;padding-bottom:40px}
@@ -596,9 +627,12 @@
   .prog-card .prog-name{font-weight:700;font-size:1.05rem;color:var(--ink);margin-bottom:6px}
   .prog-card .prog-desc{font-size:.9rem;color:var(--ink-soft);line-height:1.65}
   .prog-more-btn{display:block;width:100%;padding:14px;background:none;border:1.5px solid var(--coral);border-radius:14px;color:var(--coral);font-weight:700;font-size:.95rem;cursor:pointer;font-family:var(--body);margin-top:4px}
-  .prog-modal-item{background:var(--cream);border-radius:14px;padding:16px 18px;margin-bottom:12px}
-  .prog-modal-item .pm-name{font-weight:700;font-size:1rem;color:var(--ink);margin-bottom:4px}
-  .prog-modal-item .pm-desc{font-size:.9rem;color:var(--ink-soft);line-height:1.65}
+  .prog-modal-item{background:var(--cream);border-radius:16px;overflow:hidden;margin-bottom:18px}
+  .prog-modal-item .pm-img{aspect-ratio:16/9;overflow:hidden;background:var(--paper)}
+  .prog-modal-item .pm-img img{width:100%;height:100%;object-fit:cover;display:block}
+  .prog-modal-item .pm-body{padding:16px 18px}
+  .prog-modal-item .pm-name{font-weight:700;font-size:1.05rem;color:var(--ink);margin-bottom:5px}
+  .prog-modal-item .pm-desc{font-size:.9rem;color:var(--ink-soft);line-height:1.6}
 </style>
 <script src="supabase-config.js"></script>
 <script src="kakao-config.js"></script>
@@ -793,6 +827,30 @@ function mapRowToData(row){
     <div class="sign reveal">${esc(d.sign_label)}<strong>${esc(d.sign_name)}</strong></div>
     <button type="button" class="director-more-btn reveal" id="directorModalOpenBtn">원장 인사말 더보기</button>`;
 
+  // ── 우리 원 현황 카드 ──
+  // (facilities는 아래 시설 섹션에서 const fac으로 다시 쓰므로 여기선 ovFac로 분리)
+  const ovFac = data.center.facilities;
+  const stats = (ovFac && ovFac.stats) || [];
+  const OVERVIEW_LABEL_ALIASES = { '교직원':'선생님' };
+  const overviewItems = stats.map(function(s){ return { label: OVERVIEW_LABEL_ALIASES[s.label] || s.label, value:s.value }; });
+  if (overviewItems.length) {
+    $('overviewSec').innerHTML = `
+      <div class="overview-card reveal">
+        <h2 class="overview-title">우리 원 현황</h2>
+        <p class="overview-sub">한눈에 보는 ${esc(c.name)}</p>
+        <div class="overview-grid">
+          ${overviewItems.map(it=>`
+            <div class="overview-item">
+              <div class="o-label">${esc(it.label)}</div>
+              <div class="o-value">${esc(it.value)}</div>
+            </div>`).join('')}
+        </div>
+        ${c.address ? `<div class="overview-address"><span class="addr-icon">●</span><span>${esc(c.address)}</span></div>` : ''}
+      </div>`;
+  } else {
+    document.getElementById('overviewSec').hidden = true;
+  }
+
   // ── 하루 스토리 (시그니처: 시간대별 빛 흐름) ──
   const frameCls = ['frame','frame alt','frame alt2','frame alt3','frame'];
   $('day').innerHTML = (data.day_story || []).map((m,i)=>`
@@ -901,6 +959,7 @@ function mapRowToData(row){
   window.__philosophyData__ = data.center.philosophy;
   window.__facilityData__ = data.center.facilities;
   window.__programData__ = data.center.programs;
+  window.__albumImgs__ = data.album?.items || [];
   initInteractions();
   renderInfoSections(data, c, esc);
   initConsultationForm(client, c.id);
@@ -919,7 +978,11 @@ function initInteractions(){
     function open(){
       var d = window.__directorData__;
       var phil = window.__philosophyData__;
-      if (d) document.getElementById('directorModalMsg').textContent = (d.message || '').replace(/<br\s*\/?>/gi,'\n');
+      if (d) {
+        document.getElementById('directorModalMsg').textContent = (d.message || '').replace(/<br\s*\/?>/gi,'\n');
+        var photoEl = document.getElementById('directorModalPhoto');
+        if (photoEl) photoEl.innerHTML = d.photo ? '<img alt="'+(d.photo_alt||'')+'" src="'+d.photo+'">' : '';
+      }
       var mottoEl = document.getElementById('directorModalMotto');
       var valEl = document.getElementById('directorModalValues');
       if (phil && mottoEl) {
@@ -948,12 +1011,15 @@ function initInteractions(){
     if (!overlay) return;
     function open(){
       var fac = window.__facilityData__;
+      var albumImgs = window.__albumImgs__ || [];
       if (!fac) return;
-      document.getElementById('facilityStats').innerHTML = (fac.stats||[]).map(function(s){
-        return '<div class="fac-stat"><div class="s-value">'+s.value+'</div><div class="s-label">'+s.label+'</div></div>';
-      }).join('');
-      document.getElementById('facilityList').innerHTML = (fac.items||[]).map(function(f){
-        return '<div class="fac-modal-item"><div class="f-name">'+f.name+'</div><div class="f-desc">'+(f.desc||'')+'</div></div>';
+      document.getElementById('facilityIntro').textContent = fac.intro || '';
+      document.getElementById('facilityList').innerHTML = (fac.items||[]).map(function(f, i){
+        var img = albumImgs[i] || null;
+        return '<div class="fac-modal-item">'
+          + (img ? '<div class="fm-img"><img src="'+img.photo+'" alt="'+f.name+'"></div>' : '')
+          + '<div class="fm-body"><div class="fm-name">'+f.name+'</div><div class="fm-desc">'+(f.desc||'')+'</div></div>'
+          + '</div>';
       }).join('');
       overlay.classList.add('open');
     }
@@ -972,10 +1038,15 @@ function initInteractions(){
     if (!overlay) return;
     function open(){
       var prog = window.__programData__;
+      var albumImgs = window.__albumImgs__ || [];
       if (!prog) return;
       document.getElementById('programModalIntro').textContent = prog.intro || '';
-      document.getElementById('programModalList').innerHTML = (prog.items||[]).map(function(it){
-        return '<div class="prog-modal-item"><div class="pm-name">'+it.name+'</div><div class="pm-desc">'+it.desc+'</div></div>';
+      document.getElementById('programModalList').innerHTML = (prog.items||[]).map(function(it, i){
+        var img = albumImgs[i+4] || albumImgs[i] || null;
+        return '<div class="prog-modal-item">'
+          + (img ? '<div class="pm-img"><img src="'+img.photo+'" alt="'+it.name+'"></div>' : '')
+          + '<div class="pm-body"><div class="pm-name">'+it.name+'</div><div class="pm-desc">'+it.desc+'</div></div>'
+          + '</div>';
       }).join('');
       overlay.classList.add('open');
     }
