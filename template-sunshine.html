@@ -426,8 +426,8 @@
 <!-- 아래 섹션들은 비어있고, JS가 haetsal.json을 읽어 채웁니다 -->
 <header class="hero" id="hero"></header>
 <section class="director wrap" id="greeting"></section>
+<section class="day wrap" id="day"></section>
 <section class="facilities wrap" id="facilitiesSec"></section>
-<section class="album wrap" id="albumSec" hidden></section>
 <section class="teachers wrap" id="teachersSec"></section>
 <section class="programs wrap" id="programSec"></section>
 <section class="block wrap" id="faq"></section>
@@ -492,6 +492,37 @@
   </div>
 </div>
 
+<!-- 원장 인사말 모달 -->
+<div class="info-modal-overlay" id="directorModal">
+  <div class="info-modal-panel">
+    <button class="info-modal-close" id="directorModalClose">×</button>
+    <h3 class="info-modal-title">원장 인사말</h3>
+    <p class="info-modal-greeting" id="directorModalMsg"></p>
+    <div class="info-modal-motto" id="directorModalMotto" style="margin-top:24px"></div>
+    <div class="info-modal-values" id="directorModalValues" style="margin-top:16px"></div>
+  </div>
+</div>
+
+<!-- 시설 모달 -->
+<div class="info-modal-overlay" id="facilityModal">
+  <div class="info-modal-panel">
+    <button class="info-modal-close" id="facilityModalClose">×</button>
+    <h3 class="info-modal-title">우리 원 시설</h3>
+    <div class="fac-stats" id="facilityStats" style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:24px"></div>
+    <div class="fac-modal-list" id="facilityList"></div>
+  </div>
+</div>
+
+<!-- 교육프로그램 모달 -->
+<div class="info-modal-overlay" id="programModal">
+  <div class="info-modal-panel">
+    <button class="info-modal-close" id="programModalClose">×</button>
+    <h3 class="info-modal-title">교육프로그램</h3>
+    <p class="info-modal-prog-intro" id="programModalIntro" style="font-size:.96rem;color:var(--ink-soft);line-height:1.75;margin-bottom:22px"></p>
+    <div id="programModalList"></div>
+  </div>
+</div>
+
 <!-- 라이트박스 -->
 <div class="lightbox-overlay" id="lightbox">
   <button class="lightbox-close" id="lightboxClose">×</button>
@@ -525,33 +556,49 @@
   .lightbox-close{position:absolute;top:18px;right:18px;width:40px;height:40px;border:none;background:rgba(255,255,255,.15);border-radius:50%;font-size:1.5rem;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center}
   .lightbox-cap{position:absolute;bottom:24px;left:50%;transform:translateX(-50%);color:rgba(255,255,255,.85);font-size:.92rem;white-space:nowrap}
 
-  /* ── 원 소개 카드 (원장 인사말 통합) ── */
-  .philosophy-card{margin-top:40px;background:var(--paper);border-radius:22px;padding:28px 24px;box-shadow:0 18px 44px -22px rgba(120,80,60,.32);text-align:center}
-  .philosophy-motto{font-family:var(--display);font-size:1.25rem;color:var(--ink);margin-bottom:18px;line-height:1.6}
-  .philosophy-values{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
-  .philosophy-value{font-size:.9rem;font-weight:700;color:#fff;background:var(--coral);padding:8px 20px;border-radius:30px}
+  /* ── 원장 인사말 미리보기 + 모달 ── */
+  .director-preview{font-family:var(--hand);font-weight:700;font-size:1.35rem;line-height:1.7;color:var(--ink);max-width:400px;margin:0 auto 8px}
+  .director-more-btn{background:none;border:none;color:var(--coral-deep);font-weight:700;font-size:.95rem;cursor:pointer;font-family:var(--body);margin-top:8px;text-decoration:underline}
 
-  /* ── 원 시설 소개 ── */
+  /* ── 공통 모달 (원장/시설/교육프로그램) ── */
+  .info-modal-overlay{position:fixed;inset:0;z-index:60;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center;padding:20px}
+  .info-modal-overlay.open{display:flex}
+  .info-modal-panel{position:relative;width:100%;max-width:480px;max-height:88vh;overflow-y:auto;background:var(--paper);border-radius:24px;padding:36px 28px 32px;box-shadow:0 30px 60px -20px rgba(0,0,0,.45)}
+  .info-modal-close{position:absolute;top:16px;right:16px;width:36px;height:36px;border:none;background:var(--cream);border-radius:50%;font-size:1.3rem;color:var(--ink-soft);cursor:pointer;display:flex;align-items:center;justify-content:center}
+  .info-modal-title{font-family:var(--display);font-size:1.45rem;color:var(--ink);letter-spacing:-.5px;margin-bottom:20px}
+  .info-modal-greeting{font-size:1rem;color:var(--ink-soft);line-height:1.9;white-space:pre-line;margin-bottom:24px}
+  .info-modal-motto{font-family:var(--display);font-size:1.2rem;color:var(--ink);text-align:center;padding:16px;background:var(--cream);border-radius:14px}
+  .info-modal-values{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+  .info-modal-value{font-size:.9rem;font-weight:700;color:#fff;background:var(--coral);padding:7px 18px;border-radius:30px}
+
+  /* ── 원 시설 (배지 + 썸네일 + 모달) ── */
   .facilities{padding-top:70px;padding-bottom:40px}
-  .fac-stats{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-top:24px;margin-bottom:36px}
-  .fac-stat{background:var(--paper);border-radius:16px;padding:18px;text-align:center;box-shadow:0 12px 28px -18px rgba(120,80,60,.32)}
-  .fac-stat .s-value{font-family:var(--display);font-size:1.6rem;color:var(--coral-deep);font-weight:400}
-  .fac-stat .s-label{font-size:.82rem;color:var(--ink-soft);margin-top:4px}
-  .fac-intro{color:var(--ink-soft);font-size:.96rem;line-height:1.75;margin-bottom:8px;text-align:center}
-  .fac-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:8px}
-  .fac-card{background:var(--paper);border-radius:16px;padding:18px 16px;box-shadow:0 12px 28px -18px rgba(120,80,60,.32)}
-  .fac-card .f-name{font-weight:700;font-size:.96rem;color:var(--ink);margin-bottom:6px}
-  .fac-card .f-desc{font-size:.86rem;color:var(--ink-soft);line-height:1.6}
-  .fac-more-btn{display:block;width:100%;margin-top:14px;padding:14px;background:none;border:1.5px solid var(--coral);border-radius:14px;color:var(--coral);font-weight:700;font-size:.95rem;cursor:pointer;font-family:var(--body)}
+  .fac-badges{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin:20px 0 28px}
+  .fac-badge{font-size:.88rem;font-weight:700;color:var(--coral-deep);background:var(--paper);padding:8px 16px;border-radius:30px;box-shadow:0 6px 16px -8px rgba(120,80,60,.3)}
+  .fac-thumb-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
+  .fac-thumb{border-radius:14px;overflow:hidden;aspect-ratio:4/3;background:var(--cream)}
+  .fac-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+  .fac-more-btn{display:block;width:100%;padding:14px;background:none;border:1.5px solid var(--coral);border-radius:14px;color:var(--coral);font-weight:700;font-size:.95rem;cursor:pointer;font-family:var(--body);margin-top:4px}
+  .fac-stat{background:var(--cream);border-radius:14px;padding:16px;text-align:center}
+  .fac-stat .s-value{font-family:var(--display);font-size:1.5rem;color:var(--coral-deep)}
+  .fac-stat .s-label{font-size:.8rem;color:var(--ink-soft);margin-top:3px}
+  .fac-modal-list{display:flex;flex-direction:column;gap:12px}
+  .fac-modal-item{background:var(--cream);border-radius:14px;padding:16px 18px}
+  .fac-modal-item .f-name{font-weight:700;font-size:.96rem;color:var(--ink);margin-bottom:4px}
+  .fac-modal-item .f-desc{font-size:.88rem;color:var(--ink-soft);line-height:1.6}
 
-  /* ── 교육프로그램 소개 ── */
+  /* ── 교육프로그램 (이미지 카드 + 모달) ── */
   .programs{padding-top:70px;padding-bottom:40px}
-  .prog-intro{color:var(--ink-soft);font-size:.96rem;line-height:1.75;margin-bottom:24px;text-align:center}
-  .prog-list{display:flex;flex-direction:column;gap:14px}
-  .prog-item{background:var(--paper);border-radius:18px;padding:20px 18px;box-shadow:0 12px 28px -18px rgba(120,80,60,.32);display:flex;gap:14px;align-items:flex-start}
-  .prog-num{font-family:var(--display);font-size:1.4rem;color:var(--coral);flex:none;min-width:32px}
-  .prog-body .p-name{font-weight:700;font-size:1rem;color:var(--ink);margin-bottom:4px}
-  .prog-body .p-desc{font-size:.9rem;color:var(--ink-soft);line-height:1.65}
+  .prog-card{background:var(--paper);border-radius:18px;overflow:hidden;box-shadow:0 16px 36px -18px rgba(120,80,60,.35);margin-bottom:14px}
+  .prog-card .prog-img{aspect-ratio:16/9;overflow:hidden;background:var(--cream)}
+  .prog-card .prog-img img{width:100%;height:100%;object-fit:cover;display:block}
+  .prog-card .prog-body{padding:18px 18px 20px}
+  .prog-card .prog-name{font-weight:700;font-size:1.05rem;color:var(--ink);margin-bottom:6px}
+  .prog-card .prog-desc{font-size:.9rem;color:var(--ink-soft);line-height:1.65}
+  .prog-more-btn{display:block;width:100%;padding:14px;background:none;border:1.5px solid var(--coral);border-radius:14px;color:var(--coral);font-weight:700;font-size:.95rem;cursor:pointer;font-family:var(--body);margin-top:4px}
+  .prog-modal-item{background:var(--cream);border-radius:14px;padding:16px 18px;margin-bottom:12px}
+  .prog-modal-item .pm-name{font-weight:700;font-size:1rem;color:var(--ink);margin-bottom:4px}
+  .prog-modal-item .pm-desc{font-size:.9rem;color:var(--ink-soft);line-height:1.65}
 </style>
 <script src="supabase-config.js"></script>
 <script src="kakao-config.js"></script>
@@ -700,16 +747,16 @@ function mapRowToData(row){
 
   // ── 상단바 / 메뉴 ──
   const c = data.center;
-  // 새 홈 구조: 하루스토리(#day)·공지(#notice)·행사일정(#schedule) 섹션 제거 → 해당 메뉴 항목 정리 후
+  // 공지·행사일정 섹션은 제거됨 → 메뉴에서 필터. 하루 스토리(#day)는 복원되어 유지.
   // 시설 소개/교육프로그램(인페이지 섹션) + 입학안내/오시는 길(새 페이지) 런타임 주입
   (function(){
     var qs = c.slug ? ('?slug=' + encodeURIComponent(c.slug)) : '';
     c.menu = (c.menu || []).filter(function(m){
-      return m.href !== '#notice' && m.href !== '#schedule' && m.href !== '#day';
+      return m.href !== '#notice' && m.href !== '#schedule';
     });
     var extra = [];
-    if (data.center.facilities) extra.push({ href:'#facilitiesSec', label:'시설 소개' });
-    if (data.center.programs) extra.push({ href:'#programSec', label:'교육프로그램' });
+    extra.push({ href:'#facilitiesSec', label:'시설 소개' });
+    extra.push({ href:'#programSec', label:'교육프로그램' });
     if (data.admission) extra.push({ href: 'admissions.html' + qs, label: '입학안내' });
     if ((c.directions_text || '').trim()) extra.push({ href: 'directions.html' + qs, label: '오시는 길' });
     if (extra.length){
@@ -735,76 +782,48 @@ function mapRowToData(row){
     <p class="reveal">${esc(h.subtitle)}</p>
     <nav class="cloud-menu reveal" aria-label="바로가기">${cloudMenu}</nav>`;
 
-  // ── 원장 인사말 + 원 소개(원훈·교육가치) 통합 ──
+  // ── 원장 인사말 (미리보기 + 모달) ──
   const d = c.director;
-  const phil = data.center.philosophy;
+  // director.message는 <br> 또는 \n 으로 줄이 나뉘어 있어, 첫 줄만 미리보기로 사용
+  const msgPreview = (d.message||'').replace(/<br\s*\/?>/gi,'\n').split('\n')[0];
   $('greeting').innerHTML = `
     <div class="badge reveal">${esc(d.badge)}</div>
     <div class="portrait reveal"><img alt="${esc(d.photo_alt)}" src="${esc(d.photo)}"></div>
-    <p class="msg reveal">${esc(d.message)}</p>
+    <p class="director-preview reveal">${esc(msgPreview)}</p>
     <div class="sign reveal">${esc(d.sign_label)}<strong>${esc(d.sign_name)}</strong></div>
-    ${phil ? `
-    <div class="philosophy-card reveal">
-      <div class="philosophy-motto">${esc(phil.motto)}</div>
-      <div class="philosophy-values">${(phil.values||[]).map(v=>`<span class="philosophy-value">${esc(v)}</span>`).join('')}</div>
-    </div>` : ''}`;
+    <button type="button" class="director-more-btn reveal" id="directorModalOpenBtn">원장 인사말 더보기</button>`;
 
-  // ── 원 시설 소개 ──
+  // ── 하루 스토리 (시그니처: 시간대별 빛 흐름) ──
+  const frameCls = ['frame','frame alt','frame alt2','frame alt3','frame'];
+  $('day').innerHTML = (data.day_story || []).map((m,i)=>`
+    <section class="moment" data-time="${esc(m.slot)}">
+      <div class="time reveal">${esc(m.time)}</div>
+      <div class="title reveal">${esc(m.title)}</div>
+      <div class="${frameCls[i]||'frame'} reveal">
+        <img class="frame-img" alt="${esc(m.photo_alt)}" data-src="${esc(m.photo)}">
+        <div class="cap">${esc(m.caption)}</div>
+      </div>
+      <p class="note reveal">${esc(m.note)}</p>
+    </section>`).join('');
+
+  // ── 원 시설 (배지 + 썸네일 + 모달) ──
   const fac = data.center.facilities;
+  const albumImgs = data.album?.items || [];
   if (fac) {
-    const statsHtml = (fac.stats||[]).map(s=>`
-      <div class="fac-stat reveal">
-        <div class="s-value">${esc(s.value)}</div>
-        <div class="s-label">${esc(s.label)}</div>
-      </div>`).join('');
-    const FAC_LIMIT = 4;
-    const facItems = fac.items || [];
-    const visibleFac = facItems.slice(0, FAC_LIMIT);
-    const hiddenFac = facItems.slice(FAC_LIMIT);
-    const facCardsHtml = visibleFac.map(f=>`
-      <div class="fac-card reveal">
-        <div class="f-name">${esc(f.name)}</div>
-        <div class="f-desc">${esc(f.desc)}</div>
-      </div>`).join('');
-    const hiddenFacHtml = hiddenFac.length ? `
-      <div class="fac-grid fac-hidden" hidden>${hiddenFac.map(f=>`
-        <div class="fac-card reveal">
-          <div class="f-name">${esc(f.name)}</div>
-          <div class="f-desc">${esc(f.desc)}</div>
-        </div>`).join('')}</div>
-      <button type="button" class="fac-more-btn" onclick="this.previousElementSibling.hidden=false;this.remove();">시설 더 보기</button>` : '';
+    const badgesHtml = (fac.items||[]).map(f=>
+      `<span class="fac-badge">${esc(f.name)}</span>`).join('');
+    const thumbHtml = albumImgs.slice(0,4).map(it=>
+      `<div class="fac-thumb"><img data-src="${esc(it.photo)}" alt="${esc(it.label)}"></div>`).join('');
     $('facilitiesSec').innerHTML = `
       <div class="section-eyebrow reveal">우리 원 시설</div>
       <h2 class="section-title reveal">안전하고 따뜻한 공간</h2>
-      <p class="fac-intro reveal">${esc(fac.intro)}</p>
-      <div class="fac-stats">${statsHtml}</div>
-      <div class="fac-grid">${facCardsHtml}</div>
-      ${hiddenFacHtml}`;
+      <p class="fac-intro reveal" style="text-align:center;color:var(--ink-soft);font-size:.96rem;line-height:1.75;margin-bottom:8px">${esc(fac.intro)}</p>
+      <div class="fac-badges reveal">${badgesHtml}</div>
+      <div class="fac-thumb-grid reveal">${thumbHtml}</div>
+      <button type="button" class="fac-more-btn reveal" id="facilityModalOpenBtn">시설 전체 보기</button>`;
   } else {
-    $('facilitiesSec').hidden = true;
+    document.getElementById('facilitiesSec').hidden = true;
   }
-
-  // ── 앨범 벽 ──
-  const al = data.album;
-  const ALBUM_LIMIT = 12;
-  const albumItems = al?.items || [];
-  const visibleItems = albumItems.slice(0, ALBUM_LIMIT);
-  const hiddenItems = albumItems.slice(ALBUM_LIMIT);
-  $('albumSec').innerHTML = `
-    <div class="section-eyebrow reveal">${esc(al?.eyebrow)}</div>
-    <h2 class="section-title reveal">${esc(al?.title)}</h2>
-    <p class="section-sub reveal">${esc(al?.sub)}</p>
-    <div class="polaroids">${visibleItems.map((it,i)=>`
-      <div class="polaroid p${i+1} reveal" tabindex="0">
-        <div class="pic"><img alt="${esc(it.label)}" data-src="${esc(it.photo)}"></div>
-        <div class="label">${esc(it.label)}</div>
-      </div>`).join('')}</div>
-    ${hiddenItems.length?`<div class="polaroids album-hidden" hidden>${hiddenItems.map((it,i)=>`
-      <div class="polaroid reveal" tabindex="0">
-        <div class="pic"><img alt="${esc(it.label)}" data-src="${esc(it.photo)}"></div>
-        <div class="label">${esc(it.label)}</div>
-      </div>`).join('')}</div>
-    <button type="button" class="more-link album-more-btn" style="background:none;border:none;cursor:pointer;font-family:inherit" onclick="this.previousElementSibling.hidden=false;this.remove();">더 보기 (총 ${albumItems.length}장)</button>`:''}`;
 
   // ── 선생님 카드 ──
   const t = data.teachers;
@@ -826,23 +845,28 @@ function mapRowToData(row){
         </div>
       </div>`).join('')}</div>`;
 
-  // ── 교육프로그램 소개 ──
+  // ── 교육프로그램 (이미지 카드 + 모달) ──
   const prog = data.center.programs;
   if (prog) {
+    const previewItems = (prog.items||[]).slice(0,2);
+    const cardsHtml = previewItems.map((it,i)=>{
+      const img = albumImgs[i+4] || albumImgs[i] || null;
+      return `<div class="prog-card reveal">
+        <div class="prog-img">${img?`<img data-src="${esc(img.photo)}" alt="${esc(it.name)}">`:''}</div>
+        <div class="prog-body">
+          <div class="prog-name">${esc(it.name)}</div>
+          <div class="prog-desc">${esc(it.desc)}</div>
+        </div>
+      </div>`;
+    }).join('');
     $('programSec').innerHTML = `
       <div class="section-eyebrow reveal">교육프로그램</div>
       <h2 class="section-title reveal">우리 원의 교육</h2>
-      <p class="prog-intro reveal">${esc(prog.intro)}</p>
-      <div class="prog-list">${(prog.items||[]).map((it,i)=>`
-        <div class="prog-item reveal">
-          <span class="prog-num">0${i+1}</span>
-          <div class="prog-body">
-            <div class="p-name">${esc(it.name)}</div>
-            <div class="p-desc">${esc(it.desc)}</div>
-          </div>
-        </div>`).join('')}</div>`;
+      <p class="prog-intro reveal" style="text-align:center;color:var(--ink-soft);font-size:.96rem;line-height:1.75;margin-bottom:24px">${esc(prog.intro)}</p>
+      ${cardsHtml}
+      <button type="button" class="prog-more-btn reveal" id="programModalOpenBtn">교육프로그램 전체 보기</button>`;
   } else {
-    $('programSec').hidden = true;
+    document.getElementById('programSec').hidden = true;
   }
 
   // ── FAQ ──
@@ -873,6 +897,10 @@ function mapRowToData(row){
   // ─────────────────────────────────────────────
   // 2) 렌더가 끝난 뒤 인터랙션 초기화 (원본 동작 그대로)
   // ─────────────────────────────────────────────
+  window.__directorData__ = c.director;
+  window.__philosophyData__ = data.center.philosophy;
+  window.__facilityData__ = data.center.facilities;
+  window.__programData__ = data.center.programs;
   initInteractions();
   renderInfoSections(data, c, esc);
   initConsultationForm(client, c.id);
@@ -881,6 +909,82 @@ function mapRowToData(row){
 function initInteractions(){
   var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   initDeferredImages();
+
+  // ── 원장 인사말 모달 ──
+  (function(){
+    var overlay = document.getElementById('directorModal');
+    var closeBtn = document.getElementById('directorModalClose');
+    var openBtn = document.getElementById('directorModalOpenBtn');
+    if (!overlay) return;
+    function open(){
+      var d = window.__directorData__;
+      var phil = window.__philosophyData__;
+      if (d) document.getElementById('directorModalMsg').textContent = (d.message || '').replace(/<br\s*\/?>/gi,'\n');
+      var mottoEl = document.getElementById('directorModalMotto');
+      var valEl = document.getElementById('directorModalValues');
+      if (phil && mottoEl) {
+        mottoEl.textContent = phil.motto || '';
+        mottoEl.hidden = !phil.motto;
+      }
+      if (phil && valEl) {
+        valEl.innerHTML = (phil.values||[]).map(function(v){
+          return '<span class="info-modal-value">'+v+'</span>';
+        }).join('');
+      }
+      overlay.classList.add('open');
+    }
+    function close(){ overlay.classList.remove('open'); }
+    if (openBtn) openBtn.addEventListener('click', open);
+    closeBtn.addEventListener('click', close);
+    overlay.addEventListener('click', function(e){ if(e.target===overlay) close(); });
+    document.addEventListener('keydown', function(e){ if(e.key==='Escape') close(); });
+  })();
+
+  // ── 시설 모달 ──
+  (function(){
+    var overlay = document.getElementById('facilityModal');
+    var closeBtn = document.getElementById('facilityModalClose');
+    var openBtn = document.getElementById('facilityModalOpenBtn');
+    if (!overlay) return;
+    function open(){
+      var fac = window.__facilityData__;
+      if (!fac) return;
+      document.getElementById('facilityStats').innerHTML = (fac.stats||[]).map(function(s){
+        return '<div class="fac-stat"><div class="s-value">'+s.value+'</div><div class="s-label">'+s.label+'</div></div>';
+      }).join('');
+      document.getElementById('facilityList').innerHTML = (fac.items||[]).map(function(f){
+        return '<div class="fac-modal-item"><div class="f-name">'+f.name+'</div><div class="f-desc">'+(f.desc||'')+'</div></div>';
+      }).join('');
+      overlay.classList.add('open');
+    }
+    function close(){ overlay.classList.remove('open'); }
+    if (openBtn) openBtn.addEventListener('click', open);
+    closeBtn.addEventListener('click', close);
+    overlay.addEventListener('click', function(e){ if(e.target===overlay) close(); });
+    document.addEventListener('keydown', function(e){ if(e.key==='Escape') close(); });
+  })();
+
+  // ── 교육프로그램 모달 ──
+  (function(){
+    var overlay = document.getElementById('programModal');
+    var closeBtn = document.getElementById('programModalClose');
+    var openBtn = document.getElementById('programModalOpenBtn');
+    if (!overlay) return;
+    function open(){
+      var prog = window.__programData__;
+      if (!prog) return;
+      document.getElementById('programModalIntro').textContent = prog.intro || '';
+      document.getElementById('programModalList').innerHTML = (prog.items||[]).map(function(it){
+        return '<div class="prog-modal-item"><div class="pm-name">'+it.name+'</div><div class="pm-desc">'+it.desc+'</div></div>';
+      }).join('');
+      overlay.classList.add('open');
+    }
+    function close(){ overlay.classList.remove('open'); }
+    if (openBtn) openBtn.addEventListener('click', open);
+    closeBtn.addEventListener('click', close);
+    overlay.addEventListener('click', function(e){ if(e.target===overlay) close(); });
+    document.addEventListener('keydown', function(e){ if(e.key==='Escape') close(); });
+  })();
 
   // ── 라이트박스 ──
   (function(){
@@ -1034,9 +1138,13 @@ function renderInfoSections(data, c, esc){
     if (!data.admission){ admSec.hidden = true; }
     else {
       admSec.hidden = false;
+      var adm = data.admission;
       admSec.innerHTML = '<h2 class="info-title">입학안내</h2>'
-        + '<p class="info-lead">모집 대상·정원·입소 절차·준비물을 한 페이지에서 확인하세요.</p>'
-        + '<a class="info-link-btn" href="admissions.html' + qs + '">입학안내 보기 →</a>';
+        + '<div class="adm-preview" style="background:var(--paper);border-radius:16px;padding:18px 20px;box-shadow:0 12px 28px -18px rgba(120,80,60,.3);margin:0 0 16px;text-align:left">'
+        + (adm.target ? '<div style="font-size:.85rem;font-weight:700;color:var(--ink-soft);margin-bottom:4px">모집 대상</div><div style="font-size:.96rem;color:var(--ink);margin-bottom:12px">'+esc(adm.target)+'</div>' : '')
+        + (adm.period ? '<div style="font-size:.85rem;font-weight:700;color:var(--ink-soft);margin-bottom:4px">모집 기간</div><div style="font-size:.96rem;color:var(--ink)">'+esc(adm.period)+'</div>' : '')
+        + '</div>'
+        + '<a class="info-link-btn" href="admissions.html' + qs + '">입학안내 자세히 보기 →</a>';
     }
   }
   var dirSec = document.getElementById('directionsSec');
