@@ -72,13 +72,10 @@
   .banner .eyebrow{font-size:.82rem;letter-spacing:3px;text-transform:uppercase;font-weight:600;opacity:.9;margin-bottom:18px}
   .banner h1{font-family:var(--serif);font-weight:600;font-size:clamp(2.6rem,9vw,3.6rem);line-height:1.25;letter-spacing:-.5px}
   .banner p{margin-top:18px;font-size:1.05rem;opacity:.92;max-width:420px;font-weight:300}
-  .banner .scroll-line{position:absolute;left:50%;bottom:28px;transform:translateX(-50%);z-index:2;width:1px;height:46px;background:rgba(255,255,255,.5);overflow:hidden}
-  .banner .scroll-line::after{content:"";position:absolute;top:-46px;left:0;width:1px;height:46px;background:#fff;animation:scrolldown 2s infinite}
   /* 액자형 메뉴 버튼 (gallery 고유 — 모노톤·세련) */
   .banner .frame-menu{display:flex;flex-wrap:wrap;gap:10px;margin-top:26px}
   .banner .frame-btn{font-size:.84rem;font-weight:600;letter-spacing:.5px;color:#fff;text-decoration:none;padding:10px 16px;border:1px solid rgba(255,255,255,.45);border-radius:8px;background:rgba(255,255,255,.08);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);transition:background .2s ease,border-color .2s ease}
   .banner .frame-btn:hover{background:rgba(255,255,255,.2);border-color:#fff}
-  @keyframes scrolldown{0%{top:-46px}60%,100%{top:46px}}
 
   /* ── 2. 갤러리 (앨범) — 가로 슬라이드 ── */
   .gallery{padding-top:90px;padding-bottom:70px}
@@ -434,13 +431,19 @@ function mapRowToData(row){
   const esc = (s)=> s==null ? '' : s;
   const c = data.center;
   // M2: 공개형 새 페이지(입학안내/오시는 길) 메뉴 항목 런타임 주입 (DB 메뉴는 그대로 둠)
+  // 버그 수정: DB 공통 메뉴(#day/#notice/#schedule/#faq)는 home.html 기준이라 gallery 자체
+  // 섹션 ID(#gallery, #infoDesk)와 달라 클릭해도 스크롤이 안 됐다. 실제 섹션에 맞게 보정.
   (function(){
+    var HREF_FIX = { '#day':'#gallery', '#notice':'#infoDesk', '#schedule':'#infoDesk', '#faq':'#infoDesk' };
+    c.menu = (c.menu || []).map(function(m){
+      return HREF_FIX[m.href] ? Object.assign({}, m, { href: HREF_FIX[m.href] }) : m;
+    });
     var qs = c.slug ? ('?slug=' + encodeURIComponent(c.slug)) : '';
     var extra = [];
     if (data.admission) extra.push({ href: 'admissions.html' + qs, label: '입학안내' });
     if ((c.directions_text || '').trim()) extra.push({ href: 'directions.html' + qs, label: '오시는 길' });
     if (extra.length){
-      var m = (c.menu || []).slice();
+      var m = c.menu.slice();
       var i = m.findIndex(function(x){ return x.cta; });
       if (i < 0) i = m.length;
       c.menu = m.slice(0, i).concat(extra, m.slice(i));
@@ -459,8 +462,7 @@ function mapRowToData(row){
       <h1 class="reveal">${esc(h.title)} ${esc(h.title_accent)}</h1>
       <p class="reveal">${esc(h.subtitle)}</p>
       <nav class="frame-menu reveal" aria-label="바로가기">${(c.menu||[]).filter(m=>!m.cta).map(m=>`<a class="frame-btn" href="${esc(m.href)}">${esc(m.label)}</a>`).join('')}</nav>
-    </div>
-    <div class="scroll-line"></div>`;
+    </div>`;
 
   // 2. 갤러리 (앨범) — 가로 슬라이드
   const al = data.album;

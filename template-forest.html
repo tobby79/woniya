@@ -1503,13 +1503,19 @@
       const esc = (s) => s == null ? '' : s;
       const c = data.center;
       // M2: 공개형 새 페이지(입학안내/오시는 길) 메뉴 항목 런타임 주입 (DB 메뉴는 그대로 둠)
+      // 버그 수정: DB 공통 메뉴(#day/#notice/#schedule/#faq)는 home.html 기준이라 forest 자체
+      // 섹션 ID(#timeline, #explore)와 달라 클릭해도 스크롤이 안 됐다. 실제 섹션에 맞게 보정.
       (function(){
+        var HREF_FIX = { '#day':'#timeline', '#notice':'#explore', '#schedule':'#explore', '#faq':'#explore' };
+        c.menu = (c.menu || []).map(function(m){
+          return HREF_FIX[m.href] ? Object.assign({}, m, { href: HREF_FIX[m.href] }) : m;
+        });
         var qs = c.slug ? ('?slug=' + encodeURIComponent(c.slug)) : '';
         var extra = [];
         if (data.admission) extra.push({ href: 'admissions.html' + qs, label: '입학안내' });
         if ((c.directions_text || '').trim()) extra.push({ href: 'directions.html' + qs, label: '오시는 길' });
         if (extra.length){
-          var m = (c.menu || []).slice();
+          var m = c.menu.slice();
           var i = m.findIndex(function(x){ return x.cta; });
           if (i < 0) i = m.length;
           c.menu = m.slice(0, i).concat(extra, m.slice(i));
