@@ -183,6 +183,22 @@
     box-shadow:0 -8px 16px -8px rgba(120,80,60,.15);
   }
 
+  /* ── 시설·프로그램 카드 (하루 이야기와 동일한 카드 패턴 재사용) ── */
+  .fac-stat-list,.fac-item-list,.prog-item-list{display:flex;flex-direction:column;gap:18px}
+  .fac-stat-card,.fac-item-card,.prog-item-card{background:var(--cream);border:1.5px solid #f1e9e0;border-radius:20px;padding:22px}
+  .fac-stat-row{display:flex;gap:12px}
+  .fac-stat-row .field{flex:1;margin-bottom:0}
+
+  /* ── 탭 하단 고정 저장바 (범용, 탭별로 적용 가능) ── */
+  .tab-save-sticky{
+    position:sticky;bottom:0;left:0;right:0;
+    background:var(--cream);
+    padding:14px 0 4px;
+    margin-top:20px;
+    z-index:10;
+    box-shadow:0 -8px 16px -8px rgba(120,80,60,.15);
+  }
+
 </style>
 </head>
 <body>
@@ -383,7 +399,47 @@
         <div class="msg" id="dayStorySaveStatus"></div>
       </div>
     </div>
-    <div class="tab-panel" data-panel="facility"><div class="tab-placeholder">시설·프로그램 편집 — 준비 중</div></div>
+    <!-- 탭4: 시설·프로그램 -->
+    <div class="tab-panel" data-panel="facility">
+      <div class="panel">
+        <div class="section-eyebrow">시설 안내</div>
+        <h2 class="section-title" style="margin-top:6px">우리 원 시설</h2>
+
+        <div class="field">
+          <label for="fac-intro">시설 소개</label>
+          <textarea id="fac-intro" rows="3" placeholder="시설을 한 문장으로 소개해주세요"></textarea>
+        </div>
+
+        <label>시설 현황</label>
+        <div class="fac-stat-list" id="facStatList"></div>
+        <button type="button" class="btn ghost" id="addFacStatBtn" style="width:auto;margin-top:10px">+ 항목 추가</button>
+
+        <div style="margin-top:30px">
+          <label>시설 항목</label>
+          <div class="fac-item-list" id="facItemList"></div>
+          <button type="button" class="btn ghost" id="addFacItemBtn" style="width:auto;margin-top:10px">+ 항목 추가</button>
+        </div>
+
+        <div class="section-eyebrow" style="margin-top:36px">교육프로그램</div>
+        <h2 class="section-title" style="margin-top:6px">프로그램 안내</h2>
+
+        <div class="field">
+          <label for="prog-intro">교육프로그램 소개</label>
+          <textarea id="prog-intro" rows="3" placeholder="교육프로그램을 한 문장으로 소개해주세요"></textarea>
+        </div>
+
+        <label>교육프로그램 항목</label>
+        <div class="prog-item-list" id="progItemList"></div>
+        <button type="button" class="btn ghost" id="addProgItemBtn" style="width:auto;margin-top:10px">+ 항목 추가</button>
+
+        <!-- 시설/프로그램 사진은 album 이미지를 순서대로 빌려쓰는 현재 방식 유지. 사진 업로드는 추후 템플릿 개편 시 별도 작업 예정. -->
+      </div>
+
+      <div class="tab-save-sticky">
+        <button type="button" class="btn" id="facilitySaveBtn">저장</button>
+        <div class="msg" id="facilitySaveStatus"></div>
+      </div>
+    </div>
     <div class="tab-panel" data-panel="teacher"><div class="tab-placeholder">선생님 편집 — 준비 중</div></div>
     <div class="tab-panel" data-panel="admission"><div class="tab-placeholder">입학안내 편집 — 준비 중</div></div>
     <div class="tab-panel" data-panel="directions"><div class="tab-placeholder">오시는 길 편집 — 준비 중</div></div>
@@ -461,6 +517,15 @@
   var dayStorySaveBtn    = document.getElementById('dayStorySaveBtn');
   var dayStorySaveStatus = document.getElementById('dayStorySaveStatus');
   var DAY_STORY_LIMIT = 5;
+
+  var facStatList       = document.getElementById('facStatList');
+  var addFacStatBtn     = document.getElementById('addFacStatBtn');
+  var facItemList       = document.getElementById('facItemList');
+  var addFacItemBtn     = document.getElementById('addFacItemBtn');
+  var progItemList      = document.getElementById('progItemList');
+  var addProgItemBtn    = document.getElementById('addProgItemBtn');
+  var facilitySaveBtn   = document.getElementById('facilitySaveBtn');
+  var facilitySaveStatus= document.getElementById('facilitySaveStatus');
 
   var currentCenter = null;
   var selectedType  = 'hero';
@@ -912,6 +977,113 @@
     }
   });
 
+  // ── 시설·프로그램 탭 ──
+  function renderStatCard(stat){
+    stat = stat || {};
+    return '<div class="fac-stat-card">' +
+      '<div class="fac-stat-row">' +
+        '<div class="field">' +
+          '<label>항목명</label>' +
+          '<input type="text" class="fs-label" placeholder="예: 설립연도" value="' + esc(stat.label) + '">' +
+        '</div>' +
+        '<div class="field">' +
+          '<label>값</label>' +
+          '<input type="text" class="fs-value" placeholder="예: 2012년" value="' + esc(stat.value) + '">' +
+        '</div>' +
+      '</div>' +
+      '<button type="button" class="btn danger fs-delete-btn" style="width:auto;margin-top:10px">삭제</button>' +
+    '</div>';
+  }
+
+  function renderNameDescCard(item, cardCls){
+    item = item || {};
+    return '<div class="' + cardCls + '">' +
+      '<div class="field">' +
+        '<label>이름</label>' +
+        '<input type="text" class="nd-name" placeholder="예: 놀이실" value="' + esc(item.name) + '">' +
+      '</div>' +
+      '<div class="field">' +
+        '<label>설명</label>' +
+        '<textarea class="nd-desc" rows="2" placeholder="설명을 입력해주세요">' + esc(item.desc) + '</textarea>' +
+      '</div>' +
+      '<button type="button" class="btn danger nd-delete-btn" style="width:auto;margin-top:6px">삭제</button>' +
+    '</div>';
+  }
+
+  function loadFacilityTab(){
+    if (!currentCenter) return;
+    var fac  = currentCenter.facilities || {};
+    var prog = currentCenter.programs || {};
+    document.getElementById('fac-intro').value  = fac.intro || '';
+    document.getElementById('prog-intro').value = prog.intro || '';
+    facStatList.innerHTML  = (fac.stats || []).map(renderStatCard).join('');
+    facItemList.innerHTML  = (fac.items || []).map(function(it){ return renderNameDescCard(it, 'fac-item-card'); }).join('');
+    progItemList.innerHTML = (prog.items || []).map(function(it){ return renderNameDescCard(it, 'prog-item-card'); }).join('');
+  }
+
+  addFacStatBtn.addEventListener('click', function(){
+    facStatList.insertAdjacentHTML('beforeend', renderStatCard({}));
+  });
+  addFacItemBtn.addEventListener('click', function(){
+    facItemList.insertAdjacentHTML('beforeend', renderNameDescCard({}, 'fac-item-card'));
+  });
+  addProgItemBtn.addEventListener('click', function(){
+    progItemList.insertAdjacentHTML('beforeend', renderNameDescCard({}, 'prog-item-card'));
+  });
+
+  facStatList.addEventListener('click', function(e){
+    var btn = e.target.closest('.fs-delete-btn');
+    if (!btn) return;
+    btn.closest('.fac-stat-card').remove();
+  });
+  facItemList.addEventListener('click', function(e){
+    var btn = e.target.closest('.nd-delete-btn');
+    if (!btn) return;
+    btn.closest('.fac-item-card').remove();
+  });
+  progItemList.addEventListener('click', function(e){
+    var btn = e.target.closest('.nd-delete-btn');
+    if (!btn) return;
+    btn.closest('.prog-item-card').remove();
+  });
+
+  facilitySaveBtn.addEventListener('click', async function(){
+    if (!currentCenter) return;
+    facilitySaveStatus.textContent = '저장 중...';
+    facilitySaveStatus.className = 'msg';
+
+    var newFacilities = {
+      intro: document.getElementById('fac-intro').value,
+      stats: Array.prototype.map.call(facStatList.querySelectorAll('.fac-stat-card'), function(card){
+        return { label: card.querySelector('.fs-label').value, value: card.querySelector('.fs-value').value };
+      }),
+      items: Array.prototype.map.call(facItemList.querySelectorAll('.fac-item-card'), function(card){
+        return { name: card.querySelector('.nd-name').value, desc: card.querySelector('.nd-desc').value };
+      })
+    };
+    var newPrograms = {
+      intro: document.getElementById('prog-intro').value,
+      items: Array.prototype.map.call(progItemList.querySelectorAll('.prog-item-card'), function(card){
+        return { name: card.querySelector('.nd-name').value, desc: card.querySelector('.nd-desc').value };
+      })
+    };
+
+    var res = await client.from('centers').update({
+      facilities: newFacilities,
+      programs:   newPrograms
+    }).eq('id', currentCenter.id);
+
+    if (res.error) {
+      facilitySaveStatus.textContent = '저장 실패: ' + res.error.message;
+      facilitySaveStatus.className = 'msg error';
+    } else {
+      currentCenter.facilities = newFacilities;
+      currentCenter.programs   = newPrograms;
+      facilitySaveStatus.textContent = '저장됐어요.';
+      facilitySaveStatus.className = 'msg ok';
+    }
+  });
+
   // ── 탭 전환 ──
   if (tabBar) {
     tabBar.addEventListener('click', function(e){
@@ -925,6 +1097,7 @@
       if (panel) panel.classList.add('active');
       if (tab === 'intro') loadIntroTab();
       if (tab === 'day') loadDayStoryTab();
+      if (tab === 'facility') loadFacilityTab();
     });
   }
 
@@ -1014,6 +1187,7 @@
 
     if (document.querySelector('.tab-btn[data-tab="intro"].active')) loadIntroTab();
     if (document.querySelector('.tab-btn[data-tab="day"].active')) loadDayStoryTab();
+    if (document.querySelector('.tab-btn[data-tab="facility"].active')) loadFacilityTab();
   }
 
   client.auth.onAuthStateChange(function(_event, session){
