@@ -125,7 +125,7 @@
   /* ── 5. 원장 한마디 ── */
   .director{padding-top:90px;padding-bottom:90px;text-align:center}
   .director .quote-mark{font-family:var(--serif);font-size:3.5rem;color:var(--line);line-height:.6;margin-bottom:10px}
-  .director .msg{font-family:var(--serif);font-weight:400;font-size:1.5rem;line-height:1.9;color:var(--char);max-width:520px;margin:0 auto;letter-spacing:-.2px}
+  .director .msg{font-family:var(--serif);font-weight:400;font-size:1.5rem;line-height:1.9;color:var(--char);max-width:520px;margin:0 auto;letter-spacing:-.2px;white-space:pre-line}
   .director .who{display:flex;flex-direction:column;align-items:center;gap:14px;margin-top:36px}
   .director .who .portrait{width:64px;height:64px;border-radius:50%;overflow:hidden;background:var(--bg-warm)}
   .director .who .portrait img{width:100%;height:100%;object-fit:cover;display:block;filter:grayscale(.3)}
@@ -587,7 +587,8 @@ function mapRowToData(row){
 
   // 원장 인사말 (미리보기 + 모달)
   const d = c.director;
-  const msgPreview = (d.message||'').replace(/<br\s*\/?>/gi,'\n').split('\n')[0];
+  const msgLines = (d.message||'').replace(/<br\s*\/?>/gi,'\n').split('\n');
+  const msgPreview = msgLines.slice(0, 4).join('\n');
   $('greeting').innerHTML = `
     <div class="quote-mark reveal">"</div>
     <p class="msg reveal">${esc(msgPreview)}</p>

@@ -161,7 +161,7 @@
   .ticket .portrait{width:104px;height:104px;border-radius:50%;overflow:hidden;border:4px solid var(--yellow);box-shadow:0 10px 24px -10px rgba(245,180,0,.6);margin-bottom:18px}
   .ticket .portrait img{width:100%;height:100%;object-fit:cover;display:block}
   .ticket .badge{font-family:var(--hand);font-weight:700;color:var(--red);font-size:1.15rem;margin-bottom:10px}
-  .ticket .msg{font-size:1.05rem;line-height:1.75;color:var(--ink)}
+  .ticket .msg{font-size:1.05rem;line-height:1.75;color:var(--ink);white-space:pre-line}
   .ticket .sign{margin-top:16px;color:var(--ink-soft);font-size:.9rem;padding-top:16px;border-top:2px dashed var(--bg-warm);width:100%}
   .ticket .sign strong{font-family:var(--display);color:var(--ink);margin-left:5px;font-weight:400}
 
@@ -699,7 +699,8 @@ function mapRowToData(row){
 
   // 티켓 부스 (원장 인사말 미리보기 + 모달)
   const d = c.director;
-  const msgPreview = (d.message||'').replace(/<br\s*\/?>/gi,'\n').split('\n')[0];
+  const msgLines = (d.message||'').replace(/<br\s*\/?>/gi,'\n').split('\n');
+  const msgPreview = msgLines.slice(0, 4).join('\n');
   $('greeting').innerHTML = `
     <div class="ticket reveal">
       <span class="notch l"></span><span class="notch r"></span>

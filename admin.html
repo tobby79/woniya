@@ -305,7 +305,55 @@
     </div>
 
     <!-- 나머지 탭: 준비 중 -->
-    <div class="tab-panel" data-panel="intro"><div class="tab-placeholder">원 소개 편집 — 준비 중</div></div>
+    <!-- 탭2: 원 소개 -->
+    <div class="tab-panel" data-panel="intro">
+      <div class="panel">
+        <div class="section-eyebrow">원 소개</div>
+        <h2 class="section-title" style="margin-top:6px">원장 인사말</h2>
+
+        <div class="field">
+          <label for="i-message">원장 인사말</label>
+          <textarea id="i-message" rows="5" placeholder="원장 인사말을 입력해주세요"></textarea>
+        </div>
+        <div class="field">
+          <label for="i-sign-label">서명 라벨</label>
+          <input type="text" id="i-sign-label" placeholder="예: 원장">
+        </div>
+        <div class="field">
+          <label for="i-sign-name">원장 이름</label>
+          <input type="text" id="i-sign-name" placeholder="예: 김햇살">
+        </div>
+        <div class="field">
+          <label for="i-badge">배지 문구</label>
+          <input type="text" id="i-badge" placeholder="예: 원장 인사말">
+        </div>
+
+        <div class="field">
+          <label>원장 사진</label>
+          <div id="directorPhotoPreview" style="margin-bottom:10px"></div>
+          <div class="upload-zone" id="directorUploadZone">
+            <div class="upload-icon">+</div>
+            <div class="upload-hint"><strong>클릭하거나 사진을 드래그</strong><br>JPG · PNG · WebP · 최대 10MB</div>
+            <input type="file" id="directorFileInput" accept="image/jpeg,image/png,image/webp">
+          </div>
+        </div>
+
+        <div class="section-eyebrow" style="margin-top:30px">원훈·교육가치</div>
+        <h2 class="section-title" style="margin-top:6px">원의 철학</h2>
+
+        <div class="field">
+          <label for="i-motto">원훈</label>
+          <input type="text" id="i-motto" placeholder="예: 햇살처럼 밝게, 바람처럼 자유롭게">
+        </div>
+        <div class="field">
+          <label for="i-values">교육가치 — 쉼표로 구분</label>
+          <input type="text" id="i-values" placeholder="예: 존중, 창의, 사랑">
+        </div>
+
+        <button type="button" class="btn" id="introSaveBtn">저장</button>
+        <div class="msg" id="introSaveStatus"></div>
+      </div>
+    </div>
     <div class="tab-panel" data-panel="day"><div class="tab-placeholder">하루 이야기 편집 — 준비 중</div></div>
     <div class="tab-panel" data-panel="facility"><div class="tab-placeholder">시설·프로그램 편집 — 준비 중</div></div>
     <div class="tab-panel" data-panel="teacher"><div class="tab-placeholder">선생님 편집 — 준비 중</div></div>
@@ -367,6 +415,12 @@
   var photoGrid     = document.getElementById('photoGrid');
   var photoEmpty    = document.getElementById('photoEmpty');
   var typeTabs      = document.getElementById('typeTabs');
+
+  var directorUploadZone     = document.getElementById('directorUploadZone');
+  var directorFileInput      = document.getElementById('directorFileInput');
+  var directorPhotoPreview   = document.getElementById('directorPhotoPreview');
+  var introSaveBtn           = document.getElementById('introSaveBtn');
+  var introSaveStatus        = document.getElementById('introSaveStatus');
 
   var currentCenter = null;
   var selectedType  = 'hero';
@@ -586,6 +640,97 @@
     }).join('');
   }
 
+  // ── 원 소개 탭: 데이터 로드 ──
+  function loadIntroTab(){
+    if (!currentCenter) return;
+    var d = currentCenter.director || {};
+    var p = currentCenter.philosophy || {};
+    document.getElementById('i-message').value    = (d.message || '').replace(/<br\s*\/?>/gi, '\n');
+    document.getElementById('i-sign-label').value  = d.sign_label || '';
+    document.getElementById('i-sign-name').value   = d.sign_name || '';
+    document.getElementById('i-badge').value       = d.badge || '';
+    document.getElementById('i-motto').value       = p.motto || '';
+    document.getElementById('i-values').value      = (p.values || []).join(', ');
+
+    directorPhotoPreview.innerHTML = '';
+    if (d.photo) {
+      signedUrl(d.photo).then(function(url){
+        if (url) {
+          directorPhotoPreview.innerHTML =
+            '<img src="'+url+'" style="width:96px;height:96px;border-radius:50%;object-fit:cover;display:block">';
+        }
+      });
+    }
+  }
+
+  // ── 원 소개 탭: 저장 ──
+  introSaveBtn.addEventListener('click', async function(){
+    if (!currentCenter) return;
+    introSaveStatus.textContent = '저장 중...';
+    introSaveStatus.className = 'msg';
+
+    var existingDirector = currentCenter.director || {};
+    var newDirector = Object.assign({}, existingDirector, {
+      message:    document.getElementById('i-message').value.replace(/\n/g, '<br>'),
+      sign_label: document.getElementById('i-sign-label').value,
+      sign_name:  document.getElementById('i-sign-name').value,
+      badge:      document.getElementById('i-badge').value
+    });
+
+    var valuesRaw = document.getElementById('i-values').value;
+    var newPhilosophy = {
+      motto:  document.getElementById('i-motto').value,
+      values: valuesRaw.split(',').map(function(v){ return v.trim(); }).filter(Boolean)
+    };
+
+    var res = await client.from('centers').update({
+      director:   newDirector,
+      philosophy: newPhilosophy
+    }).eq('id', currentCenter.id);
+
+    if (res.error) {
+      introSaveStatus.textContent = '저장 실패: ' + res.error.message;
+      introSaveStatus.className = 'msg error';
+    } else {
+      currentCenter.director   = newDirector;
+      currentCenter.philosophy = newPhilosophy;
+      introSaveStatus.textContent = '저장됐어요.';
+      introSaveStatus.className = 'msg ok';
+    }
+  });
+
+  // ── 원 소개 탭: 원장 사진 업로드 ──
+  directorUploadZone.addEventListener('click', function(){ directorFileInput.click(); });
+  directorUploadZone.addEventListener('dragover', function(e){ e.preventDefault(); directorUploadZone.classList.add('drag-over'); });
+  directorUploadZone.addEventListener('dragleave', function(){ directorUploadZone.classList.remove('drag-over'); });
+  directorUploadZone.addEventListener('drop', function(e){
+    e.preventDefault();
+    directorUploadZone.classList.remove('drag-over');
+    handleDirectorPhoto(e.dataTransfer.files[0]);
+  });
+  directorFileInput.addEventListener('change', function(){
+    if (directorFileInput.files[0]) handleDirectorPhoto(directorFileInput.files[0]);
+    directorFileInput.value = '';
+  });
+
+  async function handleDirectorPhoto(file){
+    if (!file || !currentCenter) return;
+    var compressed = await compressImage(file);
+    var path = currentCenter.id + '/director/' + Date.now() + '_' + compressed.name;
+    var upRes = await client.storage.from(BUCKET).upload(path, compressed, { cacheControl:'3600', upsert:false });
+    if (upRes.error){ alert('사진 업로드 실패: ' + upRes.error.message); return; }
+
+    var newDirector = Object.assign({}, currentCenter.director || {}, { photo: path });
+    await client.from('centers').update({ director: newDirector }).eq('id', currentCenter.id);
+    currentCenter.director = newDirector;
+
+    var url = await signedUrl(path);
+    if (url) {
+      directorPhotoPreview.innerHTML =
+        '<img src="'+url+'" style="width:96px;height:96px;border-radius:50%;object-fit:cover;display:block">';
+    }
+  }
+
   // ── 탭 전환 ──
   if (tabBar) {
     tabBar.addEventListener('click', function(e){
@@ -597,6 +742,7 @@
       btn.classList.add('active');
       var panel = document.querySelector('.tab-panel[data-panel="'+tab+'"]');
       if (panel) panel.classList.add('active');
+      if (tab === 'intro') loadIntroTab();
     });
   }
 
@@ -683,6 +829,8 @@
 
     consultSection.hidden = false;
     loadConsultations(currentCenter.id);
+
+    if (document.querySelector('.tab-btn[data-tab="intro"].active')) loadIntroTab();
   }
 
   client.auth.onAuthStateChange(function(_event, session){

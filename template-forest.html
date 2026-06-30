@@ -420,7 +420,8 @@
       font-weight: 400;
       font-size: 1.18rem;
       line-height: 1.8;
-      color: var(--ink)
+      color: var(--ink);
+      white-space: pre-line
     }
 
     .trail-start .sign {
@@ -1697,7 +1698,8 @@
     <div class="enter-cue reveal"><span>숲길을 따라 걸어요</span><span class="path"></span></div>`;
 
       const d = c.director;
-      const msgPreview = (d.message||'').replace(/<br\s*\/?>/gi,'\n').split('\n')[0];
+      const msgLines = (d.message||'').replace(/<br\s*\/?>/gi,'\n').split('\n');
+      const msgPreview = msgLines.slice(0, 4).join('\n');
       $('greeting').innerHTML = `
     <div class="signpost reveal">
       <div class="portrait"><img alt="${esc(d.photo_alt)}" src="${esc(d.photo)}"></div>
