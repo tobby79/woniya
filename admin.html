@@ -189,6 +189,11 @@
   .fac-stat-row{display:flex;gap:12px}
   .fac-stat-row .field{flex:1;margin-bottom:0}
 
+  /* ── 선생님 카드 ── */
+  .teacher-list{display:flex;flex-direction:column;gap:18px}
+  .teacher-card{background:var(--cream);border:1.5px solid #f1e9e0;border-radius:20px;padding:22px}
+  .tc-photo-preview img{width:96px;height:96px;border-radius:50%;object-fit:cover;display:block;margin-bottom:10px}
+
   /* ── 탭 하단 고정 저장바 (범용, 탭별로 적용 가능) ── */
   .tab-save-sticky{
     position:sticky;bottom:0;left:0;right:0;
@@ -440,7 +445,20 @@
         <div class="msg" id="facilitySaveStatus"></div>
       </div>
     </div>
-    <div class="tab-panel" data-panel="teacher"><div class="tab-placeholder">선생님 편집 — 준비 중</div></div>
+    <div class="tab-panel" data-panel="teacher">
+      <div class="panel">
+        <div class="section-eyebrow">선생님</div>
+        <h2 class="section-title" style="margin-top:6px">선생님 소개</h2>
+
+        <div class="teacher-list" id="teacherList"></div>
+        <button type="button" class="btn ghost" id="addTeacherBtn" style="width:auto;margin-top:10px">+ 선생님 추가</button>
+      </div>
+
+      <div class="tab-save-sticky">
+        <button type="button" class="btn" id="teacherSaveBtn">저장</button>
+        <div class="msg" id="teacherSaveStatus"></div>
+      </div>
+    </div>
     <div class="tab-panel" data-panel="admission"><div class="tab-placeholder">입학안내 편집 — 준비 중</div></div>
     <div class="tab-panel" data-panel="directions"><div class="tab-placeholder">오시는 길 편집 — 준비 중</div></div>
     <div class="tab-panel" data-panel="faq"><div class="tab-placeholder">FAQ 편집 — 준비 중</div></div>
@@ -526,6 +544,12 @@
   var addProgItemBtn    = document.getElementById('addProgItemBtn');
   var facilitySaveBtn   = document.getElementById('facilitySaveBtn');
   var facilitySaveStatus= document.getElementById('facilitySaveStatus');
+
+  var teacherList       = document.getElementById('teacherList');
+  var addTeacherBtn     = document.getElementById('addTeacherBtn');
+  var teacherSaveBtn    = document.getElementById('teacherSaveBtn');
+  var teacherSaveStatus = document.getElementById('teacherSaveStatus');
+  var TEACHER_LIMIT = 10;
 
   var currentCenter = null;
   var selectedType  = 'hero';
@@ -1084,6 +1108,142 @@
     }
   });
 
+  // ── 선생님 탭 ──
+  function renderTeacherCard(row){
+    return '<div class="teacher-card" data-id="' + row.id + '">' +
+      '<div class="field">' +
+        '<label>이름</label>' +
+        '<input type="text" class="tc-name" placeholder="예: 김햇살 선생님" value="' + esc(row.title) + '">' +
+      '</div>' +
+      '<div class="field">' +
+        '<label>역할</label>' +
+        '<input type="text" class="tc-role" placeholder="예: 만 3세 햇살반 담임" value="' + esc(row.subtitle) + '">' +
+      '</div>' +
+      '<div class="field">' +
+        '<label>한마디</label>' +
+        '<textarea class="tc-message" placeholder="아이들에게 또는 학부모에게 하고 싶은 말">' + esc(row.caption) + '</textarea>' +
+      '</div>' +
+      '<div class="field">' +
+        '<label>사진</label>' +
+        '<div class="tc-photo-preview"></div>' +
+        '<div class="upload-zone tc-upload-zone">' +
+          '<div class="upload-icon">+</div>' +
+          '<div class="upload-hint">클릭하거나 사진을 드래그</div>' +
+          '<input type="file" class="tc-file-input" accept="image/jpeg,image/png,image/webp">' +
+        '</div>' +
+      '</div>' +
+      '<button type="button" class="btn danger tc-delete-btn" style="width:auto;margin-top:10px">삭제</button>' +
+    '</div>';
+  }
+
+  function bindTeacherCard(row){
+    var card = teacherList.querySelector('.teacher-card[data-id="' + row.id + '"]');
+    if (!card) return;
+
+    var preview    = card.querySelector('.tc-photo-preview');
+    var zone       = card.querySelector('.tc-upload-zone');
+    var fileInput_ = card.querySelector('.tc-file-input');
+    var delBtn     = card.querySelector('.tc-delete-btn');
+
+    if (row.photo_url) {
+      signedUrl(row.photo_url).then(function(url){
+        if (url) preview.innerHTML = '<img src="' + url + '" alt="">';
+      });
+    }
+
+    zone.addEventListener('click', function(){ fileInput_.click(); });
+    zone.addEventListener('dragover', function(e){ e.preventDefault(); zone.classList.add('drag-over'); });
+    zone.addEventListener('dragleave', function(){ zone.classList.remove('drag-over'); });
+    zone.addEventListener('drop', function(e){
+      e.preventDefault();
+      zone.classList.remove('drag-over');
+      handleTeacherPhoto(row.id, e.dataTransfer.files[0], preview);
+    });
+    fileInput_.addEventListener('change', function(){
+      if (fileInput_.files[0]) handleTeacherPhoto(row.id, fileInput_.files[0], preview);
+      fileInput_.value = '';
+    });
+
+    delBtn.addEventListener('click', function(){ deleteTeacher(row.id, row.photo_url); });
+  }
+
+  async function loadTeacherTab(){
+    if (!currentCenter) return;
+    var res = await client.from('center_media').select('*')
+      .eq('center_id', currentCenter.id).eq('media_type', 'teacher')
+      .order('sort_order', { ascending: true });
+    var rows = res.data || [];
+    teacherList.innerHTML = rows.map(renderTeacherCard).join('');
+    rows.forEach(function(row){ bindTeacherCard(row); });
+  }
+
+  async function handleTeacherPhoto(mediaId, file, previewEl){
+    if (!file || !currentCenter) return;
+    var compressed = await compressImage(file);
+    var path = currentCenter.id + '/teacher/' + Date.now() + '_' + compressed.name;
+    var upRes = await client.storage.from(BUCKET).upload(path, compressed, { cacheControl:'3600', upsert:false });
+    if (upRes.error){ alert('사진 업로드 실패: ' + upRes.error.message); return; }
+
+    await client.from('center_media').update({ photo_url: path }).eq('id', mediaId);
+
+    var url = await signedUrl(path);
+    if (url) previewEl.innerHTML = '<img src="' + url + '" alt="">';
+  }
+
+  async function deleteTeacher(mediaId, photoUrl){
+    if (!confirm('이 선생님 카드를 삭제할까요?')) return;
+    if (photoUrl) await client.storage.from(BUCKET).remove([photoUrl]);
+    await client.from('center_media').delete().eq('id', mediaId);
+    loadTeacherTab();
+  }
+
+  addTeacherBtn.addEventListener('click', async function(){
+    if (!currentCenter) return;
+    var countRes = await client.from('center_media').select('id', { count:'exact', head:true })
+      .eq('center_id', currentCenter.id).eq('media_type', 'teacher');
+    if ((countRes.count || 0) >= TEACHER_LIMIT){
+      alert('선생님은 최대 ' + TEACHER_LIMIT + '명까지 등록할 수 있어요.');
+      return;
+    }
+    var sortMax = await client.from('center_media').select('sort_order')
+      .eq('center_id', currentCenter.id).order('sort_order', { ascending:false }).limit(1);
+    var nextSort = ((sortMax.data && sortMax.data[0]) ? sortMax.data[0].sort_order : 0) + 1;
+
+    await client.from('center_media').insert({
+      center_id:  currentCenter.id,
+      media_type: 'teacher',
+      sort_order: nextSort
+    });
+    loadTeacherTab();
+  });
+
+  teacherSaveBtn.addEventListener('click', async function(){
+    teacherSaveStatus.textContent = '저장 중...';
+    teacherSaveStatus.className = 'msg';
+
+    var cards = teacherList.querySelectorAll('.teacher-card');
+    var hadError = false;
+    for (var i = 0; i < cards.length; i++){
+      var card = cards[i];
+      var id = card.dataset.id;
+      var payload = {
+        title:    card.querySelector('.tc-name').value,
+        subtitle: card.querySelector('.tc-role').value,
+        caption:  card.querySelector('.tc-message').value
+      };
+      var res = await client.from('center_media').update(payload).eq('id', id);
+      if (res.error) hadError = true;
+    }
+
+    if (hadError) {
+      teacherSaveStatus.textContent = '일부 항목 저장에 실패했어요.';
+      teacherSaveStatus.className = 'msg error';
+    } else {
+      teacherSaveStatus.textContent = '저장됐어요.';
+      teacherSaveStatus.className = 'msg ok';
+    }
+  });
+
   // ── 탭 전환 ──
   if (tabBar) {
     tabBar.addEventListener('click', function(e){
@@ -1098,6 +1258,7 @@
       if (tab === 'intro') loadIntroTab();
       if (tab === 'day') loadDayStoryTab();
       if (tab === 'facility') loadFacilityTab();
+      if (tab === 'teacher') loadTeacherTab();
     });
   }
 
@@ -1188,6 +1349,7 @@
     if (document.querySelector('.tab-btn[data-tab="intro"].active')) loadIntroTab();
     if (document.querySelector('.tab-btn[data-tab="day"].active')) loadDayStoryTab();
     if (document.querySelector('.tab-btn[data-tab="facility"].active')) loadFacilityTab();
+    if (document.querySelector('.tab-btn[data-tab="teacher"].active')) loadTeacherTab();
   }
 
   client.auth.onAuthStateChange(function(_event, session){
