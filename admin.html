@@ -169,6 +169,20 @@
     box-shadow:0 18px 44px -22px rgba(120,80,60,.35);
   }
 
+  /* ── 하루 이야기 카드 ── */
+  .day-story-list{display:flex;flex-direction:column;gap:18px}
+  .day-story-card{background:var(--cream);border:1.5px solid #f1e9e0;border-radius:20px;padding:22px}
+  .ds-photo-preview img{width:100%;max-width:200px;border-radius:12px;display:block;margin-bottom:10px}
+
+  .day-story-save-bar{
+    position:sticky;bottom:0;left:0;right:0;
+    background:var(--cream);
+    padding:14px 0 4px;
+    margin-top:20px;
+    z-index:10;
+    box-shadow:0 -8px 16px -8px rgba(120,80,60,.15);
+  }
+
 </style>
 </head>
 <body>
@@ -354,7 +368,21 @@
         <div class="msg" id="introSaveStatus"></div>
       </div>
     </div>
-    <div class="tab-panel" data-panel="day"><div class="tab-placeholder">하루 이야기 편집 — 준비 중</div></div>
+    <!-- 탭3: 하루 이야기 -->
+    <div class="tab-panel" data-panel="day">
+      <div class="panel">
+        <div class="section-eyebrow">하루 이야기</div>
+        <h2 class="section-title" style="margin-top:6px">시간대별 스토리</h2>
+
+        <div class="day-story-list" id="dayStoryList"></div>
+        <button type="button" class="btn ghost" id="addDayStoryBtn" style="width:auto;margin-top:10px">+ 항목 추가</button>
+      </div>
+
+      <div class="day-story-save-bar">
+        <button type="button" class="btn" id="dayStorySaveBtn">전체 저장</button>
+        <div class="msg" id="dayStorySaveStatus"></div>
+      </div>
+    </div>
     <div class="tab-panel" data-panel="facility"><div class="tab-placeholder">시설·프로그램 편집 — 준비 중</div></div>
     <div class="tab-panel" data-panel="teacher"><div class="tab-placeholder">선생님 편집 — 준비 중</div></div>
     <div class="tab-panel" data-panel="admission"><div class="tab-placeholder">입학안내 편집 — 준비 중</div></div>
@@ -384,6 +412,12 @@
   var client = supabase.createClient(cfg.url, cfg.anonKey);
 
   var BUCKET = 'center-images';
+
+  function esc(s){
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){
+      return ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' })[c];
+    });
+  }
 
   // ── DOM refs ──
   var loginView    = document.getElementById('loginView');
@@ -421,6 +455,12 @@
   var directorPhotoPreview   = document.getElementById('directorPhotoPreview');
   var introSaveBtn           = document.getElementById('introSaveBtn');
   var introSaveStatus        = document.getElementById('introSaveStatus');
+
+  var dayStoryList       = document.getElementById('dayStoryList');
+  var addDayStoryBtn     = document.getElementById('addDayStoryBtn');
+  var dayStorySaveBtn    = document.getElementById('dayStorySaveBtn');
+  var dayStorySaveStatus = document.getElementById('dayStorySaveStatus');
+  var DAY_STORY_LIMIT = 5;
 
   var currentCenter = null;
   var selectedType  = 'hero';
@@ -731,6 +771,147 @@
     }
   }
 
+  // ── 하루 이야기 탭 ──
+  function renderDayStoryCard(row){
+    return '<div class="day-story-card" data-id="' + row.id + '">' +
+      '<div class="field">' +
+        '<label>시간 라벨</label>' +
+        '<input type="text" class="ds-time" placeholder="예: 오전 9시" value="' + esc(row.time_label) + '">' +
+      '</div>' +
+      '<div class="field">' +
+        '<label>제목</label>' +
+        '<input type="text" class="ds-title" placeholder="예: 등원, 즐거운 아침맞이" value="' + esc(row.title) + '">' +
+      '</div>' +
+      '<div class="field">' +
+        '<label>설명</label>' +
+        '<textarea class="ds-note" placeholder="이 시간에 어떤 활동을 하는지 설명">' + esc(row.note) + '</textarea>' +
+      '</div>' +
+      '<div class="field">' +
+        '<label>사진 캡션</label>' +
+        '<input type="text" class="ds-caption" placeholder="사진 위에 표시될 짧은 문구" value="' + esc(row.caption) + '">' +
+      '</div>' +
+      '<div class="field">' +
+        '<label>사진</label>' +
+        '<div class="ds-photo-preview"></div>' +
+        '<div class="upload-zone ds-upload-zone">' +
+          '<div class="upload-icon">+</div>' +
+          '<div class="upload-hint">클릭하거나 사진을 드래그</div>' +
+          '<input type="file" class="ds-file-input" accept="image/jpeg,image/png,image/webp">' +
+        '</div>' +
+      '</div>' +
+      '<button type="button" class="btn danger ds-delete-btn" style="width:auto;margin-top:10px">삭제</button>' +
+    '</div>';
+  }
+
+  function bindDayStoryCard(row){
+    var card = dayStoryList.querySelector('.day-story-card[data-id="' + row.id + '"]');
+    if (!card) return;
+
+    var preview    = card.querySelector('.ds-photo-preview');
+    var zone       = card.querySelector('.ds-upload-zone');
+    var fileInput_ = card.querySelector('.ds-file-input');
+    var delBtn     = card.querySelector('.ds-delete-btn');
+
+    if (row.photo_url) {
+      signedUrl(row.photo_url).then(function(url){
+        if (url) preview.innerHTML = '<img src="' + url + '" alt="">';
+      });
+    }
+
+    zone.addEventListener('click', function(){ fileInput_.click(); });
+    zone.addEventListener('dragover', function(e){ e.preventDefault(); zone.classList.add('drag-over'); });
+    zone.addEventListener('dragleave', function(){ zone.classList.remove('drag-over'); });
+    zone.addEventListener('drop', function(e){
+      e.preventDefault();
+      zone.classList.remove('drag-over');
+      handleDayStoryPhoto(row.id, e.dataTransfer.files[0], preview);
+    });
+    fileInput_.addEventListener('change', function(){
+      if (fileInput_.files[0]) handleDayStoryPhoto(row.id, fileInput_.files[0], preview);
+      fileInput_.value = '';
+    });
+
+    delBtn.addEventListener('click', function(){ deleteDayStory(row.id, row.photo_url); });
+  }
+
+  async function loadDayStoryTab(){
+    if (!currentCenter) return;
+    var res = await client.from('center_media').select('*')
+      .eq('center_id', currentCenter.id).eq('media_type', 'day_story')
+      .order('sort_order', { ascending: true });
+    var rows = res.data || [];
+    dayStoryList.innerHTML = rows.map(renderDayStoryCard).join('');
+    rows.forEach(function(row){ bindDayStoryCard(row); });
+  }
+
+  async function handleDayStoryPhoto(mediaId, file, previewEl){
+    if (!file || !currentCenter) return;
+    var compressed = await compressImage(file);
+    var path = currentCenter.id + '/day_story/' + Date.now() + '_' + compressed.name;
+    var upRes = await client.storage.from(BUCKET).upload(path, compressed, { cacheControl:'3600', upsert:false });
+    if (upRes.error){ alert('사진 업로드 실패: ' + upRes.error.message); return; }
+
+    await client.from('center_media').update({ photo_url: path }).eq('id', mediaId);
+
+    var url = await signedUrl(path);
+    if (url) previewEl.innerHTML = '<img src="' + url + '" alt="">';
+  }
+
+  async function deleteDayStory(mediaId, photoUrl){
+    if (!confirm('이 항목을 삭제할까요?')) return;
+    if (photoUrl) await client.storage.from(BUCKET).remove([photoUrl]);
+    await client.from('center_media').delete().eq('id', mediaId);
+    loadDayStoryTab();
+  }
+
+  addDayStoryBtn.addEventListener('click', async function(){
+    if (!currentCenter) return;
+    var countRes = await client.from('center_media').select('id', { count:'exact', head:true })
+      .eq('center_id', currentCenter.id).eq('media_type', 'day_story');
+    if ((countRes.count || 0) >= DAY_STORY_LIMIT){
+      alert('하루 이야기는 최대 ' + DAY_STORY_LIMIT + '개까지 등록할 수 있어요.');
+      return;
+    }
+    var sortMax = await client.from('center_media').select('sort_order')
+      .eq('center_id', currentCenter.id).order('sort_order', { ascending:false }).limit(1);
+    var nextSort = ((sortMax.data && sortMax.data[0]) ? sortMax.data[0].sort_order : 0) + 1;
+
+    await client.from('center_media').insert({
+      center_id:  currentCenter.id,
+      media_type: 'day_story',
+      sort_order: nextSort
+    });
+    loadDayStoryTab();
+  });
+
+  dayStorySaveBtn.addEventListener('click', async function(){
+    dayStorySaveStatus.textContent = '저장 중...';
+    dayStorySaveStatus.className = 'msg';
+
+    var cards = dayStoryList.querySelectorAll('.day-story-card');
+    var hadError = false;
+    for (var i = 0; i < cards.length; i++){
+      var card = cards[i];
+      var id = card.dataset.id;
+      var payload = {
+        time_label: card.querySelector('.ds-time').value,
+        title:      card.querySelector('.ds-title').value,
+        note:       card.querySelector('.ds-note').value,
+        caption:    card.querySelector('.ds-caption').value
+      };
+      var res = await client.from('center_media').update(payload).eq('id', id);
+      if (res.error) hadError = true;
+    }
+
+    if (hadError) {
+      dayStorySaveStatus.textContent = '일부 항목 저장에 실패했어요.';
+      dayStorySaveStatus.className = 'msg error';
+    } else {
+      dayStorySaveStatus.textContent = '저장됐어요.';
+      dayStorySaveStatus.className = 'msg ok';
+    }
+  });
+
   // ── 탭 전환 ──
   if (tabBar) {
     tabBar.addEventListener('click', function(e){
@@ -743,6 +924,7 @@
       var panel = document.querySelector('.tab-panel[data-panel="'+tab+'"]');
       if (panel) panel.classList.add('active');
       if (tab === 'intro') loadIntroTab();
+      if (tab === 'day') loadDayStoryTab();
     });
   }
 
@@ -831,6 +1013,7 @@
     loadConsultations(currentCenter.id);
 
     if (document.querySelector('.tab-btn[data-tab="intro"].active')) loadIntroTab();
+    if (document.querySelector('.tab-btn[data-tab="day"].active')) loadDayStoryTab();
   }
 
   client.auth.onAuthStateChange(function(_event, session){
