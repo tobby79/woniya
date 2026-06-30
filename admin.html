@@ -184,8 +184,8 @@
   }
 
   /* ── 시설·프로그램 카드 (하루 이야기와 동일한 카드 패턴 재사용) ── */
-  .fac-stat-list,.fac-item-list,.prog-item-list{display:flex;flex-direction:column;gap:18px}
-  .fac-stat-card,.fac-item-card,.prog-item-card{background:var(--cream);border:1.5px solid #f1e9e0;border-radius:20px;padding:22px}
+  .fac-stat-list,.fac-item-list,.prog-item-list,.faq-item-list{display:flex;flex-direction:column;gap:18px}
+  .fac-stat-card,.fac-item-card,.prog-item-card,.faq-item-card{background:var(--cream);border:1.5px solid #f1e9e0;border-radius:20px;padding:22px}
   .fac-stat-row{display:flex;gap:12px}
   .fac-stat-row .field{flex:1;margin-bottom:0}
 
@@ -512,7 +512,21 @@
         <div class="msg" id="directionsSaveStatus"></div>
       </div>
     </div>
-    <div class="tab-panel" data-panel="faq"><div class="tab-placeholder">FAQ 편집 — 준비 중</div></div>
+    <div class="tab-panel" data-panel="faq">
+      <div class="panel">
+        <div class="section-eyebrow" style="margin-top:0">FAQ</div>
+        <h2 class="section-title">자주 묻는 질문</h2>
+
+        <label>질문·답변 목록</label>
+        <div class="faq-item-list" id="faqList"></div>
+        <button type="button" class="btn ghost" id="addFaqBtn" style="width:auto;margin-top:10px">+ 질문 추가</button>
+      </div>
+
+      <div class="tab-save-sticky">
+        <button type="button" class="btn" id="faqSaveBtn">저장</button>
+        <div class="msg" id="faqSaveStatus"></div>
+      </div>
+    </div>
 
     <!-- 신청 현황 -->
     <div class="tab-panel" data-panel="consult">
@@ -608,6 +622,11 @@
 
   var directionsSaveBtn    = document.getElementById('directionsSaveBtn');
   var directionsSaveStatus = document.getElementById('directionsSaveStatus');
+
+  var faqList       = document.getElementById('faqList');
+  var addFaqBtn      = document.getElementById('addFaqBtn');
+  var faqSaveBtn     = document.getElementById('faqSaveBtn');
+  var faqSaveStatus  = document.getElementById('faqSaveStatus');
 
   var currentCenter = null;
   var selectedType  = 'hero';
@@ -1384,6 +1403,62 @@
     }
   });
 
+  // ── FAQ 탭 ──
+  function renderFaqCard(item){
+    item = item || {};
+    return '<div class="faq-item-card">' +
+      '<div class="field">' +
+        '<label>질문</label>' +
+        '<input type="text" class="faq-q" placeholder="질문 (예: 입소 신청은 어떻게 하나요?)" value="' + esc(item.q) + '">' +
+      '</div>' +
+      '<div class="field">' +
+        '<label>답변</label>' +
+        '<textarea class="faq-a" rows="2" placeholder="답변">' + esc(item.a) + '</textarea>' +
+      '</div>' +
+      '<button type="button" class="btn danger faq-delete-btn" style="width:auto;margin-top:6px">삭제</button>' +
+    '</div>';
+  }
+
+  function loadFaqTab(){
+    if (!currentCenter) return;
+    var faqs = currentCenter.faqs || {};
+    faqList.innerHTML = (faqs.items || []).map(renderFaqCard).join('');
+  }
+
+  addFaqBtn.addEventListener('click', function(){
+    faqList.insertAdjacentHTML('beforeend', renderFaqCard({}));
+  });
+
+  faqList.addEventListener('click', function(e){
+    var btn = e.target.closest('.faq-delete-btn');
+    if (!btn) return;
+    btn.closest('.faq-item-card').remove();
+  });
+
+  faqSaveBtn.addEventListener('click', async function(){
+    if (!currentCenter) return;
+    faqSaveStatus.textContent = '저장 중...';
+    faqSaveStatus.className = 'msg';
+
+    var items = Array.prototype.map.call(faqList.querySelectorAll('.faq-item-card'), function(card){
+      return { q: card.querySelector('.faq-q').value, a: card.querySelector('.faq-a').value };
+    }).filter(function(it){ return it.q || it.a; });
+
+    var existingFaqs = currentCenter.faqs || {};
+    var newFaqs = Object.assign({}, existingFaqs, { items: items });
+
+    var res = await client.from('centers').update({ faqs: newFaqs }).eq('id', currentCenter.id);
+
+    if (res.error){
+      faqSaveStatus.textContent = '저장 실패: ' + res.error.message;
+      faqSaveStatus.className = 'msg error';
+    } else {
+      currentCenter.faqs = newFaqs;
+      faqSaveStatus.textContent = '저장됐어요.';
+      faqSaveStatus.className = 'msg ok';
+    }
+  });
+
   // ── 탭 전환 ──
   if (tabBar) {
     tabBar.addEventListener('click', function(e){
@@ -1401,6 +1476,7 @@
       if (tab === 'teacher') loadTeacherTab();
       if (tab === 'admission') loadAdmissionTab();
       if (tab === 'directions') loadDirectionsTab();
+      if (tab === 'faq') loadFaqTab();
     });
   }
 
@@ -1494,6 +1570,7 @@
     if (document.querySelector('.tab-btn[data-tab="teacher"].active')) loadTeacherTab();
     if (document.querySelector('.tab-btn[data-tab="admission"].active')) loadAdmissionTab();
     if (document.querySelector('.tab-btn[data-tab="directions"].active')) loadDirectionsTab();
+    if (document.querySelector('.tab-btn[data-tab="faq"].active')) loadFaqTab();
   }
 
   client.auth.onAuthStateChange(function(_event, session){
