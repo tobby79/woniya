@@ -91,6 +91,7 @@
 
   /* ── 사진 업로드 ── */
   .upload-zone{
+    position:relative;overflow:hidden;min-height:150px;
     border:2px dashed #f1e9e0;border-radius:18px;padding:28px 20px;
     text-align:center;cursor:pointer;transition:border-color .2s,background .2s;
     background:var(--cream);
@@ -99,7 +100,24 @@
   .upload-zone .upload-icon{font-size:2rem;margin-bottom:8px}
   .upload-zone .upload-hint{font-size:.86rem;color:var(--ink-soft);line-height:1.5}
   .upload-zone .upload-hint strong{color:var(--coral-deep)}
-  #fileInput{display:none}
+  .upload-zone input[type=file],#fileInput{display:none}
+  .upload-zone.has-photo{padding:0;border-style:solid;background:#f1e9e0}
+  .upload-zone.has-photo .upload-icon,.upload-zone.has-photo .upload-hint{display:none}
+  .upload-zone .upload-photo-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
+  .upload-zone .replace-badge{
+    position:absolute;left:50%;bottom:12px;transform:translateX(-50%);
+    background:rgba(64,55,51,.76);color:#fff;border-radius:99px;
+    padding:5px 12px;font-size:.76rem;font-weight:700;opacity:.92;
+    transition:opacity .15s ease;
+  }
+  .upload-zone:hover .replace-badge{opacity:1}
+  .upload-zone .photo-remove-btn{
+    position:absolute;top:8px;right:8px;width:28px;height:28px;border-radius:50%;
+    background:rgba(0,0,0,.55);color:#fff;border:none;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;font-size:.9rem;line-height:1;
+    z-index:2;
+  }
+  .upload-zone .photo-remove-btn:hover{background:rgba(217,83,79,.9)}
 
   /* 업로드 진행바 */
   .upload-progress{margin-top:14px;display:none}
@@ -172,7 +190,7 @@
   /* ── 하루 이야기 카드 ── */
   .day-story-list{display:flex;flex-direction:column;gap:18px}
   .day-story-card{background:var(--cream);border:1.5px solid #f1e9e0;border-radius:20px;padding:22px}
-  .ds-photo-preview img{width:100%;max-width:200px;border-radius:12px;display:block;margin-bottom:10px}
+  .day-story-card .upload-zone,.fac-item-card .upload-zone,.prog-item-card .upload-zone{min-height:180px}
 
   .day-story-save-bar{
     position:sticky;bottom:0;left:0;right:0;
@@ -318,14 +336,6 @@
 
           <div class="msg error" id="uploadError" style="margin-top:10px"></div>
 
-          <!-- 업로드된 사진 그리드 -->
-          <div style="margin-top:22px">
-            <label>업로드된 사진</label>
-            <div class="photo-grid" id="photoGrid">
-              <div class="photo-empty" id="photoEmpty">아직 사진이 없어요.</div>
-            </div>
-          </div>
-
         </div>
       </div>
     </div>
@@ -400,26 +410,6 @@
       <div class="panel">
         <div class="section-eyebrow">시설 안내</div>
         <h2 class="section-title" style="margin-top:6px">우리 원 시설</h2>
-
-        <div class="field">
-          <label>시설·프로그램 사진</label>
-          <div class="upload-zone" id="facilityUploadZone">
-            <div class="upload-icon">+</div>
-            <div class="upload-hint">
-              <strong>클릭하거나 사진을 여기에 드래그</strong><br>
-              JPG · PNG · WebP · 최대 10MB
-            </div>
-            <input type="file" id="facilityFileInput" accept="image/jpeg,image/png,image/webp" multiple>
-          </div>
-          <div class="upload-progress" id="facilityUploadProgress">
-            <div class="progress-bar-wrap"><div class="progress-bar" id="facilityProgressBar"></div></div>
-            <div class="progress-label" id="facilityProgressLabel">준비 중...</div>
-          </div>
-          <div class="msg error" id="facilityUploadError" style="margin-top:10px"></div>
-          <div class="photo-grid" id="facilityPhotoGrid">
-            <div class="photo-empty">아직 사진이 없어요.</div>
-          </div>
-        </div>
 
         <div class="field">
           <label for="fac-intro">시설 소개</label>
@@ -614,8 +604,6 @@
   var progressBar   = document.getElementById('progressBar');
   var progressLabel = document.getElementById('progressLabel');
   var uploadError   = document.getElementById('uploadError');
-  var photoGrid     = document.getElementById('photoGrid');
-  var photoEmpty    = document.getElementById('photoEmpty');
   var typeTabs      = document.getElementById('typeTabs');
 
   var directorUploadZone     = document.getElementById('directorUploadZone');
@@ -636,13 +624,6 @@
   var addFacItemBtn     = document.getElementById('addFacItemBtn');
   var progItemList      = document.getElementById('progItemList');
   var addProgItemBtn    = document.getElementById('addProgItemBtn');
-  var facilityUploadZone    = document.getElementById('facilityUploadZone');
-  var facilityFileInput     = document.getElementById('facilityFileInput');
-  var facilityUploadProgress= document.getElementById('facilityUploadProgress');
-  var facilityProgressBar   = document.getElementById('facilityProgressBar');
-  var facilityProgressLabel = document.getElementById('facilityProgressLabel');
-  var facilityUploadError   = document.getElementById('facilityUploadError');
-  var facilityPhotoGrid     = document.getElementById('facilityPhotoGrid');
   var facilitySaveBtn   = document.getElementById('facilitySaveBtn');
   var facilitySaveStatus= document.getElementById('facilitySaveStatus');
 
@@ -666,6 +647,7 @@
 
   var currentCenter = null;
   var selectedType  = 'hero';
+  var currentHeroPhoto = null;
 
   var TYPE_LABELS = { hero:'대표', day_story:'하루', teacher:'교사', facility:'시설' };
   var KIND_LABELS = { consult:'상담', waiting:'대기', info_session:'설명회' };
@@ -717,6 +699,38 @@
     }
   }
 
+  function setUploadZonePhoto(zone, signedPhotoUrl, onDelete){
+    if (!zone) return;
+    zone.querySelectorAll('.upload-photo-img,.replace-badge,.photo-remove-btn').forEach(function(el){
+      el.remove();
+    });
+    zone.classList.toggle('has-photo', !!signedPhotoUrl);
+    if (!signedPhotoUrl) return;
+
+    var img = document.createElement('img');
+    img.className = 'upload-photo-img';
+    img.src = signedPhotoUrl;
+    img.alt = '';
+    zone.appendChild(img);
+
+    var badge = document.createElement('span');
+    badge.className = 'replace-badge';
+    badge.textContent = '클릭해서 교체';
+    zone.appendChild(badge);
+
+    var del = document.createElement('button');
+    del.type = 'button';
+    del.className = 'photo-remove-btn';
+    del.title = '사진 삭제';
+    del.textContent = '×';
+    del.addEventListener('click', function(e){
+      e.preventDefault();
+      e.stopPropagation();
+      if (onDelete) onDelete();
+    });
+    zone.appendChild(del);
+  }
+
   // ── 사진 목록 로드 ──
   async function loadPhotos(){
     if (!currentCenter) return;
@@ -727,38 +741,21 @@
       .order('sort_order', { ascending: true });
     if (res.error) {
       logAdminError('loadPhotos', res.error);
-      photoGrid.innerHTML = '<div class="photo-empty"></div>';
-      photoGrid.querySelector('.photo-empty').textContent = '사진 목록을 불러오지 못했어요: ' + res.error.message;
+      uploadError.textContent = '사진 목록을 불러오지 못했어요: ' + res.error.message;
+      uploadError.className = 'msg error';
       return;
     }
 
     var rows = (res.data || []);
-    if (rows.length === 0){
-      photoGrid.innerHTML = '<div class="photo-empty" id="photoEmpty">아직 사진이 없어요.</div>';
+    currentHeroPhoto = rows[0] || null;
+    if (!currentHeroPhoto || !currentHeroPhoto.photo_url){
+      setUploadZonePhoto(uploadZone, null);
       return;
     }
 
-    // 서명 URL 병렬 발급
-    var items = await Promise.all(rows.map(async function(row){
-      var url = await signedUrl(row.photo_url);
-      return { row: row, signedUrl: url };
-    }));
-
-    photoGrid.innerHTML = items.map(function(item){
-      if (!item.signedUrl) return '';
-      return '<div class="photo-item" data-media-id="' + esc(item.row.id) + '" data-path="' + esc(item.row.photo_url) + '">' +
-        '<img src="' + esc(item.signedUrl) + '" alt="' + esc(item.row.caption || '') + '" loading="lazy">' +
-        '<span class="photo-type-badge">' + esc(TYPE_LABELS[item.row.media_type] || item.row.media_type) + '</span>' +
-        '<button class="del-btn" data-media-id="' + esc(item.row.id) + '" data-path="' + esc(item.row.photo_url) + '" title="삭제">×</button>' +
-      '</div>';
-    }).join('');
-
-    // 삭제 버튼 이벤트
-    photoGrid.querySelectorAll('.del-btn').forEach(function(btn){
-      btn.addEventListener('click', function(e){
-        e.stopPropagation();
-        deletePhoto(btn.dataset.mediaId, btn.dataset.path);
-      });
+    var url = await signedUrl(currentHeroPhoto.photo_url);
+    setUploadZonePhoto(uploadZone, url, function(){
+      deletePhoto(currentHeroPhoto.id, currentHeroPhoto.photo_url);
     });
   }
 
@@ -777,13 +774,64 @@
       alertAdminError('deletePhoto', deleteRes.error, '사진 삭제 실패');
       return;
     }
+    currentHeroPhoto = null;
+    setUploadZonePhoto(uploadZone, null);
     loadPhotos();
+  }
+
+  async function handleHeroFile(file){
+    if (!file || !currentCenter) return;
+    uploadError.textContent = '';
+    uploadProgress.style.display = 'block';
+    progressBar.style.width = '0%';
+    progressLabel.textContent = '압축 중... ' + file.name;
+
+    try {
+      var compressed = await compressImage(file);
+      var path = currentCenter.id + '/hero/' + Date.now() + '_' + compressed.name;
+      progressLabel.textContent = '업로드 중... ' + compressed.name;
+      progressBar.style.width = '70%';
+
+      var upRes = await client.storage.from(BUCKET).upload(path, compressed, {
+        cacheControl: '3600', upsert: false
+      });
+      if (upRes.error) throw upRes.error;
+
+      if (currentHeroPhoto && currentHeroPhoto.id) {
+        var oldPath = currentHeroPhoto.photo_url;
+        var updateRes = await client.from('center_media').update({ photo_url: path }).eq('id', currentHeroPhoto.id);
+        if (updateRes.error) throw updateRes.error;
+        if (oldPath) client.storage.from(BUCKET).remove([oldPath]);
+      } else {
+        var insertRes = await client.from('center_media').insert({
+          center_id: currentCenter.id,
+          media_type: 'hero',
+          photo_url: path,
+          caption: '',
+          sort_order: 0
+        });
+        if (insertRes.error) throw insertRes.error;
+      }
+
+      progressBar.style.width = '100%';
+      progressLabel.textContent = '1장 중 1장 완료';
+      loadPhotos();
+    } catch(err) {
+      showUploadError('handleHeroFile', err, '업로드 실패');
+    } finally {
+      setTimeout(function(){ uploadProgress.style.display = 'none'; }, 2000);
+    }
   }
 
   // ── 파일 업로드 처리 ──
   async function handleFiles(files){
     if (!currentCenter || files.length === 0) return;
     uploadError.textContent = '';
+
+    if (selectedType === 'hero') {
+      handleHeroFile(files[0]);
+      return;
+    }
 
     // 타입별 최대 개수 제한
     var LIMITS = { hero: 1, facility: 100, day_story: 12, teacher: 30 };
@@ -1030,10 +1078,9 @@
       '</div>' +
       '<div class="field">' +
         '<label>사진</label>' +
-        '<div class="ds-photo-preview"></div>' +
         '<div class="upload-zone ds-upload-zone">' +
           '<div class="upload-icon">+</div>' +
-          '<div class="upload-hint">클릭하거나 사진을 드래그</div>' +
+          '<div class="upload-hint"><strong>클릭하거나 사진을 여기에 드래그</strong><br>JPG · PNG · WebP · 최대 10MB</div>' +
           '<input type="file" class="ds-file-input" accept="image/jpeg,image/png,image/webp">' +
         '</div>' +
       '</div>' +
@@ -1045,15 +1092,18 @@
     var card = dayStoryList.querySelector('.day-story-card[data-id="' + row.id + '"]');
     if (!card) return;
 
-    var preview    = card.querySelector('.ds-photo-preview');
     var zone       = card.querySelector('.ds-upload-zone');
     var fileInput_ = card.querySelector('.ds-file-input');
     var delBtn     = card.querySelector('.ds-delete-btn');
 
     if (row.photo_url) {
       signedUrl(row.photo_url).then(function(url){
-        if (url) preview.innerHTML = '<img src="' + esc(url || '') + '" alt="">';
+        if (url) setUploadZonePhoto(zone, url, function(){
+          deleteDayStoryPhoto(row.id, row.photo_url, zone, row);
+        });
       });
+    } else {
+      setUploadZonePhoto(zone, null);
     }
 
     zone.addEventListener('click', function(){ fileInput_.click(); });
@@ -1062,10 +1112,10 @@
     zone.addEventListener('drop', function(e){
       e.preventDefault();
       zone.classList.remove('drag-over');
-      handleDayStoryPhoto(row.id, e.dataTransfer.files[0], preview);
+      handleDayStoryPhoto(row.id, e.dataTransfer.files[0], zone, row);
     });
     fileInput_.addEventListener('change', function(){
-      if (fileInput_.files[0]) handleDayStoryPhoto(row.id, fileInput_.files[0], preview);
+      if (fileInput_.files[0]) handleDayStoryPhoto(row.id, fileInput_.files[0], zone, row);
       fileInput_.value = '';
     });
 
@@ -1088,7 +1138,7 @@
     rows.forEach(function(row){ bindDayStoryCard(row); });
   }
 
-  async function handleDayStoryPhoto(mediaId, file, previewEl){
+  async function handleDayStoryPhoto(mediaId, file, zone, row){
     if (!file || !currentCenter) return;
     var compressed = await compressImage(file);
     var path = currentCenter.id + '/day_story/' + Date.now() + '_' + compressed.name;
@@ -1097,9 +1147,30 @@
 
     var updateRes = await client.from('center_media').update({ photo_url: path }).eq('id', mediaId);
     if (updateRes.error){ alertAdminError('handleDayStoryPhoto', updateRes.error, '사진 저장 실패'); return; }
+    var oldPath = row ? row.photo_url : '';
+    if (oldPath) client.storage.from(BUCKET).remove([oldPath]);
+    if (row) row.photo_url = path;
 
     var url = await signedUrl(path);
-    if (url) previewEl.innerHTML = '<img src="' + esc(url || '') + '" alt="">';
+    if (url) setUploadZonePhoto(zone, url, function(){
+      deleteDayStoryPhoto(mediaId, path, zone, row);
+    });
+  }
+
+  async function deleteDayStoryPhoto(mediaId, photoUrl, zone, row){
+    if (!photoUrl || !confirm('이 사진을 삭제할까요?')) return;
+    var removeRes = await client.storage.from(BUCKET).remove([photoUrl]);
+    if (removeRes.error) {
+      alertAdminError('deleteDayStoryPhoto', removeRes.error, '사진 삭제 실패');
+      return;
+    }
+    var updateRes = await client.from('center_media').update({ photo_url: '' }).eq('id', mediaId);
+    if (updateRes.error) {
+      alertAdminError('deleteDayStoryPhoto', updateRes.error, '사진 삭제 실패');
+      return;
+    }
+    if (row) row.photo_url = '';
+    setUploadZonePhoto(zone, null);
   }
 
   async function deleteDayStory(mediaId, photoUrl){
@@ -1200,9 +1271,11 @@
     '</div>';
   }
 
-  function renderNameDescCard(item, cardCls){
+  function renderNameDescCard(item, cardCls, kind){
     item = item || {};
-    return '<div class="' + cardCls + '">' +
+    var photoUrl = item.photo_url || '';
+    var label = kind === 'program' ? '프로그램 사진' : '시설 사진';
+    return '<div class="' + cardCls + '" data-photo-kind="' + esc(kind || '') + '">' +
       '<div class="field">' +
         '<label>이름</label>' +
         '<input type="text" class="nd-name" placeholder="예: 놀이실" value="' + esc(item.name) + '">' +
@@ -1211,6 +1284,16 @@
         '<label>설명</label>' +
         '<textarea class="nd-desc" rows="2" placeholder="설명을 입력해주세요">' + esc(item.desc) + '</textarea>' +
       '</div>' +
+      (kind ? '<div class="field">' +
+        '<label>' + label + '</label>' +
+        '<input type="hidden" class="nd-photo-url" value="' + esc(photoUrl) + '">' +
+        '<div class="upload-zone item-upload-zone">' +
+          '<div class="upload-icon">+</div>' +
+          '<div class="upload-hint"><strong>클릭하거나 사진을 여기에 드래그</strong><br>JPG · PNG · WebP · 최대 10MB</div>' +
+          '<input type="file" class="item-file-input" accept="image/jpeg,image/png,image/webp">' +
+        '</div>' +
+        '<div class="msg error item-upload-error" style="margin-top:10px"></div>' +
+      '</div>' : '') +
       '<button type="button" class="btn danger nd-delete-btn" style="width:auto;margin-top:6px">삭제</button>' +
     '</div>';
   }
@@ -1222,19 +1305,21 @@
     document.getElementById('fac-intro').value  = fac.intro || '';
     document.getElementById('prog-intro').value = prog.intro || '';
     facStatList.innerHTML  = (fac.stats || []).map(renderStatCard).join('');
-    facItemList.innerHTML  = (fac.items || []).map(function(it){ return renderNameDescCard(it, 'fac-item-card'); }).join('');
-    progItemList.innerHTML = (prog.items || []).map(function(it){ return renderNameDescCard(it, 'prog-item-card'); }).join('');
-    loadFacilityPhotos();
+    facItemList.innerHTML  = (fac.items || []).map(function(it){ return renderNameDescCard(it, 'fac-item-card', 'facility'); }).join('');
+    progItemList.innerHTML = (prog.items || []).map(function(it){ return renderNameDescCard(it, 'prog-item-card', 'program'); }).join('');
+    bindFacilityItemUploads();
   }
 
   addFacStatBtn.addEventListener('click', function(){
     facStatList.insertAdjacentHTML('beforeend', renderStatCard({}));
   });
   addFacItemBtn.addEventListener('click', function(){
-    facItemList.insertAdjacentHTML('beforeend', renderNameDescCard({}, 'fac-item-card'));
+    facItemList.insertAdjacentHTML('beforeend', renderNameDescCard({}, 'fac-item-card', 'facility'));
+    bindFacilityItemUploads();
   });
   addProgItemBtn.addEventListener('click', function(){
-    progItemList.insertAdjacentHTML('beforeend', renderNameDescCard({}, 'prog-item-card'));
+    progItemList.insertAdjacentHTML('beforeend', renderNameDescCard({}, 'prog-item-card', 'program'));
+    bindFacilityItemUploads();
   });
 
   facStatList.addEventListener('click', function(e){
@@ -1253,166 +1338,143 @@
     btn.closest('.prog-item-card').remove();
   });
 
-  async function loadFacilityPhotos(){
-    if (!currentCenter || !facilityPhotoGrid) return;
-    var res = await client.from('center_media').select('*')
-      .eq('center_id', currentCenter.id).eq('media_type', 'facility')
-      .order('sort_order', { ascending: true });
-    if (res.error) {
-      logAdminError('loadFacilityPhotos', res.error);
-      facilityPhotoGrid.innerHTML = '<div class="photo-empty"></div>';
-      facilityPhotoGrid.querySelector('.photo-empty').textContent = '시설 사진을 불러오지 못했어요: ' + res.error.message;
-      return;
-    }
+  function collectFacilityPayload(){
+    return {
+      facilities: {
+        intro: document.getElementById('fac-intro').value,
+        stats: Array.prototype.map.call(facStatList.querySelectorAll('.fac-stat-card'), function(card){
+          return { label: card.querySelector('.fs-label').value, value: card.querySelector('.fs-value').value };
+        }),
+        items: Array.prototype.map.call(facItemList.querySelectorAll('.fac-item-card'), function(card){
+          var item = { name: card.querySelector('.nd-name').value, desc: card.querySelector('.nd-desc').value };
+          var photo = card.querySelector('.nd-photo-url');
+          if (photo && photo.value) item.photo_url = photo.value;
+          return item;
+        })
+      },
+      programs: {
+        intro: document.getElementById('prog-intro').value,
+        items: Array.prototype.map.call(progItemList.querySelectorAll('.prog-item-card'), function(card){
+          var item = { name: card.querySelector('.nd-name').value, desc: card.querySelector('.nd-desc').value };
+          var photo = card.querySelector('.nd-photo-url');
+          if (photo && photo.value) item.photo_url = photo.value;
+          return item;
+        })
+      }
+    };
+  }
 
-    var rows = res.data || [];
-    if (rows.length === 0) {
-      facilityPhotoGrid.innerHTML = '<div class="photo-empty">아직 사진이 없어요.</div>';
-      return;
-    }
+  async function persistFacilityPayload(){
+    var payload = collectFacilityPayload();
+    var res = await client.from('centers').update({
+      facilities: payload.facilities,
+      programs: payload.programs
+    }).eq('id', currentCenter.id);
+    if (res.error) throw res.error;
+    currentCenter.facilities = payload.facilities;
+    currentCenter.programs = payload.programs;
+    return payload;
+  }
 
-    var items = await Promise.all(rows.map(async function(row){
-      var url = await signedUrl(row.photo_url);
-      return { row: row, signedUrl: url };
-    }));
+  function bindFacilityItemUploads(){
+    document.querySelectorAll('.item-upload-zone').forEach(function(zone){
+      if (zone.dataset.bound === '1') return;
+      zone.dataset.bound = '1';
 
-    facilityPhotoGrid.innerHTML = items.map(function(item){
-      if (!item.signedUrl) return '';
-      return '<div class="photo-item" data-media-id="' + esc(item.row.id) + '" data-path="' + esc(item.row.photo_url) + '">' +
-        '<img src="' + esc(item.signedUrl) + '" alt="' + esc(item.row.caption || '') + '" loading="lazy">' +
-        '<span class="photo-type-badge">' + esc(TYPE_LABELS[item.row.media_type] || item.row.media_type) + '</span>' +
-        '<button class="del-btn" data-media-id="' + esc(item.row.id) + '" data-path="' + esc(item.row.photo_url) + '" title="삭제">×</button>' +
-      '</div>';
-    }).join('');
+      var card = zone.closest('.fac-item-card,.prog-item-card');
+      var fileInput_ = zone.querySelector('.item-file-input');
+      var photoInput = card.querySelector('.nd-photo-url');
+      var photoUrl = photoInput ? photoInput.value : '';
 
-    facilityPhotoGrid.querySelectorAll('.del-btn').forEach(function(btn){
-      btn.addEventListener('click', function(e){
-        e.stopPropagation();
-        deleteFacilityPhoto(btn.dataset.mediaId, btn.dataset.path);
+      if (photoUrl) {
+        signedUrl(photoUrl).then(function(url){
+          if (url) setUploadZonePhoto(zone, url, function(){ deleteFacilityItemPhoto(card); });
+        });
+      } else {
+        setUploadZonePhoto(zone, null);
+      }
+
+      zone.addEventListener('click', function(){ fileInput_.click(); });
+      zone.addEventListener('dragover', function(e){ e.preventDefault(); zone.classList.add('drag-over'); });
+      zone.addEventListener('dragleave', function(){ zone.classList.remove('drag-over'); });
+      zone.addEventListener('drop', function(e){
+        e.preventDefault();
+        zone.classList.remove('drag-over');
+        handleFacilityItemPhoto(card, e.dataTransfer.files[0]);
+      });
+      fileInput_.addEventListener('change', function(){
+        if (fileInput_.files[0]) handleFacilityItemPhoto(card, fileInput_.files[0]);
+        fileInput_.value = '';
       });
     });
   }
 
-  async function deleteFacilityPhoto(mediaId, storagePath){
-    if (!confirm('이 시설 사진을 삭제할까요?')) return;
-    var removeRes = await client.storage.from(BUCKET).remove([storagePath]);
-    if (removeRes.error) {
-      alertAdminError('deleteFacilityPhoto', removeRes.error, '시설 사진 삭제 실패');
-      return;
+  async function handleFacilityItemPhoto(card, file){
+    if (!file || !currentCenter) return;
+    var zone = card.querySelector('.item-upload-zone');
+    var errorEl = card.querySelector('.item-upload-error');
+    var photoInput = card.querySelector('.nd-photo-url');
+    var kind = card.dataset.photoKind === 'program' ? 'program' : 'facility';
+    var oldPath = photoInput.value;
+    var path = '';
+    if (errorEl) errorEl.textContent = '';
+
+    try {
+      var compressed = await compressImage(file);
+      var index = Array.prototype.indexOf.call(card.parentNode.children, card);
+      path = currentCenter.id + '/' + kind + '/' + Date.now() + '_item_' + index + '_' + compressed.name;
+      var upRes = await client.storage.from(BUCKET).upload(path, compressed, {
+        cacheControl: '3600', upsert: false
+      });
+      if (upRes.error) throw upRes.error;
+
+      photoInput.value = path;
+      await persistFacilityPayload();
+      if (oldPath) client.storage.from(BUCKET).remove([oldPath]);
+
+      var url = await signedUrl(path);
+      if (url) setUploadZonePhoto(zone, url, function(){ deleteFacilityItemPhoto(card); });
+    } catch(err) {
+      if (photoInput && path) photoInput.value = oldPath;
+      logAdminError('handleFacilityItemPhoto', err);
+      if (errorEl) errorEl.textContent = '업로드 실패: ' + errorMessage(err);
     }
-    var deleteRes = await client.from('center_media').delete().eq('id', mediaId);
-    if (deleteRes.error) {
-      alertAdminError('deleteFacilityPhoto', deleteRes.error, '시설 사진 삭제 실패');
-      return;
-    }
-    loadFacilityPhotos();
   }
 
-  async function handleFacilityFiles(files){
-    if (!currentCenter || !files.length) return;
-    facilityUploadError.textContent = '';
-    facilityUploadProgress.style.display = 'block';
-    facilityProgressBar.style.width = '0%';
+  async function deleteFacilityItemPhoto(card){
+    var photoInput = card.querySelector('.nd-photo-url');
+    var zone = card.querySelector('.item-upload-zone');
+    var path = photoInput ? photoInput.value : '';
+    var persisted = false;
+    if (!path || !confirm('이 사진을 삭제할까요?')) return;
 
-    var total = files.length;
-    var done = 0;
-
-    for (var i = 0; i < files.length; i++){
-      var file = files[i];
-      facilityProgressLabel.textContent = '(' + (i+1) + '/' + total + ') 압축 중... ' + file.name;
-
-      try {
-        var compressed = await compressImage(file);
-        var path = currentCenter.id + '/facility/' + Date.now() + '_' + compressed.name;
-
-        facilityProgressLabel.textContent = '(' + (i+1) + '/' + total + ') 업로드 중... ' + compressed.name;
-        facilityProgressBar.style.width = Math.round((i / total) * 80) + '%';
-
-        var upRes = await client.storage.from(BUCKET).upload(path, compressed, {
-          cacheControl: '3600', upsert: false
-        });
-        if (upRes.error) throw upRes.error;
-
-        var sortMax = await client.from('center_media').select('sort_order')
-          .eq('center_id', currentCenter.id).eq('media_type', 'facility')
-          .order('sort_order', { ascending: false })
-          .limit(1);
-        if (sortMax.error) throw sortMax.error;
-        var nextSort = ((sortMax.data && sortMax.data[0]) ? sortMax.data[0].sort_order : 0) + 1;
-
-        var insertRes = await client.from('center_media').insert({
-          center_id: currentCenter.id,
-          media_type: 'facility',
-          photo_url: path,
-          caption: '',
-          sort_order: nextSort
-        });
-        if (insertRes.error) throw insertRes.error;
-
-        done++;
-        facilityProgressBar.style.width = Math.round(((i+1) / total) * 100) + '%';
-      } catch(err) {
-        logAdminError('handleFacilityFiles', err);
-        facilityUploadError.textContent = '업로드 실패: ' + errorMessage(err);
-        facilityUploadError.className = 'msg error';
-      }
+    try {
+      photoInput.value = '';
+      await persistFacilityPayload();
+      persisted = true;
+      var removeRes = await client.storage.from(BUCKET).remove([path]);
+      if (removeRes.error) throw removeRes.error;
+      setUploadZonePhoto(zone, null);
+    } catch(err) {
+      if (!persisted && photoInput && !photoInput.value) photoInput.value = path;
+      if (persisted) setUploadZonePhoto(zone, null);
+      alertAdminError('deleteFacilityItemPhoto', err, '사진 삭제 실패');
     }
-
-    facilityProgressLabel.textContent = total + '장 중 ' + done + '장 완료';
-    setTimeout(function(){
-      facilityUploadProgress.style.display = 'none';
-    }, 2000);
-    loadFacilityPhotos();
   }
-
-  facilityUploadZone.addEventListener('click', function(){ facilityFileInput.click(); });
-  facilityFileInput.addEventListener('change', function(){
-    handleFacilityFiles(Array.from(facilityFileInput.files));
-    facilityFileInput.value = '';
-  });
-  facilityUploadZone.addEventListener('dragover', function(e){ e.preventDefault(); facilityUploadZone.classList.add('drag-over'); });
-  facilityUploadZone.addEventListener('dragleave', function(){ facilityUploadZone.classList.remove('drag-over'); });
-  facilityUploadZone.addEventListener('drop', function(e){
-    e.preventDefault();
-    facilityUploadZone.classList.remove('drag-over');
-    handleFacilityFiles(Array.from(e.dataTransfer.files));
-  });
 
   facilitySaveBtn.addEventListener('click', async function(){
     if (!currentCenter) return;
     facilitySaveStatus.textContent = '저장 중...';
     facilitySaveStatus.className = 'msg';
 
-    var newFacilities = {
-      intro: document.getElementById('fac-intro').value,
-      stats: Array.prototype.map.call(facStatList.querySelectorAll('.fac-stat-card'), function(card){
-        return { label: card.querySelector('.fs-label').value, value: card.querySelector('.fs-value').value };
-      }),
-      items: Array.prototype.map.call(facItemList.querySelectorAll('.fac-item-card'), function(card){
-        return { name: card.querySelector('.nd-name').value, desc: card.querySelector('.nd-desc').value };
-      })
-    };
-    var newPrograms = {
-      intro: document.getElementById('prog-intro').value,
-      items: Array.prototype.map.call(progItemList.querySelectorAll('.prog-item-card'), function(card){
-        return { name: card.querySelector('.nd-name').value, desc: card.querySelector('.nd-desc').value };
-      })
-    };
-
-    var res = await client.from('centers').update({
-      facilities: newFacilities,
-      programs:   newPrograms
-    }).eq('id', currentCenter.id);
-
-    if (res.error) {
-      logAdminError('saveFacility', res.error);
-      facilitySaveStatus.textContent = '저장 실패: ' + res.error.message;
-      facilitySaveStatus.className = 'msg error';
-    } else {
-      currentCenter.facilities = newFacilities;
-      currentCenter.programs   = newPrograms;
+    try {
+      await persistFacilityPayload();
       facilitySaveStatus.textContent = '저장됐어요.';
       facilitySaveStatus.className = 'msg ok';
+    } catch(err) {
+      logAdminError('saveFacility', err);
+      facilitySaveStatus.textContent = '저장 실패: ' + errorMessage(err);
+      facilitySaveStatus.className = 'msg error';
     }
   });
 
