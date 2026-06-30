@@ -459,8 +459,59 @@
         <div class="msg" id="teacherSaveStatus"></div>
       </div>
     </div>
-    <div class="tab-panel" data-panel="admission"><div class="tab-placeholder">입학안내 편집 — 준비 중</div></div>
-    <div class="tab-panel" data-panel="directions"><div class="tab-placeholder">오시는 길 편집 — 준비 중</div></div>
+    <div class="tab-panel" data-panel="admission">
+      <div class="panel">
+        <div class="section-eyebrow" style="margin-top:0">입학안내</div>
+        <h2 class="section-title">모집요강</h2>
+        <div class="field">
+          <label for="adm-target">모집 대상</label>
+          <input type="text" id="adm-target" placeholder="예: 만 3세~5세">
+        </div>
+        <div class="field">
+          <label for="adm-capacity">정원 정보</label>
+          <input type="text" id="adm-capacity" placeholder="예: 학급당 15명, 총 60명">
+        </div>
+        <div class="field">
+          <label for="adm-period">모집 기간</label>
+          <input type="text" id="adm-period" placeholder="예: 매년 11월~12월">
+        </div>
+        <div class="field">
+          <label for="adm-process">입소 절차</label>
+          <textarea id="adm-process" rows="3" placeholder="예: 상담 신청 → 방문 상담 → 서류 제출 → 입소 확정"></textarea>
+        </div>
+        <div class="field">
+          <label for="adm-supplies">준비물</label>
+          <textarea id="adm-supplies" rows="3" placeholder="예: 개인 물병, 실내화, 여벌옷"></textarea>
+        </div>
+        <div class="field">
+          <label for="adm-notes">기타 안내</label>
+          <textarea id="adm-notes" rows="3" placeholder="추가로 안내할 내용"></textarea>
+        </div>
+      </div>
+
+      <div class="tab-save-sticky">
+        <button type="button" class="btn" id="admissionSaveBtn">저장</button>
+        <div class="msg" id="admissionSaveStatus"></div>
+      </div>
+    </div>
+    <div class="tab-panel" data-panel="directions">
+      <div class="panel">
+        <div class="section-eyebrow" style="margin-top:0">오시는 길</div>
+        <h2 class="section-title">교통편 안내</h2>
+        <div class="field">
+          <label for="dir-text">교통편 안내 문구</label>
+          <textarea id="dir-text" rows="5" placeholder="예: 지하철 2호선 강남역 3번 출구에서 도보 5분. 주차장 이용 가능. 통학차량 운영 중."></textarea>
+        </div>
+        <div class="tab-placeholder" style="margin-top:20px;padding:24px 20px">
+          버스 정류장·시간 정보는 추후 별도로 제공될 예정이에요.
+        </div>
+      </div>
+
+      <div class="tab-save-sticky">
+        <button type="button" class="btn" id="directionsSaveBtn">저장</button>
+        <div class="msg" id="directionsSaveStatus"></div>
+      </div>
+    </div>
     <div class="tab-panel" data-panel="faq"><div class="tab-placeholder">FAQ 편집 — 준비 중</div></div>
 
     <!-- 신청 현황 -->
@@ -550,6 +601,13 @@
   var teacherSaveBtn    = document.getElementById('teacherSaveBtn');
   var teacherSaveStatus = document.getElementById('teacherSaveStatus');
   var TEACHER_LIMIT = 10;
+
+  var admissionSaveBtn    = document.getElementById('admissionSaveBtn');
+  var admissionSaveStatus = document.getElementById('admissionSaveStatus');
+  var currentAdmissionId  = null;
+
+  var directionsSaveBtn    = document.getElementById('directionsSaveBtn');
+  var directionsSaveStatus = document.getElementById('directionsSaveStatus');
 
   var currentCenter = null;
   var selectedType  = 'hero';
@@ -1244,6 +1302,88 @@
     }
   });
 
+  // ── 입학안내 탭 ──
+  async function loadAdmissionTab(){
+    if (!currentCenter) return;
+    var res = await client.from('admissions').select('*').eq('center_id', currentCenter.id).maybeSingle();
+    var adm = res.data || {};
+    currentAdmissionId = adm.id || null;
+    document.getElementById('adm-target').value   = adm.target || '';
+    document.getElementById('adm-capacity').value = adm.capacity_info || '';
+    document.getElementById('adm-period').value   = adm.period || '';
+    document.getElementById('adm-process').value  = adm.process || '';
+    document.getElementById('adm-supplies').value = adm.supplies || '';
+    document.getElementById('adm-notes').value    = adm.notes || '';
+  }
+
+  admissionSaveBtn.addEventListener('click', async function(){
+    if (!currentCenter) return;
+    admissionSaveStatus.textContent = '저장 중...';
+    admissionSaveStatus.className = 'msg';
+
+    var payload = {
+      center_id:     currentCenter.id,
+      target:        document.getElementById('adm-target').value,
+      capacity_info: document.getElementById('adm-capacity').value,
+      period:        document.getElementById('adm-period').value,
+      process:       document.getElementById('adm-process').value,
+      supplies:      document.getElementById('adm-supplies').value,
+      notes:         document.getElementById('adm-notes').value
+    };
+
+    var sessionCheck = await client.auth.getSession();
+    console.log('[admin/admissions] auth session before save', {
+      hasSession: !!(sessionCheck.data && sessionCheck.data.session),
+      userId: sessionCheck.data && sessionCheck.data.session ? sessionCheck.data.session.user.id : null,
+      email: sessionCheck.data && sessionCheck.data.session ? sessionCheck.data.session.user.email : null,
+      expiresAt: sessionCheck.data && sessionCheck.data.session ? sessionCheck.data.session.expires_at : null,
+      centerId: currentCenter ? currentCenter.id : null,
+      centerOwnerId: currentCenter ? currentCenter.owner_id : null,
+      admissionId: currentAdmissionId,
+      error: sessionCheck.error
+    });
+
+    var res;
+    if (currentAdmissionId) {
+      res = await client.from('admissions').update(payload).eq('id', currentAdmissionId);
+    } else {
+      res = await client.from('admissions').insert(payload).select().single();
+      if (res.data) currentAdmissionId = res.data.id;
+    }
+
+    if (res.error){
+      admissionSaveStatus.textContent = '저장 실패: ' + res.error.message;
+      admissionSaveStatus.className = 'msg error';
+    } else {
+      admissionSaveStatus.textContent = '저장됐어요.';
+      admissionSaveStatus.className = 'msg ok';
+    }
+  });
+
+  // ── 오시는 길 탭 ──
+  function loadDirectionsTab(){
+    if (!currentCenter) return;
+    document.getElementById('dir-text').value = currentCenter.directions_text || '';
+  }
+
+  directionsSaveBtn.addEventListener('click', async function(){
+    if (!currentCenter) return;
+    directionsSaveStatus.textContent = '저장 중...';
+    directionsSaveStatus.className = 'msg';
+
+    var text = document.getElementById('dir-text').value;
+    var res = await client.from('centers').update({ directions_text: text }).eq('id', currentCenter.id);
+
+    if (res.error){
+      directionsSaveStatus.textContent = '저장 실패: ' + res.error.message;
+      directionsSaveStatus.className = 'msg error';
+    } else {
+      currentCenter.directions_text = text;
+      directionsSaveStatus.textContent = '저장됐어요.';
+      directionsSaveStatus.className = 'msg ok';
+    }
+  });
+
   // ── 탭 전환 ──
   if (tabBar) {
     tabBar.addEventListener('click', function(e){
@@ -1259,6 +1399,8 @@
       if (tab === 'day') loadDayStoryTab();
       if (tab === 'facility') loadFacilityTab();
       if (tab === 'teacher') loadTeacherTab();
+      if (tab === 'admission') loadAdmissionTab();
+      if (tab === 'directions') loadDirectionsTab();
     });
   }
 
@@ -1350,6 +1492,8 @@
     if (document.querySelector('.tab-btn[data-tab="day"].active')) loadDayStoryTab();
     if (document.querySelector('.tab-btn[data-tab="facility"].active')) loadFacilityTab();
     if (document.querySelector('.tab-btn[data-tab="teacher"].active')) loadTeacherTab();
+    if (document.querySelector('.tab-btn[data-tab="admission"].active')) loadAdmissionTab();
+    if (document.querySelector('.tab-btn[data-tab="directions"].active')) loadDirectionsTab();
   }
 
   client.auth.onAuthStateChange(function(_event, session){
