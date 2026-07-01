@@ -62,7 +62,10 @@
   .btn:hover{transform:translateY(-2px)}
   .btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
   .btn.ghost{background:transparent;color:var(--ink-soft);box-shadow:none;border:1.5px solid #e7dccf}
+  .btn.kakao{background:#FEE500;color:#191919;box-shadow:0 14px 28px -12px rgba(60,45,0,.35)}
   .btn.small{width:auto;padding:8px 16px;font-size:.84rem;box-shadow:none}
+  .auth-divider{display:flex;align-items:center;gap:12px;margin:18px 0;color:var(--ink-soft);font-size:.82rem}
+  .auth-divider::before,.auth-divider::after{content:"";flex:1;height:1px;background:var(--line)}
   .switch-link{margin-top:16px;text-align:center;font-size:.9rem;color:var(--ink-soft)}
   .switch-link button{border:none;background:transparent;color:var(--coral-deep);font-weight:800;cursor:pointer;font-family:var(--body)}
   .msg{margin-top:14px;font-size:.88rem;text-align:center;color:var(--ink-soft)}
@@ -100,6 +103,8 @@
   </section>
 
   <section class="panel" id="authPanel" hidden>
+    <button type="button" class="btn kakao" id="kakaoLoginBtn">카카오로 3초만에 시작하기</button>
+    <div class="auth-divider" aria-hidden="true">또는</div>
     <form id="authForm">
       <div class="field">
         <label for="authEmail">이메일</label>
@@ -183,6 +188,7 @@
   var authMsg = document.getElementById('authMsg');
   var authSwitchText = document.getElementById('authSwitchText');
   var authModeBtn = document.getElementById('authModeBtn');
+  var kakaoLoginBtn = document.getElementById('kakaoLoginBtn');
 
   var inviteForm = document.getElementById('inviteForm');
   var inviteCode = document.getElementById('inviteCode');
@@ -337,6 +343,25 @@
 
   authModeBtn.addEventListener('click', function(){
     setAuthMode(authMode === 'login' ? 'signup' : 'login');
+  });
+
+  kakaoLoginBtn.addEventListener('click', async function(){
+    authMsg.textContent = '';
+    kakaoLoginBtn.disabled = true;
+
+    try {
+      var res = await client.auth.signInWithOAuth({
+        provider: 'kakao',
+        options: {
+          redirectTo: window.location.origin + '/parent.html'
+        }
+      });
+      if (res.error) throw res.error;
+    } catch (err) {
+      authMsg.innerHTML = escWithBr(err && err.message ? err.message : String(err));
+      authMsg.className = 'msg error';
+      kakaoLoginBtn.disabled = false;
+    }
   });
 
   authForm.addEventListener('submit', async function(e){
