@@ -118,6 +118,18 @@
     z-index:2;
   }
   .upload-zone .photo-remove-btn:hover{background:rgba(217,83,79,.9)}
+  .upload-zone.profile-upload{
+    width:132px;height:132px;min-height:132px;border-radius:50%;
+    padding:18px;margin-top:4px;
+    display:flex;align-items:center;justify-content:center;flex-direction:column;
+  }
+  .upload-zone.profile-upload.has-photo{padding:0}
+  .upload-zone.profile-upload .upload-hint{font-size:.74rem;line-height:1.35}
+  .upload-zone.profile-upload .replace-badge{
+    bottom:0;width:100%;border-radius:0;padding:7px 8px;font-size:.72rem;
+    background:rgba(64,55,51,.74);
+  }
+  .upload-zone.profile-upload .photo-remove-btn{top:4px;right:4px}
 
   /* 업로드 진행바 */
   .upload-progress{margin-top:14px;display:none}
@@ -210,7 +222,6 @@
   /* ── 선생님 카드 ── */
   .teacher-list{display:flex;flex-direction:column;gap:18px}
   .teacher-card{background:var(--cream);border:1.5px solid #f1e9e0;border-radius:20px;padding:22px}
-  .tc-photo-preview img{width:96px;height:96px;border-radius:50%;object-fit:cover;display:block;margin-bottom:10px}
 
   /* ── 탭 하단 고정 저장바 (범용, 탭별로 적용 가능) ── */
   .tab-save-sticky{
@@ -366,10 +377,9 @@
 
         <div class="field">
           <label>원장 사진</label>
-          <div id="directorPhotoPreview" style="margin-bottom:10px"></div>
-          <div class="upload-zone" id="directorUploadZone">
+          <div class="upload-zone profile-upload" id="directorUploadZone">
             <div class="upload-icon">+</div>
-            <div class="upload-hint"><strong>클릭하거나 사진을 드래그</strong><br>JPG · PNG · WebP · 최대 10MB</div>
+            <div class="upload-hint"><strong>클릭하거나 사진을 여기에 드래그</strong><br>JPG · PNG · WebP</div>
             <input type="file" id="directorFileInput" accept="image/jpeg,image/png,image/webp">
           </div>
         </div>
@@ -608,7 +618,6 @@
 
   var directorUploadZone     = document.getElementById('directorUploadZone');
   var directorFileInput      = document.getElementById('directorFileInput');
-  var directorPhotoPreview   = document.getElementById('directorPhotoPreview');
   var introSaveBtn           = document.getElementById('introSaveBtn');
   var introSaveStatus        = document.getElementById('introSaveStatus');
 
@@ -976,13 +985,10 @@
     document.getElementById('i-motto').value       = p.motto || '';
     document.getElementById('i-values').value      = (p.values || []).join(', ');
 
-    directorPhotoPreview.innerHTML = '';
+    setUploadZonePhoto(directorUploadZone, null);
     if (d.photo) {
       signedUrl(d.photo).then(function(url){
-        if (url) {
-          directorPhotoPreview.innerHTML =
-            '<img src="'+esc(url || '')+'" style="width:96px;height:96px;border-radius:50%;object-fit:cover;display:block">';
-        }
+        if (url) setUploadZonePhoto(directorUploadZone, url, deleteDirectorPhoto);
       });
     }
   }
@@ -1045,16 +1051,34 @@
     var upRes = await client.storage.from(BUCKET).upload(path, compressed, { cacheControl:'3600', upsert:false });
     if (upRes.error){ alertAdminError('handleDirectorPhoto', upRes.error, '사진 업로드 실패'); return; }
 
+    var oldPath = currentCenter.director && currentCenter.director.photo ? currentCenter.director.photo : '';
     var newDirector = Object.assign({}, currentCenter.director || {}, { photo: path });
     var updateRes = await client.from('centers').update({ director: newDirector }).eq('id', currentCenter.id);
     if (updateRes.error){ alertAdminError('handleDirectorPhoto', updateRes.error, '원장 사진 저장 실패'); return; }
     currentCenter.director = newDirector;
+    if (oldPath) client.storage.from(BUCKET).remove([oldPath]);
 
     var url = await signedUrl(path);
-    if (url) {
-      directorPhotoPreview.innerHTML =
-        '<img src="'+esc(url || '')+'" style="width:96px;height:96px;border-radius:50%;object-fit:cover;display:block">';
+    if (url) setUploadZonePhoto(directorUploadZone, url, deleteDirectorPhoto);
+  }
+
+  async function deleteDirectorPhoto(){
+    var photoUrl = currentCenter && currentCenter.director ? currentCenter.director.photo : '';
+    if (!photoUrl || !confirm('이 사진을 삭제할까요?')) return;
+
+    var newDirector = Object.assign({}, currentCenter.director || {}, { photo: '' });
+    var updateRes = await client.from('centers').update({ director: newDirector }).eq('id', currentCenter.id);
+    if (updateRes.error){
+      alertAdminError('deleteDirectorPhoto', updateRes.error, '원장 사진 삭제 실패');
+      return;
     }
+
+    currentCenter.director = newDirector;
+    var removeRes = await client.storage.from(BUCKET).remove([photoUrl]);
+    if (removeRes.error) {
+      alertAdminError('deleteDirectorPhoto', removeRes.error, '원장 사진 파일 삭제 실패');
+    }
+    setUploadZonePhoto(directorUploadZone, null);
   }
 
   // ── 하루 이야기 탭 ──
@@ -1495,14 +1519,13 @@
       '</div>' +
       '<div class="field">' +
         '<label>사진</label>' +
-        '<div class="tc-photo-preview"></div>' +
-        '<div class="upload-zone tc-upload-zone">' +
+        '<div class="upload-zone profile-upload tc-upload-zone">' +
           '<div class="upload-icon">+</div>' +
-          '<div class="upload-hint">클릭하거나 사진을 드래그</div>' +
+          '<div class="upload-hint"><strong>클릭하거나 사진을 여기에 드래그</strong><br>JPG · PNG · WebP</div>' +
           '<input type="file" class="tc-file-input" accept="image/jpeg,image/png,image/webp">' +
         '</div>' +
       '</div>' +
-      '<button type="button" class="btn danger tc-delete-btn" style="width:auto;margin-top:10px">삭제</button>' +
+      '<button type="button" class="btn danger tc-delete-btn" style="width:auto;margin-top:10px">선생님 카드 삭제</button>' +
     '</div>';
   }
 
@@ -1510,15 +1533,18 @@
     var card = teacherList.querySelector('.teacher-card[data-id="' + row.id + '"]');
     if (!card) return;
 
-    var preview    = card.querySelector('.tc-photo-preview');
     var zone       = card.querySelector('.tc-upload-zone');
     var fileInput_ = card.querySelector('.tc-file-input');
     var delBtn     = card.querySelector('.tc-delete-btn');
 
     if (row.photo_url) {
       signedUrl(row.photo_url).then(function(url){
-        if (url) preview.innerHTML = '<img src="' + esc(url || '') + '" alt="">';
+        if (url) setUploadZonePhoto(zone, url, function(){
+          deleteTeacherPhoto(row.id, row.photo_url, zone, row);
+        });
       });
+    } else {
+      setUploadZonePhoto(zone, null);
     }
 
     zone.addEventListener('click', function(){ fileInput_.click(); });
@@ -1527,10 +1553,10 @@
     zone.addEventListener('drop', function(e){
       e.preventDefault();
       zone.classList.remove('drag-over');
-      handleTeacherPhoto(row.id, e.dataTransfer.files[0], preview);
+      handleTeacherPhoto(row.id, e.dataTransfer.files[0], zone, row);
     });
     fileInput_.addEventListener('change', function(){
-      if (fileInput_.files[0]) handleTeacherPhoto(row.id, fileInput_.files[0], preview);
+      if (fileInput_.files[0]) handleTeacherPhoto(row.id, fileInput_.files[0], zone, row);
       fileInput_.value = '';
     });
 
@@ -1553,7 +1579,7 @@
     rows.forEach(function(row){ bindTeacherCard(row); });
   }
 
-  async function handleTeacherPhoto(mediaId, file, previewEl){
+  async function handleTeacherPhoto(mediaId, file, zone, row){
     if (!file || !currentCenter) return;
     var compressed = await compressImage(file);
     var path = currentCenter.id + '/teacher/' + Date.now() + '_' + compressed.name;
@@ -1562,9 +1588,29 @@
 
     var updateRes = await client.from('center_media').update({ photo_url: path }).eq('id', mediaId);
     if (updateRes.error){ alertAdminError('handleTeacherPhoto', updateRes.error, '사진 저장 실패'); return; }
+    var oldPath = row ? row.photo_url : '';
+    if (oldPath) client.storage.from(BUCKET).remove([oldPath]);
+    if (row) row.photo_url = path;
 
     var url = await signedUrl(path);
-    if (url) previewEl.innerHTML = '<img src="' + esc(url || '') + '" alt="">';
+    if (url) setUploadZonePhoto(zone, url, function(){
+      deleteTeacherPhoto(mediaId, path, zone, row);
+    });
+  }
+
+  async function deleteTeacherPhoto(mediaId, photoUrl, zone, row){
+    if (!photoUrl || !confirm('이 사진을 삭제할까요?')) return;
+    var updateRes = await client.from('center_media').update({ photo_url: '' }).eq('id', mediaId);
+    if (updateRes.error){
+      alertAdminError('deleteTeacherPhoto', updateRes.error, '사진 삭제 실패');
+      return;
+    }
+    if (row) row.photo_url = '';
+    var removeRes = await client.storage.from(BUCKET).remove([photoUrl]);
+    if (removeRes.error) {
+      alertAdminError('deleteTeacherPhoto', removeRes.error, '사진 파일 삭제 실패');
+    }
+    setUploadZonePhoto(zone, null);
   }
 
   async function deleteTeacher(mediaId, photoUrl){
