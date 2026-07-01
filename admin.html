@@ -134,6 +134,10 @@
   }
   .upload-zone.profile-upload.has-photo:hover::after{opacity:1}
   .upload-zone.profile-upload .photo-remove-btn{top:-6px;right:-6px}
+  .profile-upload-caption{
+    margin-top:8px;font-size:.78rem;color:var(--ink-soft);opacity:.72;
+    line-height:1.35;
+  }
 
   /* 업로드 진행바 */
   .upload-progress{margin-top:14px;display:none}
@@ -386,6 +390,7 @@
             <div class="upload-hint"><strong>클릭하거나 사진을 여기에 드래그</strong><br>JPG · PNG · WebP</div>
             <input type="file" id="directorFileInput" accept="image/jpeg,image/png,image/webp">
           </div>
+          <div class="profile-upload-caption">클릭해서 사진 교체</div>
         </div>
 
         <div class="section-eyebrow" style="margin-top:30px">원훈·교육가치</div>
@@ -1530,6 +1535,7 @@
           '<div class="upload-hint"><strong>클릭하거나 사진을 여기에 드래그</strong><br>JPG · PNG · WebP</div>' +
           '<input type="file" class="tc-file-input" accept="image/jpeg,image/png,image/webp">' +
         '</div>' +
+        '<div class="profile-upload-caption">클릭해서 사진 교체</div>' +
       '</div>' +
       '<button type="button" class="btn danger tc-delete-btn" style="width:auto;margin-top:10px">선생님 카드 삭제</button>' +
     '</div>';
