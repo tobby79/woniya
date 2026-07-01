@@ -134,7 +134,7 @@
   }
   .upload-zone.profile-upload.has-photo:hover::after{opacity:1}
   .upload-zone.profile-upload .photo-remove-btn{top:-6px;right:-6px}
-  .profile-upload-caption{
+  .profile-upload-caption,.upload-caption{
     margin-top:8px;font-size:.78rem;color:var(--ink-soft);opacity:.72;
     line-height:1.35;
   }
@@ -352,6 +352,7 @@
             </div>
             <input type="file" id="fileInput" accept="image/jpeg,image/png,image/webp" multiple>
           </div>
+          <div class="upload-caption">이미지는 업로드 즉시 반영됩니다. 수정하려면 사진을 클릭해서 바로 교체해주세요.</div>
 
           <!-- 진행바 -->
           <div class="upload-progress" id="uploadProgress">
@@ -396,7 +397,7 @@
             <div class="upload-hint"><strong>클릭하거나 사진을 여기에 드래그</strong><br>JPG · PNG · WebP</div>
             <input type="file" id="directorFileInput" accept="image/jpeg,image/png,image/webp">
           </div>
-          <div class="profile-upload-caption">클릭해서 사진 교체</div>
+          <div class="profile-upload-caption">이미지는 업로드 즉시 반영됩니다. 수정하려면 사진을 클릭해서 바로 교체해주세요.</div>
         </div>
 
         <div class="section-eyebrow" style="margin-top:30px">원훈·교육가치</div>
@@ -1131,6 +1132,7 @@
           '<div class="upload-hint"><strong>클릭하거나 사진을 여기에 드래그</strong><br>JPG · PNG · WebP · 최대 10MB</div>' +
           '<input type="file" class="ds-file-input" accept="image/jpeg,image/png,image/webp">' +
         '</div>' +
+        '<div class="upload-caption">이미지는 업로드 즉시 반영됩니다. 수정하려면 사진을 클릭해서 바로 교체해주세요.</div>' +
       '</div>' +
       '<button type="button" class="btn danger ds-delete-btn" style="width:auto;margin-top:10px">삭제</button>' +
     '</div>';
@@ -1340,6 +1342,7 @@
           '<div class="upload-hint"><strong>클릭하거나 사진을 여기에 드래그</strong><br>JPG · PNG · WebP · 최대 10MB</div>' +
           '<input type="file" class="item-file-input" accept="image/jpeg,image/png,image/webp">' +
         '</div>' +
+        '<div class="upload-caption">이미지는 업로드 즉시 반영됩니다. 수정하려면 사진을 클릭해서 바로 교체해주세요.</div>' +
         '<div class="msg error item-upload-error" style="margin-top:10px"></div>' +
       '</div>' : '') +
       '<button type="button" class="btn danger nd-delete-btn" style="width:auto;margin-top:6px">삭제</button>' +
@@ -1578,7 +1581,7 @@
           '<div class="upload-hint"><strong>클릭하거나 사진을 여기에 드래그</strong><br>JPG · PNG · WebP</div>' +
           '<input type="file" class="tc-file-input" accept="image/jpeg,image/png,image/webp">' +
         '</div>' +
-        '<div class="profile-upload-caption">클릭해서 사진 교체</div>' +
+        '<div class="profile-upload-caption">이미지는 업로드 즉시 반영됩니다. 수정하려면 사진을 클릭해서 바로 교체해주세요.</div>' +
       '</div>' +
       '<button type="button" class="btn danger tc-delete-btn" style="width:auto;margin-top:10px">선생님 카드 삭제</button>' +
     '</div>';
