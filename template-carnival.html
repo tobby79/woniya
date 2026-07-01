@@ -340,7 +340,23 @@
 <section class="finale wrap" id="finale"></section>
 <footer id="footerEl"></footer>
 
-<div class="float" id="float"><a href="#finale"><span class="pulse"></span>입소 상담</a></div>
+<div class="float" id="float" hidden><a href="#finale"><span class="pulse"></span>입소 상담</a></div>
+
+<button type="button" class="ask-fab" id="askFab" aria-label="무엇이든 물어보세요" title="무엇이든 물어보세요">?</button>
+
+<div class="ask-modal-overlay" id="askModal" aria-hidden="true">
+  <div class="ask-modal-panel" role="dialog" aria-modal="true" aria-labelledby="askModalTitle">
+    <div class="ask-modal-header">
+      <h3 class="ask-modal-title" id="askModalTitle">무엇이든 물어보세요</h3>
+      <button type="button" class="ask-modal-close" id="askModalClose" aria-label="닫기">×</button>
+    </div>
+    <div class="ask-modal-body">
+      <div class="ask-faq-list" id="askFaqList"></div>
+      <p class="ask-empty" id="askFaqEmpty" hidden>궁금한 점은 상담으로 편하게 물어보세요.</p>
+      <button type="button" class="ask-consult-btn" id="askConsultBtn">입소 상담</button>
+    </div>
+  </div>
+</div>
 
 <div class="csl-overlay" id="cslOverlay">
   <div class="csl-panel">
@@ -445,6 +461,25 @@
 </div>
 
 <style>
+  /* ── FAQ + 상담 플로팅 진입점 ── */
+  .ask-fab{position:fixed;right:max(18px,calc((100vw - 600px)/2 + 24px));bottom:24px;z-index:45;width:54px;height:54px;border:none;border-radius:50%;background:var(--paper);color:var(--ink);font-family:var(--body);font-weight:700;font-size:1.35rem;padding:0;box-shadow:0 18px 42px -18px rgba(0,0,0,.38);cursor:pointer;border:1.5px solid rgba(120,80,60,.14);display:flex;align-items:center;justify-content:center}
+  .ask-fab:hover{transform:translateY(-2px)}
+  .ask-modal-overlay{position:fixed;inset:0;z-index:70;background:rgba(0,0,0,.45);display:none;align-items:center;justify-content:center;padding:20px}
+  .ask-modal-overlay.open{display:flex}
+  .ask-modal-panel{width:92vw;max-width:520px;max-height:88vh;overflow-y:auto;background:var(--paper);border-radius:24px;box-shadow:0 30px 60px -20px rgba(0,0,0,.45)}
+  .ask-modal-header{position:sticky;top:0;z-index:2;background:var(--paper);padding:26px 32px 18px;border-radius:24px 24px 0 0}
+  .ask-modal-title{font-family:var(--display);font-size:1.35rem;color:var(--ink);letter-spacing:-.4px;margin:0}
+  .ask-modal-close{position:absolute;top:22px;right:24px;width:38px;height:38px;border:none;background:var(--cream,var(--paper-warm,var(--bg-warm,#f3eee8)));border-radius:50%;font-size:1.4rem;color:var(--ink-soft);cursor:pointer;display:flex;align-items:center;justify-content:center}
+  .ask-modal-body{padding:8px 32px 34px}
+  .ask-faq-item{background:var(--cream,var(--paper-warm,var(--bg-warm,#f3eee8)));border-radius:16px;margin-bottom:10px;overflow:hidden}
+  .ask-faq-q{width:100%;border:none;background:transparent;text-align:left;padding:16px 18px;font-family:var(--body);font-size:.98rem;font-weight:700;color:var(--ink);cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:12px}
+  .ask-faq-q::after{content:"+";flex:none;color:var(--coral,var(--leaf,var(--red,var(--char,var(--ink)))));font-weight:700}
+  .ask-faq-item.open .ask-faq-q::after{content:"−"}
+  .ask-faq-a{max-height:0;overflow:hidden;transition:max-height .3s ease}
+  .ask-faq-a p{padding:0 18px 16px;color:var(--ink-soft);font-size:.94rem;line-height:1.7}
+  .ask-empty{color:var(--ink-soft);font-size:.94rem;line-height:1.65;margin-bottom:16px}
+  .ask-consult-btn{width:100%;border:none;border-radius:999px;background:var(--coral,var(--leaf,var(--red,var(--char,var(--ink)))));color:#fff;font-family:var(--body);font-weight:700;font-size:1rem;padding:15px 18px;cursor:pointer;box-shadow:0 14px 28px -14px rgba(0,0,0,.5)}
+
   /* ── 입학안내 / 오시는 길 (M1 추가) — 각 템플릿 공통 변수(--paper/--ink/--ink-soft/--display) 기반 ── */
   #admissionsSec[hidden],#directionsSec[hidden]{display:none}
   .info-block{padding-top:46px;padding-bottom:14px;text-align:center}
@@ -880,6 +915,7 @@ function mapRowToData(row){
   window.__albumImgs__ = data.album?.items || [];
   initInteractions(SAMPLE_SPACES.length);
   renderInfoSections(data, c, esc);
+  setupAskPanel(data.faqs);
   initConsultationForm(client, c.id);
 })();
 
@@ -1118,6 +1154,47 @@ function initInteractions(pageCount){
       q.setAttribute('aria-expanded',open?'true':'false');
       a.style.maxHeight = open ? (a.scrollHeight+'px') : null;
     });
+  });
+}
+
+function setupAskPanel(faqs){
+  var fab = document.getElementById('askFab');
+  var overlay = document.getElementById('askModal');
+  var closeBtn = document.getElementById('askModalClose');
+  var list = document.getElementById('askFaqList');
+  var empty = document.getElementById('askFaqEmpty');
+  var consultBtn = document.getElementById('askConsultBtn');
+  if (!fab || !overlay || !list || !consultBtn) return;
+  function askEsc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(ch){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]; }); }
+  function askWithBr(s){ return askEsc(s).replace(/\n/g,'<br>'); }
+  var items = (faqs && faqs.items) || [];
+  list.innerHTML = items.map(function(it){
+    return '<div class="ask-faq-item">'
+      + '<button type="button" class="ask-faq-q" aria-expanded="false">' + askEsc(it.q) + '</button>'
+      + '<div class="ask-faq-a"><p>' + askWithBr(it.a) + '</p></div>'
+      + '</div>';
+  }).join('');
+  if (empty) empty.hidden = items.length > 0;
+  function open(){ overlay.classList.add('open'); overlay.setAttribute('aria-hidden','false'); }
+  function close(){ overlay.classList.remove('open'); overlay.setAttribute('aria-hidden','true'); }
+  fab.addEventListener('click', open);
+  if (closeBtn) closeBtn.addEventListener('click', close);
+  overlay.addEventListener('click', function(e){ if (e.target === overlay) close(); });
+  document.addEventListener('keydown', function(e){ if (e.key === 'Escape') close(); });
+  list.querySelectorAll('.ask-faq-item').forEach(function(item){
+    var q = item.querySelector('.ask-faq-q');
+    var a = item.querySelector('.ask-faq-a');
+    q.addEventListener('click', function(){
+      var openItem = item.classList.toggle('open');
+      q.setAttribute('aria-expanded', openItem ? 'true' : 'false');
+      a.style.maxHeight = openItem ? (a.scrollHeight + 'px') : null;
+    });
+  });
+  consultBtn.addEventListener('click', function(){
+    close();
+    var target = document.getElementById('cslOpenBtn');
+    if (target) target.click();
+    else location.hash = '#finale';
   });
 }
 
