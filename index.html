@@ -118,13 +118,21 @@
   .ocard .meta{color:var(--ink-soft);font-size:.84rem;margin-top:2px}
   .ocard .badges{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0 0}
   .ocard .badges span{font-size:.72rem;color:var(--ink);background:var(--base);border:.5px solid rgba(63,42,44,.1);padding:4px 9px;border-radius:30px}
-  .ocard .go{margin-top:14px;width:100%;text-align:center;background:var(--coral-deep);color:#fff;font-family:var(--body);font-weight:700;font-size:.96rem;padding:13px;border-radius:14px}
+  .ocard .badges .availability{font-weight:700}
+  .ocard .badges .availability.available{color:#2F6F4E;background:#E7F4EC;border-color:rgba(47,111,78,.16)}
+  .ocard .badges .availability.waitlist{color:#8A641A;background:#FFF3CC;border-color:rgba(138,100,26,.18)}
+  .ocard .badges .availability.closed{color:#6E625B;background:#ECE8E1;border-color:rgba(110,98,91,.16)}
+  .ocard .actions{display:flex;gap:8px;margin-top:14px}
+  .ocard .go{flex:1;text-align:center;text-decoration:none;font-family:var(--body);font-weight:700;font-size:.96rem;padding:13px 10px;border-radius:14px}
+  .ocard .go.primary{background:var(--coral-deep);color:#fff}
+  .ocard .go.secondary{background:#fff;color:var(--coral-deep);border:1.5px solid rgba(242,113,90,.32)}
+  .ocard .go.secondary:hover{background:#fff8f5}
 
   .search-foot{text-align:center;color:var(--ink-soft);font-size:.78rem;padding:6px 0 36px;line-height:1.6}
 
   .empty{text-align:center;color:var(--ink-soft);padding:60px 0;font-size:.96rem}
 
-  a:focus-visible{outline:3px solid var(--coral);outline-offset:3px;border-radius:8px}
+  a:focus-visible,.ocard:focus-visible{outline:3px solid var(--coral);outline-offset:3px;border-radius:8px}
 
   /* ══════════════════ PC 레이아웃 (768px 이상) ══════════════════ */
   @media (min-width:768px){
@@ -207,6 +215,11 @@
     carnival: 'template-carnival.html',
     gallery: 'template-gallery.html'
   };
+  const AVAILABILITY_LABELS = {
+    available: '빈자리 있음',
+    waitlist: '대기 문의',
+    closed: '정원 마감'
+  };
 
   const listEl    = document.getElementById('cardList');
   const headEl    = document.getElementById('resultsHead');
@@ -233,11 +246,33 @@
       const client = supabase.createClient(cfg.url, cfg.anonKey);
       const { data, error } = await client
         .from('centers')
-        .select('slug, name, region, address, badges, tags, director, template, card_image')
+        .select('id, slug, name, region, address, lat, lng, badges, tags, director, template, card_image, admissions(id)')
         .eq('status', 'published')
-        .order('name'); // 거리·품질이 아닌 중립 기준(이름순). 위치 검색은 추후 lat/lng 도입 시 거리순으로 교체.
+        .order('name'); // 위치 권한이 없을 때는 거리·품질이 아닌 중립 기준(이름순).
       if (error) throw error;
       centers = data || [];
+
+      const centerIds = centers.map(function(center){ return center.id; }).filter(Boolean);
+      if (centerIds.length) {
+        const classRes = await client
+          .from('classes')
+          .select('center_id, status')
+          .in('center_id', centerIds);
+        if (classRes.error) {
+          console.warn('classes load failed', classRes.error);
+        } else {
+          const classesByCenter = {};
+          (classRes.data || []).forEach(function(row){
+            if (!row.center_id) return;
+            if (!classesByCenter[row.center_id]) classesByCenter[row.center_id] = [];
+            classesByCenter[row.center_id].push(row);
+          });
+
+          centers.forEach(function(center){
+            center.availability = availabilityOf(classesByCenter[center.id]);
+          });
+        }
+      }
 
       function imagePathOf(center) {
         return center.card_image || (center.director && center.director.photo) || '';
@@ -307,7 +342,7 @@
   function renderResultsHead(query, count){
     headEl.innerHTML = query
       ? '<b>' + escapeHtml(query) + '</b><span>근처 어린이집·유치원 ' + count + '곳</span>'
-      : '<span>등록된 어린이집·유치원 ' + count + '곳</span>';
+      : '<span>' + (hasLocationDistances() ? '가까운 순 · ' : '') + '등록된 어린이집·유치원 ' + count + '곳</span>';
   }
 
   function render(list, query){
@@ -324,25 +359,98 @@
       var tagChips = (c.tags || [])
         .map(function(t){ return '<span>' + escapeHtml(t) + '</span>'; })
         .join('');
+      var availabilityChip = c.availability
+        ? '<span class="availability ' + c.availability + '">' + escapeHtml(AVAILABILITY_LABELS[c.availability]) + '</span>'
+        : '';
       var photo = c.card_image || (c.director && c.director.photo) || '';
       var locationText = [c.region, c.address].filter(Boolean).join(' · ');
+      var distanceText = typeof c.distanceKm === 'number' ? '약 ' + c.distanceKm.toFixed(1) + ' km' : '';
+      var metaText = [locationText, distanceText].filter(Boolean).join(' · ');
       var templateFile = TEMPLATE_FILES[c.template] || 'template-sunshine.html';
+      var homeUrl = templateFile + '?slug=' + encodeURIComponent(c.slug);
+      var admissionsUrl = 'admissions.html?slug=' + encodeURIComponent(c.slug);
+      var admissionsButton = (c.admissions || []).length
+        ? '<a class="go secondary" href="' + admissionsUrl + '">입학안내 보기</a>'
+        : '';
       return '' +
-        '<a class="ocard" href="' + templateFile + '?slug=' + encodeURIComponent(c.slug) + '">' +
+        '<article class="ocard" role="link" tabindex="0" data-href="' + homeUrl + '">' +
           '<div class="photo">' + (photo ? '<img src="' + photo + '" alt="' + escapeHtml(c.name) + '">' : '') + '</div>' +
           '<div class="body">' +
             '<div class="name">' + escapeHtml(c.name) + '</div>' +
-            '<div class="meta">' + escapeHtml(locationText) + '</div>' +
-            '<div class="badges">' + badgeChips + tagChips + '</div>' +
-            '<div class="go">홈페이지 보기</div>' +
+            '<div class="meta">' + escapeHtml(metaText) + '</div>' +
+            '<div class="badges">' + availabilityChip + badgeChips + tagChips + '</div>' +
+            '<div class="actions">' +
+              '<a class="go primary" href="' + homeUrl + '">홈페이지 보기</a>' +
+              admissionsButton +
+            '</div>' +
           '</div>' +
-        '</a>';
+        '</article>';
     }).join('');
+  }
+
+  function availabilityOf(classes){
+    if (!classes || classes.length === 0) return null;
+    if (classes.some(function(row){ return row.status === 'open'; })) return 'available';
+    if (classes.every(function(row){ return row.status === 'closed'; })) return 'closed';
+    return 'waitlist';
+  }
+
+  function toRad(deg){
+    return deg * Math.PI / 180;
+  }
+
+  function distanceKmBetween(aLat, aLng, bLat, bLng){
+    var earthKm = 6371;
+    var dLat = toRad(bLat - aLat);
+    var dLng = toRad(bLng - aLng);
+    var lat1 = toRad(aLat);
+    var lat2 = toRad(bLat);
+    var h = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(lat1) * Math.cos(lat2) *
+      Math.sin(dLng / 2) * Math.sin(dLng / 2);
+    return earthKm * 2 * Math.atan2(Math.sqrt(h), Math.sqrt(1 - h));
+  }
+
+  function hasLocationDistances(){
+    return centers.some(function(c){ return typeof c.distanceKm === 'number'; });
+  }
+
+  function sortByDistance(list){
+    return list.slice().sort(function(a, b){
+      var ad = typeof a.distanceKm === 'number' ? a.distanceKm : Number.POSITIVE_INFINITY;
+      var bd = typeof b.distanceKm === 'number' ? b.distanceKm : Number.POSITIVE_INFINITY;
+      return ad - bd;
+    });
+  }
+
+  function defaultList(){
+    return hasLocationDistances() ? sortByDistance(centers) : centers;
+  }
+
+  function applyUserLocation(position){
+    var coords = position && position.coords;
+    if (!coords) return;
+    centers.forEach(function(c){
+      var lat = Number(c.lat);
+      var lng = Number(c.lng);
+      if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
+      c.distanceKm = distanceKmBetween(coords.latitude, coords.longitude, lat, lng);
+    });
+    applyFilter();
+  }
+
+  function requestUserLocation(){
+    if (!navigator.geolocation) return;
+    navigator.geolocation.getCurrentPosition(applyUserLocation, function(){}, {
+      enableHighAccuracy: false,
+      timeout: 8000,
+      maximumAge: 300000
+    });
   }
 
   function applyFilter(){
     var q = input.value.trim().toLowerCase();
-    var filtered = !q ? centers : centers.filter(function(c){
+    var filtered = !q ? defaultList() : centers.filter(function(c){
       return (c.region || '').toLowerCase().includes(q) ||
              (c.address || '').toLowerCase().includes(q);
     });
@@ -351,11 +459,25 @@
   }
 
   buildChips();
-  render(centers, '');
+  render(defaultList(), '');
   syncChipActive();
+  requestUserLocation();
 
   input.addEventListener('input', applyFilter);
   searchBtn.addEventListener('click', applyFilter);
+  listEl.addEventListener('click', function(e){
+    if (e.target.closest('a')) return;
+    var card = e.target.closest('.ocard');
+    if (card && card.dataset.href) location.href = card.dataset.href;
+  });
+  listEl.addEventListener('keydown', function(e){
+    if (e.key !== 'Enter' && e.key !== ' ') return;
+    if (e.target.closest('a')) return;
+    var card = e.target.closest('.ocard');
+    if (!card || !card.dataset.href) return;
+    e.preventDefault();
+    location.href = card.dataset.href;
+  });
   chipsEl.addEventListener('click', function(e){
     var chip = e.target.closest('.chip');
     if (!chip) return;
