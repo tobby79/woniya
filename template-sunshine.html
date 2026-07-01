@@ -639,6 +639,34 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="topbar.js"></script>
 <script>
+// 모든 렌더 함수(async IIFE, initInteractions 등)가 공유하는 escape 헬퍼.
+// 최상단 스크립트 스코프에 둬야 initInteractions처럼 async IIFE 바깥에서 정의된
+// 함수에서도 클로저로 접근할 수 있다.
+const esc = (s) => {
+  if (s == null) return '';
+  return String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+};
+
+function escWithBr(text){
+  var normalized = (text || '').replace(/<br\s*\/?>/gi, '\n');
+  return esc(normalized).replace(/\n/g, '<br>');
+}
+
+function heroTitleHtml(title, accent, accentClass){
+  var titleHtml = escWithBr(title);
+  var accentHtml = escWithBr(accent);
+  if (!accentHtml) return titleHtml;
+  var hasBreak = /<br\s*\/?>|\r?\n/i.test(title || '') || /^\s*(?:<br\s*\/?>|\r?\n)/i.test(accent || '');
+  var joiner = hasBreak ? '' : (accentClass ? '<br>' : ' ');
+  var cls = accentClass ? ' class="' + accentClass + '"' : '';
+  return titleHtml + joiner + '<span' + cls + '>' + accentHtml + '</span>';
+}
+
 // center_media(행 단위)를 기존 haetsal.json 모양(day_story[]/album.items[]/teachers.items[])으로 되돌린다.
 // album/teachers의 eyebrow·title·sub는 아직 centers 테이블에 컬럼이 없어 고정 문구로 채운다.
 function mapRowToData(row){
@@ -777,7 +805,6 @@ function mapRowToData(row){
   }
 
   const $ = (id)=>document.getElementById(id);
-  const esc = (s)=> s==null ? '' : s; // 데모 데이터는 신뢰. 실서비스에선 정화 처리.
 
   // ── 상단바 / 메뉴 ──
   const c = data.center;
@@ -811,9 +838,9 @@ function mapRowToData(row){
   if (data.heroPhoto) $('hero').classList.add('has-photo');
   $('hero').innerHTML = `
     ${data.heroPhoto ? `<div class="hero-bg"><img alt="${esc(c.name)}" src="${esc(data.heroPhoto)}"></div>` : ''}
-    <div class="eyebrow reveal">${esc(h.eyebrow)}</div>
-    <h1 class="reveal">${esc(h.title)}<br><span class="glow">${esc(h.title_accent)}</span></h1>
-    <p class="reveal">${esc(h.subtitle)}</p>
+    <div class="eyebrow reveal">${escWithBr(h.eyebrow)}</div>
+    <h1 class="reveal">${heroTitleHtml(h.title, h.title_accent, 'glow')}</h1>
+    <p class="reveal">${escWithBr(h.subtitle)}</p>
     <nav class="cloud-menu reveal" aria-label="바로가기">${cloudMenu}</nav>`;
 
   // ── 원장 인사말 (미리보기 + 모달) ──
@@ -824,7 +851,7 @@ function mapRowToData(row){
   $('greeting').innerHTML = `
     <div class="badge reveal">${esc(d.badge)}</div>
     <div class="portrait reveal"><img alt="${esc(d.photo_alt)}" src="${esc(d.photo)}"></div>
-    <p class="director-preview reveal">${esc(msgPreview)}</p>
+    <p class="director-preview reveal">${escWithBr(msgPreview)}</p>
     <div class="sign reveal">${esc(d.sign_label)}<strong>${esc(d.sign_name)}</strong></div>
     <button type="button" class="director-more-btn reveal" id="directorModalOpenBtn">원장 인사말 더보기</button>`;
 
@@ -857,12 +884,12 @@ function mapRowToData(row){
   $('day').innerHTML = (data.day_story || []).map((m,i)=>`
     <section class="moment" data-time="${esc(m.slot)}">
       <div class="time reveal">${esc(m.time)}</div>
-      <div class="title reveal">${esc(m.title)}</div>
+      <div class="title reveal">${escWithBr(m.title)}</div>
       <div class="${frameCls[i]||'frame'} reveal">
         <img class="frame-img" alt="${esc(m.photo_alt)}" data-src="${esc(m.photo)}">
-        <div class="cap">${esc(m.caption)}</div>
+        <div class="cap">${escWithBr(m.caption)}</div>
       </div>
-      <p class="note reveal">${esc(m.note)}</p>
+      <p class="note reveal">${escWithBr(m.note)}</p>
     </section>`).join('');
 
   // ── 원 시설 (배지 + 썸네일 + 모달) ──
@@ -876,7 +903,7 @@ function mapRowToData(row){
     $('facilitiesSec').innerHTML = `
       <div class="section-eyebrow reveal">우리 원 시설</div>
       <h2 class="section-title reveal">안전하고 따뜻한 공간</h2>
-      <p class="fac-intro reveal" style="text-align:center;color:var(--ink-soft);font-size:.96rem;line-height:1.75;margin-bottom:8px">${esc(fac.intro)}</p>
+      <p class="fac-intro reveal" style="text-align:center;color:var(--ink-soft);font-size:.96rem;line-height:1.75;margin-bottom:8px">${escWithBr(fac.intro)}</p>
       <div class="fac-badges reveal">${badgesHtml}</div>
       <div class="fac-thumb-grid reveal">${thumbHtml}</div>
       <button type="button" class="fac-more-btn reveal" id="facilityModalOpenBtn">시설 전체 보기</button>`;
@@ -887,8 +914,8 @@ function mapRowToData(row){
   // ── 선생님 카드 ──
   const t = data.teachers;
   $('teachersSec').innerHTML = `
-    <div class="section-eyebrow reveal">${esc(t?.eyebrow)}</div>
-    <h2 class="section-title reveal">${esc(t?.title)}</h2>
+    <div class="section-eyebrow reveal">${escWithBr(t?.eyebrow)}</div>
+    <h2 class="section-title reveal">${escWithBr(t?.title)}</h2>
     <div class="cards">${(t?.items || []).map(tc=>`
       <div class="flip reveal" tabindex="0" role="button" aria-label="${esc(tc.name)} 카드 뒤집기">
         <div class="flip-inner">
@@ -900,7 +927,7 @@ function mapRowToData(row){
               <div class="tap">눌러서 한마디 보기</div>
             </div>
           </div>
-          <div class="face back">${esc(tc.message)}</div>
+          <div class="face back">${escWithBr(tc.message)}</div>
         </div>
       </div>`).join('')}</div>`;
 
@@ -914,14 +941,14 @@ function mapRowToData(row){
         <div class="prog-img">${img?`<img data-src="${esc(img.photo)}" alt="${esc(it.name)}">`:''}</div>
         <div class="prog-body">
           <div class="prog-name">${esc(it.name)}</div>
-          <div class="prog-desc">${esc(it.desc)}</div>
+          <div class="prog-desc">${escWithBr(it.desc)}</div>
         </div>
       </div>`;
     }).join('');
     $('programSec').innerHTML = `
       <div class="section-eyebrow reveal">교육프로그램</div>
       <h2 class="section-title reveal">우리 원의 교육</h2>
-      <p class="prog-intro reveal" style="text-align:center;color:var(--ink-soft);font-size:.96rem;line-height:1.75;margin-bottom:24px">${esc(prog.intro)}</p>
+      <p class="prog-intro reveal" style="text-align:center;color:var(--ink-soft);font-size:.96rem;line-height:1.75;margin-bottom:24px">${escWithBr(prog.intro)}</p>
       ${cardsHtml}
       <button type="button" class="prog-more-btn reveal" id="programModalOpenBtn">교육프로그램 전체 보기</button>`;
   } else {
@@ -931,25 +958,25 @@ function mapRowToData(row){
   // ── FAQ ──
   const f = data.faqs;
   $('faq').innerHTML = `
-    <div class="section-eyebrow reveal">${esc(f?.eyebrow)}</div>
-    <h2 class="section-title reveal">${esc(f?.title)}</h2>
+    <div class="section-eyebrow reveal">${escWithBr(f?.eyebrow)}</div>
+    <h2 class="section-title reveal">${escWithBr(f?.title)}</h2>
     <div class="faq-list">${(f?.items || []).map(it=>`
       <div class="faq-item reveal">
         <button class="faq-q" aria-expanded="false">${esc(it.q)}<span class="chev"></span></button>
-        <div class="faq-a"><p>${esc(it.a)}</p></div>
+        <div class="faq-a"><p>${escWithBr(it.a)}</p></div>
       </div>`).join('')}</div>`;
 
   // ── 마무리 ──
   const fin = data.finale || {};
   $('finale').innerHTML = `
-    <h2 class="reveal">${esc(fin.title)}</h2>
-    <p class="reveal">${esc(fin.subtitle)}</p>
+    <h2 class="reveal">${escWithBr(fin.title)}</h2>
+    <p class="reveal">${escWithBr(fin.subtitle)}</p>
     <button type="button" id="cslOpenBtn" class="btn-big reveal">${esc(fin.cta)}</button>`;
 
   // ── 푸터 ──
   $('footerEl').innerHTML = `
     <div class="demo-tag">${esc(data.footer?.tag)}</div>
-    <div>${esc(data.footer?.text)}</div>`;
+    <div>${escWithBr(data.footer?.text)}</div>`;
 
   document.title = `원이야 - ${esc(c.name) || '원이야'}`;
 
@@ -982,7 +1009,7 @@ function initInteractions(){
       if (d) {
         document.getElementById('directorModalMsg').textContent = (d.message || '').replace(/<br\s*\/?>/gi,'\n');
         var photoEl = document.getElementById('directorModalPhoto');
-        if (photoEl) photoEl.innerHTML = d.photo ? '<img alt="'+(d.photo_alt||'')+'" src="'+d.photo+'">' : '';
+        if (photoEl) photoEl.innerHTML = d.photo ? '<img alt="'+esc(d.photo_alt||'')+'" src="'+esc(d.photo || '')+'">' : '';
       }
       var mottoEl = document.getElementById('directorModalMotto');
       var valEl = document.getElementById('directorModalValues');
@@ -992,7 +1019,7 @@ function initInteractions(){
       }
       if (phil && valEl) {
         valEl.innerHTML = (phil.values||[]).map(function(v){
-          return '<span class="info-modal-value">'+v+'</span>';
+          return '<span class="info-modal-value">'+esc(v)+'</span>';
         }).join('');
       }
       overlay.classList.add('open');
@@ -1018,8 +1045,8 @@ function initInteractions(){
       document.getElementById('facilityList').innerHTML = (fac.items||[]).map(function(f, i){
         var img = albumImgs[i] || null;
         return '<div class="fac-modal-item">'
-          + (img ? '<div class="fm-img"><img src="'+img.photo+'" alt="'+f.name+'"></div>' : '')
-          + '<div class="fm-body"><div class="fm-name">'+f.name+'</div><div class="fm-desc">'+(f.desc||'')+'</div></div>'
+          + (img && img.photo ? '<div class="fm-img"><img src="'+esc(img.photo || '')+'" alt="'+esc(f.name)+'"></div>' : '')
+          + '<div class="fm-body"><div class="fm-name">'+esc(f.name)+'</div><div class="fm-desc">'+escWithBr(f.desc||'')+'</div></div>'
           + '</div>';
       }).join('');
       overlay.classList.add('open');
@@ -1045,8 +1072,8 @@ function initInteractions(){
       document.getElementById('programModalList').innerHTML = (prog.items||[]).map(function(it, i){
         var img = albumImgs[i+4] || albumImgs[i] || null;
         return '<div class="prog-modal-item">'
-          + (img ? '<div class="pm-img"><img src="'+img.photo+'" alt="'+it.name+'"></div>' : '')
-          + '<div class="pm-body"><div class="pm-name">'+it.name+'</div><div class="pm-desc">'+it.desc+'</div></div>'
+          + (img && img.photo ? '<div class="pm-img"><img src="'+esc(img.photo || '')+'" alt="'+esc(it.name)+'"></div>' : '')
+          + '<div class="pm-body"><div class="pm-name">'+esc(it.name)+'</div><div class="pm-desc">'+escWithBr(it.desc)+'</div></div>'
           + '</div>';
       }).join('');
       overlay.classList.add('open');

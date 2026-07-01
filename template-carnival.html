@@ -539,6 +539,34 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="topbar.js"></script>
 <script>
+// 모든 렌더 함수(async IIFE, initInteractions 등)가 공유하는 escape 헬퍼.
+// 최상단 스크립트 스코프에 둬야 initInteractions처럼 async IIFE 바깥에서 정의된
+// 함수에서도 클로저로 접근할 수 있다.
+const esc = (s) => {
+  if (s == null) return '';
+  return String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+};
+
+function escWithBr(text){
+  var normalized = (text || '').replace(/<br\s*\/?>/gi, '\n');
+  return esc(normalized).replace(/\n/g, '<br>');
+}
+
+function heroTitleHtml(title, accent, accentClass){
+  var titleHtml = escWithBr(title);
+  var accentHtml = escWithBr(accent);
+  if (!accentHtml) return titleHtml;
+  var hasBreak = /<br\s*\/?>|\r?\n/i.test(title || '') || /^\s*(?:<br\s*\/?>|\r?\n)/i.test(accent || '');
+  var joiner = hasBreak ? '' : (accentClass ? '<br>' : ' ');
+  var cls = accentClass ? ' class="' + accentClass + '"' : '';
+  return titleHtml + joiner + '<span' + cls + '>' + accentHtml + '</span>';
+}
+
 var SAMPLE_SPACES = [
   { name:'놀이방', tag:'신나는 공간', desc:'블록과 역할놀이로 상상력이 자라는 우리 반 아지트예요.', photo:null },
   { name:'바깥 놀이터', tag:'활동', desc:'마음껏 뛰놀 수 있는 안전한 모래밭과 미끄럼틀이 있어요.', photo:null },
@@ -649,7 +677,6 @@ function mapRowToData(row){
   }
 
   const $ = (id)=>document.getElementById(id);
-  const esc = (s)=> s==null ? '' : s;
   const c = data.center;
   // sunshine 기준 구조 통일: 공지·행사일정 제거 → 메뉴 필터. 하루(#day)·FAQ(#faq) 섹션 유지.
   // 시설 소개/교육프로그램(인페이지 섹션) + 입학안내/오시는 길(새 페이지) 런타임 주입
@@ -681,9 +708,9 @@ function mapRowToData(row){
   // 풍선 메뉴는 c.menu(통일된 메뉴)에서 생성 — 섹션 ID 일치 보장
   const balloonItems = (c.menu || []).filter(m=>!m.cta).map(m=>({ label:m.label, href:m.href }));
   const balloonMenu = balloonItems.map(b=>`
-    <a class="bln" href="${b.href}">
+    <a class="bln" href="${esc(b.href)}">
       <span class="bln-body"><span class="shine"></span></span>
-      <span class="bln-label">${b.label}</span>
+      <span class="bln-label">${esc(b.label)}</span>
       <span class="string"></span>
     </a>`).join('');
   if (data.heroPhoto) $('hero').classList.add('has-photo');
@@ -691,9 +718,9 @@ function mapRowToData(row){
     ${data.heroPhoto ? `<div class="hero-bg"><img alt="${esc(c.name)}" src="${esc(data.heroPhoto)}"></div>` : ''}
     <div class="confetti" aria-hidden="true"></div>
     <div class="bunting reveal">${bunting}</div>
-    <div class="eyebrow reveal">${esc(h.eyebrow)}</div>
-    <h1 class="reveal">${esc(h.title)}<br><span class="pop">${esc(h.title_accent)}</span></h1>
-    <p class="reveal">${esc(h.subtitle)}</p>
+    <div class="eyebrow reveal">${escWithBr(h.eyebrow)}</div>
+    <h1 class="reveal">${heroTitleHtml(h.title, h.title_accent, 'pop')}</h1>
+    <p class="reveal">${escWithBr(h.subtitle)}</p>
     <nav class="balloon-menu reveal" aria-label="바로가기">${balloonMenu}</nav>
     <div class="bounce-cue reveal"><span>아래로 입장!</span><span class="ball"></span></div>`;
 
@@ -706,7 +733,7 @@ function mapRowToData(row){
       <span class="notch l"></span><span class="notch r"></span>
       <div class="portrait"><img alt="${esc(d.photo_alt)}" src="${esc(d.photo)}"></div>
       <div class="badge">🎫 ${esc(d.badge)}</div>
-      <p class="msg">${esc(msgPreview)}</p>
+      <p class="msg">${escWithBr(msgPreview)}</p>
       <div class="sign">${esc(d.sign_label)}<strong>${esc(d.sign_name)}</strong></div>
       <button type="button" class="director-more-btn" id="directorModalOpenBtn">원장 인사말 더보기</button>
     </div>`;
@@ -745,7 +772,7 @@ function mapRowToData(row){
         <span class="eyebrow">우리 원 시설</span>
         <h2>안전하고 따뜻한 공간</h2>
       </div>
-      <p class="fac-intro reveal" style="text-align:center;color:var(--ink-soft);font-size:.96rem;line-height:1.75;margin-bottom:8px">${esc(fac.intro)}</p>
+      <p class="fac-intro reveal" style="text-align:center;color:var(--ink-soft);font-size:.96rem;line-height:1.75;margin-bottom:8px">${escWithBr(fac.intro)}</p>
       <div class="fac-badges reveal">${badgesHtml}</div>
       <div class="fac-thumb-grid reveal">${thumbHtml}</div>
       <button type="button" class="fac-more-btn reveal" id="facilityModalOpenBtn">시설 전체 보기</button>`;
@@ -764,13 +791,13 @@ function mapRowToData(row){
       <div class="flip-track" id="flipTrack">${SAMPLE_SPACES.map((sp,i)=>`
         <div class="page">
           <div class="photo">
-            ${sp.photo ? `<img decoding="async" alt="${sp.name}" data-src="${sp.photo}">` : `<div style="width:100%;height:100%;background:linear-gradient(135deg,#FFE0C8,#FFD0E0)"></div>`}
+            ${sp.photo ? `<img decoding="async" alt="${esc(sp.name)}" data-src="${esc(sp.photo)}">` : `<div style="width:100%;height:100%;background:linear-gradient(135deg,#FFE0C8,#FFD0E0)"></div>`}
             <div class="ride-no">${i+1}</div>
-            <div class="tagchip">${sp.tag}</div>
+            <div class="tagchip">${esc(sp.tag)}</div>
           </div>
           <div class="body">
-            <h3>${sp.name}</h3>
-            <p>${sp.desc}</p>
+            <h3>${esc(sp.name)}</h3>
+            <p>${escWithBr(sp.desc)}</p>
           </div>
         </div>`).join('')}</div>
     </div>
@@ -796,7 +823,7 @@ function mapRowToData(row){
         <div class="avatar"><img alt="${esc(tc.name)}" data-src="${esc(tc.photo)}"></div>
         <div class="name">${esc(tc.name)}</div>
         <div class="role">${esc(tc.role)}</div>
-        <div class="msg">${esc(tc.message)}</div>
+        <div class="msg">${escWithBr(tc.message)}</div>
       </div>`).join('')}</div>`;
 
   // 교육프로그램 (이미지 카드 + 모달)
@@ -809,7 +836,7 @@ function mapRowToData(row){
         <div class="prog-img">${img?`<img data-src="${esc(img.photo)}" alt="${esc(it.name)}">`:''}</div>
         <div class="prog-body">
           <div class="prog-name">${esc(it.name)}</div>
-          <div class="prog-desc">${esc(it.desc)}</div>
+          <div class="prog-desc">${escWithBr(it.desc)}</div>
         </div>
       </div>`;
     }).join('');
@@ -818,7 +845,7 @@ function mapRowToData(row){
         <span class="eyebrow" style="background:var(--mint)">교육프로그램</span>
         <h2>우리 원의 교육</h2>
       </div>
-      <p class="prog-intro reveal" style="text-align:center;color:var(--ink-soft);font-size:.96rem;line-height:1.75;margin-bottom:24px">${esc(prog.intro)}</p>
+      <p class="prog-intro reveal" style="text-align:center;color:var(--ink-soft);font-size:.96rem;line-height:1.75;margin-bottom:24px">${escWithBr(prog.intro)}</p>
       ${cardsHtml}
       <button type="button" class="prog-more-btn reveal" id="programModalOpenBtn">교육프로그램 전체 보기</button>`;
   } else {
@@ -834,16 +861,16 @@ function mapRowToData(row){
     </div>
     <div class="faq-list">${(f?.items || []).map(it=>`
       <div class="faq-item reveal"><button class="faq-q" aria-expanded="false">${esc(it.q)}<span class="chev"></span></button>
-        <div class="faq-a"><p>${esc(it.a)}</p></div></div>`).join('')}</div>`;
+        <div class="faq-a"><p>${escWithBr(it.a)}</p></div></div>`).join('')}</div>`;
 
   // 마무리
   const fin = data.finale || {};
   $('finale').innerHTML = `
-    <h2 class="reveal">${esc(fin.title)}</h2>
-    <p class="reveal">${esc(fin.subtitle)}</p>
+    <h2 class="reveal">${escWithBr(fin.title)}</h2>
+    <p class="reveal">${escWithBr(fin.subtitle)}</p>
     <button type="button" id="cslOpenBtn" class="btn-big reveal">${esc(fin.cta)}</button>`;
 
-  $('footerEl').innerHTML = `<div class="demo-tag">${esc(data.footer?.tag)}</div><div>${esc(data.footer?.text)}</div>`;
+  $('footerEl').innerHTML = `<div class="demo-tag">${esc(data.footer?.tag)}</div><div>${escWithBr(data.footer?.text)}</div>`;
   document.title = `원이야 - ${esc(c.name) || '원이야'}`;
 
   window.__directorData__ = c.director;
@@ -872,13 +899,13 @@ function initInteractions(pageCount){
       if (d) {
         document.getElementById('directorModalMsg').textContent = (d.message || '').replace(/<br\s*\/?>/gi,'\n');
         var photoEl = document.getElementById('directorModalPhoto');
-        if (photoEl) photoEl.innerHTML = d.photo ? '<img alt="'+(d.photo_alt||'')+'" src="'+d.photo+'">' : '';
+        if (photoEl) photoEl.innerHTML = d.photo ? '<img alt="'+esc(d.photo_alt||'')+'" src="'+esc(d.photo || '')+'">' : '';
       }
       var mottoEl = document.getElementById('directorModalMotto');
       var valEl = document.getElementById('directorModalValues');
       if (phil && mottoEl) { mottoEl.textContent = phil.motto || ''; mottoEl.hidden = !phil.motto; }
       if (phil && valEl) {
-        valEl.innerHTML = (phil.values||[]).map(function(v){ return '<span class="info-modal-value">'+v+'</span>'; }).join('');
+        valEl.innerHTML = (phil.values||[]).map(function(v){ return '<span class="info-modal-value">'+esc(v)+'</span>'; }).join('');
       }
       overlay.classList.add('open');
     }
@@ -903,8 +930,8 @@ function initInteractions(pageCount){
       document.getElementById('facilityList').innerHTML = (fac.items||[]).map(function(f, i){
         var img = albumImgs[i] || null;
         return '<div class="fac-modal-item">'
-          + (img ? '<div class="fm-img"><img src="'+img.photo+'" alt="'+f.name+'"></div>' : '')
-          + '<div class="fm-body"><div class="fm-name">'+f.name+'</div><div class="fm-desc">'+(f.desc||'')+'</div></div>'
+          + (img && img.photo ? '<div class="fm-img"><img src="'+esc(img.photo || '')+'" alt="'+esc(f.name)+'"></div>' : '')
+          + '<div class="fm-body"><div class="fm-name">'+esc(f.name)+'</div><div class="fm-desc">'+escWithBr(f.desc||'')+'</div></div>'
           + '</div>';
       }).join('');
       overlay.classList.add('open');
@@ -930,8 +957,8 @@ function initInteractions(pageCount){
       document.getElementById('programModalList').innerHTML = (prog.items||[]).map(function(it, i){
         var img = albumImgs[i+4] || albumImgs[i] || null;
         return '<div class="prog-modal-item">'
-          + (img ? '<div class="pm-img"><img src="'+img.photo+'" alt="'+it.name+'"></div>' : '')
-          + '<div class="pm-body"><div class="pm-name">'+it.name+'</div><div class="pm-desc">'+it.desc+'</div></div>'
+          + (img && img.photo ? '<div class="pm-img"><img src="'+esc(img.photo || '')+'" alt="'+esc(it.name)+'"></div>' : '')
+          + '<div class="pm-body"><div class="pm-name">'+esc(it.name)+'</div><div class="pm-desc">'+escWithBr(it.desc)+'</div></div>'
           + '</div>';
       }).join('');
       overlay.classList.add('open');
