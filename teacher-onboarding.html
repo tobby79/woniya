@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>원이야 - 선생님 초대 수락</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Gaegu:wght@700&family=Gowun+Dodum&display=swap" rel="stylesheet">
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<style>
+  :root{
+    --cream:#FBF6EE;
+    --ink:#403733;
+    --ink-soft:#6E625B;
+    --coral:#FF8A6B;
+    --coral-deep:#F2715A;
+    --sage:#9CB89A;
+    --paper:#FFFFFF;
+    --display:'Gowun Dodum',sans-serif;
+    --hand:'Gaegu',cursive;
+    --body:'Pretendard',sans-serif;
+  }
+
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{
+    min-height:100vh;
+    font-family:var(--body);
+    color:var(--ink);
+    background:var(--cream);
+    line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+  }
+  [hidden]{display:none!important}
+
+  .topbar{padding:18px 0}
+  .topbar-inner{max-width:560px;margin:0 auto;padding:0 22px;display:flex;align-items:center;justify-content:space-between}
+  .brand{font-family:var(--display);font-size:1.2rem;color:var(--ink);text-decoration:none;letter-spacing:-.5px}
+  .back-link{font-size:.85rem;color:var(--coral-deep);text-decoration:none;font-weight:700}
+
+  .wrap{max-width:480px;margin:0 auto;padding:46px 22px 70px}
+  .section-eyebrow{font-family:var(--hand);font-size:1.15rem;color:var(--sage);font-weight:700;text-align:center}
+  .section-title{font-family:var(--display);font-size:1.72rem;margin:8px 0 22px;letter-spacing:-.5px;line-height:1.38;text-align:center}
+  .lead{color:var(--ink-soft);font-size:.95rem;text-align:center;margin-bottom:24px}
+  .panel{background:var(--paper);border-radius:24px;padding:26px;box-shadow:0 18px 44px -22px rgba(120,80,60,.35)}
+  .field{margin-bottom:16px}
+  label{display:block;font-size:.86rem;font-weight:700;color:var(--ink-soft);margin-bottom:6px}
+  input[type=password]{
+    width:100%;border:1.5px solid #f1e9e0;border-radius:14px;padding:13px 16px;
+    font-family:var(--body);font-size:.98rem;color:var(--ink);background:var(--cream);
+    outline:none;transition:border-color .2s ease;
+  }
+  input:focus{border-color:var(--coral)}
+  .btn{
+    display:inline-flex;align-items:center;justify-content:center;width:100%;border:none;
+    border-radius:30px;padding:14px;background:var(--coral);color:#fff;font-weight:700;
+    font-size:1rem;cursor:pointer;transition:transform .2s ease,box-shadow .2s ease;
+    box-shadow:0 14px 28px -10px var(--coral-deep);
+  }
+  .btn:hover{transform:translateY(-2px)}
+  .btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+  .btn.ghost{background:transparent;color:var(--ink-soft);box-shadow:none;border:1.5px solid #e7dccf}
+  .msg{margin-top:14px;font-size:.88rem;text-align:center;color:var(--ink-soft)}
+  .msg.error{color:#D9534F}
+  .msg.ok{color:var(--sage)}
+  .result-title{font-family:var(--display);font-size:1.28rem;text-align:center;margin-bottom:10px}
+  .result-desc{text-align:center;color:var(--ink-soft);font-size:.94rem;line-height:1.7}
+  .result-actions{margin-top:22px}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="index.html">원이야</a>
+    <a class="back-link" href="index.html">홈으로</a>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="section-eyebrow">선생님 초대</div>
+  <h1 class="section-title">초대를 확인하고<br>비밀번호를 설정해주세요</h1>
+  <p class="lead" id="leadText">초대 링크 확인 중입니다.</p>
+
+  <section class="panel" id="loadingPanel">
+    <p class="msg">세션을 확인하고 있어요.</p>
+  </section>
+
+  <section class="panel" id="passwordPanel" hidden>
+    <form id="passwordForm">
+      <div class="field">
+        <label for="password">새 비밀번호</label>
+        <input type="password" id="password" required minlength="6" autocomplete="new-password">
+      </div>
+      <div class="field">
+        <label for="passwordConfirm">새 비밀번호 확인</label>
+        <input type="password" id="passwordConfirm" required minlength="6" autocomplete="new-password">
+      </div>
+      <button type="submit" class="btn" id="passwordSubmit">비밀번호 설정하기</button>
+      <div class="msg error" id="passwordMsg"></div>
+    </form>
+  </section>
+
+  <section class="panel" id="resultPanel" hidden>
+    <div class="result-title" id="resultTitle"></div>
+    <p class="result-desc" id="resultDesc"></p>
+    <div class="result-actions">
+      <button type="button" class="btn ghost" id="classManageBtn" disabled>반 관리 화면 준비 중</button>
+    </div>
+  </section>
+</main>
+
+<script src="supabase-config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+(function(){
+  var cfg = window.__SUPABASE_CONFIG__;
+  var client = supabase.createClient(cfg.url, cfg.anonKey);
+
+  var leadText = document.getElementById('leadText');
+  var loadingPanel = document.getElementById('loadingPanel');
+  var passwordPanel = document.getElementById('passwordPanel');
+  var resultPanel = document.getElementById('resultPanel');
+  var passwordForm = document.getElementById('passwordForm');
+  var passwordInput = document.getElementById('password');
+  var passwordConfirmInput = document.getElementById('passwordConfirm');
+  var passwordSubmit = document.getElementById('passwordSubmit');
+  var passwordMsg = document.getElementById('passwordMsg');
+  var resultTitle = document.getElementById('resultTitle');
+  var resultDesc = document.getElementById('resultDesc');
+
+  function esc(s){
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){
+      return ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' })[c];
+    });
+  }
+
+  function escWithBr(s){
+    return esc(s).replace(/\r?\n/g, '<br>');
+  }
+
+  function showPanel(panel){
+    loadingPanel.hidden = panel !== loadingPanel;
+    passwordPanel.hidden = panel !== passwordPanel;
+    resultPanel.hidden = panel !== resultPanel;
+  }
+
+  function showInvalid(message){
+    leadText.textContent = '초대 링크를 확인할 수 없습니다.';
+    resultTitle.textContent = '유효하지 않은 접근입니다';
+    resultDesc.innerHTML = escWithBr(message || '초대 이메일의 링크로 다시 접속해주세요.');
+    showPanel(resultPanel);
+  }
+
+  async function classNamesFor(ids){
+    if (!ids.length) return [];
+    var res = await client.from('classes').select('id,name,age_label').in('id', ids);
+    if (res.error || !res.data) return [];
+    return res.data.map(function(row){
+      if (row.name && row.age_label) return row.name + ' · ' + row.age_label;
+      return row.name || row.age_label || '이름 없는 반';
+    });
+  }
+
+  async function acceptInvite(){
+    var rpcRes = await client.rpc('accept_teacher_invite');
+    if (rpcRes.error) {
+      leadText.textContent = '초대 연결 중 문제가 생겼습니다.';
+      resultTitle.textContent = '연결하지 못했습니다';
+      resultDesc.innerHTML = escWithBr(rpcRes.error.message);
+      showPanel(resultPanel);
+      return;
+    }
+
+    var linked = rpcRes.data && Array.isArray(rpcRes.data.linked_classes)
+      ? rpcRes.data.linked_classes
+      : [];
+
+    if (!linked.length) {
+      leadText.textContent = '확인된 초대가 없습니다.';
+      resultTitle.textContent = '유효한 초대를 찾을 수 없습니다';
+      resultDesc.textContent = '원장님께 다시 초대를 요청해주세요.';
+      showPanel(resultPanel);
+      return;
+    }
+
+    var names = await classNamesFor(linked);
+    leadText.textContent = '초대 연결이 완료되었습니다.';
+    if (linked.length === 1) {
+      resultTitle.textContent = (names[0] || '해당 반') + ' 선생님으로 연결되었습니다';
+    } else {
+      resultTitle.textContent = linked.length + '개 반의 선생님으로 연결되었습니다';
+    }
+    resultDesc.textContent = '반 관리 화면은 곧 준비됩니다. 준비가 끝나면 이곳에서 바로 이동할 수 있어요.';
+    showPanel(resultPanel);
+  }
+
+  async function init(){
+    showPanel(loadingPanel);
+    var res = await client.auth.getSession();
+    var session = res.data ? res.data.session : null;
+    if (!session) {
+      showInvalid('유효하지 않은 접근입니다. 초대 이메일의 링크로 다시 접속해주세요.');
+      return;
+    }
+
+    leadText.textContent = '초대 계정의 비밀번호를 먼저 설정해주세요.';
+    showPanel(passwordPanel);
+  }
+
+  passwordForm.addEventListener('submit', async function(e){
+    e.preventDefault();
+    passwordMsg.textContent = '';
+
+    var password = passwordInput.value;
+    var confirm = passwordConfirmInput.value;
+    if (password !== confirm) {
+      passwordMsg.textContent = '비밀번호가 서로 일치하지 않습니다.';
+      return;
+    }
+
+    passwordSubmit.disabled = true;
+    passwordMsg.textContent = '비밀번호를 설정하는 중입니다.';
+    passwordMsg.className = 'msg';
+
+    var res = await client.auth.updateUser({ password: password });
+    if (res.error) {
+      passwordSubmit.disabled = false;
+      passwordMsg.innerHTML = escWithBr(res.error.message);
+      passwordMsg.className = 'msg error';
+      return;
+    }
+
+    passwordMsg.textContent = '';
+    await acceptInvite();
+    passwordSubmit.disabled = false;
+  });
+
+  init().catch(function(err){
+    showInvalid(err && err.message ? err.message : String(err));
+  });
+})();
+</script>
+</body>
+</html>
