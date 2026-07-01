@@ -134,6 +134,13 @@
   }
   .upload-zone.profile-upload.has-photo:hover::after{opacity:1}
   .upload-zone.profile-upload .photo-remove-btn{top:-6px;right:-6px}
+  .hero-upload-field{margin-bottom:22px}
+  .upload-zone.hero-upload{
+    min-height:0;aspect-ratio:21/9;
+    padding:24px 20px;border-radius:18px;
+    display:flex;align-items:center;justify-content:center;flex-direction:column;
+  }
+  .upload-zone.hero-upload .upload-icon{font-size:2.2rem}
   .profile-upload-caption,.upload-caption{
     margin-top:8px;font-size:.78rem;color:var(--ink-soft);opacity:.72;
     line-height:1.35;
@@ -309,60 +316,58 @@
     <!-- 탭1: 기본 정보 -->
     <div class="tab-panel active" data-panel="basic">
       <!-- 원 정보 편집 -->
-      <div class="panel" id="centerPanel" hidden>
+      <div id="centerPanel" hidden>
         <form id="saveForm">
-          <div class="field">
-            <label for="f-name">원 이름</label>
-            <input type="text" id="f-name" required>
-          </div>
-          <div class="field">
-            <label for="f-intro">소개</label>
-            <textarea id="f-intro" placeholder="우리 원을 한 줄로 소개해주세요"></textarea>
-          </div>
-          <div class="field">
-            <label for="f-address">주소</label>
-            <input type="text" id="f-address">
-          </div>
-          <div class="field">
-            <label for="f-hours">운영시간</label>
-            <input type="text" id="f-hours" placeholder="예: 07:30 ~ 19:30">
-          </div>
-          <div style="margin-top:26px;margin-bottom:18px">
-            <label>원 현황</label>
-            <div class="fac-stat-list" id="facStatList"></div>
-            <button type="button" class="btn ghost" id="addFacStatBtn" style="width:auto;margin-top:10px">+ 항목 추가</button>
-          </div>
-          <button type="submit" class="btn">저장</button>
-          <div class="msg ok" id="saveStatus"></div>
-        </form>
-      </div>
+          <div class="panel">
 
-      <!-- 사진 관리 -->
-      <div id="photoSection" hidden>
-        <div class="section-eyebrow" style="margin-top:40px">사진 관리</div>
-        <h2 class="section-title">원 사진 올리기</h2>
-        <div class="panel">
+            <div class="hero-upload-field" id="photoSection" hidden>
+              <label>대표 사진</label>
+              <div class="upload-zone hero-upload" id="uploadZone">
+                <div class="upload-icon">+</div>
+                <div class="upload-hint">
+                  <strong>클릭하거나 사진을 여기에 드래그</strong><br>
+                  JPG · PNG · WebP · 최대 10MB
+                </div>
+                <input type="file" id="fileInput" accept="image/jpeg,image/png,image/webp" multiple>
+              </div>
+              <div class="upload-caption">이미지는 업로드 즉시 반영됩니다. 수정하려면 사진을 클릭해서 바로 교체해주세요.</div>
 
-          <!-- 드래그앤드롭 업로드 존 -->
-          <div class="upload-zone" id="uploadZone">
-            <div class="upload-icon">+</div>
-            <div class="upload-hint">
-              <strong>클릭하거나 사진을 여기에 드래그</strong><br>
-              JPG · PNG · WebP · 최대 10MB
+              <!-- 진행바 -->
+              <div class="upload-progress" id="uploadProgress">
+                <div class="progress-bar-wrap"><div class="progress-bar" id="progressBar"></div></div>
+                <div class="progress-label" id="progressLabel">준비 중...</div>
+              </div>
+
+              <div class="msg error" id="uploadError" style="margin-top:10px"></div>
             </div>
-            <input type="file" id="fileInput" accept="image/jpeg,image/png,image/webp" multiple>
+
+            <div class="field">
+              <label for="f-name">원 이름</label>
+              <input type="text" id="f-name" required>
+            </div>
+            <div class="field">
+              <label for="f-intro">소개</label>
+              <textarea id="f-intro" placeholder="우리 원을 한 줄로 소개해주세요"></textarea>
+            </div>
+            <div class="field">
+              <label for="f-address">주소</label>
+              <input type="text" id="f-address">
+            </div>
+            <div class="field">
+              <label for="f-hours">운영시간</label>
+              <input type="text" id="f-hours" placeholder="예: 07:30 ~ 19:30">
+            </div>
+            <div style="margin-top:26px;margin-bottom:18px">
+              <label>원 현황</label>
+              <div class="fac-stat-list" id="facStatList"></div>
+              <button type="button" class="btn ghost" id="addFacStatBtn" style="width:auto;margin-top:10px">+ 항목 추가</button>
+            </div>
           </div>
-          <div class="upload-caption">이미지는 업로드 즉시 반영됩니다. 수정하려면 사진을 클릭해서 바로 교체해주세요.</div>
-
-          <!-- 진행바 -->
-          <div class="upload-progress" id="uploadProgress">
-            <div class="progress-bar-wrap"><div class="progress-bar" id="progressBar"></div></div>
-            <div class="progress-label" id="progressLabel">준비 중...</div>
+          <div class="tab-save-sticky">
+            <button type="submit" class="btn">저장</button>
+            <div class="msg ok" id="saveStatus"></div>
           </div>
-
-          <div class="msg error" id="uploadError" style="margin-top:10px"></div>
-
-        </div>
+        </form>
       </div>
     </div>
 
@@ -411,7 +416,9 @@
           <label for="i-values">교육가치 — 쉼표로 구분</label>
           <input type="text" id="i-values" placeholder="예: 존중, 창의, 사랑">
         </div>
+      </div>
 
+      <div class="tab-save-sticky">
         <button type="button" class="btn" id="introSaveBtn">저장</button>
         <div class="msg" id="introSaveStatus"></div>
       </div>
