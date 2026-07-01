@@ -120,16 +120,20 @@
   .upload-zone .photo-remove-btn:hover{background:rgba(217,83,79,.9)}
   .upload-zone.profile-upload{
     width:132px;height:132px;min-height:132px;border-radius:50%;
-    padding:18px;margin-top:4px;
+    padding:18px;margin-top:4px;overflow:visible;
     display:flex;align-items:center;justify-content:center;flex-direction:column;
   }
   .upload-zone.profile-upload.has-photo{padding:0}
   .upload-zone.profile-upload .upload-hint{font-size:.74rem;line-height:1.35}
-  .upload-zone.profile-upload .replace-badge{
-    bottom:0;width:100%;border-radius:0;padding:7px 8px;font-size:.72rem;
-    background:rgba(64,55,51,.74);
+  .upload-zone.profile-upload .upload-photo-img{border-radius:50%}
+  .upload-zone.profile-upload.has-photo::after{
+    content:'✎';position:absolute;inset:0;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    background:rgba(0,0,0,.22);color:#fff;font-size:1.25rem;font-weight:700;
+    opacity:0;transition:opacity .15s ease;pointer-events:none;
   }
-  .upload-zone.profile-upload .photo-remove-btn{top:4px;right:4px}
+  .upload-zone.profile-upload.has-photo:hover::after{opacity:1}
+  .upload-zone.profile-upload .photo-remove-btn{top:-6px;right:-6px}
 
   /* 업로드 진행바 */
   .upload-progress{margin-top:14px;display:none}
@@ -722,10 +726,12 @@
     img.alt = '';
     zone.appendChild(img);
 
-    var badge = document.createElement('span');
-    badge.className = 'replace-badge';
-    badge.textContent = '클릭해서 교체';
-    zone.appendChild(badge);
+    if (!zone.classList.contains('profile-upload')) {
+      var badge = document.createElement('span');
+      badge.className = 'replace-badge';
+      badge.textContent = '클릭해서 교체';
+      zone.appendChild(badge);
+    }
 
     var del = document.createElement('button');
     del.type = 'button';
