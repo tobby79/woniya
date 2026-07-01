@@ -252,6 +252,11 @@
   .status-pill.empty{background:#FFF1EA;color:var(--coral-deep)}
   .invite-history-list{display:flex;flex-direction:column;gap:10px;margin-top:12px}
   .invite-history-email{font-weight:800;color:var(--ink);word-break:break-all}
+  .parent-code-box{margin-top:12px;background:#fff8f5;border:1.5px solid #ffe1d6;border-radius:18px;padding:16px;text-align:center}
+  .parent-code-value{font-family:var(--display);font-size:1.7rem;font-weight:800;letter-spacing:.08em;color:var(--coral-deep);word-break:break-all}
+  .parent-code-note{margin-top:5px;font-size:.82rem;color:var(--ink-soft)}
+  .class-subsection{margin-top:20px}
+  .parent-id{font-size:.82rem;color:var(--ink-soft);word-break:break-all}
   .modal-backdrop{position:fixed;inset:0;z-index:80;background:rgba(64,55,51,.42);display:flex;align-items:center;justify-content:center;padding:22px}
   .modal-panel{width:min(100%,520px);max-height:calc(100vh - 44px);overflow:auto;background:var(--paper);border-radius:24px;padding:24px;box-shadow:0 24px 60px -24px rgba(64,55,51,.48)}
   .modal-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:18px}
@@ -763,11 +768,15 @@
   var programTabLoaded = false;
   var classRows = [];
   var teacherInviteRows = [];
+  var parentInviteRows = [];
+  var parentEnrollmentRows = [];
   var selectedTeacherClassId = null;
 
   var TYPE_LABELS = { hero:'대표', day_story:'하루', teacher:'교사', facility:'시설' };
   var KIND_LABELS = { consult:'상담', waiting:'대기', info_session:'설명회' };
   var TEACHER_INVITE_STATUS_LABELS = { pending:'대기중', accepted:'수락됨', revoked:'취소됨' };
+  var CLASS_INVITE_STATUS_LABELS = { active:'활성', expired:'만료', revoked:'폐기' };
+  var CLASS_ENROLLMENT_STATUS_LABELS = { pending:'승인 대기', approved:'승인됨', rejected:'거절됨' };
   var TEMPLATE_FILES = {
     sunshine: 'template-sunshine.html',
     forest: 'template-forest.html',
@@ -1867,8 +1876,28 @@
     return teacherInviteRows.filter(function(row){ return row.class_id === classId; });
   }
 
+  function parentInvitesForClass(classId){
+    return parentInviteRows.filter(function(row){ return row.class_id === classId; });
+  }
+
+  function parentEnrollmentsForClass(classId){
+    return parentEnrollmentRows.filter(function(row){ return row.class_id === classId; });
+  }
+
+  function activeParentInviteForClass(classId){
+    return parentInvitesForClass(classId).find(function(row){ return row.status === 'active'; });
+  }
+
   function hasPendingInvite(classId){
     return invitesForClass(classId).some(function(row){ return row.status === 'pending'; });
+  }
+
+  function classInviteStatusLabel(status){
+    return CLASS_INVITE_STATUS_LABELS[status] || status || '';
+  }
+
+  function enrollmentStatusLabel(status){
+    return CLASS_ENROLLMENT_STATUS_LABELS[status] || status || '';
   }
 
   function renderClassCard(row){
@@ -1880,6 +1909,7 @@
     var action = row.teacher_id
       ? ''
       : '<button type="button" class="btn ghost class-invite-btn" data-class-id="' + esc(row.id) + '">선생님 초대</button>';
+    var parentCodeAction = '<button type="button" class="btn ghost parent-code-btn" data-class-id="' + esc(row.id) + '">초대 코드 발급</button>';
 
     return '<div class="class-card' + (isSelected ? ' active' : '') + '" data-class-id="' + esc(row.id) + '">' +
       '<div class="class-card-head">' +
@@ -1887,7 +1917,7 @@
           '<div class="class-card-title">' + esc(classTitle(row)) + '</div>' +
           '<div class="class-card-meta">' + esc(classMeta(row) || '반 정보를 확인해 주세요') + '</div>' +
         '</div>' +
-        '<div class="class-card-actions">' + badge + action + '</div>' +
+        '<div class="class-card-actions">' + badge + action + parentCodeAction + '</div>' +
       '</div>' +
     '</div>';
   }
@@ -1911,6 +1941,42 @@
     '</div>';
   }
 
+  function renderParentInviteHistory(row){
+    var when = row.created_at ? new Date(row.created_at).toLocaleString('ko-KR') : '';
+    return '<div class="invite-history-card">' +
+      '<div class="invite-history-row">' +
+        '<div>' +
+          '<div class="invite-history-email">' + esc(row.code) + '</div>' +
+          '<div class="invite-history-meta">' + esc(when) + '</div>' +
+        '</div>' +
+        '<div class="class-card-actions">' +
+          '<span class="status-pill ' + esc(row.status === 'active' ? 'assigned' : inviteStatusClass(row.status)) + '">' + esc(classInviteStatusLabel(row.status)) + '</span>' +
+          (row.status === 'active' ? '<button type="button" class="btn ghost copy-parent-code-btn" data-code="' + esc(row.code) + '">복사하기</button>' : '') +
+        '</div>' +
+      '</div>' +
+    '</div>';
+  }
+
+  function renderParentEnrollment(row){
+    var when = row.requested_at ? new Date(row.requested_at).toLocaleString('ko-KR') : '';
+    var actions = row.status === 'pending'
+      ? '<button type="button" class="btn ghost enrollment-approve-btn" data-enrollment-id="' + esc(row.id) + '">승인</button>' +
+        '<button type="button" class="btn ghost enrollment-reject-btn" data-enrollment-id="' + esc(row.id) + '">거절</button>'
+      : '';
+    return '<div class="invite-history-card">' +
+      '<div class="invite-history-row">' +
+        '<div>' +
+          '<div class="parent-id">학부모 ID: ' + esc(row.parent_id) + '</div>' +
+          '<div class="invite-history-meta">' + esc(when) + '</div>' +
+        '</div>' +
+        '<div class="class-card-actions">' +
+          '<span class="status-pill ' + esc(row.status === 'pending' ? 'pending' : inviteStatusClass(row.status)) + '">' + esc(enrollmentStatusLabel(row.status)) + '</span>' +
+          actions +
+        '</div>' +
+      '</div>' +
+    '</div>';
+  }
+
   function renderClassInviteDetail(){
     var row = classRows.find(function(item){ return item.id === selectedTeacherClassId; });
     if (!row) {
@@ -1920,9 +1986,12 @@
     }
 
     var invites = invitesForClass(row.id);
+    var parentInvites = parentInvitesForClass(row.id);
+    var pendingEnrollments = parentEnrollmentsForClass(row.id).filter(function(item){ return item.status === 'pending'; });
     var action = row.teacher_id
       ? '<span class="status-pill assigned">선생님 배정됨</span>'
       : '<button type="button" class="btn ghost class-invite-btn" data-class-id="' + esc(row.id) + '">선생님 초대</button>';
+    var parentAction = '<button type="button" class="btn ghost parent-code-btn" data-class-id="' + esc(row.id) + '">초대 코드 발급</button>';
 
     classInviteDetail.hidden = false;
     classInviteDetail.innerHTML =
@@ -1932,13 +2001,25 @@
             '<div class="class-detail-title">' + esc(classTitle(row)) + '</div>' +
             '<div class="class-detail-meta">' + esc(classMeta(row) || '반 정보를 확인해 주세요') + '</div>' +
           '</div>' +
-          '<div class="class-detail-actions">' + action + '</div>' +
+          '<div class="class-detail-actions">' + action + parentAction + '</div>' +
         '</div>' +
-        '<div style="margin-top:18px">' +
-          '<label>초대 이력</label>' +
+        '<div class="class-subsection">' +
+          '<label>선생님 초대 이력</label>' +
           (invites.length
             ? '<div class="invite-history-list">' + invites.map(renderInviteHistory).join('') + '</div>'
-            : '<div class="no-center" style="padding:18px 0">아직 초대 이력이 없습니다.</div>') +
+            : '<div class="no-center" style="padding:18px 0">아직 선생님 초대 이력이 없습니다.</div>') +
+        '</div>' +
+        '<div class="class-subsection">' +
+          '<label>학부모 초대 코드 이력</label>' +
+          (parentInvites.length
+            ? '<div class="invite-history-list">' + parentInvites.map(renderParentInviteHistory).join('') + '</div>'
+            : '<div class="no-center" style="padding:18px 0">아직 발급된 학부모 초대 코드가 없습니다.</div>') +
+        '</div>' +
+        '<div class="class-subsection">' +
+          '<label>학부모 승인 대기</label>' +
+          (pendingEnrollments.length
+            ? '<div class="invite-history-list">' + pendingEnrollments.map(renderParentEnrollment).join('') + '</div>'
+            : '<div class="no-center" style="padding:18px 0">승인 대기 중인 학부모가 없습니다.</div>') +
         '</div>' +
       '</div>';
   }
@@ -1977,6 +2058,8 @@
 
     classRows = classRes.data || [];
     teacherInviteRows = [];
+    parentInviteRows = [];
+    parentEnrollmentRows = [];
 
     if (classRows.length) {
       var ids = classRows.map(function(row){ return row.id; });
@@ -1993,6 +2076,34 @@
         return;
       }
       teacherInviteRows = inviteRes.data || [];
+
+      var parentInviteRes = await client.from('class_invites')
+        .select('id,class_id,code,status,created_at,expires_at')
+        .in('class_id', ids)
+        .order('created_at', { ascending: false });
+
+      if (parentInviteRes.error) {
+        logAdminError('loadClassManager/parentInvites', parentInviteRes.error);
+        classManagerStatus.innerHTML = escWithBr('학부모 초대 코드 이력을 불러오지 못했습니다: ' + parentInviteRes.error.message);
+        classManagerStatus.className = 'msg error';
+        renderClassManager();
+        return;
+      }
+      parentInviteRows = parentInviteRes.data || [];
+
+      var enrollmentRes = await client.from('class_enrollments')
+        .select('id,class_id,parent_id,status,requested_at,approved_at')
+        .in('class_id', ids)
+        .order('requested_at', { ascending: false });
+
+      if (enrollmentRes.error) {
+        logAdminError('loadClassManager/enrollments', enrollmentRes.error);
+        classManagerStatus.innerHTML = escWithBr('학부모 연결 신청을 불러오지 못했습니다: ' + enrollmentRes.error.message);
+        classManagerStatus.className = 'msg error';
+        renderClassManager();
+        return;
+      }
+      parentEnrollmentRows = enrollmentRes.data || [];
     }
 
     classManagerStatus.textContent = '';
@@ -2047,11 +2158,105 @@
     return data;
   }
 
+  function generateInviteCode() {
+    var chars = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+    var code = '';
+    for (var i = 0; i < 8; i++) {
+      code += chars[Math.floor(Math.random() * chars.length)];
+    }
+    return code;
+  }
+
+  async function getCurrentSessionOrThrow(){
+    var sessionRes = await client.auth.getSession();
+    var session = sessionRes.data ? sessionRes.data.session : null;
+    if (!session) throw new Error('로그인 세션을 확인할 수 없습니다. 다시 로그인해 주세요.');
+    return session;
+  }
+
+  async function issueParentInviteCode(classId){
+    var session = await getCurrentSessionOrThrow();
+    var active = activeParentInviteForClass(classId);
+    if (active) {
+      var ok = confirm('이미 발급된 코드가 있습니다: ' + active.code + '\n재발급하면 기존 코드는 무효화됩니다.');
+      if (!ok) return;
+
+      var revokeRes = await client.from('class_invites')
+        .update({ status: 'revoked' })
+        .eq('id', active.id);
+      if (revokeRes.error) throw revokeRes.error;
+    }
+
+    var lastError = null;
+    for (var attempt = 0; attempt < 3; attempt++) {
+      var code = generateInviteCode();
+      var insertRes = await client.from('class_invites')
+        .insert({
+          class_id: classId,
+          code: code,
+          status: 'active',
+          created_by: session.user.id
+        })
+        .select()
+        .single();
+
+      if (!insertRes.error) {
+        await loadClassManagerTab();
+        classManagerStatus.innerHTML =
+          '<div class="parent-code-box">' +
+            '<div class="parent-code-value">' + esc(insertRes.data.code) + '</div>' +
+            '<div class="parent-code-note">학부모에게 이 코드를 전달해주세요.</div>' +
+            '<button type="button" class="btn ghost copy-parent-code-btn" data-code="' + esc(insertRes.data.code) + '" style="margin-top:12px">복사하기</button>' +
+          '</div>';
+        classManagerStatus.className = 'msg ok';
+        return insertRes.data;
+      }
+
+      lastError = insertRes.error;
+      if (insertRes.error.code !== '23505') break;
+    }
+
+    throw lastError || new Error('초대 코드 발급에 실패했습니다.');
+  }
+
+  async function copyInviteCode(code){
+    if (!code) return;
+    if (!navigator.clipboard || !navigator.clipboard.writeText) {
+      throw new Error('이 브라우저에서는 클립보드 복사를 지원하지 않습니다.');
+    }
+    await navigator.clipboard.writeText(code);
+  }
+
+  async function updateParentEnrollment(enrollmentId, status){
+    var session = await getCurrentSessionOrThrow();
+    var payload = {
+      status: status,
+      approved_at: new Date().toISOString(),
+      approved_by: session.user.id
+    };
+    var res = await client.from('class_enrollments')
+      .update(payload)
+      .eq('id', enrollmentId);
+    if (res.error) throw res.error;
+    await loadClassManagerTab();
+  }
+
   classManagerList.addEventListener('click', function(e){
     var inviteBtn = e.target.closest('.class-invite-btn');
     if (inviteBtn) {
       e.stopPropagation();
       openTeacherInviteModal(inviteBtn.dataset.classId, '');
+      return;
+    }
+
+    var parentCodeBtn = e.target.closest('.parent-code-btn');
+    if (parentCodeBtn) {
+      e.stopPropagation();
+      issueParentInviteCode(parentCodeBtn.dataset.classId).catch(function(err){
+        logAdminError('issueParentInviteCode', err);
+        classManagerStatus.innerHTML = escWithBr(errorMessage(err));
+        classManagerStatus.className = 'msg error';
+      });
       return;
     }
 
@@ -2068,11 +2273,68 @@
       return;
     }
 
+    var parentCodeBtn = e.target.closest('.parent-code-btn');
+    if (parentCodeBtn) {
+      issueParentInviteCode(parentCodeBtn.dataset.classId).catch(function(err){
+        logAdminError('issueParentInviteCode', err);
+        classManagerStatus.innerHTML = escWithBr(errorMessage(err));
+        classManagerStatus.className = 'msg error';
+      });
+      return;
+    }
+
+    var copyCodeBtn = e.target.closest('.copy-parent-code-btn');
+    if (copyCodeBtn) {
+      copyInviteCode(copyCodeBtn.dataset.code).then(function(){
+        classManagerStatus.textContent = '초대 코드를 복사했습니다.';
+        classManagerStatus.className = 'msg ok';
+      }).catch(function(err){
+        logAdminError('copyInviteCode', err);
+        classManagerStatus.innerHTML = escWithBr(errorMessage(err));
+        classManagerStatus.className = 'msg error';
+      });
+      return;
+    }
+
+    var approveBtn = e.target.closest('.enrollment-approve-btn');
+    if (approveBtn) {
+      updateParentEnrollment(approveBtn.dataset.enrollmentId, 'approved').catch(function(err){
+        logAdminError('approveParentEnrollment', err);
+        classManagerStatus.innerHTML = escWithBr(errorMessage(err));
+        classManagerStatus.className = 'msg error';
+      });
+      return;
+    }
+
+    var rejectBtn = e.target.closest('.enrollment-reject-btn');
+    if (rejectBtn) {
+      updateParentEnrollment(rejectBtn.dataset.enrollmentId, 'rejected').catch(function(err){
+        logAdminError('rejectParentEnrollment', err);
+        classManagerStatus.innerHTML = escWithBr(errorMessage(err));
+        classManagerStatus.className = 'msg error';
+      });
+      return;
+    }
+
     var resendBtn = e.target.closest('.class-resend-btn');
     if (resendBtn) {
       openTeacherInviteModal(resendBtn.dataset.classId, resendBtn.dataset.email || '');
     }
   });
+
+  classManagerStatus.addEventListener('click', function(e){
+    var copyCodeBtn = e.target.closest('.copy-parent-code-btn');
+    if (!copyCodeBtn) return;
+    copyInviteCode(copyCodeBtn.dataset.code).then(function(){
+      classManagerStatus.textContent = '초대 코드를 복사했습니다.';
+      classManagerStatus.className = 'msg ok';
+    }).catch(function(err){
+      logAdminError('copyInviteCode', err);
+      classManagerStatus.innerHTML = escWithBr(errorMessage(err));
+      classManagerStatus.className = 'msg error';
+    });
+  });
+
 
   teacherInviteForm.addEventListener('submit', async function(e){
     e.preventDefault();

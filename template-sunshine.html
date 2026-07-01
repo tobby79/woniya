@@ -855,8 +855,10 @@ function mapRowToData(row){
     extra.push({ href:'#programSec', label:'교육프로그램' });
     if (data.admission) extra.push({ href: 'admissions.html' + qs, label: '입학안내' });
     if ((c.directions_text || '').trim()) extra.push({ href: 'directions.html' + qs, label: '오시는 길' });
+    extra.push({ href: 'parent.html', label: '우리 반 미니홈피' });
     if (extra.length){
       var m = c.menu.slice();
+      m = m.filter(function(x){ return x.href !== 'parent.html'; });
       var i = m.findIndex(function(x){ return x.cta; });
       if (i < 0) i = m.length;
       c.menu = m.slice(0, i).concat(extra, m.slice(i));
