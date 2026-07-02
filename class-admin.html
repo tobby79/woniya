@@ -137,6 +137,9 @@
             <input type="hidden" id="diaryId">
             <div class="field"><label for="diaryTitle">제목</label><input type="text" id="diaryTitle" required></div>
             <div class="field"><label for="diaryBody">본문</label><textarea id="diaryBody" required></textarea></div>
+            <div class="notice-line">이 사진은 반 학부모 전원에게 공개됩니다</div>
+            <input type="file" id="diaryFileInput" accept="image/*" multiple hidden>
+            <div class="photo-grid" id="diaryPhotoGrid"></div>
             <button type="submit" class="btn" id="diarySubmit">일지 저장</button>
             <button type="button" class="btn ghost" id="diaryCancel" hidden style="margin-top:10px">수정 취소</button>
             <div class="msg" id="diaryMsg"></div>
@@ -268,6 +271,9 @@
   var selectedDate = toDateInput(new Date());
   var monthEvents = [];
   var currentAlbum = null;
+  var diaryDraftFiles = [];
+  var diaryDraftSeq = 0;
+  var currentDiaryMedia = [];
   var albumDraftFiles = [];
   var albumDraftSeq = 0;
 
@@ -402,31 +408,93 @@
 
   async function loadDiaryTab(){
     var rows = await loadPosts('diary');
-    renderPostList('diary', rows, byId('diaryList'));
+    await renderDiaryList(rows);
   }
   async function loadNoticeTab(){
     var rows = await loadPosts('notice');
     renderPostList('notice', rows, byId('noticeList'));
   }
 
+  async function renderDiaryList(rows){
+    var listEl = byId('diaryList');
+    if (!rows.length) {
+      listEl.innerHTML = '<div class="empty">아직 작성된 글이 없습니다.</div>';
+      return;
+    }
+    var ids = rows.map(function(row){ return row.id; });
+    var mediaRes = await client.from('class_media').select('*').in('post_id', ids).order('uploaded_at', { ascending:true });
+    if (mediaRes.error) {
+      listEl.innerHTML = '<div class="empty">' + esc(mediaRes.error.message) + '</div>';
+      return;
+    }
+    var media = mediaRes.data || [];
+    var html = [];
+    for (var i = 0; i < rows.length; i++) {
+      var row = rows[i];
+      var first = media.find(function(item){ return item.post_id === row.id; });
+      var thumb = '';
+      if (first) {
+        try { thumb = await signedUrl(first.url); }
+        catch (err) { thumb = ''; }
+      }
+      html.push('<article class="card">' +
+        (thumb ? '<div class="album-thumb"><img src="' + esc(thumb) + '" alt=""></div>' : '') +
+        '<div class="card-head"><div>' +
+          '<div class="card-title">' + esc(row.title || '제목 없음') + '</div>' +
+          '<div class="card-meta">' + esc(formatDateTime(row.created_at)) + '</div>' +
+        '</div></div>' +
+        '<div class="card-body">' + escWithBr(row.body || '') + '</div>' +
+        '<div class="actions">' +
+          '<button type="button" class="btn ghost" data-edit-post="' + esc(row.id) + '" data-type="diary">수정</button>' +
+          '<button type="button" class="btn danger" data-delete-post="' + esc(row.id) + '" data-type="diary">삭제</button>' +
+        '</div>' +
+      '</article>');
+    }
+    listEl.innerHTML = html.join('');
+  }
+
   async function saveSimplePost(type, ids){
     var msg = byId(ids.msg);
     setMsg(msg, '저장 중입니다.');
-    var id = byId(ids.id).value;
-    var payload = {
-      class_id: currentClass.id,
-      type: type,
-      title: byId(ids.title).value.trim(),
-      body: byId(ids.body).value.trim()
-    };
-    var res = id
-      ? await client.from('class_posts').update({ title:payload.title, body:payload.body }).eq('id', id).eq('class_id', currentClass.id)
-      : await client.from('class_posts').insert(payload);
-    if (res.error) { setMsg(msg, res.error.message, true); return; }
-    resetSimpleForm(ids, type === 'diary' ? '일지 저장' : '공지 저장');
-    setMsg(msg, '저장되었습니다.');
-    if (type === 'diary') await loadDiaryTab();
-    if (type === 'notice') await loadNoticeTab();
+    byId(ids.submit).disabled = true;
+    try {
+      var id = byId(ids.id).value;
+      var payload = {
+        class_id: currentClass.id,
+        type: type,
+        title: byId(ids.title).value.trim(),
+        body: byId(ids.body).value.trim()
+      };
+      var query = id
+        ? client.from('class_posts').update({ title:payload.title, body:payload.body }).eq('id', id).eq('class_id', currentClass.id).select('id').single()
+        : client.from('class_posts').insert(payload).select('id').single();
+      var res = await query;
+      if (res.error) { setMsg(msg, res.error.message, true); return; }
+      var postId = id || (res.data ? res.data.id : null);
+      if (!postId) { setMsg(msg, '저장 후 post_id를 확인하지 못했습니다.', true); return; }
+
+      if (type === 'diary' && diaryDraftFiles.length) {
+        var uploadResult = await uploadFilesToPost(postId, 'diary', diaryDraftFiles.map(function(item){ return item.file; }), msg);
+        removeUploadedDiaryDraftFiles(uploadResult.uploadedFiles);
+        await renderDiaryPhotoGrid(postId);
+        if (uploadResult.failed.length) {
+          byId(ids.id).value = postId;
+          byId(ids.submit).textContent = '수정 저장';
+          byId(ids.cancel).hidden = false;
+          setMsg(msg, '일지 내용은 저장되었지만 일부 사진 업로드에 실패했습니다.\n' + uploadResult.failed.map(function(item){ return item.name + ': ' + item.message; }).join('\n'), true);
+          return;
+        }
+      }
+
+      resetSimpleForm(ids, type === 'diary' ? '일지 저장' : '공지 저장');
+      setMsg(msg, '저장되었습니다.');
+      if (type === 'diary') await loadDiaryTab();
+      if (type === 'notice') await loadNoticeTab();
+    } catch (err) {
+      setMsg(msg, errorMessage(err), true);
+    } finally {
+      byId(ids.submit).disabled = false;
+    }
   }
 
   function resetSimpleForm(ids, submitText){
@@ -435,6 +503,10 @@
     byId(ids.body).value = '';
     byId(ids.submit).textContent = submitText;
     byId(ids.cancel).hidden = true;
+    if (ids.id === 'diaryId') {
+      currentDiaryMedia = [];
+      clearDiaryDraftFiles();
+    }
   }
 
   async function editSimplePost(id, type){
@@ -446,11 +518,15 @@
     byId(ids.body).value = res.data.body || '';
     byId(ids.submit).textContent = '수정 저장';
     byId(ids.cancel).hidden = false;
+    if (type === 'diary') {
+      clearDiaryDraftFiles();
+      await loadDiaryMedia(id);
+    }
   }
 
   async function deletePost(id, type){
     if (!confirm('삭제할까요?')) return;
-    if (type === 'album') {
+    if (type === 'album' || type === 'diary') {
       var mediaRes = await client.from('class_media').select('id,url').eq('class_id', currentClass.id).eq('post_id', id);
       if (mediaRes.error) { alert(errorMessage(mediaRes.error)); return; }
       var paths = (mediaRes.data || []).map(function(row){ return row.url; }).filter(Boolean);
@@ -467,6 +543,120 @@
     if (type === 'notice') await loadNoticeTab();
     if (type === 'event') await loadEventTab();
     if (type === 'album') await loadAlbumTab();
+  }
+
+  function diaryUploadTile(){
+    return '<div class="upload-zone" id="diaryUploadZone" tabindex="0" role="button" aria-label="일지 사진 선택">' +
+      '<div class="upload-icon">+</div>' +
+      '<div class="upload-hint"><strong>클릭하거나 사진을 여기에 드래그</strong><br>사진 없이 일지만 저장할 수도 있어요</div>' +
+    '</div>';
+  }
+
+  async function loadDiaryMedia(postId){
+    var res = await client.from('class_media')
+      .select('*')
+      .eq('class_id', currentClass.id)
+      .eq('post_id', postId)
+      .order('uploaded_at', { ascending:false });
+    if (res.error) {
+      setMsg(byId('diaryMsg'), res.error.message, true);
+      return;
+    }
+    currentDiaryMedia = res.data || [];
+    await renderDiaryPhotoGrid(postId);
+  }
+
+  async function renderDiaryPhotoGrid(postId){
+    var html = [diaryUploadTile()];
+    if (!currentDiaryMedia.length && !diaryDraftFiles.length) {
+      html.push('<div class="empty">사진 없이 일지만 저장할 수도 있어요.</div>');
+    }
+    for (var i = 0; i < currentDiaryMedia.length; i++) {
+      var url = '';
+      try { url = await signedUrl(currentDiaryMedia[i].url); }
+      catch (err) { url = ''; }
+      html.push('<div class="photo-item">' +
+        (url ? '<img src="' + esc(url) + '" alt="">' : '') +
+        '<button type="button" class="photo-del" title="사진 삭제" data-delete-diary-media="' + esc(currentDiaryMedia[i].id) + '" data-path="' + esc(currentDiaryMedia[i].url) + '">×</button>' +
+      '</div>');
+    }
+    diaryDraftFiles.forEach(function(item){
+      html.push('<div class="photo-item">' +
+        '<img src="' + esc(item.previewUrl) + '" alt="">' +
+        '<button type="button" class="photo-del" title="선택 취소" data-remove-diary-draft="' + esc(item.id) + '">×</button>' +
+      '</div>');
+    });
+    byId('diaryPhotoGrid').innerHTML = html.join('');
+    bindDiaryUploadZone();
+  }
+
+  function bindDiaryUploadZone(){
+    var zone = byId('diaryUploadZone');
+    var input = byId('diaryFileInput');
+    if (!zone || !input) return;
+    zone.addEventListener('click', function(){ input.click(); });
+    zone.addEventListener('keydown', function(e){
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        input.click();
+      }
+    });
+    zone.addEventListener('dragover', function(e){ e.preventDefault(); zone.classList.add('drag-over'); });
+    zone.addEventListener('dragleave', function(){ zone.classList.remove('drag-over'); });
+    zone.addEventListener('drop', function(e){
+      e.preventDefault();
+      zone.classList.remove('drag-over');
+      addDiaryDraftFiles(Array.from(e.dataTransfer.files));
+    });
+  }
+
+  function addDiaryDraftFiles(files){
+    files.filter(function(file){ return file && file.type && file.type.indexOf('image/') === 0; }).forEach(function(file){
+      diaryDraftSeq++;
+      diaryDraftFiles.push({
+        id: 'diary-draft-' + diaryDraftSeq,
+        file: file,
+        previewUrl: URL.createObjectURL(file)
+      });
+    });
+    renderDiaryPhotoGrid(byId('diaryId').value || null);
+  }
+
+  function removeDiaryDraftFile(id){
+    var next = [];
+    diaryDraftFiles.forEach(function(item){
+      if (item.id === id) URL.revokeObjectURL(item.previewUrl);
+      else next.push(item);
+    });
+    diaryDraftFiles = next;
+    renderDiaryPhotoGrid(byId('diaryId').value || null);
+  }
+
+  function removeUploadedDiaryDraftFiles(uploadedFiles){
+    if (!uploadedFiles.length) return;
+    var next = [];
+    diaryDraftFiles.forEach(function(item){
+      if (uploadedFiles.indexOf(item.file) >= 0) URL.revokeObjectURL(item.previewUrl);
+      else next.push(item);
+    });
+    diaryDraftFiles = next;
+  }
+
+  function clearDiaryDraftFiles(){
+    diaryDraftFiles.forEach(function(item){ URL.revokeObjectURL(item.previewUrl); });
+    diaryDraftFiles = [];
+    renderDiaryPhotoGrid(null);
+  }
+
+  async function deleteDiaryMedia(id, storagePath){
+    if (!confirm('이 사진을 삭제할까요?')) return;
+    var removeRes = await client.storage.from(BUCKET).remove([storagePath]);
+    if (removeRes.error) { alert(errorMessage(removeRes.error)); return; }
+    var deleteRes = await client.from('class_media').delete().eq('id', id).eq('class_id', currentClass.id);
+    if (deleteRes.error) { alert(errorMessage(deleteRes.error)); return; }
+    var postId = byId('diaryId').value;
+    if (postId) await loadDiaryMedia(postId);
+    await loadDiaryTab();
   }
 
   async function loadEventTab(){
@@ -626,7 +816,7 @@
       }
 
       if (albumDraftFiles.length) {
-        var uploadResult = await uploadFilesToAlbum(postId, albumDraftFiles.map(function(item){ return item.file; }), msg);
+        var uploadResult = await uploadFilesToPost(postId, 'album', albumDraftFiles.map(function(item){ return item.file; }), msg);
         removeUploadedDraftFiles(uploadResult.uploadedFiles);
         renderDraftPhotoGrid();
         if (uploadResult.failed.length) {
@@ -819,7 +1009,7 @@
     if (!currentAlbum || !files.length) return;
     var msg = byId('albumUploadMsg');
     setMsg(msg, '업로드 준비 중입니다.');
-    var result = await uploadFilesToAlbum(currentAlbum.id, files, msg);
+    var result = await uploadFilesToPost(currentAlbum.id, 'album', files, msg);
     if (result.failed.length) {
       setMsg(msg, files.length + '장 중 ' + result.uploadedFiles.length + '장 업로드 완료\n' + result.failed.map(function(item){ return item.name + ': ' + item.message; }).join('\n'), true);
     } else if (result.uploadedFiles.length) {
@@ -828,7 +1018,7 @@
     await loadAlbumPhotos();
   }
 
-  async function uploadFilesToAlbum(postId, files, msg){
+  async function uploadFilesToPost(postId, folder, files, msg){
     var result = { uploadedFiles: [], failed: [] };
     for (var i = 0; i < files.length; i++) {
       var file = files[i];
@@ -836,7 +1026,7 @@
       try {
         setMsg(msg, '(' + (i + 1) + '/' + files.length + ') 압축 중입니다.');
         var compressed = await compressImage(file);
-        path = 'classes/' + currentClass.id + '/album/' + postId + '/' + Date.now() + '_' + i + '_' + safeName(compressed.name);
+        path = 'classes/' + currentClass.id + '/' + folder + '/' + postId + '/' + Date.now() + '_' + i + '_' + safeName(compressed.name);
         setMsg(msg, '(' + (i + 1) + '/' + files.length + ') 업로드 중입니다.');
         var upRes = await client.storage.from(BUCKET).upload(path, compressed, { cacheControl:'3600', upsert:false });
         if (upRes.error) throw upRes.error;
@@ -962,6 +1152,8 @@
   byId('noticeForm').addEventListener('submit', function(e){ e.preventDefault(); saveSimplePost('notice', noticeIds); });
   byId('diaryCancel').addEventListener('click', function(){ resetSimpleForm(diaryIds, '일지 저장'); });
   byId('noticeCancel').addEventListener('click', function(){ resetSimpleForm(noticeIds, '공지 저장'); });
+  var diaryFileInput = byId('diaryFileInput');
+  diaryFileInput.addEventListener('change', function(){ addDiaryDraftFiles(Array.from(diaryFileInput.files)); diaryFileInput.value = ''; });
 
   document.addEventListener('click', async function(e){
     var editPost = e.target.closest('[data-edit-post]');
@@ -969,6 +1161,8 @@
     var editEventBtn = e.target.closest('[data-edit-event]');
     var editAlbumBtn = e.target.closest('[data-edit-album]');
     var deleteMediaBtn = e.target.closest('[data-delete-media]');
+    var deleteDiaryMediaBtn = e.target.closest('[data-delete-diary-media]');
+    var removeDiaryDraftBtn = e.target.closest('[data-remove-diary-draft]');
     var removeDraftBtn = e.target.closest('[data-remove-draft]');
     var saveReplyBtn = e.target.closest('[data-save-reply]');
     if (editPost) { await editSimplePost(editPost.dataset.editPost, editPost.dataset.type); }
@@ -976,6 +1170,8 @@
     if (editEventBtn) { await editEvent(editEventBtn.dataset.editEvent); }
     if (editAlbumBtn) { e.stopPropagation(); await editAlbum(editAlbumBtn.dataset.editAlbum); }
     if (deleteMediaBtn) { await deleteMedia(deleteMediaBtn.dataset.deleteMedia, deleteMediaBtn.dataset.path); }
+    if (deleteDiaryMediaBtn) { await deleteDiaryMedia(deleteDiaryMediaBtn.dataset.deleteDiaryMedia, deleteDiaryMediaBtn.dataset.path); }
+    if (removeDiaryDraftBtn) { removeDiaryDraftFile(removeDiaryDraftBtn.dataset.removeDiaryDraft); }
     if (removeDraftBtn) { removeDraftFile(removeDraftBtn.dataset.removeDraft); }
     if (saveReplyBtn) { await saveReply(saveReplyBtn.dataset.saveReply); }
   });
@@ -1052,6 +1248,7 @@
     try { await loadTeacherClass(currentSession); }
     catch (err) { pageNotice.innerHTML = escWithBr(errorMessage(err)); showPanel(noticePanel); }
   });
+  renderDiaryPhotoGrid(null);
   renderDraftPhotoGrid();
 })();
 </script>
