@@ -1,0 +1,873 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>원이야 - 반 미니홈피 관리</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Gaegu:wght@700&display=swap" rel="stylesheet">
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<style>
+  :root{
+    --cream:#FBF6EE;--ink:#403733;--ink-soft:#6E625B;--coral:#FF8A6B;
+    --coral-deep:#F2715A;--sage:#9CB89A;--paper:#FFFFFF;--line:#f1e9e0;
+    --display:'Gowun Dodum',sans-serif;--hand:'Gaegu',cursive;--body:'Pretendard',sans-serif;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:var(--body);color:var(--ink);background:var(--cream);line-height:1.6;min-height:100vh;-webkit-font-smoothing:antialiased}
+  [hidden]{display:none!important}
+  .topbar{position:sticky;top:0;z-index:40;padding:14px 0;background:rgba(255,250,243,.86);backdrop-filter:blur(10px);box-shadow:0 1px 0 rgba(180,140,110,.12)}
+  .topbar-inner{max-width:980px;margin:0 auto;padding:0 22px;display:flex;align-items:center;justify-content:space-between;gap:14px}
+  .brand{font-family:var(--display);font-size:1.24rem;color:var(--ink);text-decoration:none;letter-spacing:-.5px}
+  .topbar-actions{display:flex;align-items:center;gap:10px;color:var(--ink-soft);font-size:.85rem}
+  .wrap{max-width:980px;margin:0 auto;padding:38px 22px 68px}
+  .section-eyebrow{font-family:var(--hand);font-size:1.12rem;color:var(--sage);font-weight:700}
+  .section-title{font-family:var(--display);font-size:1.72rem;margin:6px 0 8px;letter-spacing:-.5px}
+  .lead{color:var(--ink-soft);font-size:.94rem;margin-bottom:22px}
+  .panel,.card{background:var(--paper);border-radius:24px;padding:26px;box-shadow:0 18px 44px -22px rgba(120,80,60,.35)}
+  .card{border:1.5px solid var(--line);box-shadow:none;background:var(--cream);border-radius:20px;padding:18px}
+  label{display:block;font-size:.86rem;font-weight:700;color:var(--ink-soft);margin-bottom:6px}
+  .field{margin-bottom:16px}
+  input[type=email],input[type=password],input[type=text],input[type=date],textarea,select{
+    width:100%;border:1.5px solid var(--line);border-radius:14px;padding:13px 16px;
+    font-family:var(--body);font-size:.98rem;color:var(--ink);background:var(--cream);outline:none;transition:border-color .2s ease;
+  }
+  textarea{resize:vertical;min-height:104px;line-height:1.6}
+  input:focus,textarea:focus,select:focus{border-color:var(--coral)}
+  .btn{display:inline-flex;align-items:center;justify-content:center;width:100%;border:none;border-radius:30px;padding:13px 18px;background:var(--coral);color:#fff;font-weight:800;font-size:.96rem;cursor:pointer;transition:transform .2s ease,box-shadow .2s ease;box-shadow:0 14px 28px -10px var(--coral-deep);font-family:var(--body)}
+  .btn:hover{transform:translateY(-2px)}
+  .btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+  .btn.ghost{background:transparent;color:var(--ink-soft);box-shadow:none;border:1.5px solid #e7dccf;width:auto;padding:8px 16px;font-size:.84rem}
+  .btn.danger{background:#fff;color:#D9534F;border:1.5px solid #f5c6c4;box-shadow:none;width:auto;padding:8px 16px;font-size:.84rem}
+  .btn.small{width:auto;padding:8px 16px;font-size:.84rem;box-shadow:none}
+  .msg{margin-top:12px;font-size:.88rem;text-align:center;color:var(--ink-soft)}
+  .msg.error{color:#D9534F}.msg.ok{color:var(--sage)}
+  .tab-bar{position:sticky;top:57px;z-index:30;display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;background:var(--cream);padding:14px 22px 10px;margin:0 -22px 24px}
+  .tab-bar::-webkit-scrollbar{display:none}
+  .tab-btn{flex:0 0 auto;padding:9px 16px;border-radius:30px;border:1.5px solid var(--line);background:var(--paper);color:var(--ink-soft);font-weight:800;font-size:.88rem;cursor:pointer;white-space:nowrap;font-family:var(--body)}
+  .tab-btn.active{background:var(--coral);color:#fff;border-color:var(--coral)}
+  .tab-panel{display:none}.tab-panel.active{display:block}
+  .layout{display:grid;grid-template-columns:330px 1fr;gap:18px;align-items:start}
+  .list{display:flex;flex-direction:column;gap:12px}
+  .card-head{display:flex;justify-content:space-between;gap:14px;align-items:flex-start}
+  .card-title{font-weight:900;color:var(--ink);word-break:break-word}
+  .card-meta{margin-top:4px;font-size:.82rem;color:var(--ink-soft)}
+  .card-body{margin-top:10px;color:var(--ink-soft);font-size:.92rem;line-height:1.65;word-break:break-word}
+  .actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;margin-top:14px}
+  .empty{padding:26px 16px;text-align:center;color:var(--ink-soft);font-size:.92rem;border:1.5px dashed var(--line);border-radius:18px;background:rgba(255,255,255,.55)}
+  .calendar-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
+  .calendar-title{font-family:var(--display);font-size:1.2rem;font-weight:900}
+  .calendar-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+  .weekday{text-align:center;color:var(--ink-soft);font-size:.76rem;font-weight:900;padding:4px 0}
+  .day-cell{position:relative;min-height:74px;border:1.5px solid var(--line);border-radius:14px;background:var(--paper);padding:8px;text-align:left;cursor:pointer;font-family:var(--body)}
+  .day-cell.out{opacity:.38}.day-cell.today{background:#fff4ef;border-color:#ffd8ca}.day-cell.selected{border-color:var(--coral);box-shadow:0 0 0 2px rgba(255,138,107,.18)}
+  .day-num{font-weight:900;font-size:.86rem}.event-dot{position:absolute;left:8px;bottom:8px;min-width:18px;height:18px;border-radius:99px;background:var(--sage);color:#fff;font-size:.7rem;font-weight:900;display:flex;align-items:center;justify-content:center;padding:0 5px}
+  .split{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(280px,.8fr);gap:18px}
+  .modal-backdrop{position:fixed;inset:0;z-index:80;background:rgba(64,55,51,.42);display:flex;align-items:center;justify-content:center;padding:22px}
+  .modal{width:min(520px,100%);background:var(--paper);border-radius:24px;padding:24px;box-shadow:0 24px 70px -26px rgba(64,55,51,.55)}
+  .modal-title{font-family:var(--display);font-size:1.28rem;margin-bottom:16px}
+  .album-grid,.photo-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+  .album-card{cursor:pointer;overflow:hidden}.album-thumb{aspect-ratio:4/3;border-radius:14px;background:#f1e9e0;margin-bottom:12px;overflow:hidden;display:flex;align-items:center;justify-content:center;color:var(--ink-soft);font-size:.82rem}
+  .album-thumb img,.photo-item img{width:100%;height:100%;object-fit:cover;display:block}
+  .photo-item{position:relative;border-radius:14px;overflow:hidden;aspect-ratio:1;background:#f1e9e0}
+  .photo-del{position:absolute;top:7px;right:7px;width:28px;height:28px;border-radius:50%;border:none;background:rgba(0,0,0,.55);color:#fff;cursor:pointer;font-size:1rem}
+  .upload-zone{position:relative;overflow:hidden;min-height:150px;border:2px dashed var(--line);border-radius:18px;padding:28px 20px;text-align:center;cursor:pointer;background:var(--cream);transition:border-color .2s,background .2s;margin-bottom:14px}
+  .upload-zone:hover,.upload-zone.drag-over{border-color:var(--coral);background:#fff8f5}
+  .upload-icon{font-size:2rem;margin-bottom:8px}.upload-hint{font-size:.86rem;color:var(--ink-soft);line-height:1.5}.upload-hint strong{color:var(--coral-deep)}
+  .notice-line{margin-bottom:14px;padding:12px 14px;border-radius:16px;background:#fff8f5;color:var(--coral-deep);font-size:.86rem;font-weight:800}
+  .detail-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:16px}
+  @media (max-width:760px){.layout,.split{grid-template-columns:1fr}.album-grid,.photo-grid{grid-template-columns:repeat(2,1fr)}.panel{padding:22px}.day-cell{min-height:62px}}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="index.html">원이야</a>
+    <div class="topbar-actions">
+      <span id="classNameTop"></span>
+      <button type="button" class="btn ghost" id="logoutBtn" hidden>로그아웃</button>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="section-eyebrow">담임 교사 공간</div>
+  <h1 class="section-title">반 미니홈피 관리</h1>
+  <p class="lead" id="leadText">로그인한 담임 교사의 담당 반만 관리할 수 있어요.</p>
+
+  <section class="panel" id="loadingPanel">
+    <p class="msg">세션을 확인하고 있어요.</p>
+  </section>
+
+  <section class="panel" id="authPanel" hidden>
+    <form id="authForm">
+      <div class="field">
+        <label for="authEmail">이메일</label>
+        <input type="email" id="authEmail" required autocomplete="email">
+      </div>
+      <div class="field">
+        <label for="authPassword">비밀번호</label>
+        <input type="password" id="authPassword" required autocomplete="current-password">
+      </div>
+      <button type="submit" class="btn" id="authSubmit">로그인</button>
+      <div class="msg error" id="authMsg"></div>
+    </form>
+  </section>
+
+  <section id="appPanel" hidden>
+    <div class="tab-bar" id="tabBar">
+      <button type="button" class="tab-btn active" data-tab="diary">오늘의 반 일지</button>
+      <button type="button" class="tab-btn" data-tab="event">행사 일정</button>
+      <button type="button" class="tab-btn" data-tab="album">사진 앨범</button>
+      <button type="button" class="tab-btn" data-tab="guestbook">방명록</button>
+      <button type="button" class="tab-btn" data-tab="notice">공지사항</button>
+    </div>
+
+    <div class="tab-panel active" data-panel="diary">
+      <div class="layout">
+        <section class="panel">
+          <form id="diaryForm">
+            <input type="hidden" id="diaryId">
+            <div class="field"><label for="diaryTitle">제목</label><input type="text" id="diaryTitle" required></div>
+            <div class="field"><label for="diaryBody">본문</label><textarea id="diaryBody" required></textarea></div>
+            <button type="submit" class="btn" id="diarySubmit">일지 저장</button>
+            <button type="button" class="btn ghost" id="diaryCancel" hidden style="margin-top:10px">수정 취소</button>
+            <div class="msg" id="diaryMsg"></div>
+          </form>
+        </section>
+        <section class="list" id="diaryList"></section>
+      </div>
+    </div>
+
+    <div class="tab-panel" data-panel="event">
+      <div class="split">
+        <section class="panel">
+          <div class="calendar-head">
+            <button type="button" class="btn ghost" id="prevMonthBtn">◀</button>
+            <div class="calendar-title" id="calendarTitle"></div>
+            <button type="button" class="btn ghost" id="nextMonthBtn">▶</button>
+          </div>
+          <div class="calendar-grid" id="calendarGrid"></div>
+        </section>
+        <section class="panel">
+          <div class="detail-top">
+            <div>
+              <div class="card-title" id="selectedDateTitle"></div>
+              <div class="card-meta">선택한 날짜의 행사</div>
+            </div>
+            <button type="button" class="btn small" id="addEventBtn">행사 추가</button>
+          </div>
+          <div class="list" id="eventList"></div>
+          <div class="msg" id="eventMsg"></div>
+        </section>
+      </div>
+    </div>
+
+    <div class="tab-panel" data-panel="album">
+      <div id="albumListView">
+        <div class="layout">
+          <section class="panel">
+            <form id="albumForm">
+              <input type="hidden" id="albumId">
+              <div class="field"><label for="albumTitle">앨범명</label><input type="text" id="albumTitle" required></div>
+              <div class="field"><label for="albumDate">일자</label><input type="date" id="albumDate" required></div>
+              <div class="field"><label for="albumBody">앨범 설명</label><textarea id="albumBody"></textarea></div>
+              <button type="submit" class="btn" id="albumSubmit">앨범 저장</button>
+              <button type="button" class="btn ghost" id="albumCancel" hidden style="margin-top:10px">수정 취소</button>
+              <div class="msg" id="albumMsg"></div>
+            </form>
+          </section>
+          <section class="album-grid" id="albumGrid"></section>
+        </div>
+      </div>
+      <div id="albumDetailView" hidden>
+        <section class="panel">
+          <div class="detail-top">
+            <div>
+              <div class="card-title" id="albumDetailTitle"></div>
+              <div class="card-meta" id="albumDetailMeta"></div>
+            </div>
+            <button type="button" class="btn ghost" id="backToAlbumsBtn">앨범 목록</button>
+          </div>
+          <div class="notice-line">이 사진은 반 학부모 전원에게 공개됩니다</div>
+          <div class="upload-zone" id="albumUploadZone">
+            <div class="upload-icon">+</div>
+            <div class="upload-hint"><strong>클릭하거나 사진을 여기에 드래그</strong><br>JPG · PNG · WebP · 다중 업로드</div>
+          </div>
+          <input type="file" id="albumFileInput" accept="image/*" multiple hidden>
+          <div class="msg" id="albumUploadMsg"></div>
+          <div class="photo-grid" id="albumPhotoGrid"></div>
+        </section>
+      </div>
+    </div>
+
+    <div class="tab-panel" data-panel="guestbook">
+      <section class="list" id="commentList"></section>
+    </div>
+
+    <div class="tab-panel" data-panel="notice">
+      <div class="layout">
+        <section class="panel">
+          <form id="noticeForm">
+            <input type="hidden" id="noticeId">
+            <div class="field"><label for="noticeTitle">제목</label><input type="text" id="noticeTitle" required></div>
+            <div class="field"><label for="noticeBody">본문</label><textarea id="noticeBody" required></textarea></div>
+            <button type="submit" class="btn" id="noticeSubmit">공지 저장</button>
+            <button type="button" class="btn ghost" id="noticeCancel" hidden style="margin-top:10px">수정 취소</button>
+            <div class="msg" id="noticeMsg"></div>
+          </form>
+        </section>
+        <section class="list" id="noticeList"></section>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel" id="noticePanel" hidden>
+    <p class="msg" id="pageNotice"></p>
+  </section>
+</main>
+
+<div class="modal-backdrop" id="eventModal" hidden>
+  <div class="modal">
+    <div class="modal-title" id="eventModalTitle">행사 추가</div>
+    <form id="eventForm">
+      <input type="hidden" id="eventId">
+      <div class="field"><label for="eventTitle">행사명</label><input type="text" id="eventTitle" required></div>
+      <div class="field"><label for="eventDate">일자</label><input type="date" id="eventDate" required></div>
+      <div class="field"><label for="eventBody">내용</label><textarea id="eventBody"></textarea></div>
+      <div class="actions">
+        <button type="button" class="btn ghost" id="eventModalCancel">취소</button>
+        <button type="submit" class="btn small" id="eventSubmit">저장</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script src="supabase-config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+(function(){
+  var cfg = window.__SUPABASE_CONFIG__;
+  var client = supabase.createClient(cfg.url, cfg.anonKey);
+  var BUCKET = 'center-images';
+
+  var currentSession = null;
+  var currentClass = null;
+  var activeTab = 'diary';
+  var calendarDate = firstOfMonth(new Date());
+  var selectedDate = toDateInput(new Date());
+  var monthEvents = [];
+  var currentAlbum = null;
+
+  var loadingPanel = byId('loadingPanel');
+  var authPanel = byId('authPanel');
+  var appPanel = byId('appPanel');
+  var noticePanel = byId('noticePanel');
+  var pageNotice = byId('pageNotice');
+  var leadText = byId('leadText');
+  var classNameTop = byId('classNameTop');
+  var logoutBtn = byId('logoutBtn');
+
+  function byId(id){ return document.getElementById(id); }
+  function esc(s){
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){
+      return ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' })[c];
+    });
+  }
+  function escWithBr(s){ return esc(s).replace(/\r?\n/g, '<br>'); }
+  function errorMessage(error){ return error && error.message ? error.message : String(error); }
+  function showPanel(panel){
+    [loadingPanel, authPanel, appPanel, noticePanel].forEach(function(item){ item.hidden = item !== panel; });
+  }
+  function setMsg(el, text, isError){
+    el.innerHTML = escWithBr(text || '');
+    el.className = 'msg' + (isError ? ' error' : '');
+  }
+  function firstOfMonth(date){ return new Date(date.getFullYear(), date.getMonth(), 1); }
+  function toDateInput(date){
+    var y = date.getFullYear();
+    var m = String(date.getMonth() + 1).padStart(2, '0');
+    var d = String(date.getDate()).padStart(2, '0');
+    return y + '-' + m + '-' + d;
+  }
+  function formatDate(value){
+    if (!value) return '';
+    var d = new Date(value + 'T00:00:00');
+    return d.toLocaleDateString('ko-KR', { year:'numeric', month:'long', day:'numeric' });
+  }
+  function formatDateTime(value){
+    if (!value) return '';
+    return new Date(value).toLocaleString('ko-KR');
+  }
+  function sameMonth(a, b){ return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth(); }
+  function safeName(name){ return String(name || 'photo').replace(/[^a-zA-Z0-9._-]/g, '_'); }
+
+  async function signedUrl(path){
+    if (!path) return null;
+    var res = await client.storage.from(BUCKET).createSignedUrl(path, 3600);
+    if (res.error) throw res.error;
+    return res.data ? res.data.signedUrl : null;
+  }
+
+  function compressImage(file){
+    return new Promise(function(resolve, reject){
+      var reader = new FileReader();
+      reader.onerror = reject;
+      reader.onload = function(e){
+        var img = new Image();
+        img.onerror = reject;
+        img.onload = function(){
+          var max = 1920;
+          var w = img.width;
+          var h = img.height;
+          if (w > max || h > max) {
+            if (w >= h) { h = Math.round(h * max / w); w = max; }
+            else { w = Math.round(w * max / h); h = max; }
+          }
+          var canvas = document.createElement('canvas');
+          canvas.width = w;
+          canvas.height = h;
+          canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+          canvas.toBlob(function(blob){
+            if (!blob) { reject(new Error('이미지를 변환하지 못했습니다')); return; }
+            resolve(new File([blob], file.name.replace(/\.[^.]+$/, '') + '.webp', { type:'image/webp' }));
+          }, 'image/webp', 0.85);
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  async function loadTeacherClass(session){
+    var res = await client.from('classes')
+      .select('id,name,age_label,teacher_id')
+      .eq('teacher_id', session.user.id)
+      .order('created_at', { ascending:true })
+      .limit(1);
+    if (res.error) throw res.error;
+    currentClass = (res.data || [])[0] || null;
+    if (!currentClass) {
+      pageNotice.innerHTML = escWithBr('담당 반이 없습니다.\n원장 콘솔에서 반에 담임 교사를 먼저 지정해주세요.');
+      showPanel(noticePanel);
+      return;
+    }
+    classNameTop.textContent = currentClass.name + (currentClass.age_label ? ' · ' + currentClass.age_label : '');
+    leadText.textContent = classNameTop.textContent + ' 미니홈피를 관리하고 있어요.';
+    showPanel(appPanel);
+    await loadActiveTab();
+  }
+
+  async function loadPosts(type){
+    var res = await client.from('class_posts')
+      .select('*')
+      .eq('class_id', currentClass.id)
+      .eq('type', type)
+      .order(type === 'event' || type === 'album' ? 'event_date' : 'created_at', { ascending:false });
+    if (res.error) throw res.error;
+    return res.data || [];
+  }
+
+  function renderPostList(type, rows, listEl){
+    if (!rows.length) {
+      listEl.innerHTML = '<div class="empty">아직 작성된 글이 없습니다.</div>';
+      return;
+    }
+    listEl.innerHTML = rows.map(function(row){
+      return '<article class="card">' +
+        '<div class="card-head"><div>' +
+          '<div class="card-title">' + esc(row.title || '제목 없음') + '</div>' +
+          '<div class="card-meta">' + esc(formatDateTime(row.created_at)) + '</div>' +
+        '</div></div>' +
+        '<div class="card-body">' + escWithBr(row.body || '') + '</div>' +
+        '<div class="actions">' +
+          '<button type="button" class="btn ghost" data-edit-post="' + esc(row.id) + '" data-type="' + esc(type) + '">수정</button>' +
+          '<button type="button" class="btn danger" data-delete-post="' + esc(row.id) + '" data-type="' + esc(type) + '">삭제</button>' +
+        '</div>' +
+      '</article>';
+    }).join('');
+  }
+
+  async function loadDiaryTab(){
+    var rows = await loadPosts('diary');
+    renderPostList('diary', rows, byId('diaryList'));
+  }
+  async function loadNoticeTab(){
+    var rows = await loadPosts('notice');
+    renderPostList('notice', rows, byId('noticeList'));
+  }
+
+  async function saveSimplePost(type, ids){
+    var msg = byId(ids.msg);
+    setMsg(msg, '저장 중입니다.');
+    var id = byId(ids.id).value;
+    var payload = {
+      class_id: currentClass.id,
+      type: type,
+      title: byId(ids.title).value.trim(),
+      body: byId(ids.body).value.trim()
+    };
+    var res = id
+      ? await client.from('class_posts').update({ title:payload.title, body:payload.body }).eq('id', id).eq('class_id', currentClass.id)
+      : await client.from('class_posts').insert(payload);
+    if (res.error) { setMsg(msg, res.error.message, true); return; }
+    resetSimpleForm(ids, type === 'diary' ? '일지 저장' : '공지 저장');
+    setMsg(msg, '저장되었습니다.');
+    if (type === 'diary') await loadDiaryTab();
+    if (type === 'notice') await loadNoticeTab();
+  }
+
+  function resetSimpleForm(ids, submitText){
+    byId(ids.id).value = '';
+    byId(ids.title).value = '';
+    byId(ids.body).value = '';
+    byId(ids.submit).textContent = submitText;
+    byId(ids.cancel).hidden = true;
+  }
+
+  async function editSimplePost(id, type){
+    var res = await client.from('class_posts').select('*').eq('id', id).eq('class_id', currentClass.id).single();
+    if (res.error) { alert(errorMessage(res.error)); return; }
+    var ids = type === 'diary' ? diaryIds : noticeIds;
+    byId(ids.id).value = res.data.id;
+    byId(ids.title).value = res.data.title || '';
+    byId(ids.body).value = res.data.body || '';
+    byId(ids.submit).textContent = '수정 저장';
+    byId(ids.cancel).hidden = false;
+  }
+
+  async function deletePost(id, type){
+    if (!confirm('삭제할까요?')) return;
+    if (type === 'album') {
+      var mediaRes = await client.from('class_media').select('id,url').eq('class_id', currentClass.id).eq('post_id', id);
+      if (mediaRes.error) { alert(errorMessage(mediaRes.error)); return; }
+      var paths = (mediaRes.data || []).map(function(row){ return row.url; }).filter(Boolean);
+      if (paths.length) {
+        var removeRes = await client.storage.from(BUCKET).remove(paths);
+        if (removeRes.error) { alert(errorMessage(removeRes.error)); return; }
+      }
+      var mediaDeleteRes = await client.from('class_media').delete().eq('class_id', currentClass.id).eq('post_id', id);
+      if (mediaDeleteRes.error) { alert(errorMessage(mediaDeleteRes.error)); return; }
+    }
+    var res = await client.from('class_posts').delete().eq('id', id).eq('class_id', currentClass.id);
+    if (res.error) { alert(errorMessage(res.error)); return; }
+    if (type === 'diary') await loadDiaryTab();
+    if (type === 'notice') await loadNoticeTab();
+    if (type === 'event') await loadEventTab();
+    if (type === 'album') await loadAlbumTab();
+  }
+
+  async function loadEventTab(){
+    var start = toDateInput(calendarDate);
+    var endDate = new Date(calendarDate.getFullYear(), calendarDate.getMonth() + 1, 0);
+    var end = toDateInput(endDate);
+    var res = await client.from('class_posts')
+      .select('*')
+      .eq('class_id', currentClass.id)
+      .eq('type', 'event')
+      .gte('event_date', start)
+      .lte('event_date', end)
+      .order('event_date', { ascending:true })
+      .order('created_at', { ascending:false });
+    if (res.error) { setMsg(byId('eventMsg'), res.error.message, true); return; }
+    monthEvents = res.data || [];
+    renderCalendar();
+    renderSelectedEvents();
+  }
+
+  function renderCalendar(){
+    byId('calendarTitle').textContent = calendarDate.getFullYear() + '년 ' + (calendarDate.getMonth() + 1) + '월';
+    var grid = byId('calendarGrid');
+    var weekdays = ['일','월','화','수','목','금','토'].map(function(day){ return '<div class="weekday">' + day + '</div>'; }).join('');
+    var firstDay = calendarDate.getDay();
+    var start = new Date(calendarDate);
+    start.setDate(1 - firstDay);
+    var today = toDateInput(new Date());
+    var cells = [];
+    for (var i = 0; i < 42; i++) {
+      var d = new Date(start);
+      d.setDate(start.getDate() + i);
+      var key = toDateInput(d);
+      var count = monthEvents.filter(function(row){ return row.event_date === key; }).length;
+      cells.push('<button type="button" class="day-cell' +
+        (sameMonth(d, calendarDate) ? '' : ' out') +
+        (key === today ? ' today' : '') +
+        (key === selectedDate ? ' selected' : '') +
+        '" data-date="' + esc(key) + '">' +
+        '<span class="day-num">' + d.getDate() + '</span>' +
+        (count ? '<span class="event-dot">' + count + '</span>' : '') +
+      '</button>');
+    }
+    grid.innerHTML = weekdays + cells.join('');
+  }
+
+  function renderSelectedEvents(){
+    byId('selectedDateTitle').textContent = formatDate(selectedDate);
+    var rows = monthEvents.filter(function(row){ return row.event_date === selectedDate; });
+    byId('eventList').innerHTML = rows.length ? rows.map(function(row){
+      return '<article class="card">' +
+        '<div class="card-title">' + esc(row.title || '행사') + '</div>' +
+        '<div class="card-body">' + escWithBr(row.body || '') + '</div>' +
+        '<div class="actions">' +
+          '<button type="button" class="btn ghost" data-edit-event="' + esc(row.id) + '">수정</button>' +
+          '<button type="button" class="btn danger" data-delete-post="' + esc(row.id) + '" data-type="event">삭제</button>' +
+        '</div>' +
+      '</article>';
+    }).join('') : '<div class="empty">선택한 날짜에 등록된 행사가 없습니다.</div>';
+  }
+
+  function openEventModal(row){
+    byId('eventModalTitle').textContent = row ? '행사 수정' : '행사 추가';
+    byId('eventId').value = row ? row.id : '';
+    byId('eventTitle').value = row ? (row.title || '') : '';
+    byId('eventDate').value = row ? row.event_date : selectedDate;
+    byId('eventBody').value = row ? (row.body || '') : '';
+    byId('eventModal').hidden = false;
+  }
+
+  async function saveEvent(){
+    var id = byId('eventId').value;
+    var payload = {
+      class_id: currentClass.id,
+      type: 'event',
+      title: byId('eventTitle').value.trim(),
+      event_date: byId('eventDate').value,
+      body: byId('eventBody').value.trim()
+    };
+    var res = id
+      ? await client.from('class_posts').update({ title:payload.title, event_date:payload.event_date, body:payload.body }).eq('id', id).eq('class_id', currentClass.id)
+      : await client.from('class_posts').insert(payload);
+    if (res.error) { setMsg(byId('eventMsg'), res.error.message, true); return; }
+    selectedDate = payload.event_date;
+    calendarDate = firstOfMonth(new Date(payload.event_date + 'T00:00:00'));
+    byId('eventModal').hidden = true;
+    await loadEventTab();
+  }
+
+  async function editEvent(id){
+    var res = await client.from('class_posts').select('*').eq('id', id).eq('class_id', currentClass.id).single();
+    if (res.error) { alert(errorMessage(res.error)); return; }
+    openEventModal(res.data);
+  }
+
+  async function loadAlbumTab(){
+    byId('albumListView').hidden = false;
+    byId('albumDetailView').hidden = true;
+    currentAlbum = null;
+    var albums = await loadPosts('album');
+    if (!albums.length) {
+      byId('albumGrid').innerHTML = '<div class="empty">아직 생성된 앨범이 없습니다.</div>';
+      return;
+    }
+    var ids = albums.map(function(row){ return row.id; });
+    var mediaRes = await client.from('class_media').select('*').in('post_id', ids).order('uploaded_at', { ascending:true });
+    if (mediaRes.error) { setMsg(byId('albumMsg'), mediaRes.error.message, true); return; }
+    var media = mediaRes.data || [];
+    var html = [];
+    for (var i = 0; i < albums.length; i++) {
+      var album = albums[i];
+      var first = media.find(function(row){ return row.post_id === album.id; });
+      var thumb = '';
+      if (first) {
+        try { thumb = await signedUrl(first.url); }
+        catch (err) { thumb = ''; }
+      }
+      html.push('<article class="card album-card" data-open-album="' + esc(album.id) + '">' +
+        '<div class="album-thumb">' + (thumb ? '<img src="' + esc(thumb) + '" alt="">' : '대표 사진 없음') + '</div>' +
+        '<div class="card-title">' + esc(album.title || '앨범') + '</div>' +
+        '<div class="card-meta">' + esc(formatDate(album.event_date)) + '</div>' +
+        '<div class="card-body">' + escWithBr(album.body || '') + '</div>' +
+        '<div class="actions">' +
+          '<button type="button" class="btn ghost" data-edit-album="' + esc(album.id) + '">수정</button>' +
+          '<button type="button" class="btn danger" data-delete-post="' + esc(album.id) + '" data-type="album">삭제</button>' +
+        '</div>' +
+      '</article>');
+    }
+    byId('albumGrid').innerHTML = html.join('');
+  }
+
+  async function saveAlbum(){
+    var msg = byId('albumMsg');
+    setMsg(msg, '저장 중입니다.');
+    var id = byId('albumId').value;
+    var payload = {
+      class_id: currentClass.id,
+      type: 'album',
+      title: byId('albumTitle').value.trim(),
+      event_date: byId('albumDate').value,
+      body: byId('albumBody').value.trim()
+    };
+    var res = id
+      ? await client.from('class_posts').update({ title:payload.title, event_date:payload.event_date, body:payload.body }).eq('id', id).eq('class_id', currentClass.id)
+      : await client.from('class_posts').insert(payload);
+    if (res.error) { setMsg(msg, res.error.message, true); return; }
+    byId('albumId').value = '';
+    byId('albumTitle').value = '';
+    byId('albumDate').value = toDateInput(new Date());
+    byId('albumBody').value = '';
+    byId('albumSubmit').textContent = '앨범 저장';
+    byId('albumCancel').hidden = true;
+    setMsg(msg, '저장되었습니다.');
+    await loadAlbumTab();
+  }
+
+  async function editAlbum(id){
+    var res = await client.from('class_posts').select('*').eq('id', id).eq('class_id', currentClass.id).single();
+    if (res.error) { alert(errorMessage(res.error)); return; }
+    byId('albumId').value = res.data.id;
+    byId('albumTitle').value = res.data.title || '';
+    byId('albumDate').value = res.data.event_date || toDateInput(new Date());
+    byId('albumBody').value = res.data.body || '';
+    byId('albumSubmit').textContent = '수정 저장';
+    byId('albumCancel').hidden = false;
+  }
+
+  async function openAlbum(id){
+    var res = await client.from('class_posts').select('*').eq('id', id).eq('class_id', currentClass.id).single();
+    if (res.error) { alert(errorMessage(res.error)); return; }
+    currentAlbum = res.data;
+    byId('albumListView').hidden = true;
+    byId('albumDetailView').hidden = false;
+    byId('albumDetailTitle').textContent = currentAlbum.title || '앨범';
+    byId('albumDetailMeta').textContent = formatDate(currentAlbum.event_date);
+    await loadAlbumPhotos();
+  }
+
+  async function loadAlbumPhotos(){
+    if (!currentAlbum) return;
+    var res = await client.from('class_media')
+      .select('*')
+      .eq('class_id', currentClass.id)
+      .eq('post_id', currentAlbum.id)
+      .order('uploaded_at', { ascending:false });
+    if (res.error) { setMsg(byId('albumUploadMsg'), res.error.message, true); return; }
+    var rows = res.data || [];
+    if (!rows.length) {
+      byId('albumPhotoGrid').innerHTML = '<div class="empty">아직 업로드된 사진이 없습니다.</div>';
+      return;
+    }
+    var html = [];
+    for (var i = 0; i < rows.length; i++) {
+      var url = '';
+      try { url = await signedUrl(rows[i].url); }
+      catch (err) { url = ''; }
+      html.push('<div class="photo-item">' +
+        (url ? '<img src="' + esc(url) + '" alt="">' : '') +
+        '<button type="button" class="photo-del" title="사진 삭제" data-delete-media="' + esc(rows[i].id) + '" data-path="' + esc(rows[i].url) + '">×</button>' +
+      '</div>');
+    }
+    byId('albumPhotoGrid').innerHTML = html.join('');
+  }
+
+  async function uploadAlbumFiles(files){
+    if (!currentAlbum || !files.length) return;
+    var msg = byId('albumUploadMsg');
+    var done = 0;
+    setMsg(msg, '업로드 준비 중입니다.');
+    for (var i = 0; i < files.length; i++) {
+      try {
+        setMsg(msg, '(' + (i + 1) + '/' + files.length + ') 압축 중입니다.');
+        var compressed = await compressImage(files[i]);
+        var path = 'classes/' + currentClass.id + '/album/' + currentAlbum.id + '/' + Date.now() + '_' + i + '_' + safeName(compressed.name);
+        setMsg(msg, '(' + (i + 1) + '/' + files.length + ') 업로드 중입니다.');
+        var upRes = await client.storage.from(BUCKET).upload(path, compressed, { cacheControl:'3600', upsert:false });
+        if (upRes.error) throw upRes.error;
+        var insertRes = await client.from('class_media').insert({
+          class_id: currentClass.id,
+          post_id: currentAlbum.id,
+          url: path
+        });
+        if (insertRes.error) throw insertRes.error;
+        done++;
+      } catch (err) {
+        setMsg(msg, errorMessage(err), true);
+      }
+    }
+    if (done) setMsg(msg, files.length + '장 중 ' + done + '장 업로드 완료');
+    await loadAlbumPhotos();
+  }
+
+  async function deleteMedia(id, path){
+    if (!confirm('이 사진을 삭제할까요?')) return;
+    var removeRes = await client.storage.from(BUCKET).remove([path]);
+    if (removeRes.error) { alert(errorMessage(removeRes.error)); return; }
+    var deleteRes = await client.from('class_media').delete().eq('id', id).eq('class_id', currentClass.id);
+    if (deleteRes.error) { alert(errorMessage(deleteRes.error)); return; }
+    await loadAlbumPhotos();
+  }
+
+  async function loadGuestbookTab(){
+    var res = await client.from('class_comments')
+      .select('*')
+      .eq('class_id', currentClass.id)
+      .order('created_at', { ascending:false });
+    if (res.error) {
+      byId('commentList').innerHTML = '<div class="empty">' + esc(res.error.message) + '</div>';
+      return;
+    }
+    var rows = (res.data || []).sort(function(a, b){
+      var ar = a.reply ? 1 : 0;
+      var br = b.reply ? 1 : 0;
+      if (ar !== br) return ar - br;
+      return new Date(b.created_at) - new Date(a.created_at);
+    });
+    byId('commentList').innerHTML = rows.length ? rows.map(function(row){
+      return '<article class="card">' +
+        '<div class="card-head"><div>' +
+          '<div class="card-title">학부모 방명록</div>' +
+          '<div class="card-meta">' + esc(formatDateTime(row.created_at)) + ' · ' + esc(row.author_id) + '</div>' +
+        '</div>' + (row.reply ? '<span class="card-meta">답글 완료</span>' : '<span class="card-meta">답글 필요</span>') + '</div>' +
+        '<div class="card-body">' + escWithBr(row.body || '') + '</div>' +
+        '<div class="field" style="margin-top:14px"><label for="reply-' + esc(row.id) + '">담임 답글</label><textarea id="reply-' + esc(row.id) + '" data-reply-input="' + esc(row.id) + '">' + esc(row.reply || '') + '</textarea></div>' +
+        (row.replied_at ? '<div class="card-meta">답글 저장: ' + esc(formatDateTime(row.replied_at)) + '</div>' : '') +
+        '<div class="actions"><button type="button" class="btn small" data-save-reply="' + esc(row.id) + '">답글 저장</button></div>' +
+      '</article>';
+    }).join('') : '<div class="empty">아직 방명록 글이 없습니다.</div>';
+  }
+
+  async function saveReply(id){
+    var input = document.querySelector('[data-reply-input="' + id + '"]');
+    var res = await client.from('class_comments')
+      .update({ reply: input.value.trim(), replied_at: new Date().toISOString() })
+      .eq('id', id)
+      .eq('class_id', currentClass.id);
+    if (res.error) { alert(errorMessage(res.error)); return; }
+    await loadGuestbookTab();
+  }
+
+  async function loadActiveTab(){
+    if (!currentClass) return;
+    if (activeTab === 'diary') await loadDiaryTab();
+    if (activeTab === 'event') await loadEventTab();
+    if (activeTab === 'album') await loadAlbumTab();
+    if (activeTab === 'guestbook') await loadGuestbookTab();
+    if (activeTab === 'notice') await loadNoticeTab();
+  }
+
+  var diaryIds = { id:'diaryId', title:'diaryTitle', body:'diaryBody', submit:'diarySubmit', cancel:'diaryCancel', msg:'diaryMsg' };
+  var noticeIds = { id:'noticeId', title:'noticeTitle', body:'noticeBody', submit:'noticeSubmit', cancel:'noticeCancel', msg:'noticeMsg' };
+
+  byId('authForm').addEventListener('submit', async function(e){
+    e.preventDefault();
+    var msg = byId('authMsg');
+    byId('authSubmit').disabled = true;
+    msg.textContent = '';
+    var res = await client.auth.signInWithPassword({
+      email: byId('authEmail').value.trim(),
+      password: byId('authPassword').value
+    });
+    byId('authSubmit').disabled = false;
+    if (res.error) { msg.innerHTML = escWithBr(res.error.message); return; }
+    currentSession = res.data.session;
+    showPanel(loadingPanel);
+    try { await loadTeacherClass(currentSession); }
+    catch (err) { pageNotice.innerHTML = escWithBr(errorMessage(err)); showPanel(noticePanel); }
+  });
+
+  logoutBtn.addEventListener('click', async function(){
+    var res = await client.auth.signOut();
+    if (res.error) { alert(errorMessage(res.error)); return; }
+    currentSession = null;
+    currentClass = null;
+    logoutBtn.hidden = true;
+    classNameTop.textContent = '';
+    showPanel(authPanel);
+  });
+
+  byId('tabBar').addEventListener('click', async function(e){
+    var btn = e.target.closest('.tab-btn');
+    if (!btn) return;
+    activeTab = btn.dataset.tab;
+    byId('tabBar').querySelectorAll('.tab-btn').forEach(function(item){ item.classList.remove('active'); });
+    document.querySelectorAll('.tab-panel').forEach(function(item){ item.classList.remove('active'); });
+    btn.classList.add('active');
+    document.querySelector('.tab-panel[data-panel="' + activeTab + '"]').classList.add('active');
+    await loadActiveTab();
+  });
+
+  byId('diaryForm').addEventListener('submit', function(e){ e.preventDefault(); saveSimplePost('diary', diaryIds); });
+  byId('noticeForm').addEventListener('submit', function(e){ e.preventDefault(); saveSimplePost('notice', noticeIds); });
+  byId('diaryCancel').addEventListener('click', function(){ resetSimpleForm(diaryIds, '일지 저장'); });
+  byId('noticeCancel').addEventListener('click', function(){ resetSimpleForm(noticeIds, '공지 저장'); });
+
+  document.addEventListener('click', async function(e){
+    var editPost = e.target.closest('[data-edit-post]');
+    var deleteBtn = e.target.closest('[data-delete-post]');
+    var editEventBtn = e.target.closest('[data-edit-event]');
+    var openAlbumBtn = e.target.closest('[data-open-album]');
+    var editAlbumBtn = e.target.closest('[data-edit-album]');
+    var deleteMediaBtn = e.target.closest('[data-delete-media]');
+    var saveReplyBtn = e.target.closest('[data-save-reply]');
+    if (editPost) { await editSimplePost(editPost.dataset.editPost, editPost.dataset.type); }
+    if (deleteBtn) { e.stopPropagation(); await deletePost(deleteBtn.dataset.deletePost, deleteBtn.dataset.type); }
+    if (editEventBtn) { await editEvent(editEventBtn.dataset.editEvent); }
+    if (openAlbumBtn && !e.target.closest('button')) { await openAlbum(openAlbumBtn.dataset.openAlbum); }
+    if (editAlbumBtn) { e.stopPropagation(); await editAlbum(editAlbumBtn.dataset.editAlbum); }
+    if (deleteMediaBtn) { await deleteMedia(deleteMediaBtn.dataset.deleteMedia, deleteMediaBtn.dataset.path); }
+    if (saveReplyBtn) { await saveReply(saveReplyBtn.dataset.saveReply); }
+  });
+
+  byId('calendarGrid').addEventListener('click', function(e){
+    var cell = e.target.closest('.day-cell');
+    if (!cell) return;
+    selectedDate = cell.dataset.date;
+    calendarDate = firstOfMonth(new Date(selectedDate + 'T00:00:00'));
+    renderCalendar();
+    renderSelectedEvents();
+  });
+  byId('prevMonthBtn').addEventListener('click', async function(){
+    calendarDate = new Date(calendarDate.getFullYear(), calendarDate.getMonth() - 1, 1);
+    selectedDate = toDateInput(calendarDate);
+    await loadEventTab();
+  });
+  byId('nextMonthBtn').addEventListener('click', async function(){
+    calendarDate = new Date(calendarDate.getFullYear(), calendarDate.getMonth() + 1, 1);
+    selectedDate = toDateInput(calendarDate);
+    await loadEventTab();
+  });
+  byId('addEventBtn').addEventListener('click', function(){ openEventModal(null); });
+  byId('eventModalCancel').addEventListener('click', function(){ byId('eventModal').hidden = true; });
+  byId('eventForm').addEventListener('submit', function(e){ e.preventDefault(); saveEvent(); });
+
+  byId('albumDate').value = toDateInput(new Date());
+  byId('albumForm').addEventListener('submit', function(e){ e.preventDefault(); saveAlbum(); });
+  byId('albumCancel').addEventListener('click', function(){
+    byId('albumId').value = '';
+    byId('albumTitle').value = '';
+    byId('albumDate').value = toDateInput(new Date());
+    byId('albumBody').value = '';
+    byId('albumSubmit').textContent = '앨범 저장';
+    byId('albumCancel').hidden = true;
+  });
+  byId('backToAlbumsBtn').addEventListener('click', function(){ loadAlbumTab(); });
+
+  var albumUploadZone = byId('albumUploadZone');
+  var albumFileInput = byId('albumFileInput');
+  albumUploadZone.addEventListener('click', function(){ albumFileInput.click(); });
+  albumFileInput.addEventListener('change', function(){ uploadAlbumFiles(Array.from(albumFileInput.files)); albumFileInput.value = ''; });
+  albumUploadZone.addEventListener('dragover', function(e){ e.preventDefault(); albumUploadZone.classList.add('drag-over'); });
+  albumUploadZone.addEventListener('dragleave', function(){ albumUploadZone.classList.remove('drag-over'); });
+  albumUploadZone.addEventListener('drop', function(e){
+    e.preventDefault();
+    albumUploadZone.classList.remove('drag-over');
+    uploadAlbumFiles(Array.from(e.dataTransfer.files));
+  });
+
+  client.auth.onAuthStateChange(function(_event, session){
+    currentSession = session;
+    logoutBtn.hidden = !session;
+  });
+
+  client.auth.getSession().then(async function(res){
+    if (res.error) { pageNotice.innerHTML = escWithBr(res.error.message); showPanel(noticePanel); return; }
+    currentSession = res.data ? res.data.session : null;
+    logoutBtn.hidden = !currentSession;
+    if (!currentSession) { showPanel(authPanel); return; }
+    try { await loadTeacherClass(currentSession); }
+    catch (err) { pageNotice.innerHTML = escWithBr(errorMessage(err)); showPanel(noticePanel); }
+  });
+})();
+</script>
+</body>
+</html>
