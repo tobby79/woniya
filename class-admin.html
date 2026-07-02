@@ -79,7 +79,8 @@
   .photo-grid .upload-zone{aspect-ratio:1;min-height:0;margin-bottom:0;display:flex;align-items:center;justify-content:center;flex-direction:column}
   .upload-zone:hover,.upload-zone.drag-over{border-color:var(--coral);background:#fff8f5}
   .upload-icon{font-size:2rem;margin-bottom:8px}.upload-hint{font-size:.86rem;color:var(--ink-soft);line-height:1.5}.upload-hint strong{color:var(--coral-deep)}
-  .notice-line{margin-bottom:14px;padding:12px 14px;border-radius:16px;background:#fff8f5;color:var(--coral-deep);font-size:.86rem;font-weight:800}
+  .upload-label{font-weight:900;color:var(--ink);margin:8px 0 4px}
+  .upload-note{font-size:.86rem;color:var(--ink-soft);margin:0 0 10px}
   .detail-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:16px}
   .detail-desc{margin-top:8px;color:var(--ink-soft);font-size:.92rem;line-height:1.65;word-break:break-word}
   .detail-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
@@ -137,7 +138,8 @@
             <input type="hidden" id="diaryId">
             <div class="field"><label for="diaryTitle">제목</label><input type="text" id="diaryTitle" required></div>
             <div class="field"><label for="diaryBody">본문</label><textarea id="diaryBody" required></textarea></div>
-            <div class="notice-line">이 사진은 반 학부모 전원에게 공개됩니다</div>
+            <div class="upload-label">이미지 업로드 (선택)</div>
+            <div class="upload-note">이미지는 한꺼번에 저장할 수 있음(10장 이내 추천)</div>
             <input type="file" id="diaryFileInput" accept="image/*" multiple hidden>
             <div class="photo-grid" id="diaryPhotoGrid"></div>
             <button type="submit" class="btn" id="diarySubmit">일지 저장</button>
@@ -182,7 +184,8 @@
               <div class="field"><label for="albumTitle">앨범명</label><input type="text" id="albumTitle" required></div>
               <div class="field"><label for="albumDate">일자</label><input type="date" id="albumDate" required></div>
               <div class="field"><label for="albumBody">앨범 설명</label><textarea id="albumBody"></textarea></div>
-              <div class="notice-line">이 사진은 반 학부모 전원에게 공개됩니다</div>
+              <div class="upload-label">이미지 업로드 (선택)</div>
+              <div class="upload-note">이미지는 한꺼번에 저장할 수 있음(10장 이내 추천)</div>
               <input type="file" id="albumDraftFileInput" accept="image/*" multiple hidden>
               <div class="photo-grid" id="albumDraftPhotoGrid"></div>
               <button type="submit" class="btn" id="albumSubmit">앨범 저장</button>
@@ -206,7 +209,6 @@
               <button type="button" class="btn ghost" id="backToAlbumsBtn">앨범 목록</button>
             </div>
           </div>
-          <div class="notice-line">이 사진은 반 학부모 전원에게 공개됩니다</div>
           <input type="file" id="albumFileInput" accept="image/*" multiple hidden>
           <div class="msg" id="albumUploadMsg"></div>
           <div class="photo-grid" id="albumPhotoGrid"></div>
@@ -548,7 +550,7 @@
   function diaryUploadTile(){
     return '<div class="upload-zone" id="diaryUploadZone" tabindex="0" role="button" aria-label="일지 사진 선택">' +
       '<div class="upload-icon">+</div>' +
-      '<div class="upload-hint"><strong>클릭하거나 사진을 여기에 드래그</strong><br>사진 없이 일지만 저장할 수도 있어요</div>' +
+      '<div class="upload-hint"><strong>클릭하거나 사진을 여기에 드래그</strong><br>JPG · PNG · WebP · 최대 10MB</div>' +
     '</div>';
   }
 
@@ -568,9 +570,6 @@
 
   async function renderDiaryPhotoGrid(postId){
     var html = [diaryUploadTile()];
-    if (!currentDiaryMedia.length && !diaryDraftFiles.length) {
-      html.push('<div class="empty">사진 없이 일지만 저장할 수도 있어요.</div>');
-    }
     for (var i = 0; i < currentDiaryMedia.length; i++) {
       var url = '';
       try { url = await signedUrl(currentDiaryMedia[i].url); }
@@ -847,15 +846,13 @@
   function draftUploadTile(){
     return '<div class="upload-zone" id="albumDraftUploadZone" tabindex="0" role="button" aria-label="앨범 생성 사진 선택">' +
       '<div class="upload-icon">+</div>' +
-      '<div class="upload-hint"><strong>클릭하거나 사진을 여기에 드래그</strong><br>저장할 때 함께 업로드됩니다</div>' +
+      '<div class="upload-hint"><strong>클릭하거나 사진을 여기에 드래그</strong><br>JPG · PNG · WebP · 최대 10MB</div>' +
     '</div>';
   }
 
   function renderDraftPhotoGrid(){
     var html = [draftUploadTile()];
-    if (!albumDraftFiles.length) {
-      html.push('<div class="empty">사진 없이 앨범만 저장할 수도 있어요.</div>');
-    } else {
+    if (albumDraftFiles.length) {
       html = html.concat(albumDraftFiles.map(function(item){
         return '<div class="photo-item">' +
           '<img src="' + esc(item.previewUrl) + '" alt="">' +
@@ -952,7 +949,7 @@
   function albumUploadTile(){
     return '<div class="upload-zone" id="albumUploadZone" tabindex="0" role="button" aria-label="앨범 사진 업로드">' +
       '<div class="upload-icon">+</div>' +
-      '<div class="upload-hint"><strong>클릭하거나 사진을 여기에 드래그</strong><br>JPG · PNG · WebP · 다중 업로드</div>' +
+      '<div class="upload-hint"><strong>클릭하거나 사진을 여기에 드래그</strong><br>JPG · PNG · WebP · 최대 10MB</div>' +
     '</div>';
   }
 
