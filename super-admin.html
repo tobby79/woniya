@@ -1,0 +1,878 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>원이야 - 플랫폼 관리자</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Gaegu:wght@700&display=swap" rel="stylesheet">
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<style>
+  :root{
+    --cream:#fff8f2;
+    --paper:#ffffff;
+    --ink:#403733;
+    --ink-soft:#756964;
+    --pink:#ff7fa8;
+    --pink-deep:#ef5f91;
+    --lavender:#a88de8;
+    --lavender-soft:#f3edff;
+    --coral:#ff8a6b;
+    --line:#f0e4dd;
+    --sage:#8fb39a;
+    --body:'Pretendard',sans-serif;
+    --hand:'Gaegu',cursive;
+  }
+
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{
+    min-height:100vh;
+    font-family:var(--body);
+    color:var(--ink);
+    background:
+      linear-gradient(180deg,rgba(255,127,168,.16),rgba(168,141,232,.12) 34%,var(--cream) 74%);
+    line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+  }
+  [hidden]{display:none!important}
+  button,input,textarea{font-family:var(--body)}
+
+  .topbar{
+    position:sticky;top:0;z-index:30;
+    background:rgba(255,248,242,.88);
+    backdrop-filter:blur(12px);
+    -webkit-backdrop-filter:blur(12px);
+    box-shadow:0 1px 0 rgba(180,140,150,.14);
+  }
+  .topbar-inner{
+    max-width:1180px;margin:0 auto;padding:15px 22px;
+    display:flex;align-items:center;justify-content:space-between;gap:16px;
+  }
+  .brand{font-size:1.05rem;font-weight:800;color:var(--pink-deep)}
+  .who{display:flex;align-items:center;gap:12px;color:var(--ink-soft);font-size:.86rem}
+
+  .wrap{max-width:1180px;margin:0 auto;padding:34px 22px 70px}
+  .page-head{display:flex;align-items:flex-end;justify-content:space-between;gap:18px;margin-bottom:24px}
+  .eyebrow{font-family:var(--hand);font-size:1.25rem;color:var(--lavender);font-weight:700}
+  h1{font-size:clamp(1.55rem,3vw,2.35rem);line-height:1.22;letter-spacing:0;margin-top:3px}
+  .lead{max-width:560px;color:var(--ink-soft);font-size:.94rem;margin-top:8px}
+
+  .panel{
+    background:var(--paper);
+    border:1px solid rgba(240,228,221,.82);
+    border-radius:22px;
+    padding:26px;
+    box-shadow:0 22px 50px -30px rgba(112,78,92,.42);
+  }
+  .login-panel{max-width:440px;margin:36px auto}
+  label{display:block;font-size:.86rem;font-weight:800;color:var(--ink-soft);margin-bottom:7px}
+  .field{margin-bottom:18px}
+  input[type=email],input[type=password],input[type=text],textarea{
+    width:100%;border:1.5px solid var(--line);border-radius:14px;padding:13px 15px;
+    color:var(--ink);background:#fffdfb;font-size:.96rem;outline:none;
+    transition:border-color .2s ease,box-shadow .2s ease;
+  }
+  textarea{min-height:104px;resize:vertical;line-height:1.55}
+  input:focus,textarea:focus{border-color:var(--pink);box-shadow:0 0 0 4px rgba(255,127,168,.12)}
+
+  .btn{
+    display:inline-flex;align-items:center;justify-content:center;gap:7px;
+    min-height:42px;border:none;border-radius:999px;padding:11px 18px;
+    background:var(--pink);color:#fff;font-weight:800;font-size:.94rem;
+    cursor:pointer;box-shadow:0 14px 28px -16px var(--pink-deep);
+    transition:transform .18s ease,opacity .18s ease,background .18s ease;
+  }
+  .btn:hover{transform:translateY(-1px)}
+  .btn:disabled{opacity:.55;cursor:not-allowed;transform:none}
+  .btn.full{width:100%}
+  .btn.ghost{background:#fff;color:var(--ink-soft);border:1.5px solid var(--line);box-shadow:none}
+  .btn.lavender{background:var(--lavender);box-shadow:0 14px 28px -16px var(--lavender)}
+  .btn.danger{background:#fff;color:#d9534f;border:1.5px solid #f4c6c3;box-shadow:none}
+  .icon-btn{
+    width:30px;height:30px;border-radius:50%;border:none;background:rgba(0,0,0,.55);color:#fff;
+    display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:1rem;line-height:1;
+  }
+  .icon-btn:hover{background:rgba(217,83,79,.92)}
+  .msg{margin-top:13px;font-size:.88rem;text-align:center;color:var(--ink-soft)}
+  .msg.error{color:#d9534f}
+  .msg.ok{color:var(--sage)}
+
+  .template-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:20px}
+  .template-card{
+    text-align:left;border:1.5px solid var(--line);border-radius:16px;padding:18px;
+    background:rgba(255,255,255,.78);cursor:pointer;
+    transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease;
+  }
+  .template-card:hover{transform:translateY(-2px);border-color:rgba(255,127,168,.55);box-shadow:0 16px 34px -26px rgba(80,60,70,.5)}
+  .template-card.active{border-color:var(--pink);background:#fff4f8}
+  .template-name{font-size:1.08rem;font-weight:900}
+  .template-id{font-size:.78rem;color:var(--ink-soft);margin-top:2px}
+
+  .editor-shell{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(330px,.95fr);gap:20px;align-items:start}
+  .editor-panel{position:sticky;top:82px}
+  .section{border-top:1px solid var(--line);padding-top:22px;margin-top:22px}
+  .section:first-child{border-top:none;padding-top:0;margin-top:0}
+  .section-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
+  .section-title{font-size:1.06rem;font-weight:900}
+  .hint{font-size:.8rem;color:var(--ink-soft);opacity:.82;margin-top:8px;line-height:1.38}
+  .two-col{display:grid;grid-template-columns:150px minmax(0,1fr);gap:20px;align-items:start}
+
+  .upload-zone{
+    position:relative;overflow:hidden;min-height:150px;
+    border:2px dashed var(--line);border-radius:18px;padding:28px 20px;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    text-align:center;cursor:pointer;background:#fffdfb;
+    transition:border-color .2s,background .2s;
+  }
+  .upload-zone:hover,.upload-zone.drag-over{border-color:var(--pink);background:#fff5f9}
+  .upload-zone .upload-icon{font-size:2rem;font-weight:800;color:var(--pink-deep);line-height:1;margin-bottom:8px}
+  .upload-zone .upload-hint{font-size:.86rem;color:var(--ink-soft);line-height:1.45}
+  .upload-zone .upload-hint strong{color:var(--pink-deep)}
+  .upload-zone input[type=file]{display:none}
+  .upload-zone.has-photo{padding:0;border-style:solid;background:#f1e9e0}
+  .upload-zone.has-photo .upload-icon,.upload-zone.has-photo .upload-hint{display:none}
+  .upload-photo-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
+  .replace-badge{
+    position:absolute;left:50%;bottom:12px;transform:translateX(-50%);
+    background:rgba(64,55,51,.78);color:#fff;border-radius:99px;
+    padding:5px 12px;font-size:.76rem;font-weight:800;
+  }
+  .photo-remove-btn{position:absolute;top:8px;right:8px;z-index:2}
+  .hero-upload{aspect-ratio:21/9;min-height:0}
+  .profile-upload{
+    width:132px;height:132px;min-height:132px;border-radius:50%;padding:18px;overflow:visible;
+  }
+  .profile-upload .upload-photo-img{border-radius:50%}
+  .profile-upload .upload-hint{font-size:.74rem;line-height:1.35}
+  .profile-upload .photo-remove-btn{top:-6px;right:-6px}
+
+  .album-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+  .album-card,.teacher-card{
+    border:1.5px solid var(--line);border-radius:16px;padding:14px;background:#fffdfb;
+  }
+  .album-photo{aspect-ratio:1;border-radius:12px;margin-bottom:10px}
+  .album-card .field,.teacher-card .field{margin-bottom:11px}
+  .teacher-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+  .teacher-card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:12px}
+  .teacher-card .profile-upload{width:104px;height:104px;min-height:104px}
+  .empty-state{
+    padding:24px;border:1.5px dashed var(--line);border-radius:16px;text-align:center;
+    color:var(--ink-soft);font-size:.9rem;background:#fffdfb;
+  }
+  .actions{display:flex;align-items:center;justify-content:flex-end;gap:10px;margin-top:22px}
+  .preview-card{background:linear-gradient(135deg,#fff7fb,#f4efff);border-color:rgba(168,141,232,.22)}
+  .preview-title{font-size:.95rem;font-weight:900;margin-bottom:10px}
+  .preview-image{aspect-ratio:21/9;border-radius:16px;background:#f3eae5;overflow:hidden;margin-bottom:16px}
+  .preview-image img{width:100%;height:100%;object-fit:cover;display:block}
+  .preview-director{display:flex;gap:12px;align-items:center;margin-bottom:14px}
+  .preview-director img{width:58px;height:58px;border-radius:50%;object-fit:cover;background:#f3eae5}
+  .preview-director strong{display:block}
+  .preview-director span,.preview-text{color:var(--ink-soft);font-size:.86rem}
+
+  @media (max-width:920px){
+    .template-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+    .editor-shell{grid-template-columns:1fr}
+    .editor-panel{position:static}
+  }
+  @media (max-width:640px){
+    .wrap{padding:24px 16px 56px}
+    .topbar-inner{padding:13px 16px}
+    .page-head{display:block}
+    .panel{padding:20px;border-radius:18px}
+    .template-grid,.album-grid,.teacher-list{grid-template-columns:1fr}
+    .two-col{grid-template-columns:1fr}
+    .who span{display:none}
+  }
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="topbar-inner">
+    <div class="brand">원이야 플랫폼 관리자</div>
+    <div class="who" id="whoBox" hidden>
+      <span id="userEmail"></span>
+      <button type="button" class="btn ghost" id="logoutBtn">로그아웃</button>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="panel login-panel" id="loginView" hidden>
+    <div class="eyebrow">Super Admin</div>
+    <h1>템플릿 미리보기 관리</h1>
+    <p class="lead">플랫폼 관리자 계정으로 로그인해주세요.</p>
+    <form id="loginForm" style="margin-top:22px">
+      <div class="field">
+        <label for="email">이메일</label>
+        <input type="email" id="email" required autocomplete="email">
+      </div>
+      <div class="field">
+        <label for="password">비밀번호</label>
+        <input type="password" id="password" required autocomplete="current-password">
+      </div>
+      <button type="submit" class="btn full" id="loginBtn">로그인</button>
+      <div class="msg error" id="loginError"></div>
+    </form>
+  </section>
+
+  <section id="adminView" hidden>
+    <div class="page-head">
+      <div>
+        <div class="eyebrow">Preview Templates</div>
+        <h1>템플릿 미리보기 관리</h1>
+        <p class="lead">템플릿 선택 화면과 공개 미리보기에서 사용할 샘플 콘텐츠를 관리합니다.</p>
+      </div>
+    </div>
+
+    <div class="template-grid" id="templateGrid"></div>
+
+    <div class="editor-shell" id="editorShell" hidden>
+      <form class="panel" id="editorForm">
+        <div class="section">
+          <div class="section-head">
+            <div>
+              <div class="section-title" id="editorTitle">템플릿 편집</div>
+              <div class="hint">사진은 선택 즉시 화면에 반영됩니다. 저장하면 미리보기 데이터에 업로드되어 적용됩니다.</div>
+            </div>
+          </div>
+
+          <div class="field">
+            <label>히어로 이미지</label>
+            <div class="upload-zone hero-upload" id="heroUpload">
+              <div class="upload-icon">+</div>
+              <div class="upload-hint"><strong>클릭하거나 사진을 여기에 드래그</strong><br>JPG · PNG · WebP</div>
+              <input type="file" id="heroFile" accept="image/jpeg,image/png,image/webp">
+            </div>
+            <div class="hint">수정하려면 사진을 클릭해서 바로 교체해주세요.</div>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="section-title" style="margin-bottom:14px">원장 소개</div>
+          <div class="two-col">
+            <div>
+              <label>원장 사진</label>
+              <div class="upload-zone profile-upload" id="directorUpload">
+                <div class="upload-icon">+</div>
+                <div class="upload-hint"><strong>클릭하거나 사진을 여기에 드래그</strong><br>JPG · PNG · WebP</div>
+                <input type="file" id="directorFile" accept="image/jpeg,image/png,image/webp">
+              </div>
+              <div class="hint">수정하려면 사진을 클릭해서 바로 교체해주세요.</div>
+            </div>
+            <div>
+              <div class="field">
+                <label for="directorName">원장 이름</label>
+                <input type="text" id="directorName" placeholder="예: 김원이 원장">
+              </div>
+              <div class="field">
+                <label for="directorMessage">원장 한마디</label>
+                <textarea id="directorMessage" placeholder="아이들과 부모님께 전하고 싶은 메시지"></textarea>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="field">
+            <label for="introText">소개글</label>
+            <textarea id="introText" placeholder="템플릿 미리보기에 보여줄 소개 문구"></textarea>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="section-head">
+            <div class="section-title">앨범</div>
+            <button type="button" class="btn ghost" id="addAlbumBtn">사진 추가</button>
+          </div>
+          <input type="file" id="albumFiles" accept="image/jpeg,image/png,image/webp" multiple hidden>
+          <div class="album-grid" id="albumList"></div>
+        </div>
+
+        <div class="section">
+          <div class="section-head">
+            <div class="section-title">교사 카드</div>
+            <button type="button" class="btn ghost" id="addTeacherBtn">교사 추가</button>
+          </div>
+          <div class="teacher-list" id="teacherList"></div>
+        </div>
+
+        <div class="actions">
+          <button type="submit" class="btn lavender" id="saveBtn">저장</button>
+        </div>
+        <div class="msg" id="saveStatus"></div>
+      </form>
+
+      <aside class="panel editor-panel preview-card">
+        <div class="preview-title">현재 편집 미리보기</div>
+        <div class="preview-image" id="previewHero"></div>
+        <div class="preview-director">
+          <img id="previewDirectorPhoto" alt="">
+          <div>
+            <strong id="previewDirectorName">원장 이름</strong>
+            <span id="previewDirectorMessage">원장 한마디가 여기에 표시됩니다.</span>
+          </div>
+        </div>
+        <div class="preview-text" id="previewIntro">소개글이 여기에 표시됩니다.</div>
+      </aside>
+    </div>
+  </section>
+</main>
+
+<script src="supabase-config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+(function(){
+  var ADMIN_EMAIL = 'tobby79@naver.com';
+  var BUCKET = 'template-previews';
+  var TEMPLATE_LABELS = {
+    sunshine: '햇살',
+    forest: '숲',
+    carnival: '카니발',
+    gallery: '갤러리'
+  };
+  var TEMPLATE_ORDER = ['sunshine', 'forest', 'carnival', 'gallery'];
+
+  var cfg = window.__SUPABASE_CONFIG__;
+  var client = supabase.createClient(cfg.url, cfg.anonKey);
+
+  var loginView = document.getElementById('loginView');
+  var adminView = document.getElementById('adminView');
+  var whoBox = document.getElementById('whoBox');
+  var userEmailEl = document.getElementById('userEmail');
+  var logoutBtn = document.getElementById('logoutBtn');
+  var loginForm = document.getElementById('loginForm');
+  var loginBtn = document.getElementById('loginBtn');
+  var loginError = document.getElementById('loginError');
+  var templateGrid = document.getElementById('templateGrid');
+  var editorShell = document.getElementById('editorShell');
+  var editorForm = document.getElementById('editorForm');
+  var editorTitle = document.getElementById('editorTitle');
+  var heroUpload = document.getElementById('heroUpload');
+  var heroFile = document.getElementById('heroFile');
+  var directorUpload = document.getElementById('directorUpload');
+  var directorFile = document.getElementById('directorFile');
+  var directorName = document.getElementById('directorName');
+  var directorMessage = document.getElementById('directorMessage');
+  var introText = document.getElementById('introText');
+  var addAlbumBtn = document.getElementById('addAlbumBtn');
+  var albumFiles = document.getElementById('albumFiles');
+  var albumList = document.getElementById('albumList');
+  var addTeacherBtn = document.getElementById('addTeacherBtn');
+  var teacherList = document.getElementById('teacherList');
+  var saveBtn = document.getElementById('saveBtn');
+  var saveStatus = document.getElementById('saveStatus');
+  var previewHero = document.getElementById('previewHero');
+  var previewDirectorPhoto = document.getElementById('previewDirectorPhoto');
+  var previewDirectorName = document.getElementById('previewDirectorName');
+  var previewDirectorMessage = document.getElementById('previewDirectorMessage');
+  var previewIntro = document.getElementById('previewIntro');
+
+  var currentTemplateId = '';
+  var heroState = emptyPhoto();
+  var directorState = emptyPhoto();
+  var albumState = [];
+  var teacherState = [];
+  var pendingRemovePaths = [];
+  var deniedEmail = '';
+
+  function emptyPhoto(){
+    return { url:'', file:null, previewUrl:'', oldUrl:'' };
+  }
+
+  function esc(s){
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){
+      return ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' })[c];
+    });
+  }
+
+  function errorMessage(error){
+    return error && error.message ? error.message : String(error || '알 수 없는 오류');
+  }
+
+  function showLoggedOut(){
+    loginView.hidden = false;
+    adminView.hidden = true;
+    whoBox.hidden = true;
+    loginBtn.disabled = false;
+    loginForm.reset();
+    loginError.className = deniedEmail ? 'msg error' : 'msg error';
+    loginError.textContent = deniedEmail
+      ? deniedEmail + ' 계정은 플랫폼 관리자 권한이 없어요. 관리자 계정으로 다시 로그인해주세요.'
+      : '';
+  }
+
+  function showLoggedIn(session){
+    loginView.hidden = true;
+    adminView.hidden = false;
+    whoBox.hidden = false;
+    userEmailEl.textContent = session.user.email;
+    renderTemplateCards();
+  }
+
+  async function handleSession(session){
+    if (!session) {
+      showLoggedOut();
+      return;
+    }
+    if ((session.user.email || '').toLowerCase() !== ADMIN_EMAIL) {
+      deniedEmail = session.user.email || '현재';
+      await client.auth.signOut();
+      showLoggedOut();
+      return;
+    }
+    deniedEmail = '';
+    showLoggedIn(session);
+  }
+
+  function renderTemplateCards(){
+    templateGrid.innerHTML = TEMPLATE_ORDER.map(function(id){
+      return '<button type="button" class="template-card' + (id === currentTemplateId ? ' active' : '') + '" data-template-id="' + id + '">' +
+        '<div class="template-name">' + esc(TEMPLATE_LABELS[id]) + '</div>' +
+        '<div class="template-id">' + esc(id) + '</div>' +
+      '</button>';
+    }).join('');
+  }
+
+  async function loadTemplate(templateId){
+    currentTemplateId = templateId;
+    renderTemplateCards();
+    editorShell.hidden = false;
+    saveStatus.textContent = '불러오는 중...';
+    saveStatus.className = 'msg';
+    editorTitle.textContent = TEMPLATE_LABELS[templateId] + ' 템플릿 편집';
+
+    var res = await client.from('platform_templates').select('*').eq('template_id', templateId).single();
+    if (res.error && res.error.code !== 'PGRST116') {
+      saveStatus.textContent = '불러오기 실패: ' + res.error.message;
+      saveStatus.className = 'msg error';
+      return;
+    }
+
+    var row = res.data || { template_id:templateId, album:[], teachers:[] };
+    heroState = { url:row.hero_image_url || '', file:null, previewUrl:'', oldUrl:row.hero_image_url || '' };
+    directorState = { url:row.director_photo_url || '', file:null, previewUrl:'', oldUrl:row.director_photo_url || '' };
+    albumState = (Array.isArray(row.album) ? row.album : []).map(function(item){
+      return { url:item.url || '', caption:item.caption || '', file:null, previewUrl:'', oldUrl:item.url || '' };
+    });
+    teacherState = (Array.isArray(row.teachers) ? row.teachers : []).map(function(item){
+      return {
+        photo_url:item.photo_url || '',
+        name:item.name || '',
+        role:item.role || '',
+        file:null,
+        previewUrl:'',
+        oldUrl:item.photo_url || ''
+      };
+    });
+
+    directorName.value = row.director_name || '';
+    directorMessage.value = row.director_message || '';
+    introText.value = row.intro_text || '';
+    pendingRemovePaths = [];
+    setUploadZonePhoto(heroUpload, getPhotoSrc(heroState), clearHeroPhoto);
+    setUploadZonePhoto(directorUpload, getPhotoSrc(directorState), clearDirectorPhoto);
+    renderAlbum();
+    renderTeachers();
+    updatePreview();
+    saveStatus.textContent = '';
+  }
+
+  function getPhotoSrc(state){
+    return state.previewUrl || state.url || '';
+  }
+
+  function setUploadZonePhoto(zone, src, onDelete){
+    zone.querySelectorAll('.upload-photo-img,.replace-badge,.photo-remove-btn').forEach(function(el){ el.remove(); });
+    zone.classList.toggle('has-photo', !!src);
+    if (!src) return;
+    var img = document.createElement('img');
+    img.className = 'upload-photo-img';
+    img.src = src;
+    img.alt = '';
+    zone.appendChild(img);
+    if (!zone.classList.contains('profile-upload')) {
+      var badge = document.createElement('span');
+      badge.className = 'replace-badge';
+      badge.textContent = '클릭해서 교체';
+      zone.appendChild(badge);
+    }
+    var del = document.createElement('button');
+    del.type = 'button';
+    del.className = 'icon-btn photo-remove-btn';
+    del.title = '사진 삭제';
+    del.textContent = '×';
+    del.addEventListener('click', function(e){
+      e.preventDefault();
+      e.stopPropagation();
+      onDelete();
+    });
+    zone.appendChild(del);
+  }
+
+  function bindUploadZone(zone, input, onFile){
+    zone.addEventListener('click', function(){ input.click(); });
+    zone.addEventListener('dragover', function(e){ e.preventDefault(); zone.classList.add('drag-over'); });
+    zone.addEventListener('dragleave', function(){ zone.classList.remove('drag-over'); });
+    zone.addEventListener('drop', function(e){
+      e.preventDefault();
+      zone.classList.remove('drag-over');
+      if (e.dataTransfer.files[0]) onFile(e.dataTransfer.files[0]);
+    });
+    input.addEventListener('change', function(){
+      if (input.files[0]) onFile(input.files[0]);
+      input.value = '';
+    });
+  }
+
+  function setPhotoFile(state, file, zone, onDelete){
+    if (!file || !file.type.match(/^image\//)) return;
+    if (state.previewUrl) URL.revokeObjectURL(state.previewUrl);
+    state.file = file;
+    state.previewUrl = URL.createObjectURL(file);
+    setUploadZonePhoto(zone, state.previewUrl, onDelete);
+    updatePreview();
+  }
+
+  function markRemoveUrl(url){
+    var path = publicUrlToPath(url);
+    if (path && pendingRemovePaths.indexOf(path) === -1) pendingRemovePaths.push(path);
+  }
+
+  function clearHeroPhoto(){
+    if (heroState.url) markRemoveUrl(heroState.url);
+    if (heroState.previewUrl) URL.revokeObjectURL(heroState.previewUrl);
+    heroState = emptyPhoto();
+    setUploadZonePhoto(heroUpload, '', clearHeroPhoto);
+    updatePreview();
+  }
+
+  function clearDirectorPhoto(){
+    if (directorState.url) markRemoveUrl(directorState.url);
+    if (directorState.previewUrl) URL.revokeObjectURL(directorState.previewUrl);
+    directorState = emptyPhoto();
+    setUploadZonePhoto(directorUpload, '', clearDirectorPhoto);
+    updatePreview();
+  }
+
+  function renderAlbum(){
+    if (!albumState.length) {
+      albumList.innerHTML = '<div class="empty-state">아직 등록된 앨범 사진이 없어요.</div>';
+      return;
+    }
+    albumList.innerHTML = albumState.map(function(item, index){
+      return '<div class="album-card" data-index="' + index + '">' +
+        '<div class="upload-zone album-photo">' +
+          '<div class="upload-icon">+</div>' +
+          '<div class="upload-hint"><strong>사진 선택</strong><br>JPG · PNG · WebP</div>' +
+          '<input type="file" class="album-file" accept="image/jpeg,image/png,image/webp">' +
+        '</div>' +
+        '<div class="field"><label>캡션</label><input type="text" class="album-caption" value="' + esc(item.caption) + '" placeholder="사진 캡션"></div>' +
+        '<button type="button" class="btn danger album-delete">삭제</button>' +
+      '</div>';
+    }).join('');
+    albumList.querySelectorAll('.album-card').forEach(function(card){
+      var index = Number(card.dataset.index);
+      var item = albumState[index];
+      var zone = card.querySelector('.album-photo');
+      var input = card.querySelector('.album-file');
+      var caption = card.querySelector('.album-caption');
+      var delBtn = card.querySelector('.album-delete');
+      setUploadZonePhoto(zone, item.previewUrl || item.url, function(){ removeAlbum(index); });
+      bindUploadZone(zone, input, function(file){
+        if (item.previewUrl) URL.revokeObjectURL(item.previewUrl);
+        item.file = file;
+        item.previewUrl = URL.createObjectURL(file);
+        setUploadZonePhoto(zone, item.previewUrl, function(){ removeAlbum(index); });
+      });
+      caption.addEventListener('input', function(){ item.caption = caption.value; });
+      delBtn.addEventListener('click', function(){ removeAlbum(index); });
+    });
+  }
+
+  function addAlbumFiles(files){
+    Array.prototype.forEach.call(files, function(file){
+      if (!file || !file.type.match(/^image\//)) return;
+      albumState.push({ url:'', caption:'', file:file, previewUrl:URL.createObjectURL(file), oldUrl:'' });
+    });
+    renderAlbum();
+  }
+
+  function removeAlbum(index){
+    var item = albumState[index];
+    if (!item) return;
+    if (item.url) markRemoveUrl(item.url);
+    if (item.previewUrl) URL.revokeObjectURL(item.previewUrl);
+    albumState.splice(index, 1);
+    renderAlbum();
+  }
+
+  function renderTeachers(){
+    if (!teacherState.length) {
+      teacherList.innerHTML = '<div class="empty-state">아직 등록된 교사 카드가 없어요.</div>';
+      return;
+    }
+    teacherList.innerHTML = teacherState.map(function(item, index){
+      return '<div class="teacher-card" data-index="' + index + '">' +
+        '<div class="teacher-card-head">' +
+          '<div class="upload-zone profile-upload teacher-photo">' +
+            '<div class="upload-icon">+</div>' +
+            '<div class="upload-hint"><strong>사진</strong><br>JPG · PNG · WebP</div>' +
+            '<input type="file" class="teacher-file" accept="image/jpeg,image/png,image/webp">' +
+          '</div>' +
+          '<button type="button" class="btn danger teacher-delete">카드 삭제</button>' +
+        '</div>' +
+        '<div class="field"><label>이름</label><input type="text" class="teacher-name" value="' + esc(item.name) + '" placeholder="예: 김햇살 선생님"></div>' +
+        '<div class="field"><label>역할</label><input type="text" class="teacher-role" value="' + esc(item.role) + '" placeholder="예: 만 3세 담임"></div>' +
+      '</div>';
+    }).join('');
+    teacherList.querySelectorAll('.teacher-card').forEach(function(card){
+      var index = Number(card.dataset.index);
+      var item = teacherState[index];
+      var zone = card.querySelector('.teacher-photo');
+      var input = card.querySelector('.teacher-file');
+      var nameInput = card.querySelector('.teacher-name');
+      var roleInput = card.querySelector('.teacher-role');
+      var delBtn = card.querySelector('.teacher-delete');
+      setUploadZonePhoto(zone, item.previewUrl || item.photo_url, function(){ clearTeacherPhoto(index); });
+      bindUploadZone(zone, input, function(file){
+        if (item.previewUrl) URL.revokeObjectURL(item.previewUrl);
+        item.file = file;
+        item.previewUrl = URL.createObjectURL(file);
+        setUploadZonePhoto(zone, item.previewUrl, function(){ clearTeacherPhoto(index); });
+      });
+      nameInput.addEventListener('input', function(){ item.name = nameInput.value; updatePreview(); });
+      roleInput.addEventListener('input', function(){ item.role = roleInput.value; });
+      delBtn.addEventListener('click', function(){ removeTeacher(index); });
+    });
+  }
+
+  function clearTeacherPhoto(index){
+    var item = teacherState[index];
+    if (!item) return;
+    if (item.photo_url) markRemoveUrl(item.photo_url);
+    if (item.previewUrl) URL.revokeObjectURL(item.previewUrl);
+    item.photo_url = '';
+    item.file = null;
+    item.previewUrl = '';
+    renderTeachers();
+  }
+
+  function removeTeacher(index){
+    var item = teacherState[index];
+    if (!item) return;
+    if (item.photo_url) markRemoveUrl(item.photo_url);
+    if (item.previewUrl) URL.revokeObjectURL(item.previewUrl);
+    teacherState.splice(index, 1);
+    renderTeachers();
+  }
+
+  function updatePreview(){
+    var heroSrc = getPhotoSrc(heroState);
+    previewHero.innerHTML = heroSrc ? '<img src="' + esc(heroSrc) + '" alt="">' : '';
+    previewDirectorPhoto.src = getPhotoSrc(directorState) || '';
+    previewDirectorName.textContent = directorName.value || '원장 이름';
+    previewDirectorMessage.textContent = directorMessage.value || '원장 한마디가 여기에 표시됩니다.';
+    previewIntro.textContent = introText.value || '소개글이 여기에 표시됩니다.';
+  }
+
+  function safeName(name){
+    return String(name || 'image.webp')
+      .replace(/\.[^.]+$/, '')
+      .replace(/[^a-zA-Z0-9_-]+/g, '-')
+      .replace(/^-+|-+$/g, '')
+      .slice(0, 48) || 'image';
+  }
+
+  function compressImage(file){
+    return new Promise(function(resolve){
+      var reader = new FileReader();
+      reader.onload = function(e){
+        var img = new Image();
+        img.onload = function(){
+          var MAX = 1920;
+          var w = img.width;
+          var h = img.height;
+          if (w > MAX || h > MAX) {
+            if (w >= h) { h = Math.round(h * MAX / w); w = MAX; }
+            else { w = Math.round(w * MAX / h); h = MAX; }
+          }
+          var canvas = document.createElement('canvas');
+          canvas.width = w;
+          canvas.height = h;
+          canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+          canvas.toBlob(function(blob){
+            resolve(new File([blob], safeName(file.name) + '.webp', { type:'image/webp' }));
+          }, 'image/webp', 0.85);
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  async function uploadPhoto(file, folder){
+    var compressed = await compressImage(file);
+    var path = currentTemplateId + '/' + folder + '/' + Date.now() + '_' + Math.random().toString(36).slice(2, 8) + '_' + compressed.name;
+    var upRes = await client.storage.from(BUCKET).upload(path, compressed, {
+      cacheControl:'3600',
+      upsert:false
+    });
+    if (upRes.error) throw upRes.error;
+    var urlRes = client.storage.from(BUCKET).getPublicUrl(path);
+    return urlRes.data.publicUrl;
+  }
+
+  function publicUrlToPath(url){
+    if (!url) return '';
+    var marker = '/storage/v1/object/public/' + BUCKET + '/';
+    var idx = url.indexOf(marker);
+    if (idx === -1) return '';
+    return decodeURIComponent(url.slice(idx + marker.length).split('?')[0]);
+  }
+
+  async function removeStoredFiles(paths){
+    if (!paths.length) return;
+    var unique = paths.filter(function(path, index){ return path && paths.indexOf(path) === index; });
+    if (!unique.length) return;
+    var res = await client.storage.from(BUCKET).remove(unique);
+    if (res.error) console.warn('[super-admin/removeStoredFiles]', res.error);
+  }
+
+  async function saveTemplate(){
+    if (!currentTemplateId) return;
+    saveBtn.disabled = true;
+    saveStatus.textContent = '저장 중...';
+    saveStatus.className = 'msg';
+    var removeAfterSave = pendingRemovePaths.slice();
+
+    try {
+      if (heroState.file) {
+        if (heroState.oldUrl) removeAfterSave.push(publicUrlToPath(heroState.oldUrl));
+        heroState.url = await uploadPhoto(heroState.file, 'hero');
+      }
+      if (directorState.file) {
+        if (directorState.oldUrl) removeAfterSave.push(publicUrlToPath(directorState.oldUrl));
+        directorState.url = await uploadPhoto(directorState.file, 'director');
+      }
+
+      var albumPayload = [];
+      for (var i = 0; i < albumState.length; i++) {
+        var albumItem = albumState[i];
+        var albumUrl = albumItem.url;
+        if (albumItem.file) {
+          if (albumItem.oldUrl) removeAfterSave.push(publicUrlToPath(albumItem.oldUrl));
+          albumUrl = await uploadPhoto(albumItem.file, 'album');
+        }
+        if (albumUrl || albumItem.caption) {
+          albumPayload.push({ url:albumUrl || '', caption:albumItem.caption || '' });
+        }
+      }
+
+      var teacherPayload = [];
+      for (var j = 0; j < teacherState.length; j++) {
+        var teacherItem = teacherState[j];
+        var photoUrl = teacherItem.photo_url;
+        if (teacherItem.file) {
+          if (teacherItem.oldUrl) removeAfterSave.push(publicUrlToPath(teacherItem.oldUrl));
+          photoUrl = await uploadPhoto(teacherItem.file, 'teachers');
+        }
+        if (photoUrl || teacherItem.name || teacherItem.role) {
+          teacherPayload.push({
+            photo_url:photoUrl || '',
+            name:teacherItem.name || '',
+            role:teacherItem.role || ''
+          });
+        }
+      }
+
+      var payload = {
+        template_id:currentTemplateId,
+        hero_image_url:heroState.url || null,
+        director_photo_url:directorState.url || null,
+        director_name:directorName.value || null,
+        director_message:directorMessage.value || null,
+        intro_text:introText.value || null,
+        album:albumPayload,
+        teachers:teacherPayload,
+        updated_at:new Date().toISOString()
+      };
+      var res = await client.from('platform_templates')
+        .upsert(payload, { onConflict:'template_id' })
+        .select()
+        .single();
+      if (res.error) throw res.error;
+
+      await removeStoredFiles(removeAfterSave);
+      pendingRemovePaths = [];
+      saveStatus.textContent = '저장됐어요.';
+      saveStatus.className = 'msg ok';
+      await loadTemplate(currentTemplateId);
+    } catch (err) {
+      console.error('[super-admin/saveTemplate]', err);
+      saveStatus.textContent = '저장 실패: ' + errorMessage(err);
+      saveStatus.className = 'msg error';
+    } finally {
+      saveBtn.disabled = false;
+    }
+  }
+
+  templateGrid.addEventListener('click', function(e){
+    var btn = e.target.closest('.template-card');
+    if (!btn) return;
+    loadTemplate(btn.dataset.templateId);
+  });
+
+  bindUploadZone(heroUpload, heroFile, function(file){
+    setPhotoFile(heroState, file, heroUpload, clearHeroPhoto);
+  });
+  bindUploadZone(directorUpload, directorFile, function(file){
+    setPhotoFile(directorState, file, directorUpload, clearDirectorPhoto);
+  });
+  addAlbumBtn.addEventListener('click', function(){ albumFiles.click(); });
+  albumFiles.addEventListener('change', function(){
+    if (albumFiles.files.length) addAlbumFiles(albumFiles.files);
+    albumFiles.value = '';
+  });
+  addTeacherBtn.addEventListener('click', function(){
+    teacherState.push({ photo_url:'', name:'', role:'', file:null, previewUrl:'', oldUrl:'' });
+    renderTeachers();
+  });
+  directorName.addEventListener('input', updatePreview);
+  directorMessage.addEventListener('input', updatePreview);
+  introText.addEventListener('input', updatePreview);
+  editorForm.addEventListener('submit', function(e){
+    e.preventDefault();
+    saveTemplate();
+  });
+
+  loginForm.addEventListener('submit', async function(e){
+    e.preventDefault();
+    deniedEmail = '';
+    loginError.textContent = '';
+    loginBtn.disabled = true;
+    var email = document.getElementById('email').value;
+    var password = document.getElementById('password').value;
+    var res = await client.auth.signInWithPassword({ email:email, password:password });
+    loginBtn.disabled = false;
+    if (res.error) {
+      console.error('[super-admin/login]', res.error);
+      loginError.textContent = '로그인에 실패했어요: ' + res.error.message;
+    }
+  });
+
+  logoutBtn.addEventListener('click', async function(){
+    var res = await client.auth.signOut();
+    if (res.error) alert('로그아웃 실패: ' + res.error.message);
+  });
+
+  client.auth.onAuthStateChange(function(_event, session){
+    handleSession(session);
+  });
+  client.auth.getSession().then(function(res){
+    handleSession(res.data.session);
+  });
+})();
+</script>
+</body>
+</html>
