@@ -97,13 +97,21 @@
   .teacher-avatar{width:72px;height:72px;border-radius:50%;border:2px dashed var(--coral);background:#fff8f5;display:flex;align-items:center;justify-content:center;font-family:var(--hand);font-size:1.12rem;color:var(--coral-deep);transform:rotate(-4deg)}
   .speech{position:relative;background:#fffaf3;border:1.5px solid #f1e2d4;border-radius:22px;padding:14px 16px;color:var(--ink-soft);font-size:.94rem}
   .speech::before{content:"";position:absolute;left:-9px;top:24px;width:16px;height:16px;background:#fffaf3;border-left:1.5px solid #f1e2d4;border-bottom:1.5px solid #f1e2d4;transform:rotate(45deg)}
-  .event-teaser{position:relative;border:1.5px dashed #ead7e7;background:#fff7fb;border-radius:28px;padding:18px;cursor:pointer;box-shadow:0 16px 42px -30px rgba(120,80,60,.45);overflow:hidden}
+  .event-teaser{position:relative;width:100%;text-align:left;border:1.5px dashed #ead7e7;background:#fff7fb;border-radius:28px;padding:18px 18px 52px;cursor:pointer;box-shadow:0 16px 42px -30px rgba(120,80,60,.45);overflow:hidden;font-family:var(--body);color:var(--ink)}
   .event-teaser::after{content:"";position:absolute;right:14px;top:12px;width:38px;height:38px;border-radius:50%;background:rgba(255,138,107,.18);border:2px dashed rgba(255,138,107,.42)}
   .event-badge{display:inline-flex;align-items:center;border-radius:999px;padding:6px 10px;background:#fff0a8;font-family:var(--hand);font-size:1rem;font-weight:700;transform:rotate(-3deg);margin-bottom:10px}
   .event-teaser-title{font-weight:900;font-size:1.04rem;line-height:1.45;margin-bottom:4px;word-break:break-word}
   .event-teaser-date{font-size:.84rem;color:var(--ink-soft);font-weight:800}
+  .event-more{position:absolute;right:16px;bottom:14px;display:inline-flex;align-items:center;gap:5px;border-radius:999px;padding:6px 10px;background:#fff;color:var(--coral-deep);font-size:.78rem;font-weight:900;box-shadow:0 10px 20px -16px rgba(242,113,90,.7);border:1px solid #f6d8cf}
+  .event-more span{font-size:.9rem;line-height:1}
+  .notice-alert{position:relative;width:100%;text-align:left;border:2px solid #ffb7c6;background:#fff4f7;border-radius:28px;padding:18px 18px 52px;cursor:pointer;box-shadow:0 18px 42px -30px rgba(242,113,90,.58);font-family:var(--body);color:var(--ink);overflow:hidden}
+  .notice-alert::before{content:"";position:absolute;right:16px;top:16px;width:12px;height:12px;border-radius:50%;background:var(--coral);box-shadow:0 0 0 6px rgba(255,138,107,.16)}
+  .notice-alert-badge{display:inline-flex;border-radius:999px;padding:6px 10px;background:#fff;color:var(--coral-deep);font-size:.78rem;font-weight:900;margin-bottom:10px;border:1px solid #ffd7df}
+  .notice-alert-title{font-weight:900;font-size:1.04rem;line-height:1.45;margin-bottom:4px;word-break:break-word}
+  .notice-alert-date{font-size:.84rem;color:var(--ink-soft);font-weight:800}
   .mini-tabs{display:flex;gap:8px;overflow-x:auto;padding:2px 2px 12px;margin-bottom:6px}
   .mini-tab{flex:0 0 auto;border:1.5px solid var(--line);background:var(--paper);color:var(--ink-soft);border-radius:999px;padding:9px 15px;font-family:var(--body);font-weight:800;cursor:pointer}
+  .mini-tab-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--coral);margin-left:6px;vertical-align:middle;box-shadow:0 0 0 3px rgba(255,138,107,.16)}
   .mini-tab.active{background:var(--coral);border-color:var(--coral);color:#fff;box-shadow:0 12px 22px -16px var(--coral-deep)}
   .mini-content{display:flex;flex-direction:column;gap:14px}
   .mini-card{position:relative;background:var(--paper);border:1.5px solid var(--line);border-radius:24px;padding:18px;box-shadow:0 16px 42px -28px rgba(120,80,60,.35)}
@@ -146,8 +154,8 @@
     .album-grid-mini{grid-template-columns:repeat(2,1fr)}
   }
   @media (min-width:768px){
-    .mini-info-grid.has-event{grid-template-columns:1fr 1fr;align-items:stretch}
-    .mini-info-grid.has-event .teacher-note,.mini-info-grid.has-event .event-teaser{height:100%}
+    .mini-info-grid.has-cards{grid-template-columns:repeat(auto-fit,minmax(220px,1fr));align-items:stretch}
+    .mini-info-grid.has-cards .notice-alert,.mini-info-grid.has-cards .teacher-note,.mini-info-grid.has-cards .event-teaser{height:100%}
   }
 </style>
 </head>
@@ -301,6 +309,7 @@
   var loadingState = false;
   var approvedClasses = [];
   var currentMiniClass = null;
+  var currentEnrollment = null;
   var currentMini = null;
   var currentMiniTab = 'diary';
   var eventCalendarDate = firstOfMonth(new Date());
@@ -464,6 +473,23 @@
     }) || null;
   }
 
+  function noticeRows(){
+    return miniCache.posts
+      .filter(function(row){ return row.type === 'notice'; })
+      .sort(function(a, b){ return new Date(b.created_at).getTime() - new Date(a.created_at).getTime(); });
+  }
+
+  function latestNotice(){
+    return noticeRows()[0] || null;
+  }
+
+  function hasUnreadNotice(){
+    var latest = latestNotice();
+    if (!latest) return false;
+    if (!currentEnrollment || !currentEnrollment.last_notice_read_at) return true;
+    return new Date(latest.created_at).getTime() > new Date(currentEnrollment.last_notice_read_at).getTime();
+  }
+
   function firstMediaForPost(postId){
     return miniCache.media.find(function(row){
       return row.post_id === postId && row.signed_url;
@@ -474,6 +500,10 @@
     var row = approvedClasses.find(function(item){ return item.id === classId; });
     if (!row) return;
     currentMiniClass = row;
+    currentEnrollment = {
+      id: row.enrollment_id || null,
+      last_notice_read_at: row.last_notice_read_at || null
+    };
     currentMini = null;
     currentMiniTab = 'diary';
     miniCache = { posts: [], media: [], comments: [] };
@@ -547,6 +577,9 @@
       currentMiniTab = modules[0].key;
     }
     var nextEvent = upcomingEvent();
+    var unreadNotice = hasUnreadNotice();
+    var latestUnreadNotice = unreadNotice ? latestNotice() : null;
+    var hasInfoCards = !!(latestUnreadNotice || nextEvent);
 
     miniRoot.innerHTML =
       '<div class="mini-cover"' + coverStyle + '>' +
@@ -558,7 +591,13 @@
           '<p>' + esc(currentMiniClass.age_label || '오늘도 반짝이는 하루') + '</p>' +
         '</div>' +
       '</div>' +
-      '<div class="mini-info-grid' + (nextEvent ? ' has-event' : '') + '">' +
+      '<div class="mini-info-grid' + (hasInfoCards ? ' has-cards' : '') + '">' +
+        (latestUnreadNotice ? '<button type="button" class="notice-alert" data-jump-notice="true">' +
+          '<span class="notice-alert-badge">새 공지</span>' +
+          '<div class="notice-alert-title">' + escWithBr(latestUnreadNotice.title || '공지사항') + '</div>' +
+          '<div class="notice-alert-date">' + esc(formatDate(latestUnreadNotice.created_at)) + '</div>' +
+          '<span class="event-more">더보기 <span aria-hidden="true">→</span></span>' +
+        '</button>' : '') +
         '<section class="teacher-note">' +
           '<div class="teacher-avatar">담임</div>' +
           '<div class="speech">' + escWithBr(currentMini.teacher_message || currentMini.intro || '선생님의 한마디가 곧 올라올 예정이에요.') + '</div>' +
@@ -567,11 +606,15 @@
           '<span class="event-badge">다가오는 행사</span>' +
           '<div class="event-teaser-title">' + escWithBr(nextEvent.title || '행사') + '</div>' +
           '<div class="event-teaser-date">' + esc(formatDate(dateKey(nextEvent.event_date))) + '</div>' +
+          '<span class="event-more">더보기 <span aria-hidden="true">→</span></span>' +
         '</button>' : '') +
       '</div>' +
       (modules.length
         ? '<div class="mini-tabs">' + modules.map(function(item){
-            return '<button type="button" class="mini-tab' + (item.key === currentMiniTab ? ' active' : '') + '" data-mini-tab="' + esc(item.key) + '">' + esc(item.label) + '</button>';
+            return '<button type="button" class="mini-tab' + (item.key === currentMiniTab ? ' active' : '') + '" data-mini-tab="' + esc(item.key) + '">' +
+              esc(item.label) +
+              (item.key === 'notice' && unreadNotice ? '<span class="mini-tab-dot" aria-label="안 읽은 공지"></span>' : '') +
+            '</button>';
           }).join('') + '</div><div class="mini-content" id="miniContent"></div>'
         : '<div class="empty-mini">아직 준비 중이에요.</div>');
 
@@ -695,7 +738,7 @@
   }
 
   function renderNoticeTab(content){
-    var rows = miniCache.posts.filter(function(row){ return row.type === 'notice'; });
+    var rows = noticeRows();
     if (!rows.length) {
       content.innerHTML = '<div class="empty-mini">아직 올라온 공지가 없어요.</div>';
       return;
@@ -707,6 +750,25 @@
         '<div class="mini-body">' + escWithBr(row.body || '') + '</div>' +
       '</article>';
     }).join('');
+  }
+
+  async function markNoticesRead(){
+    if (!currentEnrollment || !currentEnrollment.id || !currentSession || !currentSession.user) return;
+    if (!hasUnreadNotice()) return;
+    var now = new Date().toISOString();
+    var cached = currentMiniClass ? approvedClasses.find(function(row){ return row.id === currentMiniClass.id; }) : null;
+    var res = await client.from('class_enrollments')
+      .update({ last_notice_read_at: now })
+      .eq('id', currentEnrollment.id)
+      .eq('parent_id', currentSession.user.id);
+    if (res.error) {
+      showNotice('공지 읽음 처리에 실패했습니다', res.error.message);
+      return;
+    }
+    currentEnrollment.last_notice_read_at = now;
+    if (currentMiniClass) currentMiniClass.last_notice_read_at = now;
+    if (cached) cached.last_notice_read_at = now;
+    renderMiniHome();
   }
 
   async function submitComment(form){
@@ -760,7 +822,7 @@
     try {
       var res = await client
         .from('class_enrollments')
-        .select('id, status, class_id')
+        .select('id, status, class_id, last_notice_read_at')
         .eq('parent_id', session.user.id);
 
       if (res.error) throw res.error;
@@ -771,6 +833,13 @@
 
       if (approved.length) {
         var rows = await loadClassRows(approved.map(function(row){ return row.class_id; }));
+        rows = rows.map(function(row){
+          var enrollment = approved.find(function(item){ return item.class_id === row.id; });
+          return Object.assign({}, row, {
+            enrollment_id: enrollment ? enrollment.id : null,
+            last_notice_read_at: enrollment ? enrollment.last_notice_read_at : null
+          });
+        });
         approvedClasses = rows;
         if (currentMiniClass && !miniPanel.hidden) return;
         classList.innerHTML = rows.map(renderClassCard).join('');
@@ -903,7 +972,16 @@
     showPanel(classesPanel);
   });
 
-  miniRoot.addEventListener('click', function(e){
+  miniRoot.addEventListener('click', async function(e){
+    var jumpNotice = e.target.closest('[data-jump-notice]');
+    if (jumpNotice) {
+      currentMiniTab = 'notice';
+      renderMiniHome();
+      await markNoticesRead();
+      var tabsForNotice = miniRoot.querySelector('.mini-tabs');
+      if (tabsForNotice) tabsForNotice.scrollIntoView({ behavior:'smooth', block:'start' });
+      return;
+    }
     var jumpEvent = e.target.closest('[data-jump-event]');
     if (jumpEvent) {
       currentMiniTab = 'event';
@@ -921,6 +999,7 @@
     if (tab) {
       currentMiniTab = tab.dataset.miniTab;
       renderMiniHome();
+      if (currentMiniTab === 'notice') await markNoticesRead();
       return;
     }
     var monthBtn = e.target.closest('[data-event-month]');
