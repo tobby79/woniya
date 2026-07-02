@@ -56,6 +56,7 @@
   .card-body{margin-top:10px;color:var(--ink-soft);font-size:.92rem;line-height:1.65;word-break:break-word}
   .actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;margin-top:14px}
   .empty{padding:26px 16px;text-align:center;color:var(--ink-soft);font-size:.92rem;border:1.5px dashed var(--line);border-radius:18px;background:rgba(255,255,255,.55)}
+  .photo-grid .empty{grid-column:1/-1}
   .calendar-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
   .calendar-title{font-family:var(--display);font-size:1.2rem;font-weight:900}
   .calendar-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
@@ -71,12 +72,17 @@
   .album-card{cursor:pointer;overflow:hidden}.album-thumb{aspect-ratio:4/3;border-radius:14px;background:#f1e9e0;margin-bottom:12px;overflow:hidden;display:flex;align-items:center;justify-content:center;color:var(--ink-soft);font-size:.82rem}
   .album-thumb img,.photo-item img{width:100%;height:100%;object-fit:cover;display:block}
   .photo-item{position:relative;border-radius:14px;overflow:hidden;aspect-ratio:1;background:#f1e9e0}
+  .photo-item::after{content:'사진 삭제';position:absolute;left:0;right:0;bottom:0;padding:20px 10px 10px;background:linear-gradient(to top,rgba(0,0,0,.54),transparent);color:#fff;font-size:.76rem;font-weight:800;text-align:center;opacity:0;transition:opacity .15s ease;pointer-events:none}
+  .photo-item:hover::after{opacity:1}
   .photo-del{position:absolute;top:7px;right:7px;width:28px;height:28px;border-radius:50%;border:none;background:rgba(0,0,0,.55);color:#fff;cursor:pointer;font-size:1rem}
   .upload-zone{position:relative;overflow:hidden;min-height:150px;border:2px dashed var(--line);border-radius:18px;padding:28px 20px;text-align:center;cursor:pointer;background:var(--cream);transition:border-color .2s,background .2s;margin-bottom:14px}
+  .photo-grid .upload-zone{aspect-ratio:1;min-height:0;margin-bottom:0;display:flex;align-items:center;justify-content:center;flex-direction:column}
   .upload-zone:hover,.upload-zone.drag-over{border-color:var(--coral);background:#fff8f5}
   .upload-icon{font-size:2rem;margin-bottom:8px}.upload-hint{font-size:.86rem;color:var(--ink-soft);line-height:1.5}.upload-hint strong{color:var(--coral-deep)}
   .notice-line{margin-bottom:14px;padding:12px 14px;border-radius:16px;background:#fff8f5;color:var(--coral-deep);font-size:.86rem;font-weight:800}
   .detail-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:16px}
+  .detail-desc{margin-top:8px;color:var(--ink-soft);font-size:.92rem;line-height:1.65;word-break:break-word}
+  .detail-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
   @media (max-width:760px){.layout,.split{grid-template-columns:1fr}.album-grid,.photo-grid{grid-template-columns:repeat(2,1fr)}.panel{padding:22px}.day-cell{min-height:62px}}
 </style>
 </head>
@@ -187,14 +193,14 @@
             <div>
               <div class="card-title" id="albumDetailTitle"></div>
               <div class="card-meta" id="albumDetailMeta"></div>
+              <div class="detail-desc" id="albumDetailDesc"></div>
             </div>
-            <button type="button" class="btn ghost" id="backToAlbumsBtn">앨범 목록</button>
+            <div class="detail-actions">
+              <button type="button" class="btn ghost" id="detailEditAlbumBtn">앨범 수정</button>
+              <button type="button" class="btn ghost" id="backToAlbumsBtn">앨범 목록</button>
+            </div>
           </div>
           <div class="notice-line">이 사진은 반 학부모 전원에게 공개됩니다</div>
-          <div class="upload-zone" id="albumUploadZone">
-            <div class="upload-icon">+</div>
-            <div class="upload-hint"><strong>클릭하거나 사진을 여기에 드래그</strong><br>JPG · PNG · WebP · 다중 업로드</div>
-          </div>
           <input type="file" id="albumFileInput" accept="image/*" multiple hidden>
           <div class="msg" id="albumUploadMsg"></div>
           <div class="photo-grid" id="albumPhotoGrid"></div>
@@ -555,6 +561,7 @@
     byId('albumListView').hidden = false;
     byId('albumDetailView').hidden = true;
     currentAlbum = null;
+    byId('albumGrid').innerHTML = '<div class="empty">앨범 목록을 불러오고 있습니다.</div>';
     var albums = await loadPosts('album');
     if (!albums.length) {
       byId('albumGrid').innerHTML = '<div class="empty">아직 생성된 앨범이 없습니다.</div>';
@@ -631,7 +638,36 @@
     byId('albumDetailView').hidden = false;
     byId('albumDetailTitle').textContent = currentAlbum.title || '앨범';
     byId('albumDetailMeta').textContent = formatDate(currentAlbum.event_date);
+    byId('albumDetailDesc').innerHTML = currentAlbum.body ? escWithBr(currentAlbum.body) : '앨범 설명이 없습니다.';
+    setMsg(byId('albumUploadMsg'), '');
     await loadAlbumPhotos();
+  }
+
+  function albumUploadTile(){
+    return '<div class="upload-zone" id="albumUploadZone" tabindex="0" role="button" aria-label="앨범 사진 업로드">' +
+      '<div class="upload-icon">+</div>' +
+      '<div class="upload-hint"><strong>클릭하거나 사진을 여기에 드래그</strong><br>JPG · PNG · WebP · 다중 업로드</div>' +
+    '</div>';
+  }
+
+  function bindAlbumUploadZone(){
+    var zone = byId('albumUploadZone');
+    var input = byId('albumFileInput');
+    if (!zone || !input) return;
+    zone.addEventListener('click', function(){ input.click(); });
+    zone.addEventListener('keydown', function(e){
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        input.click();
+      }
+    });
+    zone.addEventListener('dragover', function(e){ e.preventDefault(); zone.classList.add('drag-over'); });
+    zone.addEventListener('dragleave', function(){ zone.classList.remove('drag-over'); });
+    zone.addEventListener('drop', function(e){
+      e.preventDefault();
+      zone.classList.remove('drag-over');
+      uploadAlbumFiles(Array.from(e.dataTransfer.files));
+    });
   }
 
   async function loadAlbumPhotos(){
@@ -643,11 +679,13 @@
       .order('uploaded_at', { ascending:false });
     if (res.error) { setMsg(byId('albumUploadMsg'), res.error.message, true); return; }
     var rows = res.data || [];
+    var html = [albumUploadTile()];
     if (!rows.length) {
-      byId('albumPhotoGrid').innerHTML = '<div class="empty">아직 업로드된 사진이 없습니다.</div>';
+      html.push('<div class="empty">아직 업로드된 사진이 없습니다.</div>');
+      byId('albumPhotoGrid').innerHTML = html.join('');
+      bindAlbumUploadZone();
       return;
     }
-    var html = [];
     for (var i = 0; i < rows.length; i++) {
       var url = '';
       try { url = await signedUrl(rows[i].url); }
@@ -658,6 +696,7 @@
       '</div>');
     }
     byId('albumPhotoGrid').innerHTML = html.join('');
+    bindAlbumUploadZone();
   }
 
   async function uploadAlbumFiles(files){
@@ -795,14 +834,12 @@
     var editPost = e.target.closest('[data-edit-post]');
     var deleteBtn = e.target.closest('[data-delete-post]');
     var editEventBtn = e.target.closest('[data-edit-event]');
-    var openAlbumBtn = e.target.closest('[data-open-album]');
     var editAlbumBtn = e.target.closest('[data-edit-album]');
     var deleteMediaBtn = e.target.closest('[data-delete-media]');
     var saveReplyBtn = e.target.closest('[data-save-reply]');
     if (editPost) { await editSimplePost(editPost.dataset.editPost, editPost.dataset.type); }
     if (deleteBtn) { e.stopPropagation(); await deletePost(deleteBtn.dataset.deletePost, deleteBtn.dataset.type); }
     if (editEventBtn) { await editEvent(editEventBtn.dataset.editEvent); }
-    if (openAlbumBtn && !e.target.closest('button')) { await openAlbum(openAlbumBtn.dataset.openAlbum); }
     if (editAlbumBtn) { e.stopPropagation(); await editAlbum(editAlbumBtn.dataset.editAlbum); }
     if (deleteMediaBtn) { await deleteMedia(deleteMediaBtn.dataset.deleteMedia, deleteMediaBtn.dataset.path); }
     if (saveReplyBtn) { await saveReply(saveReplyBtn.dataset.saveReply); }
@@ -832,6 +869,11 @@
 
   byId('albumDate').value = toDateInput(new Date());
   byId('albumForm').addEventListener('submit', function(e){ e.preventDefault(); saveAlbum(); });
+  byId('albumGrid').addEventListener('click', async function(e){
+    var card = e.target.closest('[data-open-album]');
+    if (!card || e.target.closest('button')) return;
+    await openAlbum(card.dataset.openAlbum);
+  });
   byId('albumCancel').addEventListener('click', function(){
     byId('albumId').value = '';
     byId('albumTitle').value = '';
@@ -840,18 +882,23 @@
     byId('albumSubmit').textContent = '앨범 저장';
     byId('albumCancel').hidden = true;
   });
-  byId('backToAlbumsBtn').addEventListener('click', function(){ loadAlbumTab(); });
-
-  var albumUploadZone = byId('albumUploadZone');
+  byId('backToAlbumsBtn').addEventListener('click', async function(){
+    var btn = byId('backToAlbumsBtn');
+    btn.disabled = true;
+    try {
+      await loadAlbumTab();
+    } finally {
+      btn.disabled = false;
+    }
+  });
   var albumFileInput = byId('albumFileInput');
-  albumUploadZone.addEventListener('click', function(){ albumFileInput.click(); });
   albumFileInput.addEventListener('change', function(){ uploadAlbumFiles(Array.from(albumFileInput.files)); albumFileInput.value = ''; });
-  albumUploadZone.addEventListener('dragover', function(e){ e.preventDefault(); albumUploadZone.classList.add('drag-over'); });
-  albumUploadZone.addEventListener('dragleave', function(){ albumUploadZone.classList.remove('drag-over'); });
-  albumUploadZone.addEventListener('drop', function(e){
-    e.preventDefault();
-    albumUploadZone.classList.remove('drag-over');
-    uploadAlbumFiles(Array.from(e.dataTransfer.files));
+  byId('detailEditAlbumBtn').addEventListener('click', async function(){
+    if (!currentAlbum) return;
+    var albumId = currentAlbum.id;
+    await loadAlbumTab();
+    await editAlbum(albumId);
+    byId('albumTitle').focus();
   });
 
   client.auth.onAuthStateChange(function(_event, session){
