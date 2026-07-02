@@ -47,12 +47,13 @@
   .panel{background:var(--paper);border-radius:24px;padding:26px;box-shadow:0 18px 44px -22px rgba(120,80,60,.35)}
   .field{margin-bottom:16px}
   label{display:block;font-size:.86rem;font-weight:700;color:var(--ink-soft);margin-bottom:6px}
-  input[type=email],input[type=password],input[type=text]{
+  input[type=email],input[type=password],input[type=text],textarea{
     width:100%;border:1.5px solid var(--line);border-radius:14px;padding:13px 16px;
     font-family:var(--body);font-size:.98rem;color:var(--ink);background:var(--cream);
     outline:none;transition:border-color .2s ease;
   }
-  input:focus{border-color:var(--coral)}
+  textarea{min-height:104px;resize:vertical;line-height:1.6}
+  input:focus,textarea:focus{border-color:var(--coral)}
   .btn{
     display:inline-flex;align-items:center;justify-content:center;width:100%;border:none;
     border-radius:30px;padding:14px;background:var(--coral);color:#fff;font-weight:700;
@@ -79,6 +80,50 @@
   .class-meta{margin-top:4px;font-size:.84rem;color:var(--ink-soft)}
   .class-actions{margin-top:14px}
   .extra-invite{margin-top:18px;padding-top:18px;border-top:1px solid var(--line)}
+  body.mini-open .wrap{max-width:760px;padding-top:24px}
+  .mini-panel{background:transparent;box-shadow:none;padding:0}
+  .mini-top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:16px}
+  .mini-title{font-family:var(--display);font-size:1.26rem;line-height:1.35}
+  .mini-cover{position:relative;min-height:230px;border-radius:30px;padding:18px;overflow:hidden;background:linear-gradient(135deg,#ffd8df,#d8c7ff);box-shadow:0 24px 60px -32px rgba(120,80,60,.55);border:2px solid rgba(255,255,255,.8)}
+  .mini-cover::after{content:"";position:absolute;inset:0;background:linear-gradient(to bottom,rgba(255,255,255,.18),rgba(255,255,255,.72));pointer-events:none}
+  .mini-cover-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+  .visit-pill{position:relative;z-index:1;display:inline-flex;border:2px dashed rgba(64,55,51,.42);border-radius:999px;padding:7px 12px;background:rgba(255,255,255,.82);font-size:.78rem;font-weight:800;color:var(--ink)}
+  .month-sticker{position:absolute;z-index:1;right:18px;top:18px;transform:rotate(7deg);background:#fff0a8;border:2px solid rgba(64,55,51,.08);border-radius:12px;padding:10px 14px;font-family:var(--hand);font-size:1.22rem;font-weight:700;box-shadow:0 12px 24px -16px rgba(64,55,51,.45)}
+  .cover-caption{position:absolute;z-index:1;left:20px;right:20px;bottom:18px}
+  .cover-caption h2{font-family:var(--display);font-size:1.7rem;line-height:1.25;margin-bottom:6px}
+  .cover-caption p{font-size:.9rem;color:var(--ink-soft);font-weight:700}
+  .teacher-note{display:grid;grid-template-columns:72px 1fr;gap:14px;align-items:start;margin:18px 0;background:var(--paper);border-radius:28px;padding:18px;border:1.5px solid var(--line)}
+  .teacher-avatar{width:72px;height:72px;border-radius:50%;border:2px dashed var(--coral);background:#fff8f5;display:flex;align-items:center;justify-content:center;font-family:var(--hand);font-size:1.12rem;color:var(--coral-deep);transform:rotate(-4deg)}
+  .speech{position:relative;background:#fffaf3;border:1.5px solid #f1e2d4;border-radius:22px;padding:14px 16px;color:var(--ink-soft);font-size:.94rem}
+  .speech::before{content:"";position:absolute;left:-9px;top:24px;width:16px;height:16px;background:#fffaf3;border-left:1.5px solid #f1e2d4;border-bottom:1.5px solid #f1e2d4;transform:rotate(45deg)}
+  .mini-tabs{display:flex;gap:8px;overflow-x:auto;padding:2px 2px 12px;margin-bottom:6px}
+  .mini-tab{flex:0 0 auto;border:1.5px solid var(--line);background:var(--paper);color:var(--ink-soft);border-radius:999px;padding:9px 15px;font-family:var(--body);font-weight:800;cursor:pointer}
+  .mini-tab.active{background:var(--coral);border-color:var(--coral);color:#fff;box-shadow:0 12px 22px -16px var(--coral-deep)}
+  .mini-content{display:flex;flex-direction:column;gap:14px}
+  .mini-card{position:relative;background:var(--paper);border:1.5px solid var(--line);border-radius:24px;padding:18px;box-shadow:0 16px 42px -28px rgba(120,80,60,.35)}
+  .mini-card::before{content:"";position:absolute;top:-9px;left:34px;width:64px;height:20px;background:rgba(255,226,167,.86);transform:rotate(-5deg);border-radius:4px;box-shadow:0 4px 10px -8px rgba(64,55,51,.6)}
+  .mini-date{font-size:.78rem;color:var(--sage);font-weight:900;margin-bottom:6px}
+  .mini-card-title{font-weight:900;font-size:1.04rem;margin-bottom:8px}
+  .mini-body{color:var(--ink-soft);font-size:.94rem;line-height:1.75;word-break:break-word}
+  .scrap-photo{position:relative;margin:6px 0 14px;padding:9px;background:#fff;border-radius:10px;box-shadow:0 14px 26px -22px rgba(64,55,51,.55);transform:rotate(-1deg)}
+  .scrap-photo img{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:7px;display:block}
+  .album-grid-mini{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+  .album-photo{border:none;padding:0;background:#fff;border-radius:16px;overflow:hidden;aspect-ratio:1;cursor:pointer;box-shadow:0 12px 26px -22px rgba(64,55,51,.55);transform:rotate(-1deg)}
+  .album-photo:nth-child(2n){transform:rotate(1.5deg)}
+  .album-photo img{width:100%;height:100%;object-fit:cover;display:block}
+  .comment-item{background:#fffdf8;border:1.5px dashed #eadccc;border-radius:22px;padding:16px}
+  .comment-reply{margin-top:12px;margin-left:20px;background:#f7f0ff;border-radius:18px;padding:12px 14px;color:var(--ink-soft);font-size:.9rem}
+  .comment-form{margin-top:4px;background:var(--paper);border-radius:24px;padding:18px;border:1.5px solid var(--line)}
+  .empty-mini{background:rgba(255,255,255,.72);border:1.5px dashed var(--line);border-radius:22px;padding:22px;text-align:center;color:var(--ink-soft)}
+  .image-modal{position:fixed;inset:0;background:rgba(64,55,51,.72);z-index:20;display:flex;align-items:center;justify-content:center;padding:22px}
+  .image-modal[hidden]{display:none!important}
+  .image-modal img{max-width:min(920px,100%);max-height:82vh;border-radius:18px;background:#fff;box-shadow:0 30px 80px -24px rgba(0,0,0,.65)}
+  .image-modal button{position:absolute;right:20px;top:18px;width:auto;padding:9px 14px;box-shadow:none}
+  @media (max-width:560px){
+    .teacher-note{grid-template-columns:1fr}
+    .teacher-avatar{width:64px;height:64px}
+    .album-grid-mini{grid-template-columns:repeat(2,1fr)}
+  }
 </style>
 </head>
 <body>
@@ -157,11 +202,27 @@
     </div>
   </section>
 
+  <section class="mini-panel" id="miniPanel" hidden>
+    <div class="mini-top">
+      <div>
+        <div class="section-eyebrow">우리 반 미니홈피</div>
+        <div class="mini-title" id="miniTitle"></div>
+      </div>
+      <button type="button" class="btn ghost small" id="miniBackBtn">목록으로</button>
+    </div>
+    <div id="miniRoot"></div>
+  </section>
+
   <section class="panel" id="noticePanel" hidden>
     <div class="result-title" id="noticeTitle"></div>
     <p class="result-desc" id="noticeDesc"></p>
   </section>
 </main>
+
+<div class="image-modal" id="imageModal" hidden>
+  <button type="button" class="btn small" id="imageModalClose">닫기</button>
+  <img id="imageModalImg" alt="">
+</div>
 
 <script src="supabase-config.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -177,9 +238,16 @@
   var invitePanel = document.getElementById('invitePanel');
   var pendingPanel = document.getElementById('pendingPanel');
   var classesPanel = document.getElementById('classesPanel');
+  var miniPanel = document.getElementById('miniPanel');
   var noticePanel = document.getElementById('noticePanel');
   var noticeTitle = document.getElementById('noticeTitle');
   var noticeDesc = document.getElementById('noticeDesc');
+  var miniTitle = document.getElementById('miniTitle');
+  var miniBackBtn = document.getElementById('miniBackBtn');
+  var miniRoot = document.getElementById('miniRoot');
+  var imageModal = document.getElementById('imageModal');
+  var imageModalImg = document.getElementById('imageModalImg');
+  var imageModalClose = document.getElementById('imageModalClose');
 
   var authForm = document.getElementById('authForm');
   var authEmail = document.getElementById('authEmail');
@@ -206,6 +274,12 @@
   var currentSession = null;
   var authMode = 'login';
   var loadingState = false;
+  var approvedClasses = [];
+  var currentMiniClass = null;
+  var currentMini = null;
+  var currentMiniTab = 'diary';
+  var miniCache = { posts: [], media: [], comments: [] };
+  var BUCKET = 'center-images';
 
   function esc(s){
     return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){
@@ -218,9 +292,10 @@
   }
 
   function showPanel(panel){
-    [loadingPanel, authPanel, invitePanel, pendingPanel, classesPanel, noticePanel].forEach(function(item){
+    [loadingPanel, authPanel, invitePanel, pendingPanel, classesPanel, miniPanel, noticePanel].forEach(function(item){
       item.hidden = item !== panel;
     });
+    document.body.classList.toggle('mini-open', panel === miniPanel);
   }
 
   function showNotice(title, desc){
@@ -254,19 +329,280 @@
   function renderClassCard(row){
     return '<div class="class-card">' +
       '<div class="class-title">' + esc(classTitle(row)) + ' 미니홈피</div>' +
-      '<div class="class-meta">반 미니홈피는 곧 준비됩니다.</div>' +
-      '<div class="class-actions"><button type="button" class="btn ghost" disabled>반 미니홈피 준비 중</button></div>' +
+      '<div class="class-meta">담임 선생님이 전하는 우리 반 소식을 확인해요.</div>' +
+      '<div class="class-actions"><button type="button" class="btn" data-open-class="' + esc(row.id) + '">반 미니홈피 열기</button></div>' +
     '</div>';
   }
 
   async function loadClassRows(ids){
     if (!ids.length) return [];
-    var res = await client.from('classes').select('id,name,age_label').in('id', ids);
+    var res = await client.from('classes').select('id,name,age_label,enrolled').in('id', ids);
     if (res.error) throw res.error;
     var rows = res.data || [];
     return ids.map(function(id){
       return rows.find(function(row){ return row.id === id; }) || { id:id };
     });
+  }
+
+  function formatDate(value){
+    if (!value) return '';
+    var date = new Date(value);
+    if (isNaN(date.getTime())) return '';
+    return (date.getMonth() + 1) + '월 ' + date.getDate() + '일';
+  }
+
+  function currentMonthLabel(){
+    return (new Date().getMonth() + 1) + '월';
+  }
+
+  function safeThemeColor(value){
+    var text = String(value || '').trim();
+    return /^#[0-9a-fA-F]{3,8}$/.test(text) ? text : '#F7B7C8';
+  }
+
+  function visitLabel(row){
+    var total = Number(row && row.enrolled ? row.enrolled : 0);
+    if (!total) return '오늘 0 · 전체 0';
+    var today = new Date().getDate() % total;
+    if (today === 0) today = total;
+    return '오늘 ' + today + ' · 전체 ' + total;
+  }
+
+  async function signedUrl(path){
+    if (!path) return '';
+    var res = await client.storage.from(BUCKET).createSignedUrl(path, 3600);
+    if (res.error) throw res.error;
+    return res.data ? res.data.signedUrl : '';
+  }
+
+  async function signedMediaRows(rows){
+    var out = [];
+    for (var i = 0; i < rows.length; i++) {
+      var row = Object.assign({}, rows[i]);
+      try { row.signed_url = await signedUrl(row.url); }
+      catch (_err) { row.signed_url = ''; }
+      out.push(row);
+    }
+    return out;
+  }
+
+  function enabledModules(){
+    var enabled = currentMini && currentMini.modules_enabled ? currentMini.modules_enabled : {};
+    var modules = [
+      { key:'diary', label:'일지' },
+      { key:'album', label:'사진첩' },
+      { key:'guestbook', label:'방명록' },
+      { key:'notice', label:'공지' }
+    ];
+    return modules.filter(function(item){
+      return enabled[item.key] !== false;
+    });
+  }
+
+  function firstMediaForPost(postId){
+    return miniCache.media.find(function(row){
+      return row.post_id === postId && row.signed_url;
+    });
+  }
+
+  async function openClassMini(classId){
+    var row = approvedClasses.find(function(item){ return item.id === classId; });
+    if (!row) return;
+    currentMiniClass = row;
+    currentMini = null;
+    currentMiniTab = 'diary';
+    miniCache = { posts: [], media: [], comments: [] };
+    miniTitle.textContent = classTitle(row);
+    miniRoot.innerHTML = '<div class="empty-mini">반 미니홈피를 불러오고 있어요.</div>';
+    leadText.textContent = classTitle(row) + ' 소식입니다.';
+    showPanel(miniPanel);
+
+    try {
+      var miniRes = await client.from('class_mini').select('*').eq('class_id', classId).maybeSingle();
+      if (miniRes.error) throw miniRes.error;
+      currentMini = miniRes.data || {
+        class_id: classId,
+        theme_color: '#F7B7C8',
+        intro: '',
+        teacher_message: '',
+        modules_enabled: { diary:false, album:false, guestbook:false, notice:false }
+      };
+
+      var postsRes = await client.from('class_posts')
+        .select('*')
+        .eq('class_id', classId)
+        .order('created_at', { ascending:false });
+      if (postsRes.error) throw postsRes.error;
+
+      var mediaRes = await client.from('class_media')
+        .select('*')
+        .eq('class_id', classId)
+        .order('uploaded_at', { ascending:false });
+      if (mediaRes.error) throw mediaRes.error;
+
+      var commentsRes = await client.from('class_comments')
+        .select('*')
+        .eq('class_id', classId)
+        .order('created_at', { ascending:false });
+      if (commentsRes.error) throw commentsRes.error;
+
+      miniCache.posts = postsRes.data || [];
+      miniCache.media = await signedMediaRows(mediaRes.data || []);
+      miniCache.comments = commentsRes.data || [];
+      renderMiniHome();
+    } catch (err) {
+      miniRoot.innerHTML = '<div class="empty-mini">' + escWithBr(err && err.message ? err.message : String(err)) + '</div>';
+    }
+  }
+
+  async function renderMiniHome(){
+    var modules = enabledModules();
+    var coverStyle = '';
+    var coverImg = '';
+    if (currentMini.cover_image) {
+      try {
+        coverImg = await signedUrl(currentMini.cover_image);
+      } catch (_err) {
+        coverImg = '';
+      }
+    }
+    if (!coverImg) {
+      coverStyle = ' style="background:linear-gradient(135deg,' + safeThemeColor(currentMini.theme_color) + ',#D9C8FF)"';
+    }
+
+    if (modules.length && !modules.some(function(item){ return item.key === currentMiniTab; })) {
+      currentMiniTab = modules[0].key;
+    }
+
+    miniRoot.innerHTML =
+      '<div class="mini-cover"' + coverStyle + '>' +
+        (coverImg ? '<img class="mini-cover-img" src="' + esc(coverImg) + '" alt="">' : '') +
+        '<div class="visit-pill">' + esc(visitLabel(currentMiniClass)) + '</div>' +
+        '<div class="month-sticker">' + esc(currentMonthLabel()) + '</div>' +
+        '<div class="cover-caption">' +
+          '<h2>' + esc(currentMiniClass.name || '우리 반') + '</h2>' +
+          '<p>' + esc(currentMiniClass.age_label || '오늘도 반짝이는 하루') + '</p>' +
+        '</div>' +
+      '</div>' +
+      '<section class="teacher-note">' +
+        '<div class="teacher-avatar">담임</div>' +
+        '<div class="speech">' + escWithBr(currentMini.teacher_message || currentMini.intro || '선생님의 한마디가 곧 올라올 예정이에요.') + '</div>' +
+      '</section>' +
+      (modules.length
+        ? '<div class="mini-tabs">' + modules.map(function(item){
+            return '<button type="button" class="mini-tab' + (item.key === currentMiniTab ? ' active' : '') + '" data-mini-tab="' + esc(item.key) + '">' + esc(item.label) + '</button>';
+          }).join('') + '</div><div class="mini-content" id="miniContent"></div>'
+        : '<div class="empty-mini">아직 준비 중이에요.</div>');
+
+    if (modules.length) renderMiniTab();
+  }
+
+  function renderMiniTab(){
+    var content = document.getElementById('miniContent');
+    if (!content) return;
+    if (currentMiniTab === 'diary') renderDiaryTab(content);
+    if (currentMiniTab === 'album') renderAlbumTab(content);
+    if (currentMiniTab === 'guestbook') renderGuestbookTab(content);
+    if (currentMiniTab === 'notice') renderNoticeTab(content);
+  }
+
+  function renderDiaryTab(content){
+    var rows = miniCache.posts.filter(function(row){ return row.type === 'diary'; });
+    if (!rows.length) {
+      content.innerHTML = '<div class="empty-mini">아직 올라온 일지가 없어요.</div>';
+      return;
+    }
+    content.innerHTML = rows.map(function(row){
+      var media = firstMediaForPost(row.id);
+      return '<article class="mini-card">' +
+        '<div class="mini-date">' + esc(formatDate(row.created_at)) + '</div>' +
+        '<div class="mini-card-title">' + esc(row.title || '오늘의 반 일지') + '</div>' +
+        (media ? '<div class="scrap-photo"><img src="' + esc(media.signed_url) + '" alt=""></div>' : '') +
+        '<div class="mini-body">' + escWithBr(row.body || '') + '</div>' +
+      '</article>';
+    }).join('');
+  }
+
+  function renderAlbumTab(content){
+    var rows = miniCache.media.filter(function(row){ return row.signed_url; });
+    if (!rows.length) {
+      content.innerHTML = '<div class="empty-mini">아직 올라온 사진이 없어요.</div>';
+      return;
+    }
+    content.innerHTML = '<div class="album-grid-mini">' + rows.map(function(row){
+      return '<button type="button" class="album-photo" data-open-image="' + esc(row.signed_url) + '">' +
+        '<img src="' + esc(row.signed_url) + '" alt="' + esc(formatDate(row.taken_at || row.uploaded_at)) + '">' +
+      '</button>';
+    }).join('') + '</div>';
+  }
+
+  function renderGuestbookTab(content){
+    var list = miniCache.comments.length
+      ? miniCache.comments.map(function(row){
+          return '<article class="comment-item">' +
+            '<div class="mini-date">' + esc(formatDate(row.created_at)) + ' · 학부모</div>' +
+            '<div class="mini-body">' + escWithBr(row.body || '') + '</div>' +
+            (row.reply ? '<div class="comment-reply"><strong>선생님 답글</strong><br>' + escWithBr(row.reply) + '</div>' : '') +
+          '</article>';
+        }).join('')
+      : '<div class="empty-mini">아직 방명록 글이 없어요.</div>';
+    content.innerHTML = list +
+      '<form class="comment-form" id="commentForm">' +
+        '<label for="commentBody">방명록 남기기</label>' +
+        '<textarea id="commentBody" required placeholder="선생님께 남길 말을 적어주세요."></textarea>' +
+        '<button type="submit" class="btn" id="commentSubmit" style="margin-top:12px">등록</button>' +
+        '<div class="msg" id="commentMsg"></div>' +
+      '</form>';
+  }
+
+  function renderNoticeTab(content){
+    var rows = miniCache.posts.filter(function(row){ return row.type === 'notice'; });
+    if (!rows.length) {
+      content.innerHTML = '<div class="empty-mini">아직 올라온 공지가 없어요.</div>';
+      return;
+    }
+    content.innerHTML = rows.map(function(row){
+      return '<article class="mini-card">' +
+        '<div class="mini-date">' + esc(formatDate(row.created_at)) + '</div>' +
+        '<div class="mini-card-title">' + esc(row.title || '공지사항') + '</div>' +
+        '<div class="mini-body">' + escWithBr(row.body || '') + '</div>' +
+      '</article>';
+    }).join('');
+  }
+
+  async function submitComment(form){
+    var body = form.querySelector('#commentBody');
+    var submit = form.querySelector('#commentSubmit');
+    var msg = form.querySelector('#commentMsg');
+    var text = body.value.trim();
+    if (!text || !currentMiniClass || !currentSession || !currentSession.user) return;
+    submit.disabled = true;
+    msg.textContent = '등록 중입니다.';
+    msg.className = 'msg';
+    var res = await client.from('class_comments').insert({
+      class_id: currentMiniClass.id,
+      author_id: currentSession.user.id,
+      body: text
+    });
+    submit.disabled = false;
+    if (res.error) {
+      msg.innerHTML = escWithBr(res.error.message);
+      msg.className = 'msg error';
+      return;
+    }
+    body.value = '';
+    msg.textContent = '등록되었습니다.';
+    var commentsRes = await client.from('class_comments')
+      .select('*')
+      .eq('class_id', currentMiniClass.id)
+      .order('created_at', { ascending:false });
+    if (commentsRes.error) {
+      msg.innerHTML = escWithBr(commentsRes.error.message);
+      msg.className = 'msg error';
+      return;
+    }
+    miniCache.comments = commentsRes.data || [];
+    renderGuestbookTab(document.getElementById('miniContent'));
   }
 
   async function loadParentState(session){
@@ -296,6 +632,7 @@
 
       if (approved.length) {
         var rows = await loadClassRows(approved.map(function(row){ return row.class_id; }));
+        approvedClasses = rows;
         classList.innerHTML = rows.map(renderClassCard).join('');
         extraInviteBox.hidden = true;
         extraInviteMsg.textContent = '';
@@ -415,6 +752,50 @@
     await redeemInvite(extraInviteCode.value.trim(), extraInviteMsg, extraInviteSubmit);
   });
 
+  classList.addEventListener('click', function(e){
+    var btn = e.target.closest('[data-open-class]');
+    if (!btn) return;
+    openClassMini(btn.dataset.openClass);
+  });
+
+  miniBackBtn.addEventListener('click', function(){
+    leadText.textContent = '승인된 반 미니홈피 목록입니다.';
+    showPanel(classesPanel);
+  });
+
+  miniRoot.addEventListener('click', function(e){
+    var tab = e.target.closest('[data-mini-tab]');
+    if (tab) {
+      currentMiniTab = tab.dataset.miniTab;
+      renderMiniHome();
+      return;
+    }
+    var imageBtn = e.target.closest('[data-open-image]');
+    if (imageBtn) {
+      imageModalImg.src = imageBtn.dataset.openImage;
+      imageModal.hidden = false;
+    }
+  });
+
+  miniRoot.addEventListener('submit', async function(e){
+    if (e.target && e.target.id === 'commentForm') {
+      e.preventDefault();
+      await submitComment(e.target);
+    }
+  });
+
+  imageModalClose.addEventListener('click', function(){
+    imageModal.hidden = true;
+    imageModalImg.removeAttribute('src');
+  });
+
+  imageModal.addEventListener('click', function(e){
+    if (e.target === imageModal) {
+      imageModal.hidden = true;
+      imageModalImg.removeAttribute('src');
+    }
+  });
+
   logoutBtn.addEventListener('click', async function(){
     var res = await client.auth.signOut();
     if (res.error) {
@@ -422,6 +803,7 @@
       return;
     }
     currentSession = null;
+    currentMiniClass = null;
     logoutBtn.hidden = true;
     setAuthMode('login');
     leadText.textContent = '로그인 후 초대 코드를 입력해주세요.';
