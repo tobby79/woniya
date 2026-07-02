@@ -213,6 +213,27 @@
     font-size:.95rem;background:var(--paper);border-radius:24px;
     box-shadow:0 18px 44px -22px rgba(120,80,60,.35);
   }
+  .edit-target-bar{
+    display:flex;align-items:center;justify-content:space-between;gap:12px;
+    margin-bottom:16px;padding:14px 16px;background:var(--paper);
+    border:1.5px solid #f1e9e0;border-radius:20px;
+    box-shadow:0 14px 34px -24px rgba(120,80,60,.32);
+  }
+  .edit-target-controls{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .edit-target-label{font-size:.82rem;font-weight:800;color:var(--ink-soft)}
+  .edit-target-select{
+    border:1.5px solid #f1e9e0;border-radius:999px;padding:9px 14px;
+    background:var(--cream);color:var(--ink);font-weight:800;outline:none;
+  }
+  .editing-badge{
+    display:inline-flex;align-items:center;justify-content:center;
+    min-height:34px;border-radius:999px;padding:7px 13px;
+    background:#FFF1EA;color:var(--coral-deep);font-size:.82rem;font-weight:900;
+    border:1.5px solid rgba(255,138,107,.22);
+  }
+  .editing-badge.template{
+    background:#F2EEFF;color:#7A61C7;border-color:rgba(122,97,199,.22);
+  }
 
   /* ── 하루 이야기 카드 ── */
   .day-story-list{display:flex;flex-direction:column;gap:18px}
@@ -321,6 +342,14 @@
   <section id="adminView" hidden>
     <div class="section-eyebrow">원 정보 편집</div>
     <h1 class="section-title">우리 원 관리</h1>
+
+    <div class="edit-target-bar" id="editTargetBar" hidden>
+      <div class="edit-target-controls">
+        <span class="edit-target-label">편집 대상</span>
+        <select class="edit-target-select" id="editTargetSelect" aria-label="편집 대상 선택"></select>
+      </div>
+      <span class="editing-badge" id="editingBadge">지금 편집 중: 내 원</span>
+    </div>
 
     <div class="no-center" id="noCenter" hidden>
       이 계정에 연결된 원이 아직 없어요.<br>관리자에게 문의해주세요.
@@ -649,7 +678,9 @@
   var cfg = window.__SUPABASE_CONFIG__;
   var client = supabase.createClient(cfg.url, cfg.anonKey);
 
-  var BUCKET = 'center-images';
+  var ADMIN_EMAIL = 'tobby79@naver.com';
+  var CENTER_BUCKET = 'center-images';
+  var TEMPLATE_BUCKET = 'template-previews';
 
   function esc(s){
     return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){
@@ -688,6 +719,9 @@
   var centerLinks      = document.getElementById('centerLinks');
   var viewSiteBtn       = document.getElementById('viewSiteBtn');
   var changeTemplateBtn = document.getElementById('changeTemplateBtn');
+  var editTargetBar    = document.getElementById('editTargetBar');
+  var editTargetSelect = document.getElementById('editTargetSelect');
+  var editingBadge     = document.getElementById('editingBadge');
   var loginForm    = document.getElementById('loginForm');
   var loginError   = document.getElementById('loginError');
   var logoutBtn    = document.getElementById('logoutBtn');
@@ -762,6 +796,12 @@
   var faqSaveStatus  = document.getElementById('faqSaveStatus');
 
   var currentCenter = null;
+  var currentOwnedCenter = null;
+  var currentEditTarget = null;
+  var isSuperAdmin = false;
+  var editTargetOptions = [];
+  var isLoadingTarget = false;
+  var hasUnsavedChanges = false;
   var selectedType  = 'hero';
   var currentHeroPhoto = null;
   var facilityTabLoaded = false;
@@ -783,6 +823,58 @@
     carnival: 'template-carnival.html',
     gallery: 'template-gallery.html'
   };
+  var TEMPLATE_LABELS = {
+    sunshine: '햇살 템플릿',
+    forest: '숲 템플릿',
+    carnival: '카니발 템플릿',
+    gallery: '갤러리 템플릿'
+  };
+
+  function isTemplateMode(){
+    return currentEditTarget && currentEditTarget.type === 'template';
+  }
+
+  function centerTable(){
+    return isTemplateMode() ? 'template_centers' : 'centers';
+  }
+
+  function mediaTable(){
+    return isTemplateMode() ? 'template_center_media' : 'center_media';
+  }
+
+  function admissionTable(){
+    return isTemplateMode() ? 'template_admissions' : 'admissions';
+  }
+
+  function ownerKey(){
+    return isTemplateMode() ? 'template_center_id' : 'center_id';
+  }
+
+  function storageBucket(){
+    return isTemplateMode() ? TEMPLATE_BUCKET : CENTER_BUCKET;
+  }
+
+  function storagePath(kind, filename){
+    if (isTemplateMode()) {
+      return currentEditTarget.templateId + '/' + kind + '/' + filename;
+    }
+    return 'centers/' + currentCenter.id + '/' + kind + '/' + filename;
+  }
+
+  function withOwner(payload){
+    payload[ownerKey()] = currentCenter.id;
+    return payload;
+  }
+
+  function markSaved(){
+    hasUnsavedChanges = false;
+  }
+
+  function editTargetLabel(){
+    if (!currentEditTarget) return '';
+    if (currentEditTarget.type === 'template') return TEMPLATE_LABELS[currentEditTarget.templateId] || currentEditTarget.templateId;
+    return currentCenter && currentCenter.name ? currentCenter.name : '내 원';
+  }
 
   // ── 이미지 압축 (Canvas API) ──
   function compressImage(file){
@@ -812,8 +904,12 @@
 
   // ── 서명 URL 발급 (1시간) ──
   async function signedUrl(path){
+    if (isTemplateMode()) {
+      var publicRes = client.storage.from(TEMPLATE_BUCKET).getPublicUrl(path);
+      return publicRes.data ? publicRes.data.publicUrl : null;
+    }
     try {
-      var res = await client.storage.from(BUCKET).createSignedUrl(path, 3600);
+      var res = await client.storage.from(CENTER_BUCKET).createSignedUrl(path, 3600);
       if (res.error) {
         logAdminError('signedUrl', res.error);
         return null;
@@ -862,9 +958,9 @@
   // ── 사진 목록 로드 ──
   async function loadPhotos(){
     if (!currentCenter) return;
-    var res = await client.from('center_media')
+    var res = await client.from(mediaTable())
       .select('*')
-      .eq('center_id', currentCenter.id)
+      .eq(ownerKey(), currentCenter.id)
       .eq('media_type', 'hero')
       .order('sort_order', { ascending: true });
     if (res.error) {
@@ -891,13 +987,13 @@
   async function deletePhoto(mediaId, storagePath){
     if (!confirm('이 사진을 삭제할까요?')) return;
     // Storage에서 제거
-    var removeRes = await client.storage.from(BUCKET).remove([storagePath]);
+    var removeRes = await client.storage.from(storageBucket()).remove([storagePath]);
     if (removeRes.error) {
       alertAdminError('deletePhoto', removeRes.error, '사진 삭제 실패');
       return;
     }
     // DB에서 제거
-    var deleteRes = await client.from('center_media').delete().eq('id', mediaId);
+    var deleteRes = await client.from(mediaTable()).delete().eq('id', mediaId);
     if (deleteRes.error) {
       alertAdminError('deletePhoto', deleteRes.error, '사진 삭제 실패');
       return;
@@ -916,28 +1012,27 @@
 
     try {
       var compressed = await compressImage(file);
-      var path = 'centers/' + currentCenter.id + '/hero/' + Date.now() + '_' + compressed.name;
+      var path = storagePath('hero', Date.now() + '_' + compressed.name);
       progressLabel.textContent = '업로드 중... ' + compressed.name;
       progressBar.style.width = '70%';
 
-      var upRes = await client.storage.from(BUCKET).upload(path, compressed, {
+      var upRes = await client.storage.from(storageBucket()).upload(path, compressed, {
         cacheControl: '3600', upsert: false
       });
       if (upRes.error) throw upRes.error;
 
       if (currentHeroPhoto && currentHeroPhoto.id) {
         var oldPath = currentHeroPhoto.photo_url;
-        var updateRes = await client.from('center_media').update({ photo_url: path }).eq('id', currentHeroPhoto.id);
+        var updateRes = await client.from(mediaTable()).update({ photo_url: path }).eq('id', currentHeroPhoto.id);
         if (updateRes.error) throw updateRes.error;
-        if (oldPath) client.storage.from(BUCKET).remove([oldPath]);
+        if (oldPath) client.storage.from(storageBucket()).remove([oldPath]);
       } else {
-        var insertRes = await client.from('center_media').insert({
-          center_id: currentCenter.id,
+        var insertRes = await client.from(mediaTable()).insert(withOwner({
           media_type: 'hero',
           photo_url: path,
           caption: '',
           sort_order: 0
-        });
+        }));
         if (insertRes.error) throw insertRes.error;
       }
 
@@ -964,9 +1059,9 @@
     // 타입별 최대 개수 제한
     var LIMITS = { hero: 1, facility: 100, day_story: 12, teacher: 30 };
     var limit = LIMITS[selectedType] || 100;
-    var countRes = await client.from('center_media')
+    var countRes = await client.from(mediaTable())
       .select('id', { count: 'exact', head: true })
-      .eq('center_id', currentCenter.id)
+      .eq(ownerKey(), currentCenter.id)
       .eq('media_type', selectedType);
     if (countRes.error) {
       showUploadError('handleFiles', countRes.error, '사진 개수 확인 실패');
@@ -992,35 +1087,34 @@
         // 1) 압축
         var compressed = await compressImage(file);
 
-        // 2) Storage 경로: centers/{center_id}/{type}/{timestamp}_{filename}
+        // 2) Storage 경로: centers/{center_id}/... 또는 template-previews/{template_id}/...
         var ts   = Date.now();
-        var path = 'centers/' + currentCenter.id + '/' + selectedType + '/' + ts + '_' + compressed.name;
+        var path = storagePath(selectedType, ts + '_' + compressed.name);
 
         progressLabel.textContent = '(' + (i+1) + '/' + total + ') 업로드 중... ' + compressed.name;
         progressBar.style.width = Math.round((i / total) * 80) + '%';
 
-        var upRes = await client.storage.from(BUCKET).upload(path, compressed, {
+        var upRes = await client.storage.from(storageBucket()).upload(path, compressed, {
           cacheControl: '3600', upsert: false
         });
 
         if (upRes.error) throw upRes.error;
 
         // 3) center_media 테이블에 기록
-        var sortMax = await client.from('center_media')
+        var sortMax = await client.from(mediaTable())
           .select('sort_order')
-          .eq('center_id', currentCenter.id)
+          .eq(ownerKey(), currentCenter.id)
           .order('sort_order', { ascending: false })
           .limit(1);
         if (sortMax.error) throw sortMax.error;
         var nextSort = ((sortMax.data && sortMax.data[0]) ? sortMax.data[0].sort_order : 0) + 1;
 
-        var insertRes = await client.from('center_media').insert({
-          center_id:  currentCenter.id,
+        var insertRes = await client.from(mediaTable()).insert(withOwner({
           media_type: selectedType,
           photo_url:  path,
           caption:    '',
           sort_order: nextSort
-        });
+        }));
         if (insertRes.error) throw insertRes.error;
 
         done++;
@@ -1132,7 +1226,7 @@
       values: valuesRaw.split(',').map(function(v){ return v.trim(); }).filter(Boolean)
     };
 
-    var res = await client.from('centers').update({
+    var res = await client.from(centerTable()).update({
       director:   newDirector,
       philosophy: newPhilosophy
     }).eq('id', currentCenter.id);
@@ -1144,6 +1238,7 @@
     } else {
       currentCenter.director   = newDirector;
       currentCenter.philosophy = newPhilosophy;
+      markSaved();
       introSaveStatus.textContent = '저장됐어요.';
       introSaveStatus.className = 'msg ok';
     }
@@ -1166,16 +1261,16 @@
   async function handleDirectorPhoto(file){
     if (!file || !currentCenter) return;
     var compressed = await compressImage(file);
-    var path = 'centers/' + currentCenter.id + '/director/' + Date.now() + '_' + compressed.name;
-    var upRes = await client.storage.from(BUCKET).upload(path, compressed, { cacheControl:'3600', upsert:false });
+    var path = storagePath('director', Date.now() + '_' + compressed.name);
+    var upRes = await client.storage.from(storageBucket()).upload(path, compressed, { cacheControl:'3600', upsert:false });
     if (upRes.error){ alertAdminError('handleDirectorPhoto', upRes.error, '사진 업로드 실패'); return; }
 
     var oldPath = currentCenter.director && currentCenter.director.photo ? currentCenter.director.photo : '';
     var newDirector = Object.assign({}, currentCenter.director || {}, { photo: path });
-    var updateRes = await client.from('centers').update({ director: newDirector }).eq('id', currentCenter.id);
+    var updateRes = await client.from(centerTable()).update({ director: newDirector }).eq('id', currentCenter.id);
     if (updateRes.error){ alertAdminError('handleDirectorPhoto', updateRes.error, '원장 사진 저장 실패'); return; }
     currentCenter.director = newDirector;
-    if (oldPath) client.storage.from(BUCKET).remove([oldPath]);
+    if (oldPath) client.storage.from(storageBucket()).remove([oldPath]);
 
     var url = await signedUrl(path);
     if (url) setUploadZonePhoto(directorUploadZone, url, deleteDirectorPhoto);
@@ -1186,14 +1281,14 @@
     if (!photoUrl || !confirm('이 사진을 삭제할까요?')) return;
 
     var newDirector = Object.assign({}, currentCenter.director || {}, { photo: '' });
-    var updateRes = await client.from('centers').update({ director: newDirector }).eq('id', currentCenter.id);
+    var updateRes = await client.from(centerTable()).update({ director: newDirector }).eq('id', currentCenter.id);
     if (updateRes.error){
       alertAdminError('deleteDirectorPhoto', updateRes.error, '원장 사진 삭제 실패');
       return;
     }
 
     currentCenter.director = newDirector;
-    var removeRes = await client.storage.from(BUCKET).remove([photoUrl]);
+    var removeRes = await client.storage.from(storageBucket()).remove([photoUrl]);
     if (removeRes.error) {
       alertAdminError('deleteDirectorPhoto', removeRes.error, '원장 사진 파일 삭제 실패');
     }
@@ -1268,8 +1363,8 @@
 
   async function loadDayStoryTab(){
     if (!currentCenter) return;
-    var res = await client.from('center_media').select('*')
-      .eq('center_id', currentCenter.id).eq('media_type', 'day_story')
+    var res = await client.from(mediaTable()).select('*')
+      .eq(ownerKey(), currentCenter.id).eq('media_type', 'day_story')
       .order('sort_order', { ascending: true });
     if (res.error) {
       logAdminError('loadDayStoryTab', res.error);
@@ -1285,14 +1380,14 @@
   async function handleDayStoryPhoto(mediaId, file, zone, row){
     if (!file || !currentCenter) return;
     var compressed = await compressImage(file);
-    var path = 'centers/' + currentCenter.id + '/day_story/' + Date.now() + '_' + compressed.name;
-    var upRes = await client.storage.from(BUCKET).upload(path, compressed, { cacheControl:'3600', upsert:false });
+    var path = storagePath('day_story', Date.now() + '_' + compressed.name);
+    var upRes = await client.storage.from(storageBucket()).upload(path, compressed, { cacheControl:'3600', upsert:false });
     if (upRes.error){ alertAdminError('handleDayStoryPhoto', upRes.error, '사진 업로드 실패'); return; }
 
-    var updateRes = await client.from('center_media').update({ photo_url: path }).eq('id', mediaId);
+    var updateRes = await client.from(mediaTable()).update({ photo_url: path }).eq('id', mediaId);
     if (updateRes.error){ alertAdminError('handleDayStoryPhoto', updateRes.error, '사진 저장 실패'); return; }
     var oldPath = row ? row.photo_url : '';
-    if (oldPath) client.storage.from(BUCKET).remove([oldPath]);
+    if (oldPath) client.storage.from(storageBucket()).remove([oldPath]);
     if (row) row.photo_url = path;
 
     var url = await signedUrl(path);
@@ -1303,12 +1398,12 @@
 
   async function deleteDayStoryPhoto(mediaId, photoUrl, zone, row){
     if (!photoUrl || !confirm('이 사진을 삭제할까요?')) return;
-    var removeRes = await client.storage.from(BUCKET).remove([photoUrl]);
+    var removeRes = await client.storage.from(storageBucket()).remove([photoUrl]);
     if (removeRes.error) {
       alertAdminError('deleteDayStoryPhoto', removeRes.error, '사진 삭제 실패');
       return;
     }
-    var updateRes = await client.from('center_media').update({ photo_url: '' }).eq('id', mediaId);
+    var updateRes = await client.from(mediaTable()).update({ photo_url: '' }).eq('id', mediaId);
     if (updateRes.error) {
       alertAdminError('deleteDayStoryPhoto', updateRes.error, '사진 삭제 실패');
       return;
@@ -1320,13 +1415,13 @@
   async function deleteDayStory(mediaId, photoUrl){
     if (!confirm('이 항목을 삭제할까요?')) return;
     if (photoUrl) {
-      var removeRes = await client.storage.from(BUCKET).remove([photoUrl]);
+      var removeRes = await client.storage.from(storageBucket()).remove([photoUrl]);
       if (removeRes.error) {
         alertAdminError('deleteDayStory', removeRes.error, '하루 이야기 삭제 실패');
         return;
       }
     }
-    var deleteRes = await client.from('center_media').delete().eq('id', mediaId);
+    var deleteRes = await client.from(mediaTable()).delete().eq('id', mediaId);
     if (deleteRes.error) {
       alertAdminError('deleteDayStory', deleteRes.error, '하루 이야기 삭제 실패');
       return;
@@ -1336,8 +1431,8 @@
 
   addDayStoryBtn.addEventListener('click', async function(){
     if (!currentCenter) return;
-    var countRes = await client.from('center_media').select('id', { count:'exact', head:true })
-      .eq('center_id', currentCenter.id).eq('media_type', 'day_story');
+    var countRes = await client.from(mediaTable()).select('id', { count:'exact', head:true })
+      .eq(ownerKey(), currentCenter.id).eq('media_type', 'day_story');
     if (countRes.error) {
       alertAdminError('addDayStory', countRes.error, '하루 이야기 추가 실패');
       return;
@@ -1346,20 +1441,19 @@
       alert('하루 이야기는 최대 ' + DAY_STORY_LIMIT + '개까지 등록할 수 있어요.');
       return;
     }
-    var sortMax = await client.from('center_media').select('sort_order')
-      .eq('center_id', currentCenter.id).order('sort_order', { ascending:false }).limit(1);
+    var sortMax = await client.from(mediaTable()).select('sort_order')
+      .eq(ownerKey(), currentCenter.id).order('sort_order', { ascending:false }).limit(1);
     if (sortMax.error) {
       alertAdminError('addDayStory', sortMax.error, '하루 이야기 추가 실패');
       return;
     }
     var nextSort = ((sortMax.data && sortMax.data[0]) ? sortMax.data[0].sort_order : 0) + 1;
 
-    var insertRes = await client.from('center_media').insert({
-      center_id:  currentCenter.id,
+    var insertRes = await client.from(mediaTable()).insert(withOwner({
       media_type: 'day_story',
       photo_url:  '',
       sort_order: nextSort
-    });
+    }));
     if (insertRes.error) {
       alertAdminError('addDayStory', insertRes.error, '하루 이야기 추가 실패');
       return;
@@ -1382,7 +1476,7 @@
         note:       card.querySelector('.ds-note').value,
         caption:    card.querySelector('.ds-caption').value
       };
-      var res = await client.from('center_media').update(payload).eq('id', id);
+      var res = await client.from(mediaTable()).update(payload).eq('id', id);
       if (res.error) {
         hadError = true;
         logAdminError('dayStorySaveLoop', res.error);
@@ -1395,6 +1489,7 @@
     } else {
       dayStorySaveStatus.textContent = '저장됐어요.';
       dayStorySaveStatus.className = 'msg ok';
+      markSaved();
     }
   });
 
@@ -1526,14 +1621,15 @@
 
   async function persistFacilityPayload(){
     var payload = collectFacilityPayload();
-    var res = await client.from('centers').update({
+    var res = await client.from(centerTable()).update({
       facilities: payload.facilities,
       programs: payload.programs
     }).eq('id', currentCenter.id);
     if (res.error) throw res.error;
-    currentCenter.facilities = payload.facilities;
-    currentCenter.programs = payload.programs;
-    return payload;
+      currentCenter.facilities = payload.facilities;
+      currentCenter.programs = payload.programs;
+      markSaved();
+      return payload;
   }
 
   function bindFacilityItemUploads(){
@@ -1582,15 +1678,15 @@
     try {
       var compressed = await compressImage(file);
       var index = Array.prototype.indexOf.call(card.parentNode.children, card);
-      path = 'centers/' + currentCenter.id + '/' + kind + '/' + Date.now() + '_item_' + index + '_' + compressed.name;
-      var upRes = await client.storage.from(BUCKET).upload(path, compressed, {
+      path = storagePath(kind, Date.now() + '_item_' + index + '_' + compressed.name);
+      var upRes = await client.storage.from(storageBucket()).upload(path, compressed, {
         cacheControl: '3600', upsert: false
       });
       if (upRes.error) throw upRes.error;
 
       photoInput.value = path;
       await persistFacilityPayload();
-      if (oldPath) client.storage.from(BUCKET).remove([oldPath]);
+      if (oldPath) client.storage.from(storageBucket()).remove([oldPath]);
 
       var url = await signedUrl(path);
       if (url) setUploadZonePhoto(zone, url, function(){ deleteFacilityItemPhoto(card); });
@@ -1612,7 +1708,7 @@
       photoInput.value = '';
       await persistFacilityPayload();
       persisted = true;
-      var removeRes = await client.storage.from(BUCKET).remove([path]);
+      var removeRes = await client.storage.from(storageBucket()).remove([path]);
       if (removeRes.error) throw removeRes.error;
       setUploadZonePhoto(zone, null);
     } catch(err) {
@@ -1718,8 +1814,8 @@
 
   async function loadTeacherTab(){
     if (!currentCenter) return;
-    var res = await client.from('center_media').select('*')
-      .eq('center_id', currentCenter.id).eq('media_type', 'teacher')
+    var res = await client.from(mediaTable()).select('*')
+      .eq(ownerKey(), currentCenter.id).eq('media_type', 'teacher')
       .order('sort_order', { ascending: true });
     if (res.error) {
       logAdminError('loadTeacherTab', res.error);
@@ -1735,14 +1831,14 @@
   async function handleTeacherPhoto(mediaId, file, zone, row){
     if (!file || !currentCenter) return;
     var compressed = await compressImage(file);
-    var path = 'centers/' + currentCenter.id + '/teacher/' + Date.now() + '_' + compressed.name;
-    var upRes = await client.storage.from(BUCKET).upload(path, compressed, { cacheControl:'3600', upsert:false });
+    var path = storagePath('teacher', Date.now() + '_' + compressed.name);
+    var upRes = await client.storage.from(storageBucket()).upload(path, compressed, { cacheControl:'3600', upsert:false });
     if (upRes.error){ alertAdminError('handleTeacherPhoto', upRes.error, '사진 업로드 실패'); return; }
 
-    var updateRes = await client.from('center_media').update({ photo_url: path }).eq('id', mediaId);
+    var updateRes = await client.from(mediaTable()).update({ photo_url: path }).eq('id', mediaId);
     if (updateRes.error){ alertAdminError('handleTeacherPhoto', updateRes.error, '사진 저장 실패'); return; }
     var oldPath = row ? row.photo_url : '';
-    if (oldPath) client.storage.from(BUCKET).remove([oldPath]);
+    if (oldPath) client.storage.from(storageBucket()).remove([oldPath]);
     if (row) row.photo_url = path;
 
     var url = await signedUrl(path);
@@ -1753,13 +1849,13 @@
 
   async function deleteTeacherPhoto(mediaId, photoUrl, zone, row){
     if (!photoUrl || !confirm('이 사진을 삭제할까요?')) return;
-    var updateRes = await client.from('center_media').update({ photo_url: '' }).eq('id', mediaId);
+    var updateRes = await client.from(mediaTable()).update({ photo_url: '' }).eq('id', mediaId);
     if (updateRes.error){
       alertAdminError('deleteTeacherPhoto', updateRes.error, '사진 삭제 실패');
       return;
     }
     if (row) row.photo_url = '';
-    var removeRes = await client.storage.from(BUCKET).remove([photoUrl]);
+    var removeRes = await client.storage.from(storageBucket()).remove([photoUrl]);
     if (removeRes.error) {
       alertAdminError('deleteTeacherPhoto', removeRes.error, '사진 파일 삭제 실패');
     }
@@ -1769,13 +1865,13 @@
   async function deleteTeacher(mediaId, photoUrl){
     if (!confirm('이 선생님 카드를 삭제할까요?')) return;
     if (photoUrl) {
-      var removeRes = await client.storage.from(BUCKET).remove([photoUrl]);
+      var removeRes = await client.storage.from(storageBucket()).remove([photoUrl]);
       if (removeRes.error) {
         alertAdminError('deleteTeacher', removeRes.error, '선생님 카드 삭제 실패');
         return;
       }
     }
-    var deleteRes = await client.from('center_media').delete().eq('id', mediaId);
+    var deleteRes = await client.from(mediaTable()).delete().eq('id', mediaId);
     if (deleteRes.error) {
       alertAdminError('deleteTeacher', deleteRes.error, '선생님 카드 삭제 실패');
       return;
@@ -1785,8 +1881,8 @@
 
   addTeacherBtn.addEventListener('click', async function(){
     if (!currentCenter) return;
-    var countRes = await client.from('center_media').select('id', { count:'exact', head:true })
-      .eq('center_id', currentCenter.id).eq('media_type', 'teacher');
+    var countRes = await client.from(mediaTable()).select('id', { count:'exact', head:true })
+      .eq(ownerKey(), currentCenter.id).eq('media_type', 'teacher');
     if (countRes.error) {
       alertAdminError('addTeacher', countRes.error, '선생님 추가 실패');
       return;
@@ -1795,20 +1891,19 @@
       alert('선생님은 최대 ' + TEACHER_LIMIT + '명까지 등록할 수 있어요.');
       return;
     }
-    var sortMax = await client.from('center_media').select('sort_order')
-      .eq('center_id', currentCenter.id).order('sort_order', { ascending:false }).limit(1);
+    var sortMax = await client.from(mediaTable()).select('sort_order')
+      .eq(ownerKey(), currentCenter.id).order('sort_order', { ascending:false }).limit(1);
     if (sortMax.error) {
       alertAdminError('addTeacher', sortMax.error, '선생님 추가 실패');
       return;
     }
     var nextSort = ((sortMax.data && sortMax.data[0]) ? sortMax.data[0].sort_order : 0) + 1;
 
-    var insertRes = await client.from('center_media').insert({
-      center_id:  currentCenter.id,
+    var insertRes = await client.from(mediaTable()).insert(withOwner({
       media_type: 'teacher',
       photo_url:  '',
       sort_order: nextSort
-    });
+    }));
     if (insertRes.error) {
       alertAdminError('addTeacher', insertRes.error, '선생님 추가 실패');
       return;
@@ -1830,7 +1925,7 @@
         subtitle: card.querySelector('.tc-role').value,
         caption:  card.querySelector('.tc-message').value
       };
-      var res = await client.from('center_media').update(payload).eq('id', id);
+      var res = await client.from(mediaTable()).update(payload).eq('id', id);
       if (res.error) {
         hadError = true;
         logAdminError('teacherSaveLoop', res.error);
@@ -1843,6 +1938,7 @@
     } else {
       teacherSaveStatus.textContent = '저장됐어요.';
       teacherSaveStatus.className = 'msg ok';
+      markSaved();
     }
   });
 
@@ -2042,6 +2138,7 @@
   }
 
   async function loadClassManagerTab(){
+    if (isTemplateMode()) return;
     if (!currentCenter) return;
     classManagerStatus.textContent = '반 목록을 불러오는 중...';
     classManagerStatus.className = 'msg';
@@ -2373,7 +2470,7 @@
 
   async function loadAdmissionTab(){
     if (!currentCenter) return;
-    var res = await client.from('admissions').select('*').eq('center_id', currentCenter.id).maybeSingle();
+    var res = await client.from(admissionTable()).select('*').eq(ownerKey(), currentCenter.id).maybeSingle();
     if (res.error) {
       logAdminError('loadAdmissionTab', res.error);
       admissionSaveStatus.textContent = '입학안내를 불러오지 못했어요: ' + res.error.message;
@@ -2396,7 +2493,6 @@
     admissionSaveStatus.className = 'msg';
 
     var payload = {
-      center_id:     currentCenter.id,
       target:        document.getElementById('adm-target').value,
       capacity_info: document.getElementById('adm-capacity').value,
       period:        document.getElementById('adm-period').value,
@@ -2407,9 +2503,9 @@
 
     var res;
     if (currentAdmissionId) {
-      res = await client.from('admissions').update(payload).eq('id', currentAdmissionId);
+      res = await client.from(admissionTable()).update(payload).eq('id', currentAdmissionId);
     } else {
-      res = await client.from('admissions').insert(payload).select().single();
+      res = await client.from(admissionTable()).insert(withOwner(payload)).select().single();
       if (res.data) currentAdmissionId = res.data.id;
     }
 
@@ -2420,6 +2516,7 @@
     } else {
       admissionSaveStatus.textContent = '저장됐어요.';
       admissionSaveStatus.className = 'msg ok';
+      markSaved();
     }
   });
 
@@ -2435,7 +2532,7 @@
     directionsSaveStatus.className = 'msg';
 
     var text = document.getElementById('dir-text').value;
-    var res = await client.from('centers').update({ directions_text: text }).eq('id', currentCenter.id);
+    var res = await client.from(centerTable()).update({ directions_text: text }).eq('id', currentCenter.id);
 
     if (res.error){
       logAdminError('directionsSave', res.error);
@@ -2443,6 +2540,7 @@
       directionsSaveStatus.className = 'msg error';
     } else {
       currentCenter.directions_text = text;
+      markSaved();
       directionsSaveStatus.textContent = '저장됐어요.';
       directionsSaveStatus.className = 'msg ok';
     }
@@ -2492,7 +2590,7 @@
     var existingFaqs = currentCenter.faqs || {};
     var newFaqs = Object.assign({}, existingFaqs, { items: items });
 
-    var res = await client.from('centers').update({ faqs: newFaqs }).eq('id', currentCenter.id);
+    var res = await client.from(centerTable()).update({ faqs: newFaqs }).eq('id', currentCenter.id);
 
     if (res.error){
       logAdminError('faqSave', res.error);
@@ -2500,6 +2598,7 @@
       faqSaveStatus.className = 'msg error';
     } else {
       currentCenter.faqs = newFaqs;
+      markSaved();
       faqSaveStatus.textContent = '저장됐어요.';
       faqSaveStatus.className = 'msg ok';
     }
@@ -2509,23 +2608,9 @@
   if (tabBar) {
     tabBar.addEventListener('click', function(e){
       var btn = e.target.closest('.tab-btn');
-      if (!btn) return;
+      if (!btn || btn.hidden) return;
       var tab = btn.getAttribute('data-tab');
-      tabBar.querySelectorAll('.tab-btn').forEach(function(b){ b.classList.remove('active'); });
-      document.querySelectorAll('.tab-panel').forEach(function(p){ p.classList.remove('active'); });
-      btn.classList.add('active');
-      var panel = document.querySelector('.tab-panel[data-panel="'+tab+'"]');
-      if (panel) panel.classList.add('active');
-      if (tab === 'basic') loadBasicStats();
-      if (tab === 'intro') loadIntroTab();
-      if (tab === 'day') loadDayStoryTab();
-      if (tab === 'facility') loadFacilityTab();
-      if (tab === 'program') loadProgramTab();
-      if (tab === 'teacher') loadTeacherTab();
-      if (tab === 'class') loadClassManagerTab();
-      if (tab === 'admission') loadAdmissionTab();
-      if (tab === 'directions') loadDirectionsTab();
-      if (tab === 'faq') loadFaqTab();
+      activateTab(tab);
     });
   }
 
@@ -2559,13 +2644,216 @@
   })();
 
   // ── 인증 흐름 ──
+  function setEditTargetChrome(){
+    var templateMode = isTemplateMode();
+    if (editingBadge) {
+      editingBadge.textContent = '지금 편집 중: ' + (templateMode ? editTargetLabel() : '내 원' + (currentCenter && currentCenter.name ? ' · ' + currentCenter.name : ''));
+      editingBadge.classList.toggle('template', templateMode);
+    }
+    if (viewSiteBtn) {
+      viewSiteBtn.textContent = templateMode ? '미리보기' : '내 페이지 보기';
+      viewSiteBtn.onclick = function(){
+        if (templateMode) {
+          alert('템플릿 미리보기 연동은 준비 중입니다.');
+          return;
+        }
+        var templateFile = TEMPLATE_FILES[currentCenter.template] || 'template-sunshine.html';
+        window.open(templateFile + '?slug=' + encodeURIComponent(currentCenter.slug), '_blank');
+      };
+    }
+    if (changeTemplateBtn) {
+      changeTemplateBtn.onclick = function(){
+        if (templateMode) {
+          alert('템플릿 모드에서는 템플릿 변경을 사용할 수 없어요.');
+          return;
+        }
+        location.href = 'template-select.html?slug=' + encodeURIComponent(currentCenter.slug) + '&auth=true';
+      };
+    }
+    if (centerLinks) centerLinks.hidden = !currentCenter;
+  }
+
+  function setTemplateTabVisibility(){
+    var templateMode = isTemplateMode();
+    ['class', 'consult'].forEach(function(tab){
+      var btn = document.querySelector('.tab-btn[data-tab="' + tab + '"]');
+      var panel = document.querySelector('.tab-panel[data-panel="' + tab + '"]');
+      if (btn) btn.hidden = templateMode;
+      if (panel) panel.hidden = templateMode;
+    });
+    if (templateMode) {
+      consultSection.hidden = true;
+      classInviteDetail.hidden = true;
+      if (document.querySelector('.tab-btn[data-tab="class"].active') || document.querySelector('.tab-btn[data-tab="consult"].active')) {
+        activateTab('basic');
+      }
+    }
+  }
+
+  function activateTab(tab){
+    var btn = document.querySelector('.tab-btn[data-tab="' + tab + '"]');
+    var panel = document.querySelector('.tab-panel[data-panel="' + tab + '"]');
+    if (!btn || btn.hidden || !panel || panel.hidden) return;
+    tabBar.querySelectorAll('.tab-btn').forEach(function(b){ b.classList.remove('active'); });
+    document.querySelectorAll('.tab-panel').forEach(function(p){ p.classList.remove('active'); });
+    btn.classList.add('active');
+    panel.classList.add('active');
+    loadTab(tab);
+  }
+
+  function activeTab(){
+    var btn = document.querySelector('.tab-btn.active');
+    return btn ? btn.getAttribute('data-tab') : 'basic';
+  }
+
+  function loadTab(tab){
+    if (tab === 'basic') loadBasicStats();
+    if (tab === 'intro') loadIntroTab();
+    if (tab === 'day') loadDayStoryTab();
+    if (tab === 'facility') loadFacilityTab();
+    if (tab === 'program') loadProgramTab();
+    if (tab === 'teacher') loadTeacherTab();
+    if (tab === 'class' && !isTemplateMode()) loadClassManagerTab();
+    if (tab === 'admission') loadAdmissionTab();
+    if (tab === 'directions') loadDirectionsTab();
+    if (tab === 'faq') loadFaqTab();
+  }
+
+  function renderEditTargetSelect(){
+    if (!editTargetBar || !editTargetSelect) return;
+    if (!isSuperAdmin) {
+      editTargetBar.hidden = true;
+      editTargetSelect.innerHTML = '';
+      return;
+    }
+    editTargetBar.hidden = false;
+    editTargetSelect.innerHTML = editTargetOptions.map(function(option){
+      return '<option value="' + esc(option.value) + '">' + esc(option.label) + '</option>';
+    }).join('');
+    if (currentEditTarget) {
+      editTargetSelect.value = currentEditTarget.type === 'template'
+        ? 'template:' + currentEditTarget.templateId
+        : 'center:' + currentEditTarget.id;
+    }
+  }
+
+  async function loadEditableTarget(target){
+    isLoadingTarget = true;
+    saveStatus.textContent = '';
+    var res;
+    if (target.type === 'template') {
+      res = await client.from('template_centers').select('*').eq('template_id', target.templateId).single();
+    } else {
+      res = await client.from('centers').select('*').eq('id', target.id).single();
+    }
+    if (res.error || !res.data) {
+      if (res.error) logAdminError('loadEditableTarget', res.error);
+      currentCenter = null;
+      noCenter.hidden = false;
+      tabBar.hidden = true;
+      centerPanel.hidden = true;
+      photoSection.hidden = true;
+      consultSection.hidden = true;
+      centerLinks.hidden = true;
+      isLoadingTarget = false;
+      return;
+    }
+
+    currentEditTarget = target;
+    currentCenter = res.data;
+    if (target.type === 'center') currentOwnedCenter = res.data;
+    currentHeroPhoto = null;
+    currentAdmissionId = null;
+    selectedTeacherClassId = null;
+    facilityTabLoaded = false;
+    programTabLoaded = false;
+
+    noCenter.hidden = true;
+    tabBar.hidden = false;
+    centerPanel.hidden = false;
+    photoSection.hidden = false;
+    setEditTargetChrome();
+    setTemplateTabVisibility();
+    renderEditTargetSelect();
+
+    document.getElementById('f-name').value    = currentCenter.name || '';
+    document.getElementById('f-intro').value   = currentCenter.intro || '';
+    document.getElementById('f-address').value = currentCenter.address || '';
+    document.getElementById('f-hours').value   = currentCenter.operating_hours || '';
+    loadBasicStats();
+    loadPhotos();
+
+    if (isTemplateMode()) {
+      consultSection.hidden = true;
+    } else {
+      consultSection.hidden = false;
+      loadConsultations(currentCenter.id);
+    }
+
+    loadTab(activeTab());
+    markSaved();
+    isLoadingTarget = false;
+  }
+
+  async function loadAdminTargets(userId){
+    var ownRes = await client.from('centers').select('*').eq('owner_id', userId).maybeSingle();
+    if (ownRes.error) logAdminError('loadAdminTargets/center', ownRes.error);
+    currentOwnedCenter = ownRes.data || null;
+
+    var templateRes = await client.from('template_centers').select('*');
+    if (templateRes.error) {
+      logAdminError('loadAdminTargets/templates', templateRes.error);
+      noCenter.hidden = false;
+      noCenter.innerHTML = '템플릿 목록을 불러오지 못했어요.<br>' + esc(templateRes.error.message);
+      tabBar.hidden = true;
+      centerPanel.hidden = true;
+      return;
+    }
+
+    var templateRows = (templateRes.data || []).sort(function(a, b){
+      var order = ['sunshine', 'forest', 'carnival', 'gallery'];
+      return order.indexOf(a.template_id) - order.indexOf(b.template_id);
+    });
+    editTargetOptions = [];
+    if (currentOwnedCenter) {
+      editTargetOptions.push({ value:'center:' + currentOwnedCenter.id, label:'내 원', type:'center', id:currentOwnedCenter.id });
+    }
+    templateRows.forEach(function(row){
+      editTargetOptions.push({
+        value:'template:' + row.template_id,
+        label:TEMPLATE_LABELS[row.template_id] || row.template_id,
+        type:'template',
+        id:row.id,
+        templateId:row.template_id
+      });
+    });
+    renderEditTargetSelect();
+
+    var first = editTargetOptions[0];
+    if (!first) {
+      noCenter.hidden = false;
+      tabBar.hidden = true;
+      centerPanel.hidden = true;
+      return;
+    }
+    await loadEditableTarget(first.type === 'template'
+      ? { type:'template', id:first.id, templateId:first.templateId }
+      : { type:'center', id:first.id });
+  }
+
   function showLoggedOut(){
     loginView.hidden = false;
     adminView.hidden = true;
     whoBox.hidden = true;
     centerLinks.hidden = true;
+    if (editTargetBar) editTargetBar.hidden = true;
     loginForm.reset();
     loginError.textContent = '';
+    currentCenter = null;
+    currentEditTarget = null;
+    isSuperAdmin = false;
+    editTargetOptions = [];
+    markSaved();
   }
 
   function showLoggedIn(session){
@@ -2573,7 +2861,9 @@
     adminView.hidden = false;
     whoBox.hidden = false;
     userEmailEl.textContent = session.user.email;
-    loadCenter(session.user.id);
+    isSuperAdmin = (session.user.email || '').toLowerCase() === ADMIN_EMAIL;
+    if (isSuperAdmin) loadAdminTargets(session.user.id);
+    else loadCenter(session.user.id);
   }
 
   async function loadCenter(userId){
@@ -2588,44 +2878,12 @@
       photoSection.hidden = true;
       consultSection.hidden = true;
       centerLinks.hidden = true;
+      if (editTargetBar) editTargetBar.hidden = true;
       return;
     }
-    currentCenter = res.data;
-    facilityTabLoaded = false;
-    programTabLoaded = false;
-    noCenter.hidden = true;
-    tabBar.hidden = false;
-    centerPanel.hidden = false;
-
-    var templateFile = TEMPLATE_FILES[currentCenter.template] || 'template-sunshine.html';
-    viewSiteBtn.onclick = function(){
-      window.open(templateFile + '?slug=' + encodeURIComponent(currentCenter.slug), '_blank');
-    };
-    changeTemplateBtn.onclick = function(){
-      location.href = 'template-select.html?slug=' + encodeURIComponent(currentCenter.slug) + '&auth=true';
-    };
-    centerLinks.hidden = false;
-    document.getElementById('f-name').value    = currentCenter.name || '';
-    document.getElementById('f-intro').value   = currentCenter.intro || '';
-    document.getElementById('f-address').value = currentCenter.address || '';
-    document.getElementById('f-hours').value   = currentCenter.operating_hours || '';
-    loadBasicStats();
-
-    photoSection.hidden = false;
-    loadPhotos();
-
-    consultSection.hidden = false;
-    loadConsultations(currentCenter.id);
-
-    if (document.querySelector('.tab-btn[data-tab="intro"].active')) loadIntroTab();
-    if (document.querySelector('.tab-btn[data-tab="day"].active')) loadDayStoryTab();
-    if (document.querySelector('.tab-btn[data-tab="facility"].active')) loadFacilityTab();
-    if (document.querySelector('.tab-btn[data-tab="program"].active')) loadProgramTab();
-    if (document.querySelector('.tab-btn[data-tab="teacher"].active')) loadTeacherTab();
-    if (document.querySelector('.tab-btn[data-tab="class"].active')) loadClassManagerTab();
-    if (document.querySelector('.tab-btn[data-tab="admission"].active')) loadAdmissionTab();
-    if (document.querySelector('.tab-btn[data-tab="directions"].active')) loadDirectionsTab();
-    if (document.querySelector('.tab-btn[data-tab="faq"].active')) loadFaqTab();
+    isSuperAdmin = false;
+    if (editTargetBar) editTargetBar.hidden = true;
+    await loadEditableTarget({ type:'center', id:res.data.id });
   }
 
   client.auth.onAuthStateChange(function(_event, session){
@@ -2653,6 +2911,30 @@
     if (res.error) alertAdminError('logout', res.error, '로그아웃 실패');
   });
 
+  if (editTargetSelect) {
+    editTargetSelect.addEventListener('change', async function(){
+      var value = editTargetSelect.value;
+      var previousValue = currentEditTarget
+        ? (currentEditTarget.type === 'template' ? 'template:' + currentEditTarget.templateId : 'center:' + currentEditTarget.id)
+        : '';
+      if (hasUnsavedChanges && !confirm('저장하지 않은 변경사항이 있어요. 편집 대상을 전환할까요?')) {
+        editTargetSelect.value = previousValue;
+        return;
+      }
+      var option = editTargetOptions.find(function(item){ return item.value === value; });
+      if (!option) return;
+      await loadEditableTarget(option.type === 'template'
+        ? { type:'template', id:option.id, templateId:option.templateId }
+        : { type:'center', id:option.id });
+    });
+  }
+
+  adminView.addEventListener('input', function(e){
+    if (isLoadingTarget) return;
+    if (e.target === editTargetSelect) return;
+    if (e.target.matches('input, textarea, select')) hasUnsavedChanges = true;
+  });
+
   saveForm.addEventListener('submit', async function(e){
     e.preventDefault();
     if (!currentCenter) return;
@@ -2663,7 +2945,7 @@
         return { label: card.querySelector('.fs-label').value, value: card.querySelector('.fs-value').value };
       })
     });
-    var res = await client.from('centers').update({
+    var res = await client.from(centerTable()).update({
       name:             document.getElementById('f-name').value,
       intro:            document.getElementById('f-intro').value,
       address:          document.getElementById('f-address').value,
@@ -2678,6 +2960,7 @@
       currentCenter.address = document.getElementById('f-address').value;
       currentCenter.operating_hours = document.getElementById('f-hours').value;
       currentCenter.facilities = updatedFacilities;
+      markSaved();
     }
     saveStatus.textContent = res.error ? ('저장 실패: ' + res.error.message) : '저장됐어요.';
   });
