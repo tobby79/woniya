@@ -916,7 +916,7 @@
 
     try {
       var compressed = await compressImage(file);
-      var path = currentCenter.id + '/hero/' + Date.now() + '_' + compressed.name;
+      var path = 'centers/' + currentCenter.id + '/hero/' + Date.now() + '_' + compressed.name;
       progressLabel.textContent = '업로드 중... ' + compressed.name;
       progressBar.style.width = '70%';
 
@@ -992,9 +992,9 @@
         // 1) 압축
         var compressed = await compressImage(file);
 
-        // 2) Storage 경로: {center_id}/{type}/{timestamp}_{filename}
+        // 2) Storage 경로: centers/{center_id}/{type}/{timestamp}_{filename}
         var ts   = Date.now();
-        var path = currentCenter.id + '/' + selectedType + '/' + ts + '_' + compressed.name;
+        var path = 'centers/' + currentCenter.id + '/' + selectedType + '/' + ts + '_' + compressed.name;
 
         progressLabel.textContent = '(' + (i+1) + '/' + total + ') 업로드 중... ' + compressed.name;
         progressBar.style.width = Math.round((i / total) * 80) + '%';
@@ -1166,7 +1166,7 @@
   async function handleDirectorPhoto(file){
     if (!file || !currentCenter) return;
     var compressed = await compressImage(file);
-    var path = currentCenter.id + '/director/' + Date.now() + '_' + compressed.name;
+    var path = 'centers/' + currentCenter.id + '/director/' + Date.now() + '_' + compressed.name;
     var upRes = await client.storage.from(BUCKET).upload(path, compressed, { cacheControl:'3600', upsert:false });
     if (upRes.error){ alertAdminError('handleDirectorPhoto', upRes.error, '사진 업로드 실패'); return; }
 
@@ -1285,7 +1285,7 @@
   async function handleDayStoryPhoto(mediaId, file, zone, row){
     if (!file || !currentCenter) return;
     var compressed = await compressImage(file);
-    var path = currentCenter.id + '/day_story/' + Date.now() + '_' + compressed.name;
+    var path = 'centers/' + currentCenter.id + '/day_story/' + Date.now() + '_' + compressed.name;
     var upRes = await client.storage.from(BUCKET).upload(path, compressed, { cacheControl:'3600', upsert:false });
     if (upRes.error){ alertAdminError('handleDayStoryPhoto', upRes.error, '사진 업로드 실패'); return; }
 
@@ -1357,6 +1357,7 @@
     var insertRes = await client.from('center_media').insert({
       center_id:  currentCenter.id,
       media_type: 'day_story',
+      photo_url:  '',
       sort_order: nextSort
     });
     if (insertRes.error) {
@@ -1581,7 +1582,7 @@
     try {
       var compressed = await compressImage(file);
       var index = Array.prototype.indexOf.call(card.parentNode.children, card);
-      path = currentCenter.id + '/' + kind + '/' + Date.now() + '_item_' + index + '_' + compressed.name;
+      path = 'centers/' + currentCenter.id + '/' + kind + '/' + Date.now() + '_item_' + index + '_' + compressed.name;
       var upRes = await client.storage.from(BUCKET).upload(path, compressed, {
         cacheControl: '3600', upsert: false
       });
@@ -1734,7 +1735,7 @@
   async function handleTeacherPhoto(mediaId, file, zone, row){
     if (!file || !currentCenter) return;
     var compressed = await compressImage(file);
-    var path = currentCenter.id + '/teacher/' + Date.now() + '_' + compressed.name;
+    var path = 'centers/' + currentCenter.id + '/teacher/' + Date.now() + '_' + compressed.name;
     var upRes = await client.storage.from(BUCKET).upload(path, compressed, { cacheControl:'3600', upsert:false });
     if (upRes.error){ alertAdminError('handleTeacherPhoto', upRes.error, '사진 업로드 실패'); return; }
 
@@ -1805,6 +1806,7 @@
     var insertRes = await client.from('center_media').insert({
       center_id:  currentCenter.id,
       media_type: 'teacher',
+      photo_url:  '',
       sort_order: nextSort
     });
     if (insertRes.error) {

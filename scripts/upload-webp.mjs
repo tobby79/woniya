@@ -2,6 +2,11 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+// Disabled: legacy bulk upload preserved arbitrary/haetsal-relative paths.
+// Storage now starts clean and new uploads must use centers/{center_id}/...
+console.error('Disabled: legacy bulk WebP upload is no longer used. Use the app upload flows with centers/{center_id}/ paths.');
+process.exit(1);
+
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const projectRoot = path.resolve(__dirname, '..');
 const cfgText = fs.readFileSync(path.join(projectRoot, 'supabase-config.js'), 'utf8');

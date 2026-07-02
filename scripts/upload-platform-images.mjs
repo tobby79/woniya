@@ -3,6 +3,11 @@ import { readFile, stat } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+// Disabled: legacy demo/platform image upload used the old shared card/* and hero/* paths.
+// Storage now starts clean and new uploads must use centers/{center_id}/...
+console.error('Disabled: legacy demo/platform image upload is no longer used. Use the admin UI with centers/{center_id}/ paths.');
+process.exit(1);
+
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const projectRoot = path.resolve(__dirname, '..');
 const configText = await readFile(path.join(projectRoot, 'supabase-config.js'), 'utf8');
