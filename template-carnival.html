@@ -314,6 +314,9 @@
     .flip-track{transition:none!important}
   }
 
+  .preview-banner{position:fixed;top:72px;left:50%;transform:translateX(-50%);z-index:55;background:rgba(64,45,58,.94);color:#fff;border-radius:999px;padding:9px 16px;font-size:.84rem;font-weight:800;box-shadow:0 14px 34px -18px rgba(58,28,42,.5)}
+  .preview-banner[hidden]{display:none}
+
 </style>
 </head>
 <body>
@@ -323,6 +326,7 @@
   <span></span><span></span><span></span>
 </button>
 <div class="menu-panel" id="menuPanel"></div>
+<div class="preview-banner" id="previewBanner" hidden>템플릿 미리보기</div>
 <span id="top"></span>
 
 <div class="park-bg"></div>
@@ -663,8 +667,64 @@ function mapRowToData(row){
   let data;
   const cfg = window.__SUPABASE_CONFIG__;
   const client = supabase.createClient(cfg.url, cfg.anonKey);
+  let isPreviewMode = false;
+  const PREVIEW_TEMPLATE_IDS = ['sunshine', 'carnival', 'forest', 'gallery'];
+  const PREVIEW_MESSAGE = '이것은 템플릿 미리보기입니다. 실제 신청은 접수되지 않습니다.';
+
+  function normalizePreviewId(value){
+    return PREVIEW_TEMPLATE_IDS.includes(value) ? value : '';
+  }
+
+  function publicTemplateUrl(path){
+    if (!path || /^https?:\/\//.test(path) || /^data:/i.test(path)) return path;
+    const res = client.storage.from('template-previews').getPublicUrl(path);
+    return res && res.data && res.data.publicUrl ? res.data.publicUrl : path;
+  }
+
+  function resolveTemplateAssets(row){
+    if (Array.isArray(row.center_media)){
+      row.center_media = row.center_media.map(function(m){
+        if (!m || !m.photo_url) return m;
+        return Object.assign({}, m, { photo_url: publicTemplateUrl(m.photo_url) });
+      });
+    }
+    if (row.director && row.director.photo){
+      row.director = Object.assign({}, row.director, { photo: publicTemplateUrl(row.director.photo) });
+    }
+    ['facilities', 'programs'].forEach(function(key){
+      if (!row[key] || !Array.isArray(row[key].items)) return;
+      row[key] = Object.assign({}, row[key], {
+        items: row[key].items.map(function(item){
+          if (!item || !item.photo_url) return item;
+          return Object.assign({}, item, { photo_url: publicTemplateUrl(item.photo_url) });
+        })
+      });
+    });
+    return row;
+  }
+
+  async function loadTemplatePreview(templateId){
+    const centerRes = await client.from('template_centers').select('*').eq('template_id', templateId).single();
+    if (centerRes.error) throw centerRes.error;
+    const row = centerRes.data;
+    const mediaRes = await client.from('template_center_media').select('*').eq('template_center_id', row.id).order('sort_order', { ascending: true });
+    if (mediaRes.error) throw mediaRes.error;
+    const admissionRes = await client.from('template_admissions').select('*').eq('template_center_id', row.id).maybeSingle();
+    if (admissionRes.error) throw admissionRes.error;
+    row.center_media = mediaRes.data || [];
+    row.admissions = admissionRes.data ? [admissionRes.data] : [];
+    return mapRowToData(resolveTemplateAssets(row));
+  }
+
   try {
-    const slug = new URLSearchParams(location.search).get('slug') || 'haetsal';
+    const params = new URLSearchParams(location.search);
+    const slugParam = params.get('slug');
+    const previewId = slugParam ? '' : normalizePreviewId(params.get('preview'));
+    if (previewId){
+      isPreviewMode = true;
+      data = await loadTemplatePreview(previewId);
+    } else {
+      const slug = slugParam || 'haetsal';
     const { data: row, error } = await client.from('centers').select('*, center_media(*), admissions(*), philosophy, programs, facilities').eq('slug', slug).single();
     if (error) throw error;
     data = mapRowToData(row);
@@ -702,6 +762,9 @@ function mapRowToData(row){
     for (const it of data.album.items){ it.photo = resolveSignedPath(it.photo); }
     for (const tc of data.teachers.items){ tc.photo = resolveSignedPath(tc.photo); }
     if (data.center.director){ data.center.director.photo = resolveSignedPath(data.center.director.photo); }
+    }
+    const previewBanner = document.getElementById('previewBanner');
+    if (previewBanner) previewBanner.hidden = !isPreviewMode;
     for (let i=0;i<SAMPLE_SPACES.length;i++){
       if (data.album.items[i]) SAMPLE_SPACES[i].photo = data.album.items[i].photo;
     }
@@ -915,6 +978,15 @@ function mapRowToData(row){
   window.__facilityData__ = data.center.facilities;
   window.__programData__ = data.center.programs;
   window.__albumImgs__ = data.album?.items || [];
+  if (isPreviewMode){
+    document.addEventListener('click', function(e){
+      var action = e.target.closest('#cslOpenBtn, #askConsultBtn, #admissionsSec .info-link-btn');
+      if (!action) return;
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      alert(PREVIEW_MESSAGE);
+    }, true);
+  }
   initInteractions(SAMPLE_SPACES.length);
   renderInfoSections(data, c, esc);
   setupAskPanel(data.faqs);
@@ -1193,6 +1265,10 @@ function setupAskPanel(faqs){
     });
   });
   consultBtn.addEventListener('click', function(){
+    if (isPreviewMode){
+      alert(PREVIEW_MESSAGE);
+      return;
+    }
     close();
     var target = document.getElementById('cslOpenBtn');
     if (target) target.click();
@@ -1292,7 +1368,7 @@ function initConsultationForm(client, centerId){
   var formWrap = document.getElementById('cslFormWrap');
   var doneWrap = document.getElementById('cslDoneWrap');
 
-  function openModal(){ overlay.classList.add('open'); formWrap.hidden = false; doneWrap.hidden = true; form.reset(); errorEl.textContent = ''; }
+  function openModal(){ if (isPreviewMode){ alert(PREVIEW_MESSAGE); return; } overlay.classList.add('open'); formWrap.hidden = false; doneWrap.hidden = true; form.reset(); errorEl.textContent = ''; }
   function closeModal(){ overlay.classList.remove('open'); }
 
   if (openBtn) openBtn.addEventListener('click', openModal);
@@ -1303,6 +1379,10 @@ function initConsultationForm(client, centerId){
   form.addEventListener('submit', async function(e){
     e.preventDefault();
     errorEl.textContent = '';
+    if (isPreviewMode){
+      alert(PREVIEW_MESSAGE);
+      return;
+    }
     if (!document.getElementById('csl-consent').checked){ errorEl.textContent = '개인정보 수집 동의가 필요해요.'; return; }
     var payload = {
       center_id: centerId,
