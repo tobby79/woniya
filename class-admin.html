@@ -179,6 +179,9 @@
               <div class="field"><label for="albumTitle">앨범명</label><input type="text" id="albumTitle" required></div>
               <div class="field"><label for="albumDate">일자</label><input type="date" id="albumDate" required></div>
               <div class="field"><label for="albumBody">앨범 설명</label><textarea id="albumBody"></textarea></div>
+              <div class="notice-line">이 사진은 반 학부모 전원에게 공개됩니다</div>
+              <input type="file" id="albumDraftFileInput" accept="image/*" multiple hidden>
+              <div class="photo-grid" id="albumDraftPhotoGrid"></div>
               <button type="submit" class="btn" id="albumSubmit">앨범 저장</button>
               <button type="button" class="btn ghost" id="albumCancel" hidden style="margin-top:10px">수정 취소</button>
               <div class="msg" id="albumMsg"></div>
@@ -265,6 +268,8 @@
   var selectedDate = toDateInput(new Date());
   var monthEvents = [];
   var currentAlbum = null;
+  var albumDraftFiles = [];
+  var albumDraftSeq = 0;
 
   var loadingPanel = byId('loadingPanel');
   var authPanel = byId('authPanel');
@@ -597,26 +602,137 @@
   async function saveAlbum(){
     var msg = byId('albumMsg');
     setMsg(msg, '저장 중입니다.');
-    var id = byId('albumId').value;
-    var payload = {
-      class_id: currentClass.id,
-      type: 'album',
-      title: byId('albumTitle').value.trim(),
-      event_date: byId('albumDate').value,
-      body: byId('albumBody').value.trim()
-    };
-    var res = id
-      ? await client.from('class_posts').update({ title:payload.title, event_date:payload.event_date, body:payload.body }).eq('id', id).eq('class_id', currentClass.id)
-      : await client.from('class_posts').insert(payload);
-    if (res.error) { setMsg(msg, res.error.message, true); return; }
-    byId('albumId').value = '';
-    byId('albumTitle').value = '';
-    byId('albumDate').value = toDateInput(new Date());
-    byId('albumBody').value = '';
-    byId('albumSubmit').textContent = '앨범 저장';
-    byId('albumCancel').hidden = true;
-    setMsg(msg, '저장되었습니다.');
-    await loadAlbumTab();
+    byId('albumSubmit').disabled = true;
+    try {
+      var id = byId('albumId').value;
+      var payload = {
+        class_id: currentClass.id,
+        type: 'album',
+        title: byId('albumTitle').value.trim(),
+        event_date: byId('albumDate').value,
+        body: byId('albumBody').value.trim()
+      };
+      var res = id
+        ? await client.from('class_posts').update({ title:payload.title, event_date:payload.event_date, body:payload.body }).eq('id', id).eq('class_id', currentClass.id).select('id').single()
+        : await client.from('class_posts').insert(payload).select('id').single();
+      if (res.error) {
+        setMsg(msg, res.error.message, true);
+        return;
+      }
+      var postId = id || (res.data ? res.data.id : null);
+      if (!postId) {
+        setMsg(msg, '앨범 저장 후 post_id를 확인하지 못했습니다.', true);
+        return;
+      }
+
+      if (albumDraftFiles.length) {
+        var uploadResult = await uploadFilesToAlbum(postId, albumDraftFiles.map(function(item){ return item.file; }), msg);
+        removeUploadedDraftFiles(uploadResult.uploadedFiles);
+        renderDraftPhotoGrid();
+        if (uploadResult.failed.length) {
+          byId('albumId').value = postId;
+          byId('albumSubmit').textContent = '수정 저장';
+          byId('albumCancel').hidden = false;
+          setMsg(msg, '앨범 정보는 저장되었지만 일부 사진 업로드에 실패했습니다.\n' + uploadResult.failed.map(function(item){ return item.name + ': ' + item.message; }).join('\n'), true);
+          return;
+        }
+      }
+
+      byId('albumId').value = '';
+      byId('albumTitle').value = '';
+      byId('albumDate').value = toDateInput(new Date());
+      byId('albumBody').value = '';
+      byId('albumSubmit').textContent = '앨범 저장';
+      byId('albumCancel').hidden = true;
+      clearDraftFiles();
+      setMsg(msg, '저장되었습니다.');
+      await loadAlbumTab();
+    } catch (err) {
+      setMsg(msg, errorMessage(err), true);
+    } finally {
+      byId('albumSubmit').disabled = false;
+    }
+  }
+
+  function draftUploadTile(){
+    return '<div class="upload-zone" id="albumDraftUploadZone" tabindex="0" role="button" aria-label="앨범 생성 사진 선택">' +
+      '<div class="upload-icon">+</div>' +
+      '<div class="upload-hint"><strong>클릭하거나 사진을 여기에 드래그</strong><br>저장할 때 함께 업로드됩니다</div>' +
+    '</div>';
+  }
+
+  function renderDraftPhotoGrid(){
+    var html = [draftUploadTile()];
+    if (!albumDraftFiles.length) {
+      html.push('<div class="empty">사진 없이 앨범만 저장할 수도 있어요.</div>');
+    } else {
+      html = html.concat(albumDraftFiles.map(function(item){
+        return '<div class="photo-item">' +
+          '<img src="' + esc(item.previewUrl) + '" alt="">' +
+          '<button type="button" class="photo-del" title="선택 취소" data-remove-draft="' + esc(item.id) + '">×</button>' +
+        '</div>';
+      }));
+    }
+    byId('albumDraftPhotoGrid').innerHTML = html.join('');
+    bindDraftUploadZone();
+  }
+
+  function bindDraftUploadZone(){
+    var zone = byId('albumDraftUploadZone');
+    var input = byId('albumDraftFileInput');
+    if (!zone || !input) return;
+    zone.addEventListener('click', function(){ input.click(); });
+    zone.addEventListener('keydown', function(e){
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        input.click();
+      }
+    });
+    zone.addEventListener('dragover', function(e){ e.preventDefault(); zone.classList.add('drag-over'); });
+    zone.addEventListener('dragleave', function(){ zone.classList.remove('drag-over'); });
+    zone.addEventListener('drop', function(e){
+      e.preventDefault();
+      zone.classList.remove('drag-over');
+      addDraftFiles(Array.from(e.dataTransfer.files));
+    });
+  }
+
+  function addDraftFiles(files){
+    files.filter(function(file){ return file && file.type && file.type.indexOf('image/') === 0; }).forEach(function(file){
+      albumDraftSeq++;
+      albumDraftFiles.push({
+        id: 'draft-' + albumDraftSeq,
+        file: file,
+        previewUrl: URL.createObjectURL(file)
+      });
+    });
+    renderDraftPhotoGrid();
+  }
+
+  function removeDraftFile(id){
+    var next = [];
+    albumDraftFiles.forEach(function(item){
+      if (item.id === id) URL.revokeObjectURL(item.previewUrl);
+      else next.push(item);
+    });
+    albumDraftFiles = next;
+    renderDraftPhotoGrid();
+  }
+
+  function removeUploadedDraftFiles(uploadedFiles){
+    if (!uploadedFiles.length) return;
+    var next = [];
+    albumDraftFiles.forEach(function(item){
+      if (uploadedFiles.indexOf(item.file) >= 0) URL.revokeObjectURL(item.previewUrl);
+      else next.push(item);
+    });
+    albumDraftFiles = next;
+  }
+
+  function clearDraftFiles(){
+    albumDraftFiles.forEach(function(item){ URL.revokeObjectURL(item.previewUrl); });
+    albumDraftFiles = [];
+    renderDraftPhotoGrid();
   }
 
   async function editAlbum(id){
@@ -702,29 +818,46 @@
   async function uploadAlbumFiles(files){
     if (!currentAlbum || !files.length) return;
     var msg = byId('albumUploadMsg');
-    var done = 0;
     setMsg(msg, '업로드 준비 중입니다.');
+    var result = await uploadFilesToAlbum(currentAlbum.id, files, msg);
+    if (result.failed.length) {
+      setMsg(msg, files.length + '장 중 ' + result.uploadedFiles.length + '장 업로드 완료\n' + result.failed.map(function(item){ return item.name + ': ' + item.message; }).join('\n'), true);
+    } else if (result.uploadedFiles.length) {
+      setMsg(msg, files.length + '장 중 ' + result.uploadedFiles.length + '장 업로드 완료');
+    }
+    await loadAlbumPhotos();
+  }
+
+  async function uploadFilesToAlbum(postId, files, msg){
+    var result = { uploadedFiles: [], failed: [] };
     for (var i = 0; i < files.length; i++) {
+      var file = files[i];
+      var path = '';
       try {
         setMsg(msg, '(' + (i + 1) + '/' + files.length + ') 압축 중입니다.');
-        var compressed = await compressImage(files[i]);
-        var path = 'classes/' + currentClass.id + '/album/' + currentAlbum.id + '/' + Date.now() + '_' + i + '_' + safeName(compressed.name);
+        var compressed = await compressImage(file);
+        path = 'classes/' + currentClass.id + '/album/' + postId + '/' + Date.now() + '_' + i + '_' + safeName(compressed.name);
         setMsg(msg, '(' + (i + 1) + '/' + files.length + ') 업로드 중입니다.');
         var upRes = await client.storage.from(BUCKET).upload(path, compressed, { cacheControl:'3600', upsert:false });
         if (upRes.error) throw upRes.error;
         var insertRes = await client.from('class_media').insert({
           class_id: currentClass.id,
-          post_id: currentAlbum.id,
+          post_id: postId,
           url: path
         });
         if (insertRes.error) throw insertRes.error;
-        done++;
+        result.uploadedFiles.push(file);
       } catch (err) {
-        setMsg(msg, errorMessage(err), true);
+        if (path) {
+          var removeRes = await client.storage.from(BUCKET).remove([path]);
+          if (removeRes.error) {
+            console.warn('failed to cleanup uploaded object', removeRes.error);
+          }
+        }
+        result.failed.push({ name: file && file.name ? file.name : '이름 없는 파일', message: errorMessage(err) });
       }
     }
-    if (done) setMsg(msg, files.length + '장 중 ' + done + '장 업로드 완료');
-    await loadAlbumPhotos();
+    return result;
   }
 
   async function deleteMedia(id, path){
@@ -836,12 +969,14 @@
     var editEventBtn = e.target.closest('[data-edit-event]');
     var editAlbumBtn = e.target.closest('[data-edit-album]');
     var deleteMediaBtn = e.target.closest('[data-delete-media]');
+    var removeDraftBtn = e.target.closest('[data-remove-draft]');
     var saveReplyBtn = e.target.closest('[data-save-reply]');
     if (editPost) { await editSimplePost(editPost.dataset.editPost, editPost.dataset.type); }
     if (deleteBtn) { e.stopPropagation(); await deletePost(deleteBtn.dataset.deletePost, deleteBtn.dataset.type); }
     if (editEventBtn) { await editEvent(editEventBtn.dataset.editEvent); }
     if (editAlbumBtn) { e.stopPropagation(); await editAlbum(editAlbumBtn.dataset.editAlbum); }
     if (deleteMediaBtn) { await deleteMedia(deleteMediaBtn.dataset.deleteMedia, deleteMediaBtn.dataset.path); }
+    if (removeDraftBtn) { removeDraftFile(removeDraftBtn.dataset.removeDraft); }
     if (saveReplyBtn) { await saveReply(saveReplyBtn.dataset.saveReply); }
   });
 
@@ -881,6 +1016,7 @@
     byId('albumBody').value = '';
     byId('albumSubmit').textContent = '앨범 저장';
     byId('albumCancel').hidden = true;
+    clearDraftFiles();
   });
   byId('backToAlbumsBtn').addEventListener('click', async function(){
     var btn = byId('backToAlbumsBtn');
@@ -893,6 +1029,8 @@
   });
   var albumFileInput = byId('albumFileInput');
   albumFileInput.addEventListener('change', function(){ uploadAlbumFiles(Array.from(albumFileInput.files)); albumFileInput.value = ''; });
+  var albumDraftFileInput = byId('albumDraftFileInput');
+  albumDraftFileInput.addEventListener('change', function(){ addDraftFiles(Array.from(albumDraftFileInput.files)); albumDraftFileInput.value = ''; });
   byId('detailEditAlbumBtn').addEventListener('click', async function(){
     if (!currentAlbum) return;
     var albumId = currentAlbum.id;
@@ -914,6 +1052,7 @@
     try { await loadTeacherClass(currentSession); }
     catch (err) { pageNotice.innerHTML = escWithBr(errorMessage(err)); showPanel(noticePanel); }
   });
+  renderDraftPhotoGrid();
 })();
 </script>
 </body>
