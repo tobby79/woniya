@@ -10,6 +10,7 @@ on:
       - "supabase/config.toml"
   push:
     branches:
+      - master
       - db-baseline-verification
     paths:
       - ".gitattributes"
