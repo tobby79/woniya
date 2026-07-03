@@ -1,0 +1,65 @@
+name: Supabase migration reset
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - ".gitattributes"
+      - ".github/workflows/supabase-migration-reset.yml"
+      - "supabase/migrations/**"
+      - "supabase/config.toml"
+  push:
+    branches:
+      - db-baseline-verification
+    paths:
+      - ".gitattributes"
+      - ".github/workflows/supabase-migration-reset.yml"
+      - "supabase/migrations/**"
+      - "supabase/config.toml"
+
+permissions:
+  contents: read
+
+jobs:
+  reset:
+    name: Clean local reset
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Show Docker version
+        run: docker --version
+
+      - name: Install Supabase CLI
+        uses: supabase/setup-cli@v2
+        with:
+          version: 2.109.0
+          github-token: ${{ github.token }}
+
+      - name: Show Supabase CLI version
+        run: supabase --version
+
+      - name: Initialize local Supabase config if missing
+        run: |
+          if [ ! -f supabase/config.toml ]; then
+            supabase init
+          fi
+
+      - name: Start local Supabase
+        run: supabase start
+
+      - name: List local migrations
+        run: supabase migration list --local
+
+      - name: Reset local database without seed
+        run: supabase db reset --local --no-seed
+
+      - name: Supabase diagnostics
+        if: always()
+        run: |
+          supabase status || true
+          supabase migration list --local || true
+          docker ps -a || true
