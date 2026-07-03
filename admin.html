@@ -904,6 +904,7 @@
 
   // ── 서명 URL 발급 (1시간) ──
   async function signedUrl(path){
+    if (path && (/^https?:\/\//.test(path) || /^data:/i.test(path))) return path;
     if (isTemplateMode()) {
       var publicRes = client.storage.from(TEMPLATE_BUCKET).getPublicUrl(path);
       return publicRes.data ? publicRes.data.publicUrl : null;

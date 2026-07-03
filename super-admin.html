@@ -369,11 +369,14 @@
   var previewIntro = document.getElementById('previewIntro');
 
   var currentTemplateId = '';
+  var currentTemplateCenter = null;
+  var currentTemplateCenterId = '';
   var heroState = emptyPhoto();
   var directorState = emptyPhoto();
   var albumState = [];
   var teacherState = [];
   var pendingRemovePaths = [];
+  var pendingDeleteMediaIds = [];
   var deniedEmail = '';
 
   function emptyPhoto(){
@@ -442,34 +445,54 @@
     saveStatus.className = 'msg';
     editorTitle.textContent = TEMPLATE_LABELS[templateId] + ' 템플릿 편집';
 
-    var res = await client.from('platform_templates').select('*').eq('template_id', templateId).single();
-    if (res.error && res.error.code !== 'PGRST116') {
-      saveStatus.textContent = '불러오기 실패: ' + res.error.message;
+    var centerRes = await client.from('template_centers').select('*').eq('template_id', templateId).single();
+    if (centerRes.error) {
+      saveStatus.textContent = '불러오기 실패: ' + centerRes.error.message;
       saveStatus.className = 'msg error';
       return;
     }
 
-    var row = res.data || { template_id:templateId, album:[], teachers:[] };
-    heroState = { url:row.hero_image_url || '', file:null, previewUrl:'', oldUrl:row.hero_image_url || '' };
-    directorState = { url:row.director_photo_url || '', file:null, previewUrl:'', oldUrl:row.director_photo_url || '' };
-    albumState = (Array.isArray(row.album) ? row.album : []).map(function(item){
-      return { url:item.url || '', caption:item.caption || '', file:null, previewUrl:'', oldUrl:item.url || '' };
+    var row = centerRes.data;
+    currentTemplateCenter = row;
+    currentTemplateCenterId = row.id;
+
+    var mediaRes = await client.from('template_center_media')
+      .select('*')
+      .eq('template_center_id', row.id)
+      .in('media_type', ['hero', 'album', 'teacher'])
+      .order('sort_order', { ascending:true });
+    if (mediaRes.error) {
+      saveStatus.textContent = '불러오기 실패: ' + mediaRes.error.message;
+      saveStatus.className = 'msg error';
+      return;
+    }
+
+    var mediaRows = mediaRes.data || [];
+    var heroRow = mediaRows.filter(function(item){ return item.media_type === 'hero'; })[0] || null;
+    var director = row.director || {};
+    heroState = { id:heroRow ? heroRow.id : '', url:heroRow ? (heroRow.photo_url || '') : '', file:null, previewUrl:'', oldUrl:heroRow ? (heroRow.photo_url || '') : '' };
+    directorState = { url:director.photo || '', file:null, previewUrl:'', oldUrl:director.photo || '' };
+    albumState = mediaRows.filter(function(item){ return item.media_type === 'album'; }).map(function(item){
+      return { id:item.id, url:item.photo_url || '', caption:item.title || item.caption || '', file:null, previewUrl:'', oldUrl:item.photo_url || '' };
     });
-    teacherState = (Array.isArray(row.teachers) ? row.teachers : []).map(function(item){
+    teacherState = mediaRows.filter(function(item){ return item.media_type === 'teacher'; }).map(function(item){
       return {
+        id:item.id,
         photo_url:item.photo_url || '',
-        name:item.name || '',
-        role:item.role || '',
+        name:item.title || '',
+        role:item.subtitle || '',
+        message:item.caption || '',
         file:null,
         previewUrl:'',
         oldUrl:item.photo_url || ''
       };
     });
 
-    directorName.value = row.director_name || '';
-    directorMessage.value = row.director_message || '';
-    introText.value = row.intro_text || '';
+    directorName.value = director.sign_name || director.name || '';
+    directorMessage.value = director.message || '';
+    introText.value = row.intro || '';
     pendingRemovePaths = [];
+    pendingDeleteMediaIds = [];
     setUploadZonePhoto(heroUpload, getPhotoSrc(heroState), clearHeroPhoto);
     setUploadZonePhoto(directorUpload, getPhotoSrc(directorState), clearDirectorPhoto);
     renderAlbum();
@@ -479,7 +502,13 @@
   }
 
   function getPhotoSrc(state){
-    return state.previewUrl || state.url || '';
+    return state.previewUrl || publicUrlForStorageValue(state.url) || '';
+  }
+
+  function publicUrlForStorageValue(value){
+    if (!value || /^https?:\/\//.test(value) || /^data:/i.test(value) || /^blob:/i.test(value)) return value || '';
+    var urlRes = client.storage.from(BUCKET).getPublicUrl(value);
+    return urlRes.data && urlRes.data.publicUrl ? urlRes.data.publicUrl : value;
   }
 
   function setUploadZonePhoto(zone, src, onDelete){
@@ -541,6 +570,7 @@
 
   function clearHeroPhoto(){
     if (heroState.url) markRemoveUrl(heroState.url);
+    if (heroState.id && pendingDeleteMediaIds.indexOf(heroState.id) === -1) pendingDeleteMediaIds.push(heroState.id);
     if (heroState.previewUrl) URL.revokeObjectURL(heroState.previewUrl);
     heroState = emptyPhoto();
     setUploadZonePhoto(heroUpload, '', clearHeroPhoto);
@@ -578,7 +608,7 @@
       var input = card.querySelector('.album-file');
       var caption = card.querySelector('.album-caption');
       var delBtn = card.querySelector('.album-delete');
-      setUploadZonePhoto(zone, item.previewUrl || item.url, function(){ removeAlbum(index); });
+      setUploadZonePhoto(zone, item.previewUrl || publicUrlForStorageValue(item.url), function(){ removeAlbum(index); });
       bindUploadZone(zone, input, function(file){
         if (item.previewUrl) URL.revokeObjectURL(item.previewUrl);
         item.file = file;
@@ -602,6 +632,7 @@
     var item = albumState[index];
     if (!item) return;
     if (item.url) markRemoveUrl(item.url);
+    if (item.id && pendingDeleteMediaIds.indexOf(item.id) === -1) pendingDeleteMediaIds.push(item.id);
     if (item.previewUrl) URL.revokeObjectURL(item.previewUrl);
     albumState.splice(index, 1);
     renderAlbum();
@@ -634,7 +665,7 @@
       var nameInput = card.querySelector('.teacher-name');
       var roleInput = card.querySelector('.teacher-role');
       var delBtn = card.querySelector('.teacher-delete');
-      setUploadZonePhoto(zone, item.previewUrl || item.photo_url, function(){ clearTeacherPhoto(index); });
+      setUploadZonePhoto(zone, item.previewUrl || publicUrlForStorageValue(item.photo_url), function(){ clearTeacherPhoto(index); });
       bindUploadZone(zone, input, function(file){
         if (item.previewUrl) URL.revokeObjectURL(item.previewUrl);
         item.file = file;
@@ -662,6 +693,7 @@
     var item = teacherState[index];
     if (!item) return;
     if (item.photo_url) markRemoveUrl(item.photo_url);
+    if (item.id && pendingDeleteMediaIds.indexOf(item.id) === -1) pendingDeleteMediaIds.push(item.id);
     if (item.previewUrl) URL.revokeObjectURL(item.previewUrl);
     teacherState.splice(index, 1);
     renderTeachers();
@@ -719,12 +751,12 @@
       upsert:false
     });
     if (upRes.error) throw upRes.error;
-    var urlRes = client.storage.from(BUCKET).getPublicUrl(path);
-    return urlRes.data.publicUrl;
+    return path;
   }
 
   function publicUrlToPath(url){
     if (!url) return '';
+    if (!/^https?:\/\//.test(url) && !/^data:/i.test(url) && !/^blob:/i.test(url)) return url;
     var marker = '/storage/v1/object/public/' + BUCKET + '/';
     var idx = url.indexOf(marker);
     if (idx === -1) return '';
@@ -739,8 +771,44 @@
     if (res.error) console.warn('[super-admin/removeStoredFiles]', res.error);
   }
 
+  async function upsertMediaRow(item, mediaType, sortOrder){
+    var payload = {
+      template_center_id: currentTemplateCenterId,
+      media_type: mediaType,
+      sort_order: sortOrder,
+      photo_url: mediaType === 'teacher' ? (item.photo_url || '') : (item.url || '')
+    };
+    if (mediaType === 'album') {
+      payload.title = item.caption || '';
+      payload.caption = item.caption || '';
+    }
+    if (mediaType === 'teacher') {
+      payload.title = item.name || '';
+      payload.subtitle = item.role || '';
+      payload.caption = item.message || '';
+    }
+
+    if (item.id) {
+      var updateRes = await client.from('template_center_media').update(payload).eq('id', item.id);
+      if (updateRes.error) throw updateRes.error;
+      return item.id;
+    }
+
+    var insertRes = await client.from('template_center_media').insert(payload).select('id').single();
+    if (insertRes.error) throw insertRes.error;
+    item.id = insertRes.data.id;
+    return item.id;
+  }
+
+  async function deletePendingMediaRows(){
+    for (var i = 0; i < pendingDeleteMediaIds.length; i++) {
+      var deleteRes = await client.from('template_center_media').delete().eq('id', pendingDeleteMediaIds[i]);
+      if (deleteRes.error) throw deleteRes.error;
+    }
+  }
+
   async function saveTemplate(){
-    if (!currentTemplateId) return;
+    if (!currentTemplateId || !currentTemplateCenterId) return;
     saveBtn.disabled = true;
     saveStatus.textContent = '저장 중...';
     saveStatus.className = 'msg';
@@ -756,55 +824,55 @@
         directorState.url = await uploadPhoto(directorState.file, 'director');
       }
 
-      var albumPayload = [];
       for (var i = 0; i < albumState.length; i++) {
         var albumItem = albumState[i];
         var albumUrl = albumItem.url;
         if (albumItem.file) {
           if (albumItem.oldUrl) removeAfterSave.push(publicUrlToPath(albumItem.oldUrl));
           albumUrl = await uploadPhoto(albumItem.file, 'album');
-        }
-        if (albumUrl || albumItem.caption) {
-          albumPayload.push({ url:albumUrl || '', caption:albumItem.caption || '' });
+          albumItem.url = albumUrl;
         }
       }
 
-      var teacherPayload = [];
       for (var j = 0; j < teacherState.length; j++) {
         var teacherItem = teacherState[j];
         var photoUrl = teacherItem.photo_url;
         if (teacherItem.file) {
           if (teacherItem.oldUrl) removeAfterSave.push(publicUrlToPath(teacherItem.oldUrl));
-          photoUrl = await uploadPhoto(teacherItem.file, 'teachers');
-        }
-        if (photoUrl || teacherItem.name || teacherItem.role) {
-          teacherPayload.push({
-            photo_url:photoUrl || '',
-            name:teacherItem.name || '',
-            role:teacherItem.role || ''
-          });
+          photoUrl = await uploadPhoto(teacherItem.file, 'teacher');
+          teacherItem.photo_url = photoUrl;
         }
       }
 
-      var payload = {
-        template_id:currentTemplateId,
-        hero_image_url:heroState.url || null,
-        director_photo_url:directorState.url || null,
-        director_name:directorName.value || null,
-        director_message:directorMessage.value || null,
-        intro_text:introText.value || null,
-        album:albumPayload,
-        teachers:teacherPayload,
-        updated_at:new Date().toISOString()
-      };
-      var res = await client.from('platform_templates')
-        .upsert(payload, { onConflict:'template_id' })
-        .select()
-        .single();
-      if (res.error) throw res.error;
+      var currentDirector = currentTemplateCenter.director || {};
+      var nextDirector = Object.assign({}, currentDirector, {
+        photo: directorState.url || '',
+        message: directorMessage.value || '',
+        sign_name: directorName.value || ''
+      });
+      var centerUpdateRes = await client.from('template_centers').update({
+        director: nextDirector,
+        intro: introText.value || ''
+      }).eq('id', currentTemplateCenterId);
+      if (centerUpdateRes.error) throw centerUpdateRes.error;
+
+      if (heroState.url) {
+        await upsertMediaRow(heroState, 'hero', 0);
+      }
+      for (var a = 0; a < albumState.length; a++) {
+        var album = albumState[a];
+        if (album.url || album.caption) await upsertMediaRow(album, 'album', a + 1);
+      }
+      for (var t = 0; t < teacherState.length; t++) {
+        var teacher = teacherState[t];
+        if (teacher.photo_url || teacher.name || teacher.role) await upsertMediaRow(teacher, 'teacher', t + 1);
+      }
+
+      await deletePendingMediaRows();
 
       await removeStoredFiles(removeAfterSave);
       pendingRemovePaths = [];
+      pendingDeleteMediaIds = [];
       saveStatus.textContent = '저장됐어요.';
       saveStatus.className = 'msg ok';
       await loadTemplate(currentTemplateId);
@@ -835,7 +903,7 @@
     albumFiles.value = '';
   });
   addTeacherBtn.addEventListener('click', function(){
-    teacherState.push({ photo_url:'', name:'', role:'', file:null, previewUrl:'', oldUrl:'' });
+    teacherState.push({ id:'', photo_url:'', name:'', role:'', message:'', file:null, previewUrl:'', oldUrl:'' });
     renderTeachers();
   });
   directorName.addEventListener('input', updatePreview);

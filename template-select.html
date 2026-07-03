@@ -181,7 +181,7 @@
   var decideCloseBtn  = document.getElementById('decideCloseBtn');
 
   function previewUrl(t){
-    return slug ? t.file + '?slug=' + encodeURIComponent(slug) : t.file;
+    return slug ? t.file + '?slug=' + encodeURIComponent(slug) : t.file + '?preview=' + encodeURIComponent(t.key);
   }
 
   // ── 카드 렌더 ──
