@@ -2,7 +2,10 @@
 -- These tables mirror the admin-managed center content tables without
 -- touching admin.html yet.
 
-drop table if exists public.platform_templates cascade;
+-- Keep the legacy platform_templates table.
+-- super-admin.html still reads/writes this table, and dropping it here would
+-- delete preview data in environments that already used the Stage A editor.
+-- If a manual cleanup is needed later, export/migrate the data first.
 
 create table if not exists public.template_centers (
   id uuid primary key default gen_random_uuid(),
