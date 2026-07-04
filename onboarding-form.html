@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>원이야 - 우리 원 홈페이지 정보 입력</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&family=Gowun+Dodum&display=swap" rel="stylesheet">
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<style>
+  :root{
+    --base:#FFF5F1;
+    --blush:#FBE0D9;
+    --paper:#FFFFFF;
+    --ink:#3F2A2C;
+    --ink-soft:#8A7370;
+    --coral:#EE8C7B;
+    --coral-deep:#DB6B54;
+    --rose:#F4A7A0;
+    --lilac:#B9A6E0;
+    --sky-top:#FDE3DA;
+    --sky-bottom:#FFF5F1;
+    --display:'Gowun Dodum',sans-serif;
+    --hand:'Gaegu',cursive;
+    --body:'Pretendard',sans-serif;
+  }
+
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{width:100%;overflow-x:hidden}
+  body{
+    font-family:var(--body);color:var(--ink);
+    background:linear-gradient(180deg,var(--sky-top) 0%,var(--sky-bottom) 340px);
+    line-height:1.6;-webkit-font-smoothing:antialiased;padding-bottom:60px;min-height:100vh;
+  }
+  [hidden]{display:none!important}
+  a{color:inherit}
+  button:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px solid var(--coral);outline-offset:2px;border-radius:8px}
+
+  .topbar{padding:18px 0}
+  .topbar-inner{max-width:600px;margin:0 auto;padding:0 20px;display:flex;align-items:center;justify-content:space-between}
+  .brand{font-family:var(--display);font-size:1.2rem;color:var(--ink);text-decoration:none;letter-spacing:-.5px}
+
+  .wrap{max-width:600px;margin:0 auto;padding:0 20px}
+
+  .hero{padding:22px 0 26px;text-align:center}
+  .hero .eyebrow{font-family:var(--hand);font-weight:700;color:var(--coral-deep);font-size:1.15rem;margin-bottom:8px}
+  .hero h1{font-family:var(--display);font-weight:400;font-size:1.72rem;line-height:1.36;letter-spacing:-.5px}
+  .hero .center-name{color:var(--coral-deep);font-weight:700}
+  .hero p{margin-top:12px;color:var(--ink-soft);font-size:.92rem;line-height:1.7}
+
+  /* 진행 상태 바 */
+  .progress-wrap{position:sticky;top:0;z-index:20;background:rgba(255,245,241,.92);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);padding:10px 0;margin-bottom:8px}
+  .progress-track{max-width:600px;margin:0 auto;padding:0 20px}
+  .progress-bar{height:8px;border-radius:8px;background:var(--blush);overflow:hidden}
+  .progress-fill{height:100%;width:0;background:var(--coral-deep);border-radius:8px;transition:width .3s ease}
+  .progress-label{text-align:center;font-size:.78rem;color:var(--ink-soft);margin-top:6px;font-weight:700}
+
+  /* 아코디언 섹션 */
+  .accordion{display:flex;flex-direction:column;gap:12px}
+  .section{background:var(--paper);border-radius:20px;box-shadow:0 14px 34px -22px rgba(150,90,80,.4);overflow:hidden}
+  .section-head{
+    width:100%;border:none;background:transparent;cursor:pointer;text-align:left;
+    display:flex;align-items:center;gap:12px;padding:18px 20px;font-family:var(--body);
+  }
+  .section-num{
+    flex:none;width:30px;height:30px;border-radius:50%;background:var(--blush);color:var(--coral-deep);
+    font-family:var(--display);font-size:.98rem;display:flex;align-items:center;justify-content:center;
+    transition:background .2s ease,color .2s ease;
+  }
+  .section.filled .section-num{background:var(--coral-deep);color:#fff}
+  .section-heading{flex:1}
+  .section-title{font-family:var(--display);font-size:1.12rem;letter-spacing:-.3px}
+  .section-sub{font-size:.8rem;color:var(--ink-soft);margin-top:2px}
+  .section-chevron{flex:none;color:var(--ink-soft);transition:transform .25s ease;font-size:1.1rem}
+  .section.open .section-chevron{transform:rotate(180deg)}
+  .section-body{display:none;padding:2px 20px 22px}
+  .section.open .section-body{display:block}
+
+  .field{margin-bottom:15px}
+  .field:last-child{margin-bottom:0}
+  .field label,.field .field-label{display:block;font-size:.86rem;font-weight:700;color:var(--ink-soft);margin-bottom:6px}
+  .req{color:var(--coral-deep)}
+  .field input[type=text],.field input[type=tel],.field input[type=number],.field textarea{
+    width:100%;border:1.5px solid rgba(63,42,44,.14);border-radius:14px;padding:12px 15px;
+    font-family:var(--body);font-size:.96rem;color:var(--ink);background:var(--base);
+    outline:none;transition:border-color .2s ease;
+  }
+  .field input:focus,.field textarea:focus{border-color:var(--coral)}
+  .field textarea{resize:vertical;min-height:82px;line-height:1.6}
+  .field .hint{font-size:.78rem;color:var(--ink-soft);margin-top:5px;line-height:1.5}
+  .field.invalid input,.field.invalid textarea{border-color:#D9534F;background:#fff4f3}
+
+  .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  @media(max-width:420px){.grid-2{grid-template-columns:1fr}}
+
+  /* 체크박스 목록 */
+  .check-list{display:flex;flex-direction:column;gap:8px}
+  .check-item{
+    display:flex;align-items:flex-start;gap:10px;padding:11px 14px;border-radius:14px;
+    background:var(--base);border:1.5px solid transparent;cursor:pointer;transition:border-color .15s ease,background .15s ease;
+  }
+  .check-item:hover{border-color:var(--blush)}
+  .check-item input{margin-top:3px;flex:none;width:17px;height:17px;accent-color:var(--coral-deep)}
+  .check-item .check-text{font-size:.92rem;color:var(--ink);line-height:1.4}
+  .chip-grid{display:flex;flex-wrap:wrap;gap:8px}
+  .chip{
+    display:inline-flex;align-items:center;gap:7px;padding:9px 14px;border-radius:30px;
+    background:var(--base);border:1.5px solid rgba(63,42,44,.12);cursor:pointer;font-size:.9rem;transition:all .15s ease;
+  }
+  .chip input{width:15px;height:15px;accent-color:var(--coral-deep)}
+  .chip:has(input:checked){background:var(--blush);border-color:var(--coral)}
+
+  /* 동적 반복 항목 (선생님/FAQ) */
+  .repeat-item{background:var(--base);border-radius:16px;padding:14px;margin-bottom:12px;position:relative;border:1.5px solid rgba(63,42,44,.08)}
+  .repeat-item .remove-btn{
+    position:absolute;top:10px;right:10px;border:none;background:rgba(219,107,84,.12);color:var(--coral-deep);
+    width:26px;height:26px;border-radius:50%;cursor:pointer;font-size:1rem;line-height:1;
+  }
+  .add-btn{
+    width:100%;border:1.5px dashed var(--coral);background:rgba(238,140,123,.06);color:var(--coral-deep);
+    font-weight:700;font-size:.92rem;padding:12px;border-radius:14px;cursor:pointer;font-family:var(--body);transition:background .15s ease;
+  }
+  .add-btn:hover{background:rgba(238,140,123,.14)}
+
+  .faq-answer{margin-top:10px;display:none}
+  .faq-item.open .faq-answer{display:block}
+
+  .radio-row{display:flex;gap:10px}
+  .radio-pill{
+    flex:1;display:flex;align-items:center;justify-content:center;gap:7px;padding:11px;border-radius:14px;
+    background:var(--base);border:1.5px solid rgba(63,42,44,.12);cursor:pointer;font-size:.92rem;transition:all .15s ease;
+  }
+  .radio-pill:has(input:checked){background:var(--blush);border-color:var(--coral);font-weight:700}
+  .radio-pill input{accent-color:var(--coral-deep)}
+
+  /* 사진 안내 블록 */
+  .photo-notice{background:linear-gradient(135deg,#FFF0EA,#FBE0D9);border-radius:16px;padding:18px 18px}
+  .photo-notice .pn-title{font-family:var(--display);font-size:1.05rem;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+  .photo-notice ul{list-style:none;display:flex;flex-direction:column;gap:7px;margin:8px 0}
+  .photo-notice li{font-size:.88rem;color:var(--ink);padding-left:20px;position:relative;line-height:1.5}
+  .photo-notice li::before{content:'📷';position:absolute;left:0;font-size:.8rem}
+  .photo-notice .pn-caption{font-size:.84rem;color:var(--ink-soft);line-height:1.65;margin-top:10px;background:rgba(255,255,255,.55);padding:11px 13px;border-radius:12px}
+
+  .submit-area{margin-top:22px}
+  .btn{
+    display:inline-flex;align-items:center;justify-content:center;width:100%;border:none;
+    border-radius:30px;padding:16px;background:var(--coral-deep);color:#fff;font-weight:700;
+    font-size:1.02rem;cursor:pointer;transition:transform .2s ease;font-family:var(--body);
+    box-shadow:0 14px 28px -10px rgba(219,107,84,.55);
+  }
+  .btn:hover{transform:translateY(-2px)}
+  .btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+  .form-msg{margin-top:14px;font-size:.9rem;text-align:center;min-height:1.2em}
+  .form-msg.error{color:#D9534F;font-weight:700}
+
+  /* 상태 화면 (로딩/무효/완료) */
+  .state-panel{background:var(--paper);border-radius:22px;padding:36px 26px;text-align:center;box-shadow:0 18px 44px -22px rgba(150,90,80,.4);margin-top:20px}
+  .state-panel .state-emoji{font-size:2.6rem;margin-bottom:14px}
+  .state-panel .state-title{font-family:var(--display);font-size:1.4rem;margin-bottom:12px;line-height:1.4}
+  .state-panel .state-desc{color:var(--ink-soft);font-size:.94rem;line-height:1.75}
+  .done-photo-notice{margin-top:22px;text-align:left}
+
+  .footer{text-align:center;color:var(--ink-soft);font-size:.78rem;padding:34px 0 10px;line-height:1.7}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="index.html">원이야</a>
+  </div>
+</header>
+
+<!-- 로딩 상태 -->
+<main class="wrap" id="loadingState">
+  <div class="state-panel">
+    <div class="state-emoji">🌤️</div>
+    <div class="state-title">링크를 확인하고 있어요</div>
+    <div class="state-desc">잠시만 기다려 주세요.</div>
+  </div>
+</main>
+
+<!-- 무효/만료 링크 -->
+<main class="wrap" id="invalidState" hidden>
+  <div class="state-panel">
+    <div class="state-emoji">🔒</div>
+    <div class="state-title">만료되었거나 잘못된 링크입니다</div>
+    <div class="state-desc">
+      링크가 만료되었거나 유효하지 않아요.<br>
+      담당자에게 문의해 새 링크를 받아주세요.
+    </div>
+  </div>
+</main>
+
+<!-- 제출 완료 -->
+<main class="wrap" id="doneState" hidden>
+  <div class="state-panel">
+    <div class="state-emoji">🎉</div>
+    <div class="state-title">제출이 완료되었어요</div>
+    <div class="state-desc">
+      보내주신 정보로 홈페이지 초안을 준비할게요.<br>
+      완성되면 담당자가 카카오톡으로 안내드립니다.
+    </div>
+    <div class="photo-notice done-photo-notice">
+      <div class="pn-title">📷 사진은 카카오톡으로 보내주세요</div>
+      <div class="pn-caption" id="donePhotoText"></div>
+    </div>
+  </div>
+</main>
+
+<!-- 폼 본문 -->
+<div id="formState" hidden>
+  <main class="wrap hero">
+    <div class="eyebrow">우리 원 홈페이지 만들기</div>
+    <h1><span class="center-name" id="heroCenterName"></span> 홈페이지에<br>담을 내용을 알려주세요</h1>
+    <p>필수 항목만 채우셔도 충분해요. 나머지는 나중에 콘솔에서 직접 다듬으실 수 있습니다.</p>
+  </main>
+
+  <div class="progress-wrap">
+    <div class="progress-track">
+      <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+      <div class="progress-label" id="progressLabel">필수 항목 0 / 6 완료</div>
+    </div>
+  </div>
+
+  <main class="wrap">
+    <form id="onboardingForm" novalidate>
+      <div class="accordion" id="accordion">
+
+        <!-- 섹션 1. 기본 정보 -->
+        <section class="section open" data-section="basic">
+          <button type="button" class="section-head">
+            <span class="section-num">1</span>
+            <span class="section-heading">
+              <span class="section-title">기본 정보</span>
+              <span class="section-sub">원명·주소·연락처·운영시간</span>
+            </span>
+            <span class="section-chevron">▾</span>
+          </button>
+          <div class="section-body">
+            <div class="field"><label>정식 원명 <span class="req">*</span></label><input type="text" data-key="basic.official_name" data-required></div>
+            <div class="field"><label>주소 <span class="req">*</span></label><input type="text" data-key="basic.address" data-required placeholder="지도·오시는 길에 사용돼요"></div>
+            <div class="field"><label>대표 전화 <span class="req">*</span></label><input type="tel" data-key="basic.phone" data-required placeholder="02-000-0000"></div>
+            <div class="field"><label>운영시간 <span class="req">*</span></label><input type="text" data-key="basic.hours" data-required placeholder="예: 평일 07:30 ~ 19:30"></div>
+            <div class="grid-2">
+              <div class="field"><label>정원</label><input type="number" min="0" data-key="basic.capacity" placeholder="명"></div>
+              <div class="field"><label>반 수</label><input type="number" min="0" data-key="basic.class_count" placeholder="개"></div>
+            </div>
+            <div class="field"><label>교사 수</label><input type="number" min="0" data-key="basic.teacher_count" placeholder="명"></div>
+          </div>
+        </section>
+
+        <!-- 섹션 2. 원 소개 -->
+        <section class="section" data-section="intro">
+          <button type="button" class="section-head">
+            <span class="section-num">2</span>
+            <span class="section-heading">
+              <span class="section-title">원 소개</span>
+              <span class="section-sub">인사말·소개글·교육철학</span>
+            </span>
+            <span class="section-chevron">▾</span>
+          </button>
+          <div class="section-body">
+            <div class="field"><label>원장 인사말 <span class="req">*</span></label><textarea data-key="intro.greeting" data-required placeholder="원장님의 따뜻한 첫인사를 적어주세요"></textarea></div>
+            <div class="field"><label>원 소개글 <span class="req">*</span></label><textarea data-key="intro.about" data-required placeholder="우리 원이 어떤 곳인지 소개해주세요"></textarea></div>
+            <div class="field"><label>원훈 / 교육철학</label><textarea data-key="intro.philosophy" placeholder="선택 사항이에요"></textarea></div>
+            <div class="field"><label>우리 원 유아상</label><textarea data-key="intro.child_image" placeholder="어떤 아이로 자라길 바라나요? (선택)"></textarea></div>
+          </div>
+        </section>
+
+        <!-- 섹션 3. 선생님 소개 -->
+        <section class="section" data-section="teachers">
+          <button type="button" class="section-head">
+            <span class="section-num">3</span>
+            <span class="section-heading">
+              <span class="section-title">선생님 소개</span>
+              <span class="section-sub">이름·담당 반·역할 (선택)</span>
+            </span>
+            <span class="section-chevron">▾</span>
+          </button>
+          <div class="section-body">
+            <div id="teacherList"></div>
+            <button type="button" class="add-btn" id="addTeacherBtn">+ 선생님 추가</button>
+          </div>
+        </section>
+
+        <!-- 섹션 4. 입학안내 -->
+        <section class="section" data-section="admission">
+          <button type="button" class="section-head">
+            <span class="section-num">4</span>
+            <span class="section-heading">
+              <span class="section-title">입학안내</span>
+              <span class="section-sub">모집 대상·정원·절차</span>
+            </span>
+            <span class="section-chevron">▾</span>
+          </button>
+          <div class="section-body">
+            <div class="field"><label>모집 대상 연령 <span class="req">*</span></label><input type="text" data-key="admission.target_age" data-required placeholder="예: 만 3세 ~ 만 5세"></div>
+            <div class="field"><label>모집 정원 안내</label><textarea data-key="admission.capacity_info" placeholder="반별 모집 인원 등 (선택)"></textarea></div>
+            <div class="field"><label>모집 기간</label><input type="text" data-key="admission.period" placeholder="예: 상시 모집 (선택)"></div>
+            <div class="field"><label>입소 절차</label><textarea data-key="admission.process" placeholder="상담 → 방문 → 등록 등 (선택)"></textarea></div>
+            <div class="field"><label>준비물</label><textarea data-key="admission.supplies" placeholder="입소 시 준비물 (선택)"></textarea></div>
+          </div>
+        </section>
+
+        <!-- 섹션 5. 오시는 길 -->
+        <section class="section" data-section="directions">
+          <button type="button" class="section-head">
+            <span class="section-num">5</span>
+            <span class="section-heading">
+              <span class="section-title">오시는 길</span>
+              <span class="section-sub">주차·대중교통·통학차량</span>
+            </span>
+            <span class="section-chevron">▾</span>
+          </button>
+          <div class="section-body">
+            <div class="field"><label>주차 안내</label><textarea data-key="directions.parking" placeholder="주차 가능 여부·위치 (선택)"></textarea></div>
+            <div class="field"><label>대중교통 안내</label><textarea data-key="directions.transit" placeholder="가까운 지하철·버스 (선택)"></textarea></div>
+            <div class="field">
+              <span class="field-label">통학차량 운영</span>
+              <div class="radio-row">
+                <label class="radio-pill"><input type="radio" name="shuttle" value="yes" data-key="directions.shuttle"> 운영해요</label>
+                <label class="radio-pill"><input type="radio" name="shuttle" value="no" data-key="directions.shuttle"> 운영 안 해요</label>
+              </div>
+            </div>
+            <div class="field" id="shuttleDetailField" hidden><label>정류장 · 시간 안내</label><textarea data-key="directions.shuttle_detail" placeholder="운행 노선·정류장·시간을 적어주세요 (선택)"></textarea></div>
+          </div>
+        </section>
+
+        <!-- 섹션 6. 자주 묻는 질문 -->
+        <section class="section" data-section="faq">
+          <button type="button" class="section-head">
+            <span class="section-num">6</span>
+            <span class="section-heading">
+              <span class="section-title">자주 묻는 질문</span>
+              <span class="section-sub">답할 질문만 골라주세요 (선택)</span>
+            </span>
+            <span class="section-chevron">▾</span>
+          </button>
+          <div class="section-body">
+            <div id="faqPresetList" class="check-list"></div>
+            <div id="faqCustomList" style="margin-top:12px"></div>
+            <button type="button" class="add-btn" id="addFaqBtn" style="margin-top:10px">+ 직접 질문 추가</button>
+          </div>
+        </section>
+
+        <!-- 섹션 7. 우리 원 특징 -->
+        <section class="section" data-section="features">
+          <button type="button" class="section-head">
+            <span class="section-num">7</span>
+            <span class="section-heading">
+              <span class="section-title">우리 원 특징</span>
+              <span class="section-sub">해당하는 항목만 체크 (선택)</span>
+            </span>
+            <span class="section-chevron">▾</span>
+          </button>
+          <div class="section-body">
+            <div class="field">
+              <span class="field-label">적합도 태그</span>
+              <div class="chip-grid" id="tagGrid"></div>
+            </div>
+            <div class="field" style="margin-top:16px">
+              <span class="field-label">사실 배지 <span style="font-weight:400;color:var(--ink-soft)">(있다/없다만 체크해요)</span></span>
+              <div class="chip-grid" id="badgeGrid"></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 섹션 8. 사진 안내 -->
+        <section class="section" data-section="photos">
+          <button type="button" class="section-head">
+            <span class="section-num">8</span>
+            <span class="section-heading">
+              <span class="section-title">사진 안내</span>
+              <span class="section-sub">입력 없이 읽어만 주세요</span>
+            </span>
+            <span class="section-chevron">▾</span>
+          </button>
+          <div class="section-body">
+            <div class="photo-notice">
+              <div class="pn-title">📷 사진은 이 폼이 아니라 카카오톡으로 보내주세요</div>
+              <div class="section-sub" style="margin-bottom:6px">필요한 사진 목록이에요.</div>
+              <ul>
+                <li>대표 사진 1장</li>
+                <li>원장님 사진 1장</li>
+                <li>하루 일과 사진 5장 내외</li>
+                <li>일상 앨범 사진 10장 내외</li>
+                <li>선생님 사진 (선택)</li>
+              </ul>
+              <div class="pn-caption" id="formPhotoText">
+                사진을 보내실 때 사진 아래에 짧은 설명을 한 줄씩 함께 보내주시면 더 좋아요.
+                설명이 없어도 저희가 초안을 달아드리고, 나중에 콘솔에서 직접 수정하실 수 있어요.
+              </div>
+            </div>
+          </div>
+        </section>
+
+      </div>
+
+      <div class="submit-area">
+        <button type="submit" class="btn" id="submitBtn">홈페이지 정보 제출하기</button>
+        <div class="form-msg" id="formMsg"></div>
+      </div>
+    </form>
+  </main>
+</div>
+
+<footer class="wrap footer">
+  원이야 · 우리 동네 어린이집·유치원 홈페이지
+</footer>
+
+<script src="supabase-config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+(function(){
+  var cfg = window.__SUPABASE_CONFIG__;
+  var client = supabase.createClient(cfg.url, cfg.anonKey);
+
+  var TOKEN = new URLSearchParams(location.search).get('token') || '';
+
+  var FAQ_PRESETS = [
+    '등하원 시간이 어떻게 되나요?',
+    '급식은 어떻게 운영되나요?',
+    '낮잠 시간이 있나요?',
+    '준비물은 무엇인가요?',
+    '상담은 어떻게 신청하나요?'
+  ];
+  var TAG_OPTIONS = ['숲 체험','영어','유기농 급식','소규모','시간 연장 보육','체육 특성화'];
+  var BADGE_OPTIONS = ['CCTV 설치','통학 차량 운영','정부 평가인증','식단 공개'];
+
+  // ── 안전한 텍스트 삽입만 사용 (DOM API), innerHTML로 사용자 값 렌더링 안 함 ──
+  function el(tag, attrs, children){
+    var e = document.createElement(tag);
+    if (attrs) Object.keys(attrs).forEach(function(k){
+      if (k === 'class') e.className = attrs[k];
+      else if (k === 'text') e.textContent = attrs[k];
+      else if (k === 'dataset') Object.keys(attrs[k]).forEach(function(d){ e.dataset[d] = attrs[k][d]; });
+      else e.setAttribute(k, attrs[k]);
+    });
+    (children || []).forEach(function(c){ if (c) e.appendChild(c); });
+    return e;
+  }
+
+  function show(id){
+    ['loadingState','invalidState','doneState','formState'].forEach(function(s){
+      document.getElementById(s).hidden = (s !== id);
+    });
+  }
+
+  // ── 동적: 선생님 항목 ──
+  var teacherList = document.getElementById('teacherList');
+  function addTeacherRow(){
+    var row = el('div', { class:'repeat-item teacher-item' });
+    var rm = el('button', { type:'button', class:'remove-btn', 'aria-label':'삭제', text:'×' });
+    rm.addEventListener('click', function(){ row.remove(); updateProgress(); });
+    row.appendChild(rm);
+    row.appendChild(el('div', { class:'field' }, [
+      el('label', { text:'선생님 이름' }),
+      el('input', { type:'text', class:'t-name', placeholder:'예: 김선생' })
+    ]));
+    row.appendChild(el('div', { class:'grid-2' }, [
+      el('div', { class:'field' }, [ el('label',{text:'담당 반'}), el('input',{type:'text',class:'t-class',placeholder:'예: 햇살반'}) ]),
+      el('div', { class:'field' }, [ el('label',{text:'역할'}), el('input',{type:'text',class:'t-role',placeholder:'예: 담임'}) ])
+    ]));
+    teacherList.appendChild(row);
+  }
+
+  // ── 동적: FAQ 프리셋 ──
+  var faqPresetList = document.getElementById('faqPresetList');
+  FAQ_PRESETS.forEach(function(q, i){
+    var wrap = el('div', { class:'faq-item' });
+    var lbl = el('label', { class:'check-item' });
+    var cb = el('input', { type:'checkbox', class:'faq-check' });
+    cb.dataset.q = q;
+    lbl.appendChild(cb);
+    lbl.appendChild(el('span', { class:'check-text', text:q }));
+    var ans = el('div', { class:'field faq-answer' }, [
+      el('textarea', { class:'faq-answer-input', placeholder:'답변을 적어주세요' })
+    ]);
+    cb.addEventListener('change', function(){
+      wrap.classList.toggle('open', cb.checked);
+    });
+    wrap.appendChild(lbl);
+    wrap.appendChild(ans);
+    faqPresetList.appendChild(wrap);
+  });
+
+  // ── 동적: FAQ 직접 추가 ──
+  var faqCustomList = document.getElementById('faqCustomList');
+  function addCustomFaq(){
+    var row = el('div', { class:'repeat-item faq-custom-item' });
+    var rm = el('button', { type:'button', class:'remove-btn', 'aria-label':'삭제', text:'×' });
+    rm.addEventListener('click', function(){ row.remove(); });
+    row.appendChild(rm);
+    row.appendChild(el('div', { class:'field' }, [ el('label',{text:'질문'}), el('input',{type:'text',class:'cf-q',placeholder:'궁금해하실 만한 질문'}) ]));
+    row.appendChild(el('div', { class:'field' }, [ el('label',{text:'답변'}), el('textarea',{class:'cf-a',placeholder:'답변'}) ]));
+    faqCustomList.appendChild(row);
+  }
+
+  // ── 태그/배지 칩 ──
+  function renderChips(gridId, options, cls){
+    var grid = document.getElementById(gridId);
+    options.forEach(function(opt){
+      var chip = el('label', { class:'chip' });
+      var cb = el('input', { type:'checkbox', class:cls });
+      cb.value = opt;
+      chip.appendChild(cb);
+      chip.appendChild(el('span', { text:opt }));
+      grid.appendChild(chip);
+    });
+  }
+  renderChips('tagGrid', TAG_OPTIONS, 'tag-check');
+  renderChips('badgeGrid', BADGE_OPTIONS, 'badge-check');
+
+  // ── 아코디언 토글 ──
+  document.querySelectorAll('.section-head').forEach(function(head){
+    head.addEventListener('click', function(){
+      head.closest('.section').classList.toggle('open');
+    });
+  });
+
+  // ── 통학차량 상세 토글 ──
+  document.querySelectorAll('input[name=shuttle]').forEach(function(r){
+    r.addEventListener('change', function(){
+      document.getElementById('shuttleDetailField').hidden = (r.value !== 'yes');
+      updateProgress();
+    });
+  });
+
+  // ── 필수 항목 진행률 ──
+  var requiredInputs = [];
+  function collectRequired(){
+    requiredInputs = Array.prototype.slice.call(document.querySelectorAll('[data-required]'));
+  }
+  function requiredFilledCount(){
+    return requiredInputs.filter(function(i){ return i.value.trim().length > 0; }).length;
+  }
+  function updateProgress(){
+    var total = requiredInputs.length;
+    var done = requiredFilledCount();
+    var pct = total ? Math.round(done/total*100) : 0;
+    document.getElementById('progressFill').style.width = pct + '%';
+    document.getElementById('progressLabel').textContent = '필수 항목 ' + done + ' / ' + total + ' 완료';
+    // 섹션별 filled 표시
+    document.querySelectorAll('.section').forEach(function(sec){
+      var reqs = sec.querySelectorAll('[data-required]');
+      if (!reqs.length) return;
+      var allFilled = Array.prototype.every.call(reqs, function(i){ return i.value.trim().length > 0; });
+      sec.classList.toggle('filled', allFilled);
+    });
+  }
+  document.getElementById('onboardingForm').addEventListener('input', updateProgress);
+
+  document.getElementById('addTeacherBtn').addEventListener('click', addTeacherRow);
+  document.getElementById('addFaqBtn').addEventListener('click', addCustomFaq);
+
+  // ── answers 조립 ──
+  function val(key){
+    var input = document.querySelector('[data-key="' + key + '"]');
+    return input ? input.value.trim() : '';
+  }
+  function buildAnswers(){
+    var a = {
+      basic: {
+        official_name: val('basic.official_name'),
+        address: val('basic.address'),
+        phone: val('basic.phone'),
+        hours: val('basic.hours'),
+        capacity: val('basic.capacity'),
+        class_count: val('basic.class_count'),
+        teacher_count: val('basic.teacher_count')
+      },
+      intro: {
+        greeting: val('intro.greeting'),
+        about: val('intro.about'),
+        philosophy: val('intro.philosophy'),
+        child_image: val('intro.child_image')
+      },
+      teachers: [],
+      admission: {
+        target_age: val('admission.target_age'),
+        capacity_info: val('admission.capacity_info'),
+        period: val('admission.period'),
+        process: val('admission.process'),
+        supplies: val('admission.supplies')
+      },
+      directions: {
+        parking: val('directions.parking'),
+        transit: val('directions.transit'),
+        shuttle: (document.querySelector('input[name=shuttle]:checked') || {}).value || '',
+        shuttle_detail: val('directions.shuttle_detail')
+      },
+      faqs: [],
+      tags: [],
+      badges: []
+    };
+
+    document.querySelectorAll('.teacher-item').forEach(function(row){
+      var name = row.querySelector('.t-name').value.trim();
+      var cls = row.querySelector('.t-class').value.trim();
+      var role = row.querySelector('.t-role').value.trim();
+      if (name || cls || role) a.teachers.push({ name:name, class:cls, role:role });
+    });
+
+    document.querySelectorAll('.faq-check:checked').forEach(function(cb){
+      var ans = cb.closest('.faq-item').querySelector('.faq-answer-input').value.trim();
+      a.faqs.push({ q: cb.dataset.q, a: ans });
+    });
+    document.querySelectorAll('.faq-custom-item').forEach(function(row){
+      var q = row.querySelector('.cf-q').value.trim();
+      var ans = row.querySelector('.cf-a').value.trim();
+      if (q || ans) a.faqs.push({ q:q, a:ans });
+    });
+
+    document.querySelectorAll('.tag-check:checked').forEach(function(cb){ a.tags.push(cb.value); });
+    document.querySelectorAll('.badge-check:checked').forEach(function(cb){ a.badges.push(cb.value); });
+
+    return a;
+  }
+
+  // ── 제출 ──
+  var submitBtn = document.getElementById('submitBtn');
+  var formMsg = document.getElementById('formMsg');
+
+  document.getElementById('onboardingForm').addEventListener('submit', async function(e){
+    e.preventDefault();
+    formMsg.textContent = '';
+    formMsg.className = 'form-msg';
+
+    // 필수 검증
+    var firstInvalid = null;
+    requiredInputs.forEach(function(input){
+      var field = input.closest('.field');
+      if (input.value.trim().length === 0){
+        field.classList.add('invalid');
+        if (!firstInvalid) firstInvalid = input;
+      } else {
+        field.classList.remove('invalid');
+      }
+    });
+
+    if (firstInvalid){
+      var sec = firstInvalid.closest('.section');
+      sec.classList.add('open');
+      formMsg.textContent = '필수 항목을 모두 채워주세요.';
+      formMsg.className = 'form-msg error';
+      firstInvalid.scrollIntoView({ behavior:'smooth', block:'center' });
+      setTimeout(function(){ firstInvalid.focus(); }, 400);
+      return;
+    }
+
+    submitBtn.disabled = true;
+    formMsg.textContent = '제출하는 중입니다...';
+
+    var res = await client.rpc('submit_onboarding_form', { p_token: TOKEN, p_answers: buildAnswers() });
+    if (res.error){
+      submitBtn.disabled = false;
+      formMsg.textContent = res.error.message || '제출에 실패했습니다. 다시 시도해주세요.';
+      formMsg.className = 'form-msg error';
+      return;
+    }
+
+    document.getElementById('donePhotoText').textContent = document.getElementById('formPhotoText').textContent.trim();
+    show('doneState');
+    window.scrollTo(0, 0);
+  });
+
+  // ── 초기 로드 ──
+  async function init(){
+    show('loadingState');
+    if (!TOKEN){ show('invalidState'); return; }
+
+    var res = await client.rpc('get_onboarding_form', { p_token: TOKEN });
+    if (res.error || !res.data){ show('invalidState'); return; }
+
+    var data = res.data;
+    document.getElementById('heroCenterName').textContent = data.center_name || '우리 원';
+
+    collectRequired();
+    updateProgress();
+    show('formState');
+  }
+
+  init().catch(function(){ show('invalidState'); });
+})();
+</script>
+</body>
+</html>
