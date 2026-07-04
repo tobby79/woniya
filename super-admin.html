@@ -170,6 +170,78 @@
   .preview-director strong{display:block}
   .preview-director span,.preview-text{color:var(--ink-soft);font-size:.86rem}
 
+  /* ── 탭 네비게이션 ── */
+  .tabnav{display:flex;gap:8px;margin-bottom:24px;flex-wrap:wrap}
+  .tabnav .tab{
+    border:1.5px solid var(--line);background:#fff;color:var(--ink-soft);
+    border-radius:999px;padding:9px 18px;font-weight:800;font-size:.9rem;cursor:pointer;
+    transition:all .18s ease;
+  }
+  .tabnav .tab:hover{border-color:rgba(255,127,168,.5)}
+  .tabnav .tab.active{background:var(--pink);color:#fff;border-color:var(--pink);box-shadow:0 12px 24px -16px var(--pink-deep)}
+
+  /* ── 신청서 관리 ── */
+  .filter-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px}
+  .filter-btn{
+    border:1.5px solid var(--line);background:#fff;color:var(--ink-soft);
+    border-radius:999px;padding:7px 15px;font-weight:800;font-size:.84rem;cursor:pointer;transition:all .16s ease;
+  }
+  .filter-btn:hover{border-color:rgba(168,141,232,.55)}
+  .filter-btn.active{background:var(--lavender);color:#fff;border-color:var(--lavender)}
+  .filter-btn .count{opacity:.72;margin-left:5px;font-weight:700}
+
+  .app-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+  .app-card{
+    text-align:left;border:1.5px solid var(--line);border-radius:18px;padding:18px;
+    background:rgba(255,255,255,.85);cursor:pointer;position:relative;
+    transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease;
+  }
+  .app-card:hover{transform:translateY(-2px);border-color:rgba(255,127,168,.5);box-shadow:0 18px 36px -28px rgba(80,60,70,.5)}
+  .app-card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:10px}
+  .app-name{font-size:1.06rem;font-weight:900;line-height:1.3}
+  .app-meta{font-size:.84rem;color:var(--ink-soft);line-height:1.7}
+  .app-meta b{color:var(--ink);font-weight:800}
+  .app-date{font-size:.78rem;color:var(--ink-soft);margin-top:8px;opacity:.85}
+
+  .badge{display:inline-flex;align-items:center;border-radius:999px;padding:4px 11px;font-size:.76rem;font-weight:900;white-space:nowrap}
+  .badge.new{background:#eef4ff;color:#3d6bd6}
+  .badge.setting{background:#fff3e6;color:#d98324}
+  .badge.done{background:#eaf7ee;color:#3f9d5c}
+  .badge.rejected{background:#fdeceb;color:#d9534f}
+  .badge.arrived{background:#ffe9f1;color:var(--pink-deep);margin-left:6px}
+
+  /* ── 상세 모달 ── */
+  .modal-backdrop{
+    position:fixed;inset:0;z-index:60;background:rgba(60,45,55,.42);
+    display:flex;align-items:flex-start;justify-content:center;padding:40px 18px;overflow-y:auto;
+    backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);
+  }
+  .modal{max-width:680px;width:100%;background:var(--paper);border-radius:22px;padding:28px;box-shadow:0 30px 70px -30px rgba(60,40,50,.6);position:relative}
+  .modal-close{position:absolute;top:18px;right:18px}
+  .modal h2{font-size:1.35rem;line-height:1.3;padding-right:40px}
+  .modal-sub{color:var(--ink-soft);font-size:.9rem;margin-top:4px;margin-bottom:20px}
+  .detail-grid{display:grid;grid-template-columns:110px minmax(0,1fr);gap:10px 16px;font-size:.92rem;margin-bottom:22px}
+  .detail-grid dt{font-weight:800;color:var(--ink-soft)}
+  .detail-grid dd{color:var(--ink);word-break:break-word}
+
+  .link-box{background:#f4efff;border:1.5px solid rgba(168,141,232,.28);border-radius:16px;padding:16px;margin-bottom:22px}
+  .link-box .link-label{font-weight:900;font-size:.9rem;margin-bottom:10px}
+  .link-url{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .link-url input{flex:1;min-width:220px;font-size:.85rem;padding:10px 12px}
+
+  .answer-section{border-top:1px solid var(--line);padding-top:16px;margin-top:16px}
+  .answer-section:first-of-type{border-top:none;padding-top:0;margin-top:0}
+  .answer-section-title{font-size:1rem;font-weight:900;margin-bottom:10px;display:flex;align-items:center;gap:7px}
+  .answer-section-title .dot{width:8px;height:8px;border-radius:50%;background:var(--pink)}
+  .answer-field{margin-bottom:9px;font-size:.9rem;line-height:1.6}
+  .answer-field .af-label{font-weight:800;color:var(--ink-soft);margin-right:6px}
+  .answer-field .af-value{color:var(--ink)}
+  .answer-empty{color:var(--ink-soft);font-size:.86rem;opacity:.8}
+  .chip-line{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+  .chip-line .chip{background:#fff4f8;border:1px solid rgba(255,127,168,.35);border-radius:999px;padding:4px 11px;font-size:.82rem;font-weight:700;color:var(--pink-deep)}
+  .teacher-row,.faq-row{background:#fffdfb;border:1px solid var(--line);border-radius:12px;padding:11px 13px;margin-bottom:8px;font-size:.88rem;line-height:1.55}
+  .modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:24px;flex-wrap:wrap}
+
   @media (max-width:920px){
     .template-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
     .editor-shell{grid-template-columns:1fr}
@@ -180,8 +252,9 @@
     .topbar-inner{padding:13px 16px}
     .page-head{display:block}
     .panel{padding:20px;border-radius:18px}
-    .template-grid,.album-grid,.teacher-list{grid-template-columns:1fr}
+    .template-grid,.album-grid,.teacher-list,.app-list{grid-template-columns:1fr}
     .two-col{grid-template-columns:1fr}
+    .detail-grid{grid-template-columns:90px minmax(0,1fr)}
     .who span{display:none}
   }
 </style>
@@ -217,6 +290,13 @@
   </section>
 
   <section id="adminView" hidden>
+    <div class="tabnav">
+      <button type="button" class="tab active" data-tab="templates">템플릿 미리보기</button>
+      <button type="button" class="tab" data-tab="applications">신청서 관리</button>
+    </div>
+
+    <!-- 탭: 템플릿 미리보기 -->
+    <div id="tab-templates">
     <div class="page-head">
       <div>
         <div class="eyebrow">Preview Templates</div>
@@ -316,7 +396,51 @@
         <div class="preview-text" id="previewIntro">소개글이 여기에 표시됩니다.</div>
       </aside>
     </div>
+    </div><!-- /tab-templates -->
+
+    <!-- 탭: 신청서 관리 -->
+    <div id="tab-applications" hidden>
+      <div class="page-head">
+        <div>
+          <div class="eyebrow">Applications</div>
+          <h1>신청서 관리</h1>
+          <p class="lead">원장 신청서를 확인하고, 온보딩 수집 폼 링크를 발급하고, 제출된 답변을 검토해 세팅을 완료합니다.</p>
+        </div>
+      </div>
+
+      <div class="filter-row" id="appFilterRow"></div>
+      <div class="app-list" id="appList"></div>
+      <div class="empty-state" id="appEmpty" hidden>표시할 신청서가 없습니다.</div>
+      <div class="msg" id="appListStatus"></div>
+    </div>
   </section>
+
+  <!-- 신청서 상세 모달 -->
+  <div class="modal-backdrop" id="appModalBackdrop" hidden>
+    <div class="modal" id="appModal">
+      <button type="button" class="btn ghost icon-btn modal-close" id="appModalClose" aria-label="닫기">×</button>
+      <h2 id="appModalName"></h2>
+      <div class="modal-sub" id="appModalStatus"></div>
+
+      <dl class="detail-grid" id="appModalDetail"></dl>
+
+      <div class="link-box">
+        <div class="link-label">온보딩 수집 폼 링크</div>
+        <div id="appLinkArea">
+          <button type="button" class="btn lavender" id="genLinkBtn">수집 폼 링크 생성</button>
+        </div>
+        <div class="msg" id="linkStatus" style="text-align:left"></div>
+      </div>
+
+      <div id="answersArea"></div>
+
+      <div class="modal-actions">
+        <button type="button" class="btn danger" id="rejectBtn">반려</button>
+        <button type="button" class="btn" id="doneBtn">세팅 완료</button>
+      </div>
+      <div class="msg" id="appActionStatus"></div>
+    </div>
+  </div>
 </main>
 
 <script src="supabase-config.js"></script>
@@ -389,6 +513,10 @@
     });
   }
 
+  function escWithBr(s){
+    return esc(s).replace(/\r?\n/g, '<br>');
+  }
+
   function errorMessage(error){
     return error && error.message ? error.message : String(error || '알 수 없는 오류');
   }
@@ -397,6 +525,7 @@
     loginView.hidden = false;
     adminView.hidden = true;
     whoBox.hidden = true;
+    applicationsLoaded = false;
     loginBtn.disabled = false;
     loginForm.reset();
     loginError.className = deniedEmail ? 'msg error' : 'msg error';
@@ -912,6 +1041,407 @@
   editorForm.addEventListener('submit', function(e){
     e.preventDefault();
     saveTemplate();
+  });
+
+  /* ══════════════════ 신청서 관리 ══════════════════ */
+  var SITE_ORIGIN = 'woniya.vercel.app';
+  var STATUS_LABELS = { new:'신규', setting:'세팅중', done:'완료', rejected:'반려' };
+  var FILTERS = ['all', 'new', 'setting', 'done', 'rejected'];
+  var FILTER_LABELS = { all:'전체', new:'신규', setting:'세팅중', done:'완료', rejected:'반려' };
+
+  var appFilterRow = document.getElementById('appFilterRow');
+  var appList = document.getElementById('appList');
+  var appEmpty = document.getElementById('appEmpty');
+  var appListStatus = document.getElementById('appListStatus');
+  var appModalBackdrop = document.getElementById('appModalBackdrop');
+  var appModalName = document.getElementById('appModalName');
+  var appModalStatus = document.getElementById('appModalStatus');
+  var appModalDetail = document.getElementById('appModalDetail');
+  var appLinkArea = document.getElementById('appLinkArea');
+  var linkStatus = document.getElementById('linkStatus');
+  var answersArea = document.getElementById('answersArea');
+  var rejectBtn = document.getElementById('rejectBtn');
+  var doneBtn = document.getElementById('doneBtn');
+  var appActionStatus = document.getElementById('appActionStatus');
+
+  var appRows = [];          // center_applications + 조인된 submission 요약
+  var currentFilter = 'all';
+  var currentApp = null;     // 상세 열린 신청서
+  var currentSubmission = null;
+  var applicationsLoaded = false;
+
+  function statusBadge(status){
+    var s = status || 'new';
+    return '<span class="badge ' + esc(s) + '">' + esc(STATUS_LABELS[s] || s) + '</span>';
+  }
+
+  function fmtDate(ts){
+    if (!ts) return '';
+    var d = new Date(ts);
+    if (isNaN(d)) return '';
+    return d.getFullYear() + '.' + String(d.getMonth()+1).padStart(2,'0') + '.' +
+      String(d.getDate()).padStart(2,'0');
+  }
+
+  async function loadApplications(){
+    appListStatus.textContent = '불러오는 중...';
+    appListStatus.className = 'msg';
+
+    var appRes = await client.from('center_applications')
+      .select('*')
+      .order('created_at', { ascending:false });
+    if (appRes.error){
+      appListStatus.textContent = '신청서를 불러오지 못했습니다: ' + appRes.error.message;
+      appListStatus.className = 'msg error';
+      return;
+    }
+    var apps = appRes.data || [];
+
+    // 연결된 온보딩 제출 조회 (제출 도착 여부 표시용)
+    var subRes = await client.from('onboarding_submissions')
+      .select('id, application_id, token, status, answers, submitted_at, expires_at')
+      .order('created_at', { ascending:false });
+    if (subRes.error){
+      appListStatus.textContent = '온보딩 제출 정보를 불러오지 못했습니다: ' + subRes.error.message;
+      appListStatus.className = 'msg error';
+      return;
+    }
+    // application_id -> 가장 최근 submission
+    var subByApp = {};
+    (subRes.data || []).forEach(function(s){
+      if (!subByApp[s.application_id]) subByApp[s.application_id] = s;
+    });
+
+    appRows = apps.map(function(a){
+      return { app:a, submission: subByApp[a.id] || null };
+    });
+
+    appListStatus.textContent = '';
+    applicationsLoaded = true;
+    renderFilters();
+    renderAppList();
+  }
+
+  function renderFilters(){
+    var counts = { all: appRows.length, new:0, setting:0, done:0, rejected:0 };
+    appRows.forEach(function(r){ if (counts[r.app.status] != null) counts[r.app.status]++; });
+    appFilterRow.innerHTML = FILTERS.map(function(f){
+      return '<button type="button" class="filter-btn' + (f === currentFilter ? ' active' : '') + '" data-filter="' + f + '">' +
+        esc(FILTER_LABELS[f]) + '<span class="count">' + counts[f] + '</span></button>';
+    }).join('');
+  }
+
+  function renderAppList(){
+    var rows = appRows.filter(function(r){
+      return currentFilter === 'all' || r.app.status === currentFilter;
+    });
+    appEmpty.hidden = rows.length > 0;
+    appList.innerHTML = rows.map(function(r){
+      var a = r.app;
+      var arrived = r.submission && r.submission.status === 'submitted';
+      return '<button type="button" class="app-card" data-app-id="' + esc(a.id) + '">' +
+        '<div class="app-card-head">' +
+          '<div class="app-name">' + esc(a.center_name) +
+            (arrived ? '<span class="badge arrived">답변 도착</span>' : '') + '</div>' +
+          statusBadge(a.status) +
+        '</div>' +
+        '<div class="app-meta">' +
+          '<div><b>원장</b> ' + esc(a.director_name) + '</div>' +
+          '<div><b>연락처</b> ' + esc(a.phone) + '</div>' +
+          (a.region ? '<div><b>지역</b> ' + esc(a.region) + '</div>' : '') +
+        '</div>' +
+        '<div class="app-date">신청일 ' + esc(fmtDate(a.created_at)) + '</div>' +
+      '</button>';
+    }).join('');
+  }
+
+  appFilterRow.addEventListener('click', function(e){
+    var btn = e.target.closest('.filter-btn');
+    if (!btn) return;
+    currentFilter = btn.getAttribute('data-filter');
+    renderFilters();
+    renderAppList();
+  });
+
+  appList.addEventListener('click', function(e){
+    var card = e.target.closest('.app-card');
+    if (!card) return;
+    var id = card.getAttribute('data-app-id');
+    var row = appRows.filter(function(r){ return r.app.id === id; })[0];
+    if (row) openAppModal(row);
+  });
+
+  // ── 상세 모달 ──
+  function openAppModal(row){
+    currentApp = row.app;
+    currentSubmission = row.submission;
+
+    appModalName.textContent = currentApp.center_name;
+    appModalStatus.innerHTML = '현재 상태 ' + statusBadge(currentApp.status);
+
+    appModalDetail.innerHTML =
+      '<dt>원명</dt><dd>' + esc(currentApp.center_name) + '</dd>' +
+      '<dt>원장명</dt><dd>' + esc(currentApp.director_name) + '</dd>' +
+      '<dt>연락처</dt><dd>' + esc(currentApp.phone) + '</dd>' +
+      '<dt>지역</dt><dd>' + (currentApp.region ? esc(currentApp.region) : '<span class="answer-empty">미입력</span>') + '</dd>' +
+      '<dt>문의내용</dt><dd>' + (currentApp.message ? escWithBr(currentApp.message) : '<span class="answer-empty">없음</span>') + '</dd>' +
+      '<dt>신청일</dt><dd>' + esc(fmtDate(currentApp.created_at)) + '</dd>';
+
+    renderLinkArea();
+    renderAnswers();
+
+    appActionStatus.textContent = '';
+    appActionStatus.className = 'msg';
+    doneBtn.disabled = false;
+    rejectBtn.disabled = false;
+    appModalBackdrop.hidden = false;
+  }
+
+  function closeAppModal(){
+    appModalBackdrop.hidden = true;
+    currentApp = null;
+    currentSubmission = null;
+  }
+  document.getElementById('appModalClose').addEventListener('click', closeAppModal);
+  appModalBackdrop.addEventListener('click', function(e){
+    if (e.target === appModalBackdrop) closeAppModal();
+  });
+
+  function formLink(token){
+    return 'https://' + SITE_ORIGIN + '/onboarding-form.html?token=' + encodeURIComponent(token);
+  }
+
+  function renderLinkArea(){
+    linkStatus.textContent = '';
+    linkStatus.className = 'msg';
+    if (currentSubmission && currentSubmission.token){
+      showGeneratedLink(currentSubmission.token);
+    } else {
+      appLinkArea.innerHTML = '<button type="button" class="btn lavender" id="genLinkBtn">수집 폼 링크 생성</button>';
+      document.getElementById('genLinkBtn').addEventListener('click', generateLink);
+    }
+  }
+
+  function showGeneratedLink(token){
+    var url = formLink(token);
+    appLinkArea.innerHTML =
+      '<div class="link-url">' +
+        '<input type="text" id="linkInput" readonly value="' + esc(url) + '">' +
+        '<button type="button" class="btn ghost" id="copyLinkBtn">복사</button>' +
+      '</div>';
+    var input = document.getElementById('linkInput');
+    document.getElementById('copyLinkBtn').addEventListener('click', function(){
+      input.select();
+      var copied = false;
+      if (navigator.clipboard && navigator.clipboard.writeText){
+        navigator.clipboard.writeText(url).then(function(){
+          linkStatus.textContent = '링크를 복사했어요.'; linkStatus.className = 'msg ok';
+        }).catch(function(){ fallbackCopy(); });
+        return;
+      }
+      fallbackCopy();
+      function fallbackCopy(){
+        try { copied = document.execCommand('copy'); } catch(_e){ copied = false; }
+        linkStatus.textContent = copied ? '링크를 복사했어요.' : '복사에 실패했어요. 직접 선택해 복사해주세요.';
+        linkStatus.className = copied ? 'msg ok' : 'msg error';
+      }
+    });
+  }
+
+  async function generateLink(){
+    var btn = document.getElementById('genLinkBtn');
+    if (btn) btn.disabled = true;
+    linkStatus.textContent = '링크를 만드는 중...';
+    linkStatus.className = 'msg';
+
+    // 중복 방지: 이미 이 신청서로 생성된 레코드가 있으면 기존 토큰 재사용
+    var existRes = await client.from('onboarding_submissions')
+      .select('id, token, status, answers, submitted_at, expires_at')
+      .eq('application_id', currentApp.id)
+      .order('created_at', { ascending:false })
+      .limit(1);
+    if (existRes.error){
+      if (btn) btn.disabled = false;
+      linkStatus.textContent = '조회 실패: ' + existRes.error.message;
+      linkStatus.className = 'msg error';
+      return;
+    }
+    if (existRes.data && existRes.data.length){
+      currentSubmission = existRes.data[0];
+      syncSubmissionInRows();
+      showGeneratedLink(currentSubmission.token);
+      linkStatus.textContent = '이미 생성된 링크를 재사용합니다.';
+      linkStatus.className = 'msg';
+      return;
+    }
+
+    var token = generateToken();
+    var insRes = await client.from('onboarding_submissions')
+      .insert({ application_id: currentApp.id, token: token, status: 'sent' })
+      .select('id, token, status, answers, submitted_at, expires_at')
+      .single();
+    if (insRes.error){
+      if (btn) btn.disabled = false;
+      linkStatus.textContent = '생성 실패: ' + insRes.error.message;
+      linkStatus.className = 'msg error';
+      return;
+    }
+    currentSubmission = insRes.data;
+    syncSubmissionInRows();
+    showGeneratedLink(currentSubmission.token);
+    linkStatus.textContent = '링크를 생성했어요.';
+    linkStatus.className = 'msg ok';
+  }
+
+  function generateToken(){
+    if (window.crypto && window.crypto.getRandomValues){
+      var arr = new Uint8Array(24);
+      window.crypto.getRandomValues(arr);
+      return Array.prototype.map.call(arr, function(b){ return b.toString(16).padStart(2,'0'); }).join('');
+    }
+    return 'tok_' + Date.now() + '_' + Math.random().toString(36).slice(2);
+  }
+
+  function syncSubmissionInRows(){
+    for (var i = 0; i < appRows.length; i++){
+      if (appRows[i].app.id === currentApp.id){ appRows[i].submission = currentSubmission; break; }
+    }
+  }
+
+  // ── 답변 렌더링 (submitted 일 때만) ──
+  var ANSWER_SECTIONS = [
+    { key:'basic', title:'기본 정보', fields:[
+      ['official_name','정식 원명'],['address','주소'],['phone','대표 전화'],['hours','운영시간'],
+      ['capacity','정원'],['class_count','반 수'],['teacher_count','교사 수']
+    ]},
+    { key:'intro', title:'원 소개', fields:[
+      ['greeting','원장 인사말'],['about','원 소개글'],['philosophy','원훈/교육철학'],['child_image','우리 원 유아상']
+    ]},
+    { key:'admission', title:'입학안내', fields:[
+      ['target_age','모집 대상 연령'],['capacity_info','모집 정원 안내'],['period','모집 기간'],
+      ['process','입소 절차'],['supplies','준비물']
+    ]},
+    { key:'directions', title:'오시는 길', fields:[
+      ['parking','주차 안내'],['transit','대중교통 안내'],['shuttle','통학차량'],['shuttle_detail','정류장·시간']
+    ]}
+  ];
+
+  function fieldRow(label, value){
+    var v = (value == null || String(value).trim() === '')
+      ? '<span class="answer-empty">미입력</span>'
+      : '<span class="af-value">' + escWithBr(value) + '</span>';
+    return '<div class="answer-field"><span class="af-label">' + esc(label) + '</span>' + v + '</div>';
+  }
+
+  function renderAnswers(){
+    if (!currentSubmission || currentSubmission.status !== 'submitted'){
+      answersArea.innerHTML = '';
+      return;
+    }
+    var a = currentSubmission.answers || {};
+    var html = '<div class="answer-section"><div class="answer-section-title"><span class="dot"></span>제출된 홈페이지 정보</div></div>';
+
+    ANSWER_SECTIONS.forEach(function(sec){
+      var data = a[sec.key] || {};
+      html += '<div class="answer-section"><div class="answer-section-title"><span class="dot"></span>' + esc(sec.title) + '</div>';
+      sec.fields.forEach(function(f){ html += fieldRow(f[1], data[f[0]]); });
+      html += '</div>';
+    });
+
+    // 선생님 소개
+    html += '<div class="answer-section"><div class="answer-section-title"><span class="dot"></span>선생님 소개</div>';
+    var teachers = Array.isArray(a.teachers) ? a.teachers : [];
+    if (!teachers.length){ html += '<div class="answer-empty">입력한 선생님이 없습니다.</div>'; }
+    else teachers.forEach(function(t){
+      html += '<div class="teacher-row"><b>' + esc(t.name || '이름 미입력') + '</b>' +
+        (t.class ? ' · ' + esc(t.class) : '') + (t.role ? ' · ' + esc(t.role) : '') + '</div>';
+    });
+    html += '</div>';
+
+    // FAQ
+    html += '<div class="answer-section"><div class="answer-section-title"><span class="dot"></span>자주 묻는 질문</div>';
+    var faqs = Array.isArray(a.faqs) ? a.faqs : [];
+    if (!faqs.length){ html += '<div class="answer-empty">선택한 질문이 없습니다.</div>'; }
+    else faqs.forEach(function(f){
+      html += '<div class="faq-row"><b>Q. ' + esc(f.q || '') + '</b><br>A. ' +
+        (f.a ? escWithBr(f.a) : '<span class="answer-empty">답변 미입력</span>') + '</div>';
+    });
+    html += '</div>';
+
+    // 특징 태그/배지
+    html += '<div class="answer-section"><div class="answer-section-title"><span class="dot"></span>우리 원 특징</div>';
+    var tags = Array.isArray(a.tags) ? a.tags : [];
+    var badges = Array.isArray(a.badges) ? a.badges : [];
+    html += '<div class="answer-field"><span class="af-label">적합도 태그</span>';
+    html += tags.length ? '<div class="chip-line">' + tags.map(function(t){ return '<span class="chip">' + esc(t) + '</span>'; }).join('') + '</div>' : '<span class="answer-empty">없음</span>';
+    html += '</div>';
+    html += '<div class="answer-field"><span class="af-label">사실 배지</span>';
+    html += badges.length ? '<div class="chip-line">' + badges.map(function(b){ return '<span class="chip">' + esc(b) + '</span>'; }).join('') + '</div>' : '<span class="answer-empty">없음</span>';
+    html += '</div></div>';
+
+    answersArea.innerHTML = html;
+  }
+
+  // ── 세팅 완료 / 반려 ──
+  doneBtn.addEventListener('click', async function(){
+    if (!currentApp) return;
+    doneBtn.disabled = true; rejectBtn.disabled = true;
+    appActionStatus.textContent = '처리 중...';
+    appActionStatus.className = 'msg';
+
+    var upRes = await client.from('center_applications')
+      .update({ status: 'done' }).eq('id', currentApp.id);
+    if (upRes.error){
+      doneBtn.disabled = false; rejectBtn.disabled = false;
+      appActionStatus.textContent = '완료 처리 실패: ' + upRes.error.message;
+      appActionStatus.className = 'msg error';
+      return;
+    }
+    if (currentSubmission && currentSubmission.id){
+      var subUp = await client.from('onboarding_submissions')
+        .update({ status: 'confirmed' }).eq('id', currentSubmission.id);
+      if (subUp.error){
+        appActionStatus.textContent = '신청서는 완료됐지만 제출 확정에 실패했습니다: ' + subUp.error.message;
+        appActionStatus.className = 'msg error';
+      }
+    }
+    currentApp.status = 'done';
+    appActionStatus.textContent = '세팅 완료로 처리했어요.';
+    appActionStatus.className = 'msg ok';
+    renderFilters(); renderAppList();
+    setTimeout(closeAppModal, 700);
+  });
+
+  rejectBtn.addEventListener('click', async function(){
+    if (!currentApp) return;
+    doneBtn.disabled = true; rejectBtn.disabled = true;
+    appActionStatus.textContent = '처리 중...';
+    appActionStatus.className = 'msg';
+
+    var upRes = await client.from('center_applications')
+      .update({ status: 'rejected' }).eq('id', currentApp.id);
+    if (upRes.error){
+      doneBtn.disabled = false; rejectBtn.disabled = false;
+      appActionStatus.textContent = '반려 처리 실패: ' + upRes.error.message;
+      appActionStatus.className = 'msg error';
+      return;
+    }
+    currentApp.status = 'rejected';
+    appActionStatus.textContent = '반려로 처리했어요.';
+    appActionStatus.className = 'msg ok';
+    renderFilters(); renderAppList();
+    setTimeout(closeAppModal, 700);
+  });
+
+  // ── 탭 전환 ──
+  document.querySelector('.tabnav').addEventListener('click', function(e){
+    var tab = e.target.closest('.tab');
+    if (!tab) return;
+    var name = tab.getAttribute('data-tab');
+    document.querySelectorAll('.tabnav .tab').forEach(function(t){ t.classList.toggle('active', t === tab); });
+    document.getElementById('tab-templates').hidden = (name !== 'templates');
+    document.getElementById('tab-applications').hidden = (name !== 'applications');
+    if (name === 'applications' && !applicationsLoaded) loadApplications();
   });
 
   loginForm.addEventListener('submit', async function(e){
