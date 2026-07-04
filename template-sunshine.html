@@ -836,48 +836,35 @@ function mapRowToData(row){
     return mapRowToData(resolveTemplateAssets(row));
   }
 
-  try {
-    const params = new URLSearchParams(location.search);
-    const slugParam = params.get('slug');
-    const previewId = slugParam ? '' : normalizePreviewId(params.get('preview'));
-    if (previewId){
-      isPreviewMode = true;
-      data = await loadTemplatePreview(previewId);
-    } else {
-      const slug = slugParam || 'haetsal';
-    const { data: row, error } = await client
-      .from('centers')
-      .select('*, center_media(*), admissions(*), philosophy, programs, facilities')
-      .eq('slug', slug)
-      .single();
-    if (error) throw error;
-    data = mapRowToData(row);
+  let isAdminPreviewMode = false;
 
-    // Storage 경로를 한 번의 batch 서명 요청으로 변환
-    async function signPaths(paths){
-      const unique = Array.from(new Set(paths.filter(function(path){
-        return path && !/^https?:\/\//.test(path);
-      })));
-      const signedMap = new Map();
-      if (unique.length){
-        const res = await fetch(cfg.url + '/storage/v1/object/sign/center-images', {
-          method: 'POST',
-          headers: {
-            apikey: cfg.anonKey,
-            Authorization: 'Bearer ' + cfg.anonKey,
-            'content-type': 'application/json'
-          },
-          body: JSON.stringify({ paths: unique, expiresIn: 3600 })
-        });
-        if (!res.ok) throw new Error('Failed to sign center images');
-        const signed = await res.json();
-        (signed || []).forEach(function(item, index){
-          const signedUrl = item.signedURL ? cfg.url + '/storage/v1' + item.signedURL : (item.signedUrl || unique[index]);
-          signedMap.set(item.path || unique[index], signedUrl);
-        });
-      }
-      return function(path){ return signedMap.get(path) || path; };
+  // Storage 경로를 한 번의 batch 서명 요청으로 변환
+  async function signPaths(paths){
+    const unique = Array.from(new Set(paths.filter(function(path){
+      return path && !/^https?:\/\//.test(path);
+    })));
+    const signedMap = new Map();
+    if (unique.length){
+      const res = await fetch(cfg.url + '/storage/v1/object/sign/center-images', {
+        method: 'POST',
+        headers: {
+          apikey: cfg.anonKey,
+          Authorization: 'Bearer ' + cfg.anonKey,
+          'content-type': 'application/json'
+        },
+        body: JSON.stringify({ paths: unique, expiresIn: 3600 })
+      });
+      if (!res.ok) throw new Error('Failed to sign center images');
+      const signed = await res.json();
+      (signed || []).forEach(function(item, index){
+        const signedUrl = item.signedURL ? cfg.url + '/storage/v1' + item.signedURL : (item.signedUrl || unique[index]);
+        signedMap.set(item.path || unique[index], signedUrl);
+      });
     }
+    return function(path){ return signedMap.get(path) || path; };
+  }
+
+  async function signCenterPhotos(data){
     const resolveSignedPath = await signPaths([]
       .concat((data.day_story || []).map(m => m.photo))
       .concat((data.album?.items || []).map(it => it.photo))
@@ -889,10 +876,59 @@ function mapRowToData(row){
     for (const it of data.album.items){ it.photo = resolveSignedPath(it.photo); }
     for (const tc of data.teachers.items){ tc.photo = resolveSignedPath(tc.photo); }
     if (data.center.director){ data.center.director.photo = resolveSignedPath(data.center.director.photo); }
+  }
+
+  try {
+    const params = new URLSearchParams(location.search);
+    const slugParam = params.get('slug');
+    const previewCenterSlug = (!slugParam) ? (params.get('preview_center') || '').trim() : '';
+    const previewId = (slugParam || previewCenterSlug) ? '' : normalizePreviewId(params.get('preview'));
+
+    if (previewId){
+      // ── 기존: 템플릿 샘플 미리보기 (?preview=sunshine 등) — 절대 변경 금지 ──
+      isPreviewMode = true;
+      data = await loadTemplatePreview(previewId);
+    } else if (previewCenterSlug){
+      // ── 신규: 관리자 draft 원 미리보기 (?preview_center=slug) ──
+      const sessionRes = await client.auth.getSession();
+      const session = sessionRes.data ? sessionRes.data.session : null;
+      const isAdmin = !!(session && (session.user.email || '').toLowerCase() === 'tobby79@naver.com');
+      if (!isAdmin){
+        document.body.innerHTML = '<p style="padding:40px;font-family:sans-serif">관리자 로그인이 필요합니다.</p>';
+        return;
+      }
+      const previewRes = await client.rpc('get_center_preview', { p_slug: previewCenterSlug });
+      if (previewRes.error) throw previewRes.error;
+      if (!previewRes.data){
+        document.body.innerHTML = '<p style="padding:40px;font-family:sans-serif">원 데이터를 불러오지 못했어요. slug를 확인해주세요.</p>';
+        return;
+      }
+      isAdminPreviewMode = true;
+      data = mapRowToData(previewRes.data);
+      await signCenterPhotos(data);
+    } else {
+      // ── 기존: 공개 원 조회 (?slug=slug) — 절대 변경 금지 ──
+      const slug = slugParam || 'haetsal';
+      const { data: row, error } = await client
+        .from('centers')
+        .select('*, center_media(*), admissions(*), philosophy, programs, facilities')
+        .eq('slug', slug)
+        .single();
+      if (error) throw error;
+      data = mapRowToData(row);
+      await signCenterPhotos(data);
     }
 
     const previewBanner = document.getElementById('previewBanner');
-    if (previewBanner) previewBanner.hidden = !isPreviewMode;
+    if (previewBanner) {
+      if (isAdminPreviewMode) {
+        previewBanner.textContent = '관리자 미리보기 — 비공개 상태';
+        previewBanner.hidden = false;
+      } else {
+        previewBanner.textContent = '템플릿 미리보기';
+        previewBanner.hidden = !isPreviewMode;
+      }
+    }
 
     const themeParam = new URLSearchParams(location.search).get('theme') || (data.center.theme || '');
     if (themeParam) document.documentElement.setAttribute('data-theme', themeParam);

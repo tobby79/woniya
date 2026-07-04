@@ -240,6 +240,19 @@
   .chip-line{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
   .chip-line .chip{background:#fff4f8;border:1px solid rgba(255,127,168,.35);border-radius:999px;padding:4px 11px;font-size:.82rem;font-weight:700;color:var(--pink-deep)}
   .teacher-row,.faq-row{background:#fffdfb;border:1px solid var(--line);border-radius:12px;padding:11px 13px;margin-bottom:8px;font-size:.88rem;line-height:1.55}
+
+  .create-box{background:#eef7f0;border:1.5px solid rgba(143,179,154,.32);border-radius:16px;padding:18px;margin-top:22px}
+  .created-box{background:#f4efff;border:1.5px solid rgba(168,141,232,.3);border-radius:16px;padding:18px;margin-top:22px}
+  .create-title{font-size:1rem;font-weight:900;margin-bottom:14px}
+  .create-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+  .create-box select{
+    width:100%;border:1.5px solid var(--line);border-radius:14px;padding:12px 14px;
+    background:#fffdfb;color:var(--ink);font-size:.94rem;font-family:var(--body);outline:none;
+  }
+  .create-box select:focus,.create-box input:focus{border-color:var(--sage);box-shadow:0 0 0 4px rgba(143,179,154,.14)}
+  .create-box .hint b{color:var(--sage)}
+  @media (max-width:640px){ .create-grid{grid-template-columns:1fr} }
+
   .modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:24px;flex-wrap:wrap}
 
   @media (max-width:920px){
@@ -433,6 +446,39 @@
       </div>
 
       <div id="answersArea"></div>
+
+      <!-- 실제 원 생성 (submitted 이고 아직 미생성일 때만 노출) -->
+      <div class="create-box" id="createBox" hidden>
+        <div class="create-title">실제 원 생성</div>
+        <div class="create-grid">
+          <div class="field">
+            <label for="tmplSelect">템플릿 선택</label>
+            <select id="tmplSelect">
+              <option value="">템플릿을 선택하세요</option>
+              <option value="sunshine">햇살 (sunshine)</option>
+              <option value="forest">숲 (forest)</option>
+              <option value="carnival">카니발 (carnival)</option>
+              <option value="gallery">갤러리 (gallery)</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="slugInput">슬러그 (URL 주소)</label>
+            <input type="text" id="slugInput" placeholder="예: haetsal" autocomplete="off">
+            <div class="hint">영문 소문자·숫자·하이픈(-)만. woniya.vercel.app/template-…?slug=<b>여기</b></div>
+          </div>
+        </div>
+        <button type="button" class="btn" id="createCenterBtn" disabled>실제 원 생성</button>
+        <div class="msg" id="createStatus" style="text-align:left"></div>
+      </div>
+
+      <!-- 생성 완료 후 링크 (linked_center_id 있을 때) -->
+      <div class="created-box" id="createdBox" hidden>
+        <div class="create-title">생성된 원</div>
+        <div class="link-url">
+          <input type="text" id="centerUrlInput" readonly>
+          <a class="btn ghost" id="viewCenterBtn" target="_blank" rel="noopener">원 페이지 보기</a>
+        </div>
+      </div>
 
       <div class="modal-actions">
         <button type="button" class="btn danger" id="rejectBtn">반려</button>
@@ -1063,6 +1109,14 @@
   var rejectBtn = document.getElementById('rejectBtn');
   var doneBtn = document.getElementById('doneBtn');
   var appActionStatus = document.getElementById('appActionStatus');
+  var createBox = document.getElementById('createBox');
+  var createdBox = document.getElementById('createdBox');
+  var tmplSelect = document.getElementById('tmplSelect');
+  var slugInput = document.getElementById('slugInput');
+  var createCenterBtn = document.getElementById('createCenterBtn');
+  var createStatus = document.getElementById('createStatus');
+  var centerUrlInput = document.getElementById('centerUrlInput');
+  var viewCenterBtn = document.getElementById('viewCenterBtn');
 
   var appRows = [];          // center_applications + 조인된 submission 요약
   var currentFilter = 'all';
@@ -1189,6 +1243,7 @@
 
     renderLinkArea();
     renderAnswers();
+    renderCreateArea();
 
     appActionStatus.textContent = '';
     appActionStatus.className = 'msg';
@@ -1196,6 +1251,126 @@
     rejectBtn.disabled = false;
     appModalBackdrop.hidden = false;
   }
+
+  // ── 실제 원 생성 영역 ──
+  function templatePageUrl(template, slug, status){
+    var param = (status === 'published') ? 'slug' : 'preview_center';
+    return 'https://' + SITE_ORIGIN + '/template-' + encodeURIComponent(template) + '.html?' + param + '=' + encodeURIComponent(slug);
+  }
+
+  function suggestSlug(){
+    // 한글 원명은 로마자 변환 없이 랜덤 영문+숫자 조합으로 제안
+    var chars = 'abcdefghijkmnpqrstuvwxyz23456789';
+    var s = '';
+    for (var i = 0; i < 6; i++) s += chars[Math.floor(Math.random()*chars.length)];
+    return 'won-' + s;
+  }
+
+  function renderCreateArea(){
+    var linked = currentApp.linked_center_id;
+    var submitted = currentSubmission && currentSubmission.status === 'submitted';
+
+    if (linked){
+      // 이미 생성됨: 링크만 표시, 재생성 방지
+      createBox.hidden = true;
+      createdBox.hidden = false;
+      // 생성된 원의 template 을 알아야 URL 을 만든다. submission/answers 엔 없으므로 centers 조회.
+      loadCreatedCenterLink(linked);
+      doneBtn.hidden = true;   // 이미 done 처리됨
+      return;
+    }
+
+    createdBox.hidden = true;
+    doneBtn.hidden = false;
+
+    if (!submitted){
+      // 답변 미도착: 생성 영역 숨김 (기존 세팅완료/반려만)
+      createBox.hidden = true;
+      return;
+    }
+
+    // 답변 도착 + 미생성: 생성 폼 노출
+    createBox.hidden = false;
+    tmplSelect.value = '';
+    slugInput.value = suggestSlug();
+    createStatus.textContent = '';
+    createStatus.className = 'msg';
+    createCenterBtn.disabled = true;
+  }
+
+  async function loadCreatedCenterLink(centerId){
+    centerUrlInput.value = '';
+    viewCenterBtn.removeAttribute('href');
+    var res = await client.from('centers').select('slug, template, status').eq('id', centerId).maybeSingle();
+    if (res.error || !res.data){
+      centerUrlInput.value = '원 정보를 불러오지 못했습니다.';
+      return;
+    }
+    var url = templatePageUrl(res.data.template, res.data.slug, res.data.status);
+    centerUrlInput.value = url;
+    viewCenterBtn.href = url;
+  }
+
+  function updateCreateBtnState(){
+    var ok = tmplSelect.value && slugInput.value.trim().length > 0;
+    createCenterBtn.disabled = !ok;
+  }
+  tmplSelect.addEventListener('change', updateCreateBtnState);
+  slugInput.addEventListener('input', updateCreateBtnState);
+
+  createCenterBtn.addEventListener('click', async function(){
+    if (!currentSubmission || !currentSubmission.id) return;
+    var template = tmplSelect.value;
+    var slug = slugInput.value.trim().toLowerCase();
+
+    if (!/^[a-z0-9-]+$/.test(slug)){
+      createStatus.textContent = '슬러그는 영문 소문자·숫자·하이픈(-)만 사용할 수 있습니다.';
+      createStatus.className = 'msg error';
+      return;
+    }
+
+    createCenterBtn.disabled = true;
+    createStatus.textContent = '원을 생성하는 중입니다...';
+    createStatus.className = 'msg';
+
+    var res = await client.rpc('create_center_from_onboarding', {
+      p_submission_id: currentSubmission.id,
+      p_template: template,
+      p_slug: slug
+    });
+
+    if (res.error){
+      createCenterBtn.disabled = false;
+      createStatus.textContent = '생성 실패: ' + res.error.message;
+      createStatus.className = 'msg error';
+      return;
+    }
+
+    // 성공: 로컬 상태 갱신
+    currentApp.status = 'done';
+    currentApp.linked_center_id = res.data.center_id;
+    currentSubmission.status = 'confirmed';
+    syncSubmissionInRows();
+    for (var i = 0; i < appRows.length; i++){
+      if (appRows[i].app.id === currentApp.id){ appRows[i].app.status = 'done'; appRows[i].app.linked_center_id = res.data.center_id; break; }
+    }
+
+    createStatus.textContent = '실제 원을 생성했어요.';
+    createStatus.className = 'msg ok';
+    appModalStatus.innerHTML = '현재 상태 ' + statusBadge('done');
+
+    // 링크 표시로 전환
+    createBox.hidden = true;
+    createdBox.hidden = false;
+    doneBtn.hidden = true;
+    // 생성 직후 원은 항상 draft(비공개) 이므로 preview_center 링크로 연결한다.
+    var url = templatePageUrl(res.data.template, res.data.slug, 'draft');
+    centerUrlInput.value = url;
+    viewCenterBtn.href = url;
+
+    renderFilters();
+    renderAppList();
+  });
 
   function closeAppModal(){
     appModalBackdrop.hidden = true;
