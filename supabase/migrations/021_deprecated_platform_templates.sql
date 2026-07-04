@@ -1,3 +1,5 @@
+-- DEPRECATED: 이 마이그레이션은 실행되지 않았으며, 023_template_centers.sql 설계로 대체되었습니다. 히스토리 보존 목적으로만 남겨둡니다.
+
 -- Platform template preview data for the super admin dashboard.
 
 create table if not exists public.platform_templates (
