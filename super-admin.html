@@ -202,6 +202,26 @@
   .app-meta{font-size:.84rem;color:var(--ink-soft);line-height:1.7}
   .app-meta b{color:var(--ink);font-weight:800}
   .app-date{font-size:.78rem;color:var(--ink-soft);margin-top:8px;opacity:.85}
+  .center-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+  .center-card{
+    border:1.5px solid var(--line);border-radius:18px;padding:18px;
+    background:rgba(255,255,255,.85);position:relative;
+    transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease;
+  }
+  .center-card:hover{transform:translateY(-2px);border-color:rgba(255,127,168,.5);box-shadow:0 18px 36px -28px rgba(80,60,70,.5)}
+  .center-card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:10px}
+  .center-name{font-size:1.06rem;font-weight:900;line-height:1.3}
+  .center-actions{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:14px;flex-wrap:wrap}
+  .center-actions a{font-size:.84rem;font-weight:900;color:var(--pink-deep);text-decoration:none}
+  .center-actions a:hover{text-decoration:underline}
+  .toggle{display:inline-flex;align-items:center;gap:8px;font-size:.8rem;font-weight:900;color:var(--ink-soft);cursor:pointer}
+  .toggle input{position:absolute;opacity:0;pointer-events:none}
+  .toggle-track{width:42px;height:24px;border-radius:999px;background:#dfd7d1;position:relative;transition:background .18s ease}
+  .toggle-track::after{content:"";position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 2px 6px rgba(80,60,70,.22);transition:transform .18s ease}
+  .toggle input:checked + .toggle-track{background:var(--pink)}
+  .toggle input:checked + .toggle-track::after{transform:translateX(18px)}
+  .toggle input:disabled + .toggle-track{opacity:.5}
+  .toggle.disabled{cursor:not-allowed;opacity:.7}
 
   .badge{display:inline-flex;align-items:center;border-radius:999px;padding:4px 11px;font-size:.76rem;font-weight:900;white-space:nowrap}
   .badge.new{background:#eef4ff;color:#3d6bd6}
@@ -209,6 +229,9 @@
   .badge.done{background:#eaf7ee;color:#3f9d5c}
   .badge.rejected{background:#fdeceb;color:#d9534f}
   .badge.arrived{background:#ffe9f1;color:var(--pink-deep);margin-left:6px}
+  .badge.draft{background:#f1eee9;color:#846f60}
+  .badge.published{background:#eaf7ee;color:#3f9d5c}
+  .badge.archived{background:#f4efff;color:#7b65c8}
 
   /* ── 상세 모달 ── */
   .modal-backdrop{
@@ -265,7 +288,7 @@
     .topbar-inner{padding:13px 16px}
     .page-head{display:block}
     .panel{padding:20px;border-radius:18px}
-    .template-grid,.album-grid,.teacher-list,.app-list{grid-template-columns:1fr}
+    .template-grid,.album-grid,.teacher-list,.app-list,.center-list{grid-template-columns:1fr}
     .two-col{grid-template-columns:1fr}
     .detail-grid{grid-template-columns:90px minmax(0,1fr)}
     .who span{display:none}
@@ -304,12 +327,13 @@
 
   <section id="adminView" hidden>
     <div class="tabnav">
-      <button type="button" class="tab active" data-tab="templates">템플릿 미리보기</button>
-      <button type="button" class="tab" data-tab="applications">신청서 관리</button>
+      <button type="button" class="tab active" data-tab="applications">신청서 관리</button>
+      <button type="button" class="tab" data-tab="centers">원 관리</button>
+      <button type="button" class="tab" data-tab="templates">템플릿 미리보기</button>
     </div>
 
     <!-- 탭: 템플릿 미리보기 -->
-    <div id="tab-templates">
+    <div id="tab-templates" hidden>
     <div class="page-head">
       <div>
         <div class="eyebrow">Preview Templates</div>
@@ -412,7 +436,7 @@
     </div><!-- /tab-templates -->
 
     <!-- 탭: 신청서 관리 -->
-    <div id="tab-applications" hidden>
+    <div id="tab-applications">
       <div class="page-head">
         <div>
           <div class="eyebrow">Applications</div>
@@ -425,6 +449,22 @@
       <div class="app-list" id="appList"></div>
       <div class="empty-state" id="appEmpty" hidden>표시할 신청서가 없습니다.</div>
       <div class="msg" id="appListStatus"></div>
+    </div>
+
+    <!-- 탭: 원 관리 -->
+    <div id="tab-centers" hidden>
+      <div class="page-head">
+        <div>
+          <div class="eyebrow">Centers</div>
+          <h1>원 관리</h1>
+          <p class="lead">생성된 원의 공개 상태를 확인하고 공개/비공개 전환을 관리합니다.</p>
+        </div>
+      </div>
+
+      <div class="filter-row" id="centerFilterRow"></div>
+      <div class="center-list" id="centerList"></div>
+      <div class="empty-state" id="centerEmpty" hidden>표시할 원이 없습니다.</div>
+      <div class="msg" id="centerListStatus"></div>
     </div>
   </section>
 
@@ -473,7 +513,10 @@
 
       <!-- 생성 완료 후 링크 (linked_center_id 있을 때) -->
       <div class="created-box" id="createdBox" hidden>
-        <div class="create-title">생성된 원</div>
+        <div class="created-title-row">
+          <div class="create-title">생성된 원</div>
+          <span id="createdCenterStatus"></span>
+        </div>
         <div class="link-url">
           <input type="text" id="centerUrlInput" readonly>
           <a class="btn ghost" id="viewCenterBtn" target="_blank" rel="noopener">원 페이지 보기</a>
@@ -585,6 +628,7 @@
     adminView.hidden = false;
     whoBox.hidden = false;
     userEmailEl.textContent = session.user.email;
+    activateTab('applications');
     renderTemplateCards();
   }
 
@@ -1117,16 +1161,32 @@
   var createStatus = document.getElementById('createStatus');
   var centerUrlInput = document.getElementById('centerUrlInput');
   var viewCenterBtn = document.getElementById('viewCenterBtn');
+  var createdCenterStatus = document.getElementById('createdCenterStatus');
+  var centerFilterRow = document.getElementById('centerFilterRow');
+  var centerList = document.getElementById('centerList');
+  var centerEmpty = document.getElementById('centerEmpty');
+  var centerListStatus = document.getElementById('centerListStatus');
 
   var appRows = [];          // center_applications + 조인된 submission 요약
   var currentFilter = 'all';
   var currentApp = null;     // 상세 열린 신청서
   var currentSubmission = null;
   var applicationsLoaded = false;
+  var centerRows = [];
+  var currentCenterFilter = 'all';
+  var centersLoaded = false;
+  var CENTER_FILTERS = ['all', 'published', 'draft'];
+  var CENTER_FILTER_LABELS = { all:'전체', published:'공개', draft:'비공개' };
+  var CENTER_STATUS_LABELS = { draft:'비공개', published:'공개', archived:'보관됨' };
 
   function statusBadge(status){
     var s = status || 'new';
     return '<span class="badge ' + esc(s) + '">' + esc(STATUS_LABELS[s] || s) + '</span>';
+  }
+
+  function centerStatusBadge(status){
+    var s = status || 'draft';
+    return '<span class="badge ' + esc(s) + '">' + esc(CENTER_STATUS_LABELS[s] || s) + '</span>';
   }
 
   function fmtDate(ts){
@@ -1225,6 +1285,119 @@
     if (row) openAppModal(row);
   });
 
+  /* ══════════════════ 원 관리 ══════════════════ */
+  async function loadCenters(){
+    centerListStatus.textContent = '불러오는 중...';
+    centerListStatus.className = 'msg';
+
+    var res = await client.from('centers')
+      .select('*')
+      .order('created_at', { ascending:false });
+    if (res.error){
+      centerListStatus.textContent = '원을 불러오지 못했습니다: ' + res.error.message;
+      centerListStatus.className = 'msg error';
+      return;
+    }
+
+    centerRows = res.data || [];
+    centersLoaded = true;
+    centerListStatus.textContent = '';
+    renderCenterFilters();
+    renderCenterList();
+  }
+
+  function renderCenterFilters(){
+    var counts = { all: centerRows.length, published:0, draft:0 };
+    centerRows.forEach(function(c){
+      if (c.status === 'published') counts.published++;
+      if (c.status === 'draft') counts.draft++;
+    });
+    centerFilterRow.innerHTML = CENTER_FILTERS.map(function(f){
+      return '<button type="button" class="filter-btn' + (f === currentCenterFilter ? ' active' : '') + '" data-center-filter="' + f + '">' +
+        esc(CENTER_FILTER_LABELS[f]) + '<span class="count">' + counts[f] + '</span></button>';
+    }).join('');
+  }
+
+  function renderCenterList(){
+    var rows = centerRows.filter(function(c){
+      return currentCenterFilter === 'all' || c.status === currentCenterFilter;
+    });
+    centerEmpty.hidden = rows.length > 0;
+    centerList.innerHTML = rows.map(function(c){
+      var toggleable = c.status === 'draft' || c.status === 'published';
+      var published = c.status === 'published';
+      var url = templatePageUrl(c.template, c.slug, c.status);
+      return '<article class="center-card" data-center-id="' + esc(c.id) + '">' +
+        '<div class="center-card-head">' +
+          '<div class="center-name">' + esc(c.name) + '</div>' +
+          centerStatusBadge(c.status) +
+        '</div>' +
+        '<div class="app-meta">' +
+          '<div><b>slug</b> ' + esc(c.slug) + '</div>' +
+          '<div><b>template</b> ' + esc(c.template) + '</div>' +
+          '<div><b>owner_id</b> ' + (c.owner_id ? '연결됨' : '미연결') + '</div>' +
+        '</div>' +
+        '<div class="app-date">생성일 ' + esc(fmtDate(c.created_at)) + '</div>' +
+        '<div class="center-actions">' +
+          '<a href="' + esc(url) + '" target="_blank" rel="noopener">원 페이지 보기</a>' +
+          '<label class="toggle' + (toggleable ? '' : ' disabled') + '">' +
+            '<input type="checkbox" data-center-toggle="' + esc(c.id) + '"' + (published ? ' checked' : '') + (toggleable ? '' : ' disabled') + '>' +
+            '<span class="toggle-track"></span>' +
+            '<span>' + (published ? '공개' : '비공개') + '</span>' +
+          '</label>' +
+        '</div>' +
+      '</article>';
+    }).join('');
+  }
+
+  centerFilterRow.addEventListener('click', function(e){
+    var btn = e.target.closest('.filter-btn');
+    if (!btn) return;
+    currentCenterFilter = btn.getAttribute('data-center-filter');
+    renderCenterFilters();
+    renderCenterList();
+  });
+
+  centerList.addEventListener('change', async function(e){
+    var input = e.target.closest('[data-center-toggle]');
+    if (!input) return;
+    var id = input.getAttribute('data-center-toggle');
+    var center = centerRows.filter(function(c){ return c.id === id; })[0];
+    if (!center) return;
+
+    if (center.status !== 'draft' && center.status !== 'published'){
+      input.checked = center.status === 'published';
+      return;
+    }
+
+    var nextStatus = input.checked ? 'published' : 'draft';
+    input.disabled = true;
+    centerListStatus.textContent = '공개 상태를 변경하는 중...';
+    centerListStatus.className = 'msg';
+
+    var res = await client.from('centers')
+      .update({ status: nextStatus, is_published: nextStatus === 'published' })
+      .eq('id', id)
+      .select('*')
+      .single();
+
+    if (res.error){
+      input.checked = center.status === 'published';
+      input.disabled = false;
+      centerListStatus.textContent = '공개 상태 변경에 실패했습니다: ' + res.error.message;
+      centerListStatus.className = 'msg error';
+      return;
+    }
+
+    for (var i = 0; i < centerRows.length; i++){
+      if (centerRows[i].id === id){ centerRows[i] = res.data; break; }
+    }
+    centerListStatus.textContent = '공개 상태를 변경했습니다.';
+    centerListStatus.className = 'msg ok';
+    renderCenterFilters();
+    renderCenterList();
+  });
+
   // ── 상세 모달 ──
   function openAppModal(row){
     currentApp = row.app;
@@ -1300,6 +1473,7 @@
 
   async function loadCreatedCenterLink(centerId){
     centerUrlInput.value = '';
+    createdCenterStatus.innerHTML = '';
     viewCenterBtn.removeAttribute('href');
     var res = await client.from('centers').select('slug, template, status').eq('id', centerId).maybeSingle();
     if (res.error || !res.data){
@@ -1307,6 +1481,7 @@
       return;
     }
     var url = templatePageUrl(res.data.template, res.data.slug, res.data.status);
+    createdCenterStatus.innerHTML = centerStatusBadge(res.data.status);
     centerUrlInput.value = url;
     viewCenterBtn.href = url;
   }
@@ -1365,8 +1540,10 @@
     doneBtn.hidden = true;
     // 생성 직후 원은 항상 draft(비공개) 이므로 preview_center 링크로 연결한다.
     var url = templatePageUrl(res.data.template, res.data.slug, 'draft');
+    createdCenterStatus.innerHTML = centerStatusBadge('draft');
     centerUrlInput.value = url;
     viewCenterBtn.href = url;
+    centersLoaded = false;
 
     renderFilters();
     renderAppList();
@@ -1609,14 +1786,21 @@
   });
 
   // ── 탭 전환 ──
+  function activateTab(name){
+    document.querySelectorAll('.tabnav .tab').forEach(function(t){
+      t.classList.toggle('active', t.getAttribute('data-tab') === name);
+    });
+    document.getElementById('tab-applications').hidden = (name !== 'applications');
+    document.getElementById('tab-centers').hidden = (name !== 'centers');
+    document.getElementById('tab-templates').hidden = (name !== 'templates');
+    if (name === 'applications' && !applicationsLoaded) loadApplications();
+    if (name === 'centers' && !centersLoaded) loadCenters();
+  }
+
   document.querySelector('.tabnav').addEventListener('click', function(e){
     var tab = e.target.closest('.tab');
     if (!tab) return;
-    var name = tab.getAttribute('data-tab');
-    document.querySelectorAll('.tabnav .tab').forEach(function(t){ t.classList.toggle('active', t === tab); });
-    document.getElementById('tab-templates').hidden = (name !== 'templates');
-    document.getElementById('tab-applications').hidden = (name !== 'applications');
-    if (name === 'applications' && !applicationsLoaded) loadApplications();
+    activateTab(tab.getAttribute('data-tab'));
   });
 
   loginForm.addEventListener('submit', async function(e){
