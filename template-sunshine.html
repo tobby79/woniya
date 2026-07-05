@@ -237,8 +237,25 @@
   .cloud svg{display:block}
 
   /* ── 상단 메뉴바 — 기본부터 반투명 흰 배경, 스크롤 시 완전 불투명으로 전환. 텍스트는 항상 어두운 색 고정 ── */
-  .topbar{position:fixed;top:0;left:0;right:0;z-index:40;padding:12px 0;background:var(--topbar-bg-idle);backdrop-filter:blur(var(--topbar-blur-idle));-webkit-backdrop-filter:blur(var(--topbar-blur-idle));box-shadow:0 1px 0 rgba(180,140,110,.08);transition:var(--topbar-transition)}
-  .topbar.scrolled{background:var(--topbar-bg-scrolled);backdrop-filter:blur(var(--topbar-blur-scrolled));-webkit-backdrop-filter:blur(var(--topbar-blur-scrolled));box-shadow:0 1px 0 rgba(180,140,110,.12)}
+  /* 헤더 하단을 구름 밑단(둥근 돌기 반복) 실루엣으로.
+     mask: 하단에 원형 dip을 가로로 반복해 구름 돌기 모양으로 잘라낸다(backdrop-blur까지 함께 클립).
+     돌기 깊이(--cloud-dip)만큼 아래로 더 내려오므로, 콘텐츠가 잘리지 않게 하단 패딩을 그만큼 더 준다.
+     box-shadow는 잘린 실루엣을 못 따라가므로 filter:drop-shadow로 대체. */
+  .topbar{
+    position:fixed;top:0;left:0;right:0;z-index:40;
+    --cloud-dip:16px; --cloud-unit:64px;
+    padding:12px 0 calc(12px + var(--cloud-dip));
+    background:var(--topbar-bg-idle);
+    backdrop-filter:blur(var(--topbar-blur-idle));-webkit-backdrop-filter:blur(var(--topbar-blur-idle));
+    filter:drop-shadow(0 2px 3px rgba(180,140,110,.14));
+    transition:var(--topbar-transition);
+    -webkit-mask:radial-gradient(var(--cloud-dip) at 50% 100%, #0000 96%, #000) 50% 0 / var(--cloud-unit) 100% repeat-x;
+    mask:radial-gradient(var(--cloud-dip) at 50% 100%, #0000 96%, #000) 50% 0 / var(--cloud-unit) 100% repeat-x;
+  }
+  .topbar.scrolled{background:var(--topbar-bg-scrolled);backdrop-filter:blur(var(--topbar-blur-scrolled));-webkit-backdrop-filter:blur(var(--topbar-blur-scrolled));filter:drop-shadow(0 3px 5px rgba(180,140,110,.2))}
+  @media (max-width:719px){
+    .topbar{--cloud-dip:12px; --cloud-unit:52px}
+  }
   .topbar .brand{font-family:var(--display);font-size:var(--fs-card-title);color:var(--topbar-text);text-decoration:none;letter-spacing:-.5px}
   .menu-btn{visibility:hidden;width:40px;height:40px;border:none;background:transparent;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:5px;cursor:pointer;border-radius:10px}
   .menu-btn span{width:22px;height:2.5px;background:var(--ink);border-radius:2px;transition:transform .3s ease,opacity .3s ease}
@@ -250,6 +267,14 @@
   .menu-panel a{padding:14px 16px;text-decoration:none;color:var(--ink);font-weight:600;border-radius:12px;font-size:1rem}
   .menu-panel a:hover{background:var(--cream)}
   .menu-panel a.menu-cta{background:var(--coral);color:#fff;text-align:center;margin-top:6px}
+  /* PC: 메뉴 드롭다운이 화면 전체 폭으로 펼쳐지지 않도록 본문 컬럼(.wrap max-width:560px) 폭에 맞춤.
+     .wrap이 가운데 정렬되므로, 메뉴는 그 컬럼의 오른쪽 가장자리에 맞춰 우측 정렬한다. 모바일은 기존 유지. */
+  @media (min-width:600px){
+    .menu-panel{
+      left:auto;width:280px;max-width:calc(100vw - 28px);
+      right:max(14px, calc((100vw - 560px) / 2 + 14px));
+    }
+  }
 
   /* ── 공통 ── */
   .wrap{max-width:560px;margin:0 auto;padding:0 var(--mobile-side-padding);position:relative}
@@ -845,19 +870,19 @@
   .frame-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0}
   .polaroid .pic img{width:100%;height:100%;object-fit:cover;border-radius:3px;display:block}
   /* 미리보기 배지: isPreviewMode(또는 관리자 draft 미리보기)일 때만 노출되는 부가 안내.
-     실제 방문자 화면에는 뜨지 않으므로 존재감을 낮춘다. topbar.js가 만든 헤더 바
-     (.topbar .wrap, flex space-between) 안에 로고와 홈/메뉴 아이콘 사이 가운데 슬롯으로
-     삽입되어(JS에서 insertBefore) 헤더의 밝은 반투명 배경 위에서 항상 자연스럽게 보인다.
-     헤더는 idle/scrolled 모두 밝은 배경이라 별도 색 분기 없이 --ink-soft 아웃라인 하나로 충분. */
+     topbar.js가 만든 헤더 바(.topbar .wrap) 안 로고와 아이콘 사이 가운데 슬롯에 삽입된다.
+     진한 배경 + 흰 텍스트로, 헤더가 스크롤 전(반투명)/후(불투명) 어떤 상태든 배지 자체는
+     항상 동일한 진한 필 스타일을 유지(헤더 배경 변화와 독립). */
   .preview-banner{
-    flex:none;background:rgba(120,80,60,.06);color:var(--ink-soft);
-    border:1px solid rgba(120,80,60,.2);
-    border-radius:999px;padding:4px 11px;
-    font-size:.68rem;font-weight:700;letter-spacing:.2px;white-space:nowrap;
+    flex:none;background:var(--coral-deep);color:#fff;
+    border:none;border-radius:999px;padding:7px 16px;
+    font-size:.82rem;font-weight:800;letter-spacing:.2px;white-space:nowrap;
+    box-shadow:0 6px 16px -8px rgba(120,80,60,.5);
+    z-index:2;
   }
   .preview-banner[hidden]{display:none}
   @media (max-width:719px){
-    .preview-banner{font-size:.62rem;padding:3px 9px}
+    .preview-banner{font-size:.74rem;padding:6px 13px}
   }
 
 </style>

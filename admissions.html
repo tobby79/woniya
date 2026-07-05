@@ -34,8 +34,20 @@
   html{scroll-behavior:smooth}
   body{font-family:var(--body);color:var(--ink);background:var(--cream);line-height:1.7;-webkit-font-smoothing:antialiased;padding-bottom:40px}
 
-  /* ── 상단 네비 ── */
-  .topbar{position:sticky;top:0;z-index:20;background:rgba(255,250,243,.82);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);box-shadow:0 1px 0 rgba(180,140,110,.12)}
+  /* ── 상단 네비 (template-sunshine.html과 동일한 구름 밑단 실루엣) ──
+     하단을 구름 돌기(mask radial-gradient 반복)로 잘라내고, 잘린 실루엣을 따라가는 drop-shadow 사용.
+     돌기 깊이(--cloud-dip)만큼 하단 패딩을 줘 콘텐츠(.inner)가 잘리지 않게 한다. */
+  .topbar{
+    position:sticky;top:0;z-index:20;
+    --cloud-dip:16px; --cloud-unit:64px;
+    padding-bottom:var(--cloud-dip);
+    background:rgba(255,250,243,.82);
+    backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+    filter:drop-shadow(0 2px 4px rgba(180,140,110,.16));
+    -webkit-mask:radial-gradient(var(--cloud-dip) at 50% 100%, #0000 96%, #000) 50% 0 / var(--cloud-unit) 100% repeat-x;
+    mask:radial-gradient(var(--cloud-dip) at 50% 100%, #0000 96%, #000) 50% 0 / var(--cloud-unit) 100% repeat-x;
+  }
+  @media (max-width:719px){ .topbar{--cloud-dip:12px; --cloud-unit:52px} }
   .topbar .inner{max-width:560px;margin:0 auto;padding:12px 22px;display:flex;align-items:center;justify-content:space-between;gap:12px}
   .topbar .brand{font-family:var(--display);font-size:1.15rem;color:var(--ink);text-decoration:none;letter-spacing:-.5px}
   .topbar .back{display:inline-flex;align-items:center;gap:6px;color:var(--ink-soft);text-decoration:none;font-weight:700;font-size:.9rem;border:1.5px solid var(--line);border-radius:50px;padding:8px 16px;background:rgba(255,255,255,.6);transition:color .2s ease,border-color .2s ease}
