@@ -348,9 +348,17 @@
      mockup-storybook-page.html에서 확정된 디자인을 sunshine 공통 토큰과 통합.
      데이터 구조(day_story)·라우팅은 불변, 렌더링 방식만 동화책으로 교체. */
   .day{
-    /* .wrap의 max-width(560)/좌우 패딩을 벗어나 책이 넉넉히 펼쳐지도록 재정의 */
+    /* .wrap의 max-width(560)/좌우 패딩을 벗어나 책이 넉넉히 펼쳐지도록 재정의.
+       진단①: overviewSec가 데이터에 따라 hidden될 수 있어(시설 stats 없음), 그 경우
+       .day가 히어로 바로 아래 위치하게 되는데, --section-padding-tight(56px)를 쓰고 있어
+       .teachers/.facilities/.programs 같은 주요 섹션(--section-padding-default, 72px)보다
+       위쪽 여백이 좁아 보였다. 우리 원 스토리도 동급의 주요 섹션이므로 default로 통일.
+       진단②: padding(shorthand)로 세로 토큰을 적용하면 토큰 자체가 "Xpx 0 Ypx" 형태라
+       padding-left/right가 0으로 강제 재설정되어, 아래에 있는 .wrap{padding:0 var(--mobile-side-padding)}의
+       좌우 여백을 완전히 덮어써 버린다(모든 섹션 공통 버그). padding-block으로 바꿔
+       세로값만 지정하고 좌우는 .wrap 규칙이 그대로 담당하게 한다. */
     max-width:960px;
-    padding:var(--section-padding-tight);
+    padding-block:72px 44px;
     --page-paper:#FFFDFA;
     --page-line:#EBDFD4;
     --sb-lavender-deep:#D6C7EC;
@@ -586,7 +594,7 @@
   }
   /* 모바일: 세로 스택. 컨트롤은 책 아래 한 행으로 */
   @media (max-width:719px){
-    .day{padding:var(--section-padding-tight) 0}
+    .day{padding-block:72px 44px}
     .storybook{aspect-ratio:auto;max-height:none}
     .storybook::before,.storybook::after{display:none}
     .sb-stage{position:relative;inset:auto;overflow:visible}
@@ -616,7 +624,7 @@
   }
 
   /* ── 앨범 벽 ── */
-  .album{padding:var(--section-padding-default);text-align:center}
+  .album{padding-block:72px 44px;text-align:center}
   .section-eyebrow{font-family:var(--hand);font-size:1.2rem;color:var(--sage);font-weight:700}
   .section-title{font-family:var(--display);font-size:var(--fs-section-title);margin:6px 0 8px;letter-spacing:-.5px}
   .section-sub{color:var(--ink-soft);font-size:var(--fs-body);margin-bottom:34px}
@@ -643,26 +651,87 @@
   .p5 .pic{background:linear-gradient(135deg,#a8d8e0,#7cc0cf)}
   .p6 .pic{background:linear-gradient(135deg,#ffc7c2,#ff9aa0)}
 
-  /* ── 선생님 카드 플립 ── */
-  .teachers{padding:var(--section-padding-default);text-align:center}
-  .cards{display:flex;flex-direction:column;gap:18px;margin-top:30px}
-  .flip{perspective:1200px;min-height:132px}
-  .flip-inner{position:relative;width:100%;height:100%;min-height:inherit;transition:transform .7s cubic-bezier(.4,.2,.2,1);transform-style:preserve-3d;cursor:pointer}
+  /* ── 선생님 플립 카드 (햇살 테마) ──
+     세로 리스트 → 그리드(PC 2열x2행/모바일 1열x3행). 앞면: 햇살 광배 원형 사진 + 이름 + 반 배지 + 힌트,
+     뒷면: 한마디 메시지. 클릭 시 3D 국소 플립. 기존 --card-* 토큰 재사용.
+     인원이 기본 노출 개수보다 많으면 "선생님 전체 보기" 인라인 펼치기(.cards-more)로 이어붙임 —
+     시설 섹션(.fac-collage-more)과 동일한 max-height+opacity 전환 패턴. */
+  .teachers{padding-block:72px 44px;text-align:center}
+  /* flexbox(wrap)로 전환: 홀수 개수일 때 마지막 줄에 남는 카드가 grid처럼 왼쪽에 붙지 않고
+     justify-content:center로 가운데 정렬된다. flex-basis를 고정해 카드 폭은 기존 2열 그리드와 동일 */
+  .cards{
+    display:flex;flex-wrap:wrap;justify-content:center;gap:22px;
+    margin:30px auto 0;max-width:600px;
+  }
+  .cards .flip{flex:0 1 289px;max-width:289px}
+  .cards-more{
+    display:flex;flex-wrap:wrap;justify-content:center;gap:22px;
+    max-width:600px;margin:0 auto;overflow:hidden;
+    max-height:0;opacity:0;
+    transition:max-height .45s ease,opacity .35s ease;
+  }
+  .cards-more .flip{flex:0 1 289px;max-width:289px}
+  .cards-more.is-expanded{max-height:3000px;opacity:1;margin-top:22px}
+  @media (prefers-reduced-motion:reduce){
+    .cards-more{transition:none}
+  }
+  .flip{perspective:1200px;min-height:320px}
+  .flip-inner{position:relative;width:100%;height:100%;min-height:inherit;transition:transform .45s cubic-bezier(.4,.2,.2,1);transform-style:preserve-3d;cursor:pointer}
   .flip.flipped .flip-inner{transform:rotateY(180deg)}
-  .face{position:absolute;inset:0;min-height:inherit;backface-visibility:hidden;border-radius:var(--card-radius-lg);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;box-shadow:var(--card-shadow)}
-  .front{background:var(--paper);flex-direction:row;justify-content:flex-start;align-items:center;text-align:left;gap:18px;padding:20px 24px}
-  .front .t-info{flex:1;min-width:0}
-  .front .avatar{width:90px;height:90px;border-radius:50%;background:linear-gradient(135deg,#ffd1bd,#ff9f86);flex:none;margin:0}
-  .cards .flip:nth-child(2) .front .avatar{background:linear-gradient(135deg,#bfe0d2,#9CB89A)}
-  .cards .flip:nth-child(3) .front .avatar{background:linear-gradient(135deg,#ffe1a8,#ffc46b)}
-  .front .name{font-family:var(--display);font-size:1.3rem}
-  .front .role{color:var(--ink-soft);font-size:var(--fs-caption);margin-top:2px}
-  .front .tap{font-family:var(--hand);color:var(--coral);font-size:var(--fs-caption);margin-top:8px;font-weight:700}
-  .back{background:linear-gradient(135deg,var(--coral),var(--coral-deep));color:#fff;transform:rotateY(180deg);font-family:var(--hand);font-size:1.3rem;font-weight:700;line-height:1.5}
+  .face{
+    position:absolute;inset:0;min-height:inherit;backface-visibility:hidden;
+    border-radius:var(--card-radius-lg);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    padding:28px 22px;box-shadow:var(--card-shadow);
+  }
+  /* 앞면: 순백 대신 따뜻한 크림/연핑크 톤 */
+  .front{
+    background:linear-gradient(170deg,var(--surface-pink-soft),var(--cream));
+    text-align:center;gap:0;
+  }
+  /* 햇살 광배 — 히어로 광배와 같은 웜 골드/크림 radial glow 톤 재사용 */
+  .front .avatar{
+    position:relative;width:112px;height:112px;border-radius:50%;flex:none;
+    margin:0 auto 16px;overflow:visible;
+  }
+  .front .avatar::before{
+    content:"";position:absolute;inset:-26px;border-radius:50%;z-index:0;
+    background:radial-gradient(circle,rgba(255,224,150,.6) 0%,rgba(255,210,150,.28) 46%,transparent 72%);
+  }
+  .front .avatar .avatar-img{
+    position:relative;z-index:1;width:100%;height:100%;border-radius:50%;overflow:hidden;
+    background:linear-gradient(135deg,#ffd1bd,#ff9f86);
+    box-shadow:0 0 0 6px rgba(255,255,255,.65),var(--card-shadow);
+  }
+  .front .avatar .avatar-img img{width:100%;height:100%;object-fit:cover;display:block}
+  .front .name{font-family:var(--display);font-size:1.3rem;position:relative;z-index:1}
+  .front .role{color:var(--ink-soft);font-size:var(--fs-caption);margin-top:3px}
+  /* 반 구분 색상 배지 — 파스텔 톤, JS가 반 이름 해시로 색을 인라인 지정 */
+  .front .class-badge{
+    display:inline-block;margin-top:12px;font-size:var(--fs-caption);font-weight:700;
+    padding:5px 15px;border-radius:999px;border:1px solid transparent;
+  }
+  /* 클릭 힌트 — 기존 빨간 링크 대신 은은한 손글씨 톤 힌트 */
+  .front .tap{
+    display:inline-flex;align-items:center;gap:5px;
+    font-family:var(--hand);color:var(--ink-soft);font-size:var(--fs-caption);
+    margin-top:16px;font-weight:700;opacity:.75;
+  }
+  .front .tap svg{width:14px;height:14px}
+  /* 뒷면: 한마디 메시지 */
+  .back{
+    background:linear-gradient(150deg,var(--coral),var(--coral-deep));
+    color:#fff;transform:rotateY(180deg);
+    font-family:var(--hand);font-size:1.22rem;font-weight:700;line-height:1.55;
+  }
+  .back::before{
+    content:"“";font-family:var(--display);font-size:2.6rem;line-height:.6;
+    display:block;margin-bottom:8px;opacity:.6;
+  }
 
   /* ── 정보 메뉴 섹션 (공지/달력/FAQ) ── */
   [id]{scroll-margin-top:78px}
-  .block{padding:var(--section-padding-tight);text-align:center}
+  .block{padding-block:56px 36px;text-align:center}
   .block .panel{background:var(--paper);border-radius:var(--card-radius-lg);padding:22px;box-shadow:var(--card-shadow);text-align:left;margin-top:24px}
 
   .notice-list{list-style:none;text-align:left;margin-top:24px}
@@ -698,7 +767,7 @@
   .faq-a p{padding:0 20px 20px;color:var(--ink-soft);font-size:var(--fs-caption);line-height:1.7}
 
   /* ── 마무리 CTA ── */
-  .finale{padding:var(--section-padding-finale);text-align:center}
+  .finale{padding-block:84px 128px;text-align:center}
   .finale h2{font-family:var(--display);font-size:var(--fs-section-title);line-height:1.3;letter-spacing:-.5px}
   .finale p{color:var(--ink-soft);margin:16px 0 34px;font-size:var(--fs-body)}
   .btn-big{display:inline-block;background:var(--coral);color:#fff;font-weight:700;font-size:1.1rem;padding:18px 44px;border-radius:50px;text-decoration:none;box-shadow:0 16px 34px -10px var(--coral-deep);transition:transform .3s ease,box-shadow .3s ease}
@@ -755,20 +824,33 @@
     .polaroid{padding:8px 8px 30px}
     .polaroid:nth-child(2),
     .polaroid:nth-child(6){margin-top:14px}
-    .flip{min-height:148px}
-    .face{min-height:148px;padding:20px}
-    .front{gap:14px;padding:18px}
-    .front .avatar{width:78px;height:78px}
+    .cards,.cards-more{gap:18px;max-width:360px}
+    .cards .flip,.cards-more .flip{flex-basis:100%;max-width:360px}
+    .cards-more.is-expanded{margin-top:18px}
+    .flip{min-height:300px}
+    .face{padding:26px 22px}
+    .front .avatar{width:104px;height:104px}
     .back{font-size:1.18rem}
   }
 
   /* ── 이미지 채움 ── */
   .frame-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0}
   .polaroid .pic img{width:100%;height:100%;object-fit:cover;border-radius:3px;display:block}
-  .front .avatar{overflow:hidden}
-  .front .avatar img{width:100%;height:100%;object-fit:cover;display:block}
-  .preview-banner{position:fixed;top:68px;left:50%;transform:translateX(-50%);z-index:55;background:rgba(58,45,43,.94);color:#fff;border-radius:999px;padding:9px 16px;font-size:.84rem;font-weight:800;box-shadow:0 14px 34px -18px rgba(55,35,30,.55)}
+  /* 미리보기 배지: isPreviewMode(또는 관리자 draft 미리보기)일 때만 노출되는 부가 안내.
+     실제 방문자 화면에는 뜨지 않으므로 존재감을 낮춘다. topbar.js가 만든 헤더 바
+     (.topbar .wrap, flex space-between) 안에 로고와 홈/메뉴 아이콘 사이 가운데 슬롯으로
+     삽입되어(JS에서 insertBefore) 헤더의 밝은 반투명 배경 위에서 항상 자연스럽게 보인다.
+     헤더는 idle/scrolled 모두 밝은 배경이라 별도 색 분기 없이 --ink-soft 아웃라인 하나로 충분. */
+  .preview-banner{
+    flex:none;background:rgba(120,80,60,.06);color:var(--ink-soft);
+    border:1px solid rgba(120,80,60,.2);
+    border-radius:999px;padding:4px 11px;
+    font-size:.68rem;font-weight:700;letter-spacing:.2px;white-space:nowrap;
+  }
   .preview-banner[hidden]{display:none}
+  @media (max-width:719px){
+    .preview-banner{font-size:.62rem;padding:3px 9px}
+  }
 
 </style>
 </head>
@@ -793,8 +875,8 @@
 
 <section class="overview wrap" id="overviewSec"></section>
 <section class="day wrap" id="day"></section>
-<section class="facilities wrap" id="facilitiesSec"></section>
 <section class="teachers wrap" id="teachersSec"></section>
+<section class="facilities wrap" id="facilitiesSec"></section>
 <section class="programs wrap" id="programSec"></section>
 <section class="block wrap" id="faq"></section>
 <section class="info-block wrap" id="admissionsSec" hidden></section>
@@ -935,7 +1017,7 @@
 
   /* ── 입학안내 / 오시는 길 (M1 추가) — 각 템플릿 공통 변수(--paper/--ink/--ink-soft/--display) 기반 ── */
   #admissionsSec[hidden],#directionsSec[hidden]{display:none}
-  .info-block{padding:var(--section-padding-tight);text-align:center}
+  .info-block{padding-block:56px 36px;text-align:center}
   .info-block .info-title{font-family:var(--display);font-size:var(--fs-card-title);color:var(--ink);letter-spacing:-.5px;margin-bottom:10px;text-align:center}
   .info-lead{color:var(--ink-soft);font-size:var(--fs-caption);margin:0 0 18px}
   .info-link-btn{display:inline-block;background:var(--paper);color:var(--ink);font-weight:700;font-size:1rem;text-decoration:none;padding:14px 30px;border-radius:50px;border:1.5px solid var(--badge-border);box-shadow:var(--card-shadow);transition:transform .25s ease}
@@ -961,7 +1043,7 @@
   /* (원장 인사말 미리보기/줄 페이드인 CSS 제거됨 — 책 .sb-director 페이지로 통합) */
 
   /* ── 우리 원 현황 카드 ── */
-  .overview{padding:var(--section-padding-tight)}
+  .overview{padding-block:56px 36px}
   .overview-card{background:var(--paper);border-radius:var(--card-radius-lg);padding:32px 26px;box-shadow:var(--card-shadow)}
   .overview-title{font-family:var(--display);font-size:var(--fs-card-title);color:var(--ink);text-align:center;margin-bottom:6px;letter-spacing:-.5px}
   .overview-sub{font-size:var(--fs-caption);color:var(--ink-soft);text-align:center;margin-bottom:26px}
@@ -991,7 +1073,7 @@
      하루 스토리(.sb-photo/.sb-photo .cap)의 폴라로이드 프레임·손글씨 캡션 언어를 재사용해
      "우리 원 시설"도 같은 코르크보드 감성의 콜라주로 통일한다.
      "시설 전체 보기"는 모달이 아니라 같은 그리드 안에 나머지 항목을 이어붙이는 인라인 펼치기. */
-  .facilities{padding:var(--section-padding-default)}
+  .facilities{padding-block:72px 44px;text-align:center}
   .fac-badges{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin:20px 0 28px}
   .fac-badge{font-size:var(--fs-caption);font-weight:700;color:var(--badge-text);background:var(--badge-bg);border:1px solid var(--badge-border);padding:8px 16px;border-radius:30px;box-shadow:0 6px 16px -8px rgba(120,80,60,.3)}
 
@@ -1070,7 +1152,7 @@
   }
 
   /* ── 교육프로그램 (이미지 카드 + 모달) ── */
-  .programs{padding:var(--section-padding-default)}
+  .programs{padding-block:72px 44px}
   .prog-card{background:var(--paper);border-radius:var(--card-radius);overflow:hidden;box-shadow:var(--card-shadow);margin-bottom:14px}
   .prog-card .prog-img{aspect-ratio:16/9;overflow:hidden;background:var(--cream)}
   .prog-card .prog-img img{width:100%;height:100%;object-fit:cover;display:block}
@@ -1386,6 +1468,15 @@ function mapRowToData(row){
   WoniyaTopbar.init({ centerName: c.name.replace(/\s*어린이집$/,'') || c.name });
   $('menuPanel').innerHTML = (c.menu || []).map(m =>
     `<a href="${esc(m.href)}"${m.cta?' class="menu-cta"':''}${m.id?' id="'+m.id+'"':''}>${esc(m.label)}</a>`).join('');
+  // "템플릿 미리보기" 배지를 헤더 바 안, 로고(brand)와 홈/메뉴 아이콘(topbar-actions) 사이
+  // 중앙 위치로 옮긴다. topbar.js가 만든 .wrap(flex, space-between) 구조 안에 끼워 넣으면
+  // 자연스럽게 가운데 슬롯이 된다. topbar.js 자체는 다른 템플릿과 공유되므로 건드리지 않는다.
+  (function(){
+    var banner = document.getElementById('previewBanner');
+    var topbarWrap = document.querySelector('.topbar .wrap');
+    var actions = document.querySelector('.topbar-actions');
+    if (banner && topbarWrap && actions) topbarWrap.insertBefore(banner, actions);
+  })();
 
   // ── 히어로 ──
   const h = c.hero;
@@ -1642,25 +1733,87 @@ function mapRowToData(row){
     document.getElementById('facilitiesSec').hidden = true;
   }
 
-  // ── 선생님 카드 ──
+  // ── 선생님 플립 카드 (햇살 테마) ──
   const t = data.teachers;
-  $('teachersSec').innerHTML = `
-    <div class="section-eyebrow reveal">${escWithBr(t?.eyebrow)}</div>
-    <h2 class="section-title reveal">${escWithBr(t?.title)}</h2>
-    <div class="cards">${(t?.items || []).map(tc=>`
-      <div class="flip reveal" tabindex="0" role="button" aria-label="${esc(tc.name)} 카드 뒤집기">
+  // 반 이름 추출: role("만 3세 햇살반 담임")에서 "○○반"을 뽑아 색상 배지에 사용.
+  function extractClassName(role){
+    const m = (role || '').match(/([가-힣A-Za-z0-9]+반)/);
+    return m ? m[1] : '';
+  }
+  // 반 구분 색상: sunshine 파스텔 팔레트를 "등장 순서"대로 배정한다.
+  // 순서 기반이라 서로 다른 반은 항상 다른 색을 받고(팔레트 소진 전까지), 같은 반은 항상 같은 색.
+  const CLASS_BADGE_PALETTE = [
+    { bg:'#FFF1EA', text:'#D9724F', border:'#FFD7CB' }, // 웜 핑크/코랄
+    { bg:'#F1ECFA', text:'#7C63B0', border:'#DED0F0' }, // 라벤더
+    { bg:'#EEF6FB', text:'#4E8CB0', border:'#CFE6F2' }, // 하늘
+    { bg:'#EDF6ED', text:'#5E9268', border:'#CFE6CF' }, // 세이지
+    { bg:'#FFF6E6', text:'#C79338', border:'#F3E2BC' }  // 웜 골드
+  ];
+  const classColorMap = {};
+  let classColorNext = 0;
+  function classBadgeStyle(name){
+    if (!name) return CLASS_BADGE_PALETTE[0];
+    if (!(name in classColorMap)){
+      classColorMap[name] = CLASS_BADGE_PALETTE[classColorNext % CLASS_BADGE_PALETTE.length];
+      classColorNext++;
+    }
+    return classColorMap[name];
+  }
+  const TAP_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 11.5V6a2 2 0 0 1 4 0v5"/><path d="M13 8.5a2 2 0 0 1 4 0V13"/><path d="M17 10.5a2 2 0 0 1 4 0V16a5 5 0 0 1-5 5h-2.5a4 4 0 0 1-3-1.4L6 15.5a2 2 0 0 1 3-2.6"/></svg>';
+  function teacherCardHtml(tc){
+    const className = extractClassName(tc.role);
+    const bs = classBadgeStyle(className);
+    const badgeHtml = className
+      ? `<span class="class-badge" style="background:${bs.bg};color:${bs.text};border-color:${bs.border}">${esc(className)}</span>`
+      : '';
+    return `
+      <div class="flip reveal" tabindex="0" role="button" aria-label="${esc(tc.name)} 카드 뒤집기 — 한마디 보기">
         <div class="flip-inner">
           <div class="face front">
-            <div class="avatar"><img alt="${esc(tc.name)}" data-src="${esc(tc.photo)}"></div>
-            <div class="t-info">
-              <div class="name">${esc(tc.name)}</div>
-              <div class="role">${esc(tc.role)}</div>
-              <div class="tap">눌러서 한마디 보기</div>
-            </div>
+            <div class="avatar"><div class="avatar-img"><img alt="${esc(tc.name)}" data-src="${esc(tc.photo)}"></div></div>
+            <div class="name">${esc(tc.name)}</div>
+            <div class="role">${esc(tc.role)}</div>
+            ${badgeHtml}
+            <div class="tap">${TAP_ICON}탭하여 한마디 보기</div>
           </div>
           <div class="face back">${escWithBr(tc.message)}</div>
         </div>
-      </div>`).join('')}</div>`;
+      </div>`;
+  }
+  // 시설 섹션과 동일한 인라인 펼치기 패턴. 기본 노출 개수는 PC 2x2(4명)/모바일 1x3(3명)로
+  // 브레이크포인트에 따라 다르므로, 렌더 시점의 뷰포트 폭으로 판단해 슬라이스 개수를 정한다.
+  const TEACHER_INITIAL_COUNT = (window.matchMedia && window.matchMedia('(max-width:719px)').matches) ? 3 : 4;
+  const teacherItems = t?.items || [];
+  const teacherInitial = teacherItems.slice(0, TEACHER_INITIAL_COUNT);
+  const teacherRest = teacherItems.slice(TEACHER_INITIAL_COUNT);
+  const teacherHasMore = teacherRest.length > 0;
+  const teacherInitialHtml = teacherInitial.map(teacherCardHtml).join('');
+  const teacherRestHtml = teacherRest.map(teacherCardHtml).join('');
+  $('teachersSec').innerHTML = `
+    <div class="section-eyebrow reveal">${escWithBr(t?.eyebrow)}</div>
+    <h2 class="section-title reveal">${escWithBr(t?.title)}</h2>
+    <div class="cards">${teacherInitialHtml}</div>
+    ${teacherHasMore ? `<div class="cards-more" id="teacherMoreGrid">${teacherRestHtml}</div>` : ''}
+    ${teacherHasMore ? `
+    <button type="button" class="fac-more-btn reveal" id="teacherMoreToggleBtn" aria-expanded="false">
+      <span class="cloud-link">선생님 전체 보기</span>
+    </button>` : ''}`;
+
+  // 선생님 인원이 기본 노출 개수보다 많을 때만 버튼 존재 → 인라인 펼치기/접기 토글
+  (function(){
+    const moreBtn = document.getElementById('teacherMoreToggleBtn');
+    const moreGrid = document.getElementById('teacherMoreGrid');
+    if (!moreBtn || !moreGrid) return;
+    moreBtn.addEventListener('click', function(){
+      const expanded = moreGrid.classList.toggle('is-expanded');
+      moreBtn.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+      moreBtn.querySelector('.cloud-link').textContent = expanded ? '접기' : '선생님 전체 보기';
+      if (!expanded) {
+        const prefersReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        document.getElementById('teachersSec').scrollIntoView({ block: 'nearest', behavior: prefersReduced ? 'auto' : 'smooth' });
+      }
+    });
+  })();
 
   // ── 교육프로그램 (이미지 카드 + 모달) ──
   const prog = data.center.programs;
