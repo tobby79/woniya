@@ -658,19 +658,23 @@
      시설 섹션(.fac-collage-more)과 동일한 max-height+opacity 전환 패턴. */
   .teachers{padding-block:72px 44px;text-align:center}
   /* flexbox(wrap)로 전환: 홀수 개수일 때 마지막 줄에 남는 카드가 grid처럼 왼쪽에 붙지 않고
-     justify-content:center로 가운데 정렬된다. flex-basis를 고정해 카드 폭은 기존 2열 그리드와 동일 */
+     justify-content:center로 가운데 정렬된다.
+     진단: 이 섹션은 .wrap(max-width:560px, 좌우 padding 22px)에 속해 있어 실제 사용 가능한
+     폭은 516px인데, flex-basis를 고정 289px(600px 폭 기준 계산값)로 줘서 카드 2장+gap이
+     600px가 되어 항상 516px를 초과 → 매번 줄바꿈되어 1열이 되던 버그.
+     고정 px 대신 컨테이너 폭 기준 calc(50% - gap/2)로 바꿔 실제 가용 폭에 맞게 절반씩 차지하게 한다. */
   .cards{
     display:flex;flex-wrap:wrap;justify-content:center;gap:22px;
     margin:30px auto 0;max-width:600px;
   }
-  .cards .flip{flex:0 1 289px;max-width:289px}
+  .cards .flip{flex:0 1 calc(50% - 11px);max-width:289px}
   .cards-more{
     display:flex;flex-wrap:wrap;justify-content:center;gap:22px;
     max-width:600px;margin:0 auto;overflow:hidden;
     max-height:0;opacity:0;
     transition:max-height .45s ease,opacity .35s ease;
   }
-  .cards-more .flip{flex:0 1 289px;max-width:289px}
+  .cards-more .flip{flex:0 1 calc(50% - 11px);max-width:289px}
   .cards-more.is-expanded{max-height:3000px;opacity:1;margin-top:22px}
   @media (prefers-reduced-motion:reduce){
     .cards-more{transition:none}
