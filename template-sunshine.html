@@ -6,7 +6,7 @@
 <title>원이야 - 햇살가득 어린이집</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Gaegu:wght@700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Gaegu:wght@700&family=Gowun+Dodum&display=swap" rel="stylesheet">
 <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
 <style>
 
@@ -28,6 +28,69 @@
     --display:'Gowun Dodum',sans-serif;
     --hand:'Gaegu',cursive;
     --body:'Pretendard',sans-serif;
+    --fs-hero:clamp(3rem,10vw,3.6rem);
+    --fs-section-title:1.8rem;
+    --fs-card-title:1.24rem;
+    --fs-body:.98rem;
+    --fs-caption:.9rem;
+    --section-padding-default:72px 0 44px;
+    --section-padding-tight:56px 0 36px;
+    --section-padding-finale:84px 0 128px;
+    --card-radius:20px;
+    --card-radius-lg:22px;
+    --card-shadow:0 16px 38px -22px rgba(120,80,60,.34);
+    --card-shadow-hover:0 24px 48px -22px rgba(120,80,60,.46);
+    --badge-bg:#FFF1EA;
+    --badge-text:var(--coral-deep);
+    --badge-border:#FFD7CB;
+    --line-warm:#F1E2D8;
+    --surface-pink:#FFF1EA;
+    --surface-pink-soft:#FFF7F3;
+    --status-warn:#D98A2B;
+    --status-danger:#D85C57;
+
+    /* ── T1 히어로 스크림 / 헤더 스크롤 / 원장 필 버튼 (M6.4~M6.5) ── */
+    --topbar-bg-idle:rgba(255,255,255,.65);
+    --topbar-bg-scrolled:rgba(255,255,255,.96);
+    --topbar-blur-idle:8px;
+    --topbar-blur-scrolled:10px;
+    --topbar-text:var(--ink);
+    --topbar-transition:background .35s ease,box-shadow .35s ease,backdrop-filter .35s ease;
+
+    --hero-scrim-start:rgba(60,32,20,.72);
+    --hero-scrim-mid:rgba(70,40,24,.32);
+    --hero-scrim-end:rgba(80,46,28,0);
+
+    --cloud-btn-bg:rgba(255,255,255,.92);
+    --cloud-btn-text:var(--coral-deep);
+    --cloud-btn-border:var(--badge-border);
+
+    --day-frame-ratio:4/3;
+    --day-frame-max-height:420px;
+
+    --hero-glow-size:min(70vw,520px);
+    --hero-glow-blur:60px;
+    --hero-glow-duration:7s;
+
+    --day-card-bg:var(--surface-pink-soft);
+    --day-card-border:var(--badge-border);
+    --day-text-gap:24px;
+
+    --hero-fade-height:34%;
+    --hero-glow-color:rgba(255,232,170,.5);
+    --hero-text-shadow:0 2px 4px rgba(40,24,14,.5),0 8px 20px rgba(40,24,14,.4);
+    --hero-text-stroke-width:.4px;
+
+    --cloud-float-duration:3.6s;
+
+    --day-badge-icon-size:14px;
+
+    --mobile-side-padding:22px;
+    --day-cloud-tail-size:18px;
+  }
+
+  @media (max-width:480px){
+    :root{ --mobile-side-padding:20px; }
   }
 
   /* ── T2 차분한 내추럴 ── */
@@ -58,7 +121,6 @@
   [data-theme="natural"] .faq-q .chev{ border-color:#7EA86A }
   [data-theme="natural"] .section-eyebrow{ color:#A89060 }
   [data-theme="natural"] .topbar{ background:rgba(244,240,232,.72) }
-  [data-theme="natural"] .director .portrait{ background:linear-gradient(135deg,#d4e8c4,#b8d4a0) }
   [data-theme="natural"] .back{ background:linear-gradient(135deg,#7EA86A,#5C8A47) }
   [data-theme="natural"] .frame{ background:linear-gradient(135deg,#d4e8c4,#b8d4a0) }
   [data-theme="natural"] .frame.alt{ background:linear-gradient(135deg,#e8d4a0,#d4bc80) }
@@ -94,7 +156,6 @@
   [data-theme="vivid"] .faq-q .chev{ border-color:#FF6B35 }
   [data-theme="vivid"] .section-eyebrow{ color:#4AABCC }
   [data-theme="vivid"] .topbar{ background:rgba(240,248,255,.72) }
-  [data-theme="vivid"] .director .portrait{ background:linear-gradient(135deg,#FFE0C8,#FFB894) }
   [data-theme="vivid"] .back{ background:linear-gradient(135deg,#FF6B35,#E8501A) }
   [data-theme="vivid"] .frame{ background:linear-gradient(135deg,#C8E8F8,#A0D4F0) }
   [data-theme="vivid"] .frame.alt{ background:linear-gradient(135deg,#FFE0A0,#FFD070) }
@@ -130,7 +191,6 @@
   [data-theme="minimal"] .faq-q .chev{ border-color:#2B4C8C }
   [data-theme="minimal"] .section-eyebrow{ color:#8C8C8A }
   [data-theme="minimal"] .topbar{ background:rgba(247,247,245,.82) }
-  [data-theme="minimal"] .director .portrait{ background:linear-gradient(135deg,#D4D8E4,#B8C0D4) }
   [data-theme="minimal"] .back{ background:linear-gradient(135deg,#2B4C8C,#1A3470) }
   [data-theme="minimal"] .frame{ background:linear-gradient(135deg,#D8D8D4,#C4C4C0) }
   [data-theme="minimal"] .frame.alt{ background:linear-gradient(135deg,#D4D8E4,#B8C0D4) }
@@ -147,6 +207,7 @@
     color:var(--ink);
     background:var(--cream);
     overflow-x:hidden;
+    font-size:var(--fs-body);
     line-height:1.7;
     -webkit-font-smoothing:antialiased;
   }
@@ -175,124 +236,406 @@
   }
   .cloud svg{display:block}
 
-  /* ── 상단 메뉴바 ── */
-  .topbar{position:fixed;top:0;left:0;right:0;z-index:40;padding:12px 0;background:rgba(255,250,243,.72);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);box-shadow:0 1px 0 rgba(180,140,110,.12)}
-  .topbar .brand{font-family:var(--display);font-size:1.25rem;color:var(--ink);text-decoration:none;letter-spacing:-.5px}
+  /* ── 상단 메뉴바 — 기본부터 반투명 흰 배경, 스크롤 시 완전 불투명으로 전환. 텍스트는 항상 어두운 색 고정 ── */
+  .topbar{position:fixed;top:0;left:0;right:0;z-index:40;padding:12px 0;background:var(--topbar-bg-idle);backdrop-filter:blur(var(--topbar-blur-idle));-webkit-backdrop-filter:blur(var(--topbar-blur-idle));box-shadow:0 1px 0 rgba(180,140,110,.08);transition:var(--topbar-transition)}
+  .topbar.scrolled{background:var(--topbar-bg-scrolled);backdrop-filter:blur(var(--topbar-blur-scrolled));-webkit-backdrop-filter:blur(var(--topbar-blur-scrolled));box-shadow:0 1px 0 rgba(180,140,110,.12)}
+  .topbar .brand{font-family:var(--display);font-size:var(--fs-card-title);color:var(--topbar-text);text-decoration:none;letter-spacing:-.5px}
   .menu-btn{visibility:hidden;width:40px;height:40px;border:none;background:transparent;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:5px;cursor:pointer;border-radius:10px}
   .menu-btn span{width:22px;height:2.5px;background:var(--ink);border-radius:2px;transition:transform .3s ease,opacity .3s ease}
   .menu-btn.open span:nth-child(1){transform:translateY(7.5px) rotate(45deg)}
   .menu-btn.open span:nth-child(2){opacity:0}
   .menu-btn.open span:nth-child(3){transform:translateY(-7.5px) rotate(-45deg)}
-  .menu-panel{position:fixed;top:62px;right:14px;left:14px;z-index:41;background:var(--paper);border-radius:20px;box-shadow:0 22px 50px -18px rgba(120,80,60,.4);padding:10px;display:flex;flex-direction:column;opacity:0;visibility:hidden;transform:translateY(-10px);transition:opacity .3s ease,transform .3s ease,visibility .3s}
+  .menu-panel{position:fixed;top:62px;right:14px;left:14px;z-index:41;background:var(--paper);border-radius:var(--card-radius);box-shadow:var(--card-shadow-hover);padding:10px;display:flex;flex-direction:column;opacity:0;visibility:hidden;transform:translateY(-10px);transition:opacity .3s ease,transform .3s ease,visibility .3s}
   .menu-panel.open{opacity:1;visibility:visible;transform:none}
   .menu-panel a{padding:14px 16px;text-decoration:none;color:var(--ink);font-weight:600;border-radius:12px;font-size:1rem}
   .menu-panel a:hover{background:var(--cream)}
   .menu-panel a.menu-cta{background:var(--coral);color:#fff;text-align:center;margin-top:6px}
 
   /* ── 공통 ── */
-  .wrap{max-width:560px;margin:0 auto;padding:0 22px;position:relative}
+  .wrap{max-width:560px;margin:0 auto;padding:0 var(--mobile-side-padding);position:relative}
   .reveal{opacity:0;transform:translateY(34px);transition:opacity .9s ease,transform .9s cubic-bezier(.22,.9,.3,1)}
   .reveal.in{opacity:1;transform:none}
 
   /* ── 히어로 ── */
-  .hero{min-height:82vh;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:8vh 22px 4vh;position:relative;overflow:hidden}
+  .hero{min-height:78vh;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:8vh var(--mobile-side-padding) 4vh;position:relative;overflow:hidden}
   .hero>*{position:relative;z-index:2}
   .hero .hero-bg{position:absolute;inset:0;z-index:0;overflow:hidden}
   .hero .hero-bg img{width:100%;height:100%;object-fit:cover;display:block}
-  /* 히어로 이미지 오버레이 */
+  /* 히어로 이미지 오버레이 — 텍스트가 위치한 하단에서부터 어두운 웜톤 스크림이 위로 퍼지는 형태.
+     사진이 완전히 가려지지 않도록 상단 30%는 스크림이 거의 없게 유지. */
   .hero-bg::after{
     content:'';
     position:absolute;
     inset:0;
     background:linear-gradient(
-      180deg,
-      rgba(0,0,0,.45) 0%,
-      rgba(0,0,0,.25) 40%,
-      rgba(0,0,0,.10) 60%,
-      var(--cream) 100%
+      0deg,
+      var(--hero-scrim-start) 0%,
+      var(--hero-scrim-mid) 45%,
+      var(--hero-scrim-end) 75%
     );
     z-index:1;
   }
   .hero-bg img{position:relative;z-index:0}
+  /* 히어로 → 다음 섹션 배경색으로 이어지는 하단 페이드. --hero-scrim-*(텍스트 가독성용)와는 별도 레이어. */
+  .hero::after{
+    content:'';
+    position:absolute;left:0;right:0;bottom:0;
+    height:var(--hero-fade-height);
+    z-index:1;pointer-events:none;
+    background:linear-gradient(to bottom,transparent,var(--cream));
+  }
   /* 히어로 텍스트 색상 — 사진 있을 때만 */
-  .hero.has-photo .eyebrow{ color:var(--coral); }
-  .hero.has-photo h1{ color:rgba(255,250,245,.96); }
-  .hero.has-photo h1 .glow{ color:var(--coral); }
-  .hero.has-photo p{ color:rgba(255,245,235,.88); }
-  /* 햇살 빛줄기 + 하단 페이드 — 사진 없을 때(폴백)만 적용. 사진 있을 때는 .hero-bg::after가
+  .hero.has-photo .eyebrow{ color:#FFD9A0; }
+  .hero.has-photo h1{ color:#FFFCF6; }
+  .hero.has-photo h1 .glow{ color:#FFD9A0; }
+  .hero.has-photo p{ color:rgba(255,250,240,.92); }
+  /* 햇살 빛줄기 — 사진 없을 때(폴백)만 적용. 사진 있을 때는 .hero-bg::after가
      텍스트 가독성용 어둡게 처리를 전담하므로, 이 웜톤 오버레이가 위에 겹쳐 가독성을 깎지 않게 분리. */
   .hero:not(.has-photo)::before{content:'';position:absolute;inset:0;z-index:1;pointer-events:none;background:linear-gradient(160deg,rgba(255,220,100,.35) 0%,transparent 40%),linear-gradient(175deg,rgba(255,200,80,.2) 10%,transparent 50%),linear-gradient(155deg,rgba(255,230,120,.25) 5%,transparent 35%)}
-  .hero:not(.has-photo)::after{content:'';position:absolute;bottom:0;left:0;right:0;height:40%;z-index:1;pointer-events:none;background:linear-gradient(to bottom,transparent,var(--cream))}
+  /* 하단 페이드(.hero::after)는 사진 유무 공통으로 위에서 정의됨 */
   .hero .eyebrow{font-family:var(--hand);font-size:1.35rem;color:var(--coral-deep);letter-spacing:.5px;margin-bottom:10px;font-weight:700}
-  .hero h1{font-family:var(--display);font-size:clamp(2.7rem,11vw,3.8rem);font-weight:400;line-height:1.18;letter-spacing:-1px}
+  .hero h1{font-family:var(--display);font-size:var(--fs-hero);font-weight:400;line-height:1.18;letter-spacing:-1px}
   .hero h1 .glow{color:var(--coral-deep)}
-  .hero p{margin-top:20px;font-size:1.02rem;color:var(--ink-soft);max-width:340px}
+  .hero p{margin-top:20px;font-size:var(--fs-body);color:var(--ink-soft);max-width:340px}
+  /* 사진 위 텍스트 가독성 — 반투명 카드 대신 다중 text-shadow + 얇은 text-stroke로 대비 확보.
+     배경 사진을 가리지 않으면서 텍스트 자체의 윤곽을 또렷하게 만든다. */
+  .hero.has-photo .eyebrow,
+  .hero.has-photo h1,
+  .hero.has-photo p{
+    text-shadow:var(--hero-text-shadow);
+  }
+  .hero.has-photo h1{
+    -webkit-text-stroke:var(--hero-text-stroke-width) rgba(60,32,20,.35);
+  }
+
+  /* ── 히어로 빛 번짐 (시그니처 "하루의 빛") — 텍스트(z-index:2)보다 아래, 스크림(z-index:1)보다 위.
+     회전 없는 고정 원형 radial-gradient + blur. 아주 미세한 밝기 변화만 유지. ── */
+  .hero-glow{
+    position:absolute;top:42%;left:50%;
+    width:var(--hero-glow-size);aspect-ratio:1/1;
+    transform:translate(-50%,-50%);
+    z-index:1;pointer-events:none;
+    border-radius:50%;
+    background:radial-gradient(circle,var(--hero-glow-color) 0%,rgba(255,224,150,.22) 45%,transparent 72%);
+    filter:blur(var(--hero-glow-blur));
+    animation:hero-glow-breathe var(--hero-glow-duration) ease-in-out infinite;
+  }
+  .hero:not(.has-photo) .hero-glow{--hero-glow-color:rgba(255,190,110,.4)}
+  @keyframes hero-glow-breathe{0%,100%{opacity:.9}50%{opacity:1}}
+  @media (prefers-reduced-motion:reduce){
+    .hero-glow{animation:none;opacity:1}
+  }
   .cloud-menu{display:flex;flex-wrap:wrap;justify-content:center;gap:14px;margin-top:42px;max-width:430px;margin-left:auto;margin-right:auto}
-  .cloud-link{position:relative;background:#fff;color:var(--ink-soft);font-weight:700;font-size:.95rem;text-decoration:none;padding:14px 22px;border-radius:30px;filter:drop-shadow(0 10px 14px rgba(180,140,110,.32));transition:transform .25s ease}
+  .cloud-link{position:relative;background:#fff;color:var(--ink-soft);font-weight:700;font-size:var(--fs-caption);text-decoration:none;padding:14px 22px;border-radius:30px;filter:drop-shadow(0 10px 14px rgba(180,140,110,.32));display:inline-block;animation:cloud-float var(--cloud-float-duration) ease-in-out infinite;animation-delay:var(--cloud-float-delay,0s)}
   .cloud-link::before,.cloud-link::after{content:"";position:absolute;background:#fff;border-radius:50%}
   .cloud-link::before{width:24px;height:24px;top:-10px;left:24%}
   .cloud-link::after{width:34px;height:34px;top:-15px;right:22%}
-  .cloud-link:hover,.cloud-link:focus-visible{transform:translateY(-3px);color:var(--coral-deep)}
+  .cloud-link:hover,.cloud-link:focus-visible{color:var(--coral-deep)}
+  @keyframes cloud-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+  @media (prefers-reduced-motion:reduce){
+    .cloud-link{animation:none}
+  }
   .scroll-cue{margin-top:46px;font-family:var(--hand);font-size:1.05rem;color:var(--ink-soft);display:flex;flex-direction:column;align-items:center;gap:8px}
   .scroll-cue .dot{width:26px;height:42px;border:2px solid var(--coral);border-radius:14px;position:relative}
   .scroll-cue .dot::after{content:"";position:absolute;left:50%;top:8px;width:5px;height:5px;border-radius:50%;background:var(--coral);transform:translateX(-50%);animation:drop 1.6s infinite}
   @keyframes drop{0%{opacity:0;transform:translate(-50%,0)}30%{opacity:1}80%{opacity:0;transform:translate(-50%,16px)}100%{opacity:0}}
 
-  /* ── 원장 인사 (배경과 어우러지게) ── */
-  .director{padding-top:60px;padding-bottom:40px;text-align:center}
-  .director .badge{font-family:var(--hand);font-weight:700;color:var(--coral-deep);font-size:1.22rem;margin-bottom:26px}
-  .director .portrait{width:144px;height:144px;border-radius:50%;margin:0 auto 24px;background:linear-gradient(135deg,#ffe7d4,#ffc4ac);display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.92);font-size:.78rem;box-shadow:0 0 0 9px rgba(255,255,255,.45),0 18px 38px -14px rgba(180,110,80,.45);overflow:hidden}
-  .director .portrait span{border:1.5px dashed rgba(255,255,255,.9);border-radius:40px;padding:6px 13px}
-  .director .msg{font-family:var(--hand);font-weight:700;font-size:1.52rem;line-height:1.72;color:var(--ink);max-width:440px;margin:0 auto}
-  .director .sign{margin-top:26px;color:var(--ink-soft);font-size:.95rem}
-  .director .sign strong{display:block;font-family:var(--display);font-size:1.2rem;color:var(--ink);font-weight:400;margin-top:4px}
+  /* ── 원장 인사 섹션 CSS 제거됨 — "우리 원 스토리" 책 페이지(.sb-director)로 통합.
+     책 페이지 스타일은 아래 .sb-director 규칙에서 정의한다. ── */
 
-  /* ── 하루 스토리 ── */
-  .day{padding-top:30px;padding-bottom:10px}
-  .moment{margin:64px 0;position:relative}
-  .moment .time{font-family:var(--hand);font-weight:700;font-size:1.25rem;color:var(--coral-deep);margin-bottom:6px}
-  .moment .title{font-family:var(--display);font-size:1.55rem;margin-bottom:18px;letter-spacing:-.5px}
-  .frame{
-    position:relative;border-radius:26px;overflow:hidden;
-    background:linear-gradient(135deg,#ffe7d4,#ffd1bd);
-    aspect-ratio:4/5;width:100%;
-    box-shadow:0 24px 50px -20px rgba(180,110,80,.45);
+  /* ── 하루 스토리: 동화책(storybook) ──
+     moment 1개 = 책 페이지 1장. 표지 → 스토리 → 마무리 순으로 넘겨보는 인터랙티브 책.
+     mockup-storybook-page.html에서 확정된 디자인을 sunshine 공통 토큰과 통합.
+     데이터 구조(day_story)·라우팅은 불변, 렌더링 방식만 동화책으로 교체. */
+  .day{
+    /* .wrap의 max-width(560)/좌우 패딩을 벗어나 책이 넉넉히 펼쳐지도록 재정의 */
+    max-width:960px;
+    padding:var(--section-padding-tight);
+    --page-paper:#FFFDFA;
+    --page-line:#EBDFD4;
+    --sb-lavender-deep:#D6C7EC;
+    --fs-story-title:clamp(1.5rem,5vw,2rem);
+  }
+  .day .section-eyebrow{text-align:center}
+  .day .day-head-title{
+    font-family:var(--display);font-size:var(--fs-section-title);
+    text-align:center;margin:6px 0 26px;letter-spacing:-.5px;
+  }
+
+  /* 책 펼침면 컨테이너: 한 화면 = 한 페이지 */
+  .storybook{
+    position:relative;width:100%;max-width:920px;margin:0 auto;
+    aspect-ratio:16/10;max-height:min(78vh,660px);
+  }
+  /* 책장 두께(뒤에 겹친 페이지) 그림자 */
+  .storybook::before,.storybook::after{
+    content:"";position:absolute;inset:0;border-radius:22px;
+    background:var(--page-paper);box-shadow:var(--card-shadow);
+  }
+  .storybook::before{transform:rotate(-1.4deg) translateY(6px);opacity:.5}
+  .storybook::after{transform:rotate(.9deg) translateY(3px);opacity:.7}
+
+  /* 페이지 트랙: 모든 sb-page를 겹쳐 두고 활성 페이지만 보인다 */
+  .sb-stage{position:absolute;inset:0;z-index:2;overflow:hidden;border-radius:22px}
+
+  .sb-page{
+    position:absolute;inset:0;
+    background:var(--page-paper);border-radius:22px;box-shadow:var(--card-shadow);
+    padding:44px;display:grid;
+    grid-template-columns:1fr 36px 1fr;align-items:center;overflow:hidden;
+    /* 2D 플립: 활성 페이지만 보이고, JS가 scaleX 압축→교체→펼침으로 종이 넘김을 연출.
+       기본은 숨김(비활성). 활성 페이지가 scaleX(1)로 펼쳐진 상태.
+       box-shadow는 transform과 별개로 정적으로 유지 — filter를 쓰지 않으므로
+       매 프레임 재도색(repaint) 없이 transform만 컴포지터에서 처리된다. */
+    opacity:0;pointer-events:none;
+    transform-origin:center center;
+  }
+  .sb-page.is-active{
+    opacity:1;pointer-events:auto;
+    transform:scaleX(1);
+    /* 전체 전환 ~480ms의 절반씩(접힘 240ms / 펼침 240ms).
+       will-change로 컴포지터 레이어를 미리 승격해 첫 프레임 버벅임을 줄인다. */
+    transition:transform .24s cubic-bezier(.4,0,.6,1);
+    will-change:transform;
+  }
+  /* 플립 중간(살짝 접힌) 상태 — JS가 순간적으로 토글. 압축 폭을 완화(.05→.45). */
+  .storybook.sb-flipping .sb-page.is-active{
+    transform:scaleX(.45);
+  }
+  /* 종이가 접히는 느낌의 은은한 명암 — filter:brightness 대신 opacity 오버레이로 구현.
+     opacity는 transform과 함께 컴포지터에서만 처리되어 box-shadow 재도색을 유발하지 않는다. */
+  .sb-page::before{
+    content:"";position:absolute;inset:0;background:#000;border-radius:22px;
+    opacity:0;pointer-events:none;transition:opacity .24s ease;will-change:opacity;
+  }
+  .storybook.sb-flipping .sb-page.is-active::before{opacity:.05}
+  /* 안쪽 종이 점선 테두리 (동화책 프레임) */
+  .sb-page::after{
+    content:"";position:absolute;inset:16px;border:1.5px dashed var(--page-line);
+    border-radius:16px;pointer-events:none;
+  }
+
+  /* 책갈피 리본 마스코트 — 텍스트 없이 새싹만 */
+  .sb-bookmark{
+    position:absolute;top:-8px;right:38px;z-index:4;width:40px;
+    display:flex;align-items:center;justify-content:center;
+    padding-top:12px;padding-bottom:18px;color:#fff;
+    background:linear-gradient(180deg,var(--coral),var(--coral-deep));
+    box-shadow:0 8px 16px -8px rgba(224,120,90,.7);
+    clip-path:polygon(0 0,100% 0,100% 100%,50% 82%,0 100%);
+    border-radius:3px 3px 0 0;
+  }
+  .sb-bookmark .m-icon{font-size:1.4rem;line-height:1;filter:drop-shadow(0 1px 1px rgba(0,0,0,.15))}
+
+  /* 사진(폴라로이드 액자) */
+  .sb-photo{
+    position:relative;z-index:1;width:100%;max-width:340px;justify-self:center;
+    background:var(--paper);padding:12px 12px 14px;border-radius:6px;
+    box-shadow:0 18px 34px -20px rgba(120,80,60,.5);transform:rotate(-1.5deg);
+  }
+  .sb-photo .pic{
+    border-radius:4px;aspect-ratio:1/1;overflow:hidden;position:relative;
+    background:linear-gradient(150deg,#ffe7d4,#ffd1bd 55%,var(--sb-lavender-deep));
     display:flex;align-items:flex-end;
   }
-  .frame.alt{background:linear-gradient(135deg,#d6ecd9,#bfe0d2)}
-  .frame.alt2{background:linear-gradient(135deg,#ffe9b8,#ffd9a3)}
-  .frame.alt3{background:linear-gradient(135deg,#e6dcf2,#d6c7ec)}
-  .frame .ph{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.85);font-size:.85rem;letter-spacing:1px}
-  .frame .ph span{border:1.5px dashed rgba(255,255,255,.8);border-radius:40px;padding:7px 16px;backdrop-filter:blur(2px)}
-  .frame .cap{
-    position:relative;z-index:2;width:100%;
-    padding:22px 20px 20px;
-    background:linear-gradient(180deg,transparent,rgba(40,30,25,.55));
-    color:#fff;font-family:var(--hand);font-size:1.32rem;font-weight:700;line-height:1.4;
+  .sb-photo .pic img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0}
+  .sb-photo .cap{
+    position:relative;z-index:2;width:100%;padding:26px 16px 14px;
+    background:linear-gradient(180deg,transparent,rgba(40,30,25,.5));
+    color:#fff;font-family:var(--hand);font-size:1.15rem;line-height:1.4;
   }
-  .moment .note{margin-top:16px;font-size:.98rem;color:var(--ink-soft);padding-left:4px}
+
+  /* 책 펼침 중앙 접힘선 */
+  .sb-fold{
+    position:relative;align-self:stretch;z-index:1;
+    background:linear-gradient(90deg,rgba(120,80,60,0) 0%,rgba(120,80,60,.05) 42%,
+      rgba(120,80,60,.11) 50%,rgba(120,80,60,.05) 58%,rgba(120,80,60,0) 100%);
+  }
+  .sb-fold::before{
+    content:"";position:absolute;top:6%;bottom:6%;left:50%;width:1px;
+    background:linear-gradient(180deg,transparent,rgba(120,80,60,.16),transparent);
+  }
+
+  /* 텍스트 영역 */
+  .sb-text{position:relative;z-index:1;padding:0 20px}
+  .sb-text .time{
+    display:inline-flex;align-items:center;gap:6px;
+    font-family:var(--hand);font-weight:700;font-size:var(--fs-caption);
+    color:var(--badge-text);background:var(--badge-bg);border:1px solid var(--badge-border);
+    border-radius:999px;padding:5px 14px;margin-bottom:16px;
+  }
+  .sb-text .time svg{width:15px;height:15px;flex:none}
+  .sb-text .title{
+    font-family:var(--display);font-size:var(--fs-story-title);
+    line-height:1.28;letter-spacing:-.5px;margin-bottom:14px;
+  }
+  .sb-text .note{font-family:var(--body);font-size:var(--fs-body);color:var(--ink-soft);line-height:1.9}
+
+  /* 표지 / 마무리 페이지: 단일 컬럼, 중앙 정렬 */
+  .sb-page.sb-cover,.sb-page.sb-finale{
+    grid-template-columns:1fr;text-align:center;justify-items:center;
+    background:
+      radial-gradient(120% 80% at 22% 12%, rgba(230,220,242,.7) 0%, transparent 55%),
+      radial-gradient(120% 80% at 82% 90%, rgba(220,235,246,.7) 0%, transparent 55%),
+      var(--page-paper);
+  }
+  .sb-cover .cover-eyebrow,.sb-finale .fin-eyebrow{
+    font-family:var(--hand);font-size:1.15rem;color:var(--coral-deep);margin-bottom:6px;
+  }
+  .sb-cover .cover-title{
+    font-family:var(--display);font-size:clamp(1.9rem,6vw,2.7rem);line-height:1.24;
+    letter-spacing:-1px;margin-bottom:16px;
+  }
+  .sb-cover .cover-date{font-family:var(--hand);font-size:1.05rem;color:var(--ink-soft)}
+  .sb-cover .cover-mascot,.sb-finale .fin-mascot{
+    font-size:3.2rem;line-height:1;margin:28px 0 4px;
+    filter:drop-shadow(0 8px 14px rgba(120,80,60,.28));
+  }
+  .sb-cover .cover-hint{
+    margin-top:22px;font-family:var(--hand);font-size:var(--fs-caption);color:var(--ink-soft);opacity:.85;
+  }
+  .sb-finale .fin-title{
+    font-family:var(--display);font-size:clamp(1.6rem,5vw,2.2rem);line-height:1.3;
+    letter-spacing:-.5px;margin-bottom:14px;
+  }
+  .sb-finale .fin-text{font-family:var(--body);font-size:var(--fs-body);color:var(--ink-soft);line-height:1.8;max-width:360px}
+  /* 통신문 연동 CTA 자리 — 이번엔 링크 없이 시각적 여백만 */
+  .sb-finale .fin-cta-slot{
+    margin-top:30px;min-height:52px;width:min(280px,80%);
+    border:1.5px dashed var(--page-line);border-radius:16px;
+    display:flex;align-items:center;justify-content:center;
+    font-family:var(--hand);font-size:var(--fs-caption);color:var(--ink-soft);opacity:.7;
+  }
+
+  /* 원장 인사말 페이지: 원형 사진 + 이름/직함 + 인사말 + 더보기.
+     스토리 페이지와 같은 폴라로이드+텍스트 톤을 유지하되, 사진만 원형으로. */
+  .sb-director .sb-portrait{
+    position:relative;z-index:1;justify-self:center;
+    width:min(78%,220px);aspect-ratio:1/1;border-radius:50%;overflow:hidden;
+    background:linear-gradient(135deg,#ffe7d4,#ffc4ac);
+    box-shadow:0 0 0 10px rgba(255,255,255,.55),0 18px 34px -20px rgba(120,80,60,.5);
+  }
+  .sb-director .sb-portrait img{width:100%;height:100%;object-fit:cover;display:block}
+  .sb-director .dir-badge{
+    display:inline-block;font-family:var(--hand);font-weight:700;font-size:var(--fs-caption);
+    color:var(--badge-text);background:var(--badge-bg);border:1px solid var(--badge-border);
+    border-radius:999px;padding:5px 14px;margin-bottom:14px;
+  }
+  .sb-director .dir-sign{font-family:var(--body);font-size:var(--fs-caption);color:var(--ink-soft);line-height:1.4;margin-bottom:14px}
+  .sb-director .dir-sign strong{display:block;font-family:var(--display);font-size:var(--fs-story-title);color:var(--ink);font-weight:400;letter-spacing:-.5px;margin-top:2px}
+  .sb-director .dir-msg{font-family:var(--body);font-size:var(--fs-body);color:var(--ink-soft);line-height:1.85;margin-bottom:18px}
+  .sb-director .dir-more{
+    display:inline-flex;align-items:center;gap:6px;cursor:pointer;
+    font-family:var(--body);font-weight:700;font-size:var(--fs-caption);
+    color:var(--coral-deep);background:none;border:none;padding:0;
+  }
+  .sb-director .dir-more .btn-arrow{transition:transform .2s ease}
+  .sb-director .dir-more:hover .btn-arrow{transform:translateX(3px)}
+
+  /* 네비게이션: 원형 chevron 화살표 */
+  .sb-arrow{
+    width:48px;height:48px;border-radius:50%;border:1px solid var(--badge-border);cursor:pointer;
+    background:linear-gradient(180deg,#fff,var(--badge-bg));
+    box-shadow:0 10px 22px -10px rgba(224,120,90,.55),0 2px 5px -3px rgba(120,80,60,.3);
+    color:var(--coral-deep);display:flex;align-items:center;justify-content:center;
+    transition:background .2s ease,box-shadow .2s ease,transform .15s ease;
+  }
+  .sb-arrow svg{width:20px;height:20px;flex:none}
+  .sb-arrow:hover{background:#fff;box-shadow:0 14px 28px -10px rgba(224,120,90,.6),0 2px 6px -3px rgba(120,80,60,.3);transform:scale(1.06)}
+  .sb-arrow:active{transform:scale(.97)}
+  .sb-arrow[disabled]{opacity:.35;cursor:default;box-shadow:none}
+  .sb-arrow[disabled]:hover{transform:none;background:linear-gradient(180deg,#fff,var(--badge-bg))}
+
+  /* 페이지 라벨: 스토리 페이지에만 "N번째 이야기 · 총 장수 중". 표지/마무리는 별도 표기 */
+  .sb-label{
+    position:absolute;left:34px;bottom:24px;z-index:3;
+    display:flex;align-items:baseline;gap:7px;font-family:var(--hand);color:var(--ink-soft);
+  }
+  .sb-label .ord{font-size:1.05rem;color:var(--coral-deep)}
+  .sb-label .total{font-size:.78rem;opacity:.75}
+
+  .sb-dots{display:flex;gap:9px;z-index:5}
+  .sb-dots button{
+    width:10px;height:10px;padding:0;border:none;border-radius:50%;cursor:pointer;
+    background:var(--sb-lavender-deep);
+    transition:transform .2s ease,background .2s ease;
+  }
+  .sb-dots button.on{background:var(--coral);transform:scale(1.35)}
+
+  /* 음소거 토글 (페이지 넘김 효과음) */
+  .sb-mute{
+    position:absolute;right:0;bottom:-38px;z-index:6;
+    width:32px;height:32px;padding:0;border:none;border-radius:50%;cursor:pointer;
+    background:rgba(255,255,255,.85);color:var(--ink-soft);
+    box-shadow:0 6px 14px -8px rgba(120,80,60,.5);
+    display:flex;align-items:center;justify-content:center;
+    transition:color .2s ease,background .2s ease;
+  }
+  .sb-mute:hover{background:#fff;color:var(--coral-deep)}
+  .sb-mute svg{width:17px;height:17px}
+  .sb-mute .icon-muted{display:none}
+  .sb-mute.is-muted .icon-on{display:none}
+  .sb-mute.is-muted .icon-muted{display:block}
+
+  /* 데스크톱: 화살표는 책 좌우 가장자리에 절대배치, 점은 책 아래 중앙 */
+  @media (min-width:720px){
+    .sb-controls .sb-arrow{position:absolute;top:50%;transform:translateY(-50%);z-index:6}
+    .sb-controls .sb-arrow.prev{left:-14px}
+    .sb-controls .sb-arrow.next{right:-14px}
+    .sb-controls .sb-dots{position:absolute;left:50%;bottom:-30px;transform:translateX(-50%)}
+  }
+  /* 모바일: 세로 스택. 컨트롤은 책 아래 한 행으로 */
+  @media (max-width:719px){
+    .day{padding:var(--section-padding-tight) 0}
+    .storybook{aspect-ratio:auto;max-height:none}
+    .storybook::before,.storybook::after{display:none}
+    .sb-stage{position:relative;inset:auto;overflow:visible}
+    /* 모바일에선 각 페이지가 흐름에 참여하되, 비활성은 숨김.
+       표지·원장·스토리·마무리 모두 같은 카드 폭(100%)과 동일한 최소 높이를 공유해
+       페이지를 넘겨도 카드 크기가 들쭉날쭉하지 않게 통일한다. */
+    .sb-page{position:relative;inset:auto;grid-template-columns:1fr;gap:22px;
+      padding:28px var(--mobile-side-padding) 34px;display:none;
+      min-height:min(560px,78vh);align-content:center}
+    .sb-page.is-active{display:grid}
+    .sb-fold{display:none}
+    .sb-photo{transform:rotate(-1deg);max-width:300px;margin:0 auto}
+    .sb-text{padding:0 var(--mobile-side-padding)}
+    .sb-label{position:static;justify-content:center;margin-top:14px}
+    .sb-controls{display:flex;align-items:center;justify-content:center;gap:22px;margin-top:20px;position:relative}
+    .sb-arrow{width:40px;height:40px}
+    /* 모바일: 음소거 버튼을 컨트롤 행 오른쪽 끝에 */
+    .sb-mute{position:absolute;right:8px;bottom:50%;transform:translateY(50%)}
+  }
+  /* prefers-reduced-motion: 플립 없이 단순 opacity 페이드만 */
+  @media (prefers-reduced-motion: reduce){
+    .sb-page.is-active{transition:opacity .2s ease;transform:none}
+    .storybook.sb-flipping .sb-page.is-active{transform:none}
+    .sb-page::before{transition:none}
+    .storybook.sb-flipping .sb-page.is-active::before{opacity:0}
+    .sb-arrow,.sb-dots button{transition:none}
+  }
 
   /* ── 앨범 벽 ── */
-  .album{padding-top:70px;padding-bottom:40px;text-align:center}
+  .album{padding:var(--section-padding-default);text-align:center}
   .section-eyebrow{font-family:var(--hand);font-size:1.2rem;color:var(--sage);font-weight:700}
-  .section-title{font-family:var(--display);font-size:1.9rem;margin:6px 0 8px;letter-spacing:-.5px}
-  .section-sub{color:var(--ink-soft);font-size:.96rem;margin-bottom:34px}
+  .section-title{font-family:var(--display);font-size:var(--fs-section-title);margin:6px 0 8px;letter-spacing:-.5px}
+  .section-sub{color:var(--ink-soft);font-size:var(--fs-body);margin-bottom:34px}
   .polaroids{display:grid;grid-template-columns:1fr 1fr;gap:18px}
   .polaroid{
     background:var(--paper);padding:10px 10px 38px;border-radius:6px;
-    box-shadow:0 16px 34px -16px rgba(120,80,60,.4);
+    box-shadow:var(--card-shadow);
     transition:transform .5s cubic-bezier(.22,.9,.3,1),box-shadow .4s ease;
     will-change:transform;
   }
-  .polaroid .pic{border-radius:3px;aspect-ratio:1/1;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.9);font-size:.78rem}
-  .polaroid .label{font-family:var(--hand);font-weight:700;font-size:1.05rem;margin-top:12px;color:var(--ink)}
+  .polaroid .pic{border-radius:3px;aspect-ratio:1/1;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.9);font-size:var(--fs-caption)}
+  .polaroid .label{font-family:var(--hand);font-weight:700;font-size:var(--fs-body);margin-top:12px;color:var(--ink)}
   .polaroid:nth-child(1){transform:rotate(-3deg)}
   .polaroid:nth-child(2){transform:rotate(2.5deg);margin-top:22px}
   .polaroid:nth-child(3){transform:rotate(2deg)}
   .polaroid:nth-child(4){transform:rotate(-2.5deg);margin-top:-10px}
   .polaroid:nth-child(5){transform:rotate(-2deg)}
   .polaroid:nth-child(6){transform:rotate(3deg);margin-top:18px}
-  .polaroid:hover,.polaroid:focus-within{transform:rotate(0) scale(1.04);box-shadow:0 26px 46px -16px rgba(120,80,60,.5);z-index:2}
+  .polaroid:hover,.polaroid:focus-within{transform:rotate(0) scale(1.04);box-shadow:var(--card-shadow-hover);z-index:2}
   .p1 .pic{background:linear-gradient(135deg,#ffd1bd,#ff9f86)}
   .p2 .pic{background:linear-gradient(135deg,#bfe0d2,#9CB89A)}
   .p3 .pic{background:linear-gradient(135deg,#ffe1a8,#ffc46b)}
@@ -301,63 +644,63 @@
   .p6 .pic{background:linear-gradient(135deg,#ffc7c2,#ff9aa0)}
 
   /* ── 선생님 카드 플립 ── */
-  .teachers{padding-top:60px;padding-bottom:40px;text-align:center}
+  .teachers{padding:var(--section-padding-default);text-align:center}
   .cards{display:flex;flex-direction:column;gap:18px;margin-top:30px}
-  .flip{perspective:1200px;height:132px}
-  .flip-inner{position:relative;width:100%;height:100%;transition:transform .7s cubic-bezier(.4,.2,.2,1);transform-style:preserve-3d;cursor:pointer}
+  .flip{perspective:1200px;min-height:132px}
+  .flip-inner{position:relative;width:100%;height:100%;min-height:inherit;transition:transform .7s cubic-bezier(.4,.2,.2,1);transform-style:preserve-3d;cursor:pointer}
   .flip.flipped .flip-inner{transform:rotateY(180deg)}
-  .face{position:absolute;inset:0;backface-visibility:hidden;border-radius:22px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;box-shadow:0 18px 40px -18px rgba(120,80,60,.4)}
+  .face{position:absolute;inset:0;min-height:inherit;backface-visibility:hidden;border-radius:var(--card-radius-lg);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;box-shadow:var(--card-shadow)}
   .front{background:var(--paper);flex-direction:row;justify-content:flex-start;align-items:center;text-align:left;gap:18px;padding:20px 24px}
   .front .t-info{flex:1;min-width:0}
   .front .avatar{width:90px;height:90px;border-radius:50%;background:linear-gradient(135deg,#ffd1bd,#ff9f86);flex:none;margin:0}
   .cards .flip:nth-child(2) .front .avatar{background:linear-gradient(135deg,#bfe0d2,#9CB89A)}
   .cards .flip:nth-child(3) .front .avatar{background:linear-gradient(135deg,#ffe1a8,#ffc46b)}
   .front .name{font-family:var(--display);font-size:1.3rem}
-  .front .role{color:var(--ink-soft);font-size:.9rem;margin-top:2px}
-  .front .tap{font-family:var(--hand);color:var(--coral);font-size:.95rem;margin-top:8px;font-weight:700}
+  .front .role{color:var(--ink-soft);font-size:var(--fs-caption);margin-top:2px}
+  .front .tap{font-family:var(--hand);color:var(--coral);font-size:var(--fs-caption);margin-top:8px;font-weight:700}
   .back{background:linear-gradient(135deg,var(--coral),var(--coral-deep));color:#fff;transform:rotateY(180deg);font-family:var(--hand);font-size:1.3rem;font-weight:700;line-height:1.5}
 
   /* ── 정보 메뉴 섹션 (공지/달력/FAQ) ── */
   [id]{scroll-margin-top:78px}
-  .block{padding-top:64px;padding-bottom:36px;text-align:center}
-  .block .panel{background:var(--paper);border-radius:24px;padding:22px;box-shadow:0 18px 44px -22px rgba(120,80,60,.35);text-align:left;margin-top:24px}
+  .block{padding:var(--section-padding-tight);text-align:center}
+  .block .panel{background:var(--paper);border-radius:var(--card-radius-lg);padding:22px;box-shadow:var(--card-shadow);text-align:left;margin-top:24px}
 
   .notice-list{list-style:none;text-align:left;margin-top:24px}
-  .notice-item{display:flex;align-items:center;gap:14px;background:var(--paper);border-radius:16px;padding:16px 18px;margin-bottom:12px;box-shadow:0 12px 28px -18px rgba(120,80,60,.35)}
+  .notice-item{display:flex;align-items:center;gap:14px;background:var(--paper);border-radius:var(--card-radius);padding:16px 18px;margin-bottom:12px;box-shadow:var(--card-shadow)}
   .notice-item .tag{flex:none;font-size:.74rem;font-weight:700;padding:5px 10px;border-radius:30px;color:#fff}
   .tag-event{background:var(--coral)}
   .tag-info{background:var(--sage)}
-  .tag-must{background:#E6A23C}
+  .tag-must{background:var(--status-warn)}
   .notice-item .n-title{font-weight:600;font-size:1rem;line-height:1.4}
   .notice-item .n-date{color:var(--ink-soft);font-size:.82rem;margin-top:3px}
-  .more-link{display:inline-block;margin-top:8px;color:var(--coral-deep);font-weight:700;text-decoration:none;font-size:.95rem}
+  .more-link{display:inline-block;margin-top:8px;color:var(--coral-deep);font-weight:700;text-decoration:none;font-size:var(--fs-caption)}
 
-  .cal{background:var(--paper);border-radius:22px;padding:20px 18px;box-shadow:0 18px 44px -22px rgba(120,80,60,.35);margin-top:24px}
-  .cal-head{font-family:var(--display);font-size:1.25rem;margin-bottom:14px}
+  .cal{background:var(--paper);border-radius:var(--card-radius-lg);padding:20px 18px;box-shadow:var(--card-shadow);margin-top:24px}
+  .cal-head{font-family:var(--display);font-size:var(--fs-card-title);margin-bottom:14px}
   .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
   .cal-grid .dow{font-size:.78rem;color:var(--ink-soft);padding:6px 0;font-weight:600}
   .cal-grid .dow:first-child{color:var(--coral-deep)}
-  .day-cell{position:relative;padding:10px 0;font-size:.9rem;border-radius:10px}
+  .day-cell{position:relative;padding:10px 0;font-size:var(--fs-caption);border-radius:10px}
   .day-cell.muted{color:#d8cfc7}
   .day-cell.ev{background:#FFF1EA;color:var(--coral-deep);font-weight:700}
   .day-cell.ev::after{content:"";position:absolute;left:50%;bottom:5px;width:5px;height:5px;border-radius:50%;background:var(--coral);transform:translateX(-50%)}
   .event-list{list-style:none;text-align:left;margin-top:18px}
-  .event-list li{display:flex;align-items:center;gap:12px;padding:11px 4px;border-bottom:1px solid #f1e9e0;font-size:.96rem}
+  .event-list li{display:flex;align-items:center;gap:12px;padding:11px 4px;border-bottom:1px solid var(--line-warm);font-size:var(--fs-body)}
   .event-list li:last-child{border-bottom:none}
   .event-list .e-date{font-weight:700;color:var(--coral-deep);font-size:.86rem;min-width:46px}
 
   .faq-list{text-align:left;margin-top:24px}
-  .faq-item{background:var(--paper);border-radius:16px;margin-bottom:12px;overflow:hidden;box-shadow:0 12px 28px -20px rgba(120,80,60,.35)}
-  .faq-q{width:100%;border:none;background:transparent;text-align:left;padding:18px 20px;font-size:1rem;font-weight:600;color:var(--ink);cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:12px;font-family:var(--body)}
+  .faq-item{background:var(--paper);border-radius:var(--card-radius);margin-bottom:12px;overflow:hidden;box-shadow:var(--card-shadow)}
+  .faq-q{width:100%;border:none;background:transparent;text-align:left;padding:18px 20px;font-size:var(--fs-body);font-weight:600;color:var(--ink);cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:12px;font-family:var(--body)}
   .faq-q .chev{flex:none;width:11px;height:11px;border-right:2.5px solid var(--coral);border-bottom:2.5px solid var(--coral);transform:rotate(45deg);transition:transform .35s ease;margin-top:-4px}
   .faq-item.open .faq-q .chev{transform:rotate(-135deg);margin-top:2px}
   .faq-a{max-height:0;overflow:hidden;transition:max-height .4s ease}
-  .faq-a p{padding:0 20px 20px;color:var(--ink-soft);font-size:.95rem;line-height:1.7}
+  .faq-a p{padding:0 20px 20px;color:var(--ink-soft);font-size:var(--fs-caption);line-height:1.7}
 
   /* ── 마무리 CTA ── */
-  .finale{padding-top:80px;padding-bottom:140px;text-align:center}
-  .finale h2{font-family:var(--display);font-size:2.1rem;line-height:1.3;letter-spacing:-.5px}
-  .finale p{color:var(--ink-soft);margin:16px 0 34px;font-size:1rem}
+  .finale{padding:var(--section-padding-finale);text-align:center}
+  .finale h2{font-family:var(--display);font-size:var(--fs-section-title);line-height:1.3;letter-spacing:-.5px}
+  .finale p{color:var(--ink-soft);margin:16px 0 34px;font-size:var(--fs-body)}
   .btn-big{display:inline-block;background:var(--coral);color:#fff;font-weight:700;font-size:1.1rem;padding:18px 44px;border-radius:50px;text-decoration:none;box-shadow:0 16px 34px -10px var(--coral-deep);transition:transform .3s ease,box-shadow .3s ease}
   .btn-big:hover{transform:translateY(-3px);box-shadow:0 22px 40px -10px var(--coral-deep)}
 
@@ -373,24 +716,24 @@
   button.btn-big{font:inherit;border:none;cursor:pointer}
   .csl-overlay{position:fixed;inset:0;z-index:50;background:rgba(64,55,51,.45);display:none;align-items:center;justify-content:center;padding:20px}
   .csl-overlay.open{display:flex}
-  .csl-panel{position:relative;width:100%;max-width:380px;max-height:88vh;overflow-y:auto;background:var(--paper);border-radius:26px;padding:30px 26px;box-shadow:0 30px 60px -20px rgba(60,40,30,.5)}
+  .csl-panel{position:relative;width:100%;max-width:380px;max-height:88vh;overflow-y:auto;background:var(--paper);border-radius:var(--card-radius-lg);padding:30px 26px;box-shadow:var(--card-shadow-hover)}
   .csl-close{position:absolute;top:16px;right:16px;width:34px;height:34px;border:none;background:var(--cream);border-radius:50%;font-size:1.2rem;line-height:1;color:var(--ink-soft);cursor:pointer}
   .csl-title{font-family:var(--display);font-size:1.35rem;margin-bottom:20px;letter-spacing:-.5px}
   .csl-field{margin-bottom:16px;text-align:left}
   .csl-field label{display:block;font-size:.85rem;font-weight:700;color:var(--ink-soft);margin-bottom:6px}
   .csl-field input[type=text],.csl-field input[type=tel],.csl-field select{
-    width:100%;border:1.5px solid #f1e9e0;border-radius:14px;padding:12px 14px;
-    font-family:var(--body);font-size:.96rem;color:var(--ink);background:var(--cream);outline:none;
+    width:100%;border:1.5px solid var(--line-warm);border-radius:14px;padding:12px 14px;
+    font-family:var(--body);font-size:var(--fs-body);color:var(--ink);background:var(--cream);outline:none;
   }
   .csl-field input:focus,.csl-field select:focus{border-color:var(--coral)}
   .csl-consent label{display:flex;align-items:flex-start;gap:8px;font-size:.85rem;font-weight:400;color:var(--ink-soft);line-height:1.5}
   .csl-consent input{margin-top:3px;flex:none}
   .csl-submit{width:100%;margin-top:6px}
-  .csl-msg.error{margin-top:12px;font-size:.85rem;color:#D9534F;text-align:center}
+  .csl-msg.error{margin-top:12px;font-size:.85rem;color:var(--status-danger);text-align:center}
   .csl-done{text-align:center;font-family:var(--hand);font-size:1.25rem;font-weight:700;color:var(--ink);padding:30px 0;line-height:1.6}
 
-  footer{text-align:center;padding:30px 22px 40px;color:var(--ink-soft);font-size:.82rem}
-  footer .demo-tag{display:inline-block;background:#fff;border:1px solid #eee;border-radius:30px;padding:6px 16px;margin-bottom:14px;font-family:var(--hand);font-weight:700;color:var(--coral-deep)}
+  footer{text-align:center;padding:30px var(--mobile-side-padding) 40px;color:var(--ink-soft);font-size:.82rem}
+  footer .demo-tag{display:inline-block;background:#fff;border:1px solid var(--line-warm);border-radius:30px;padding:6px 16px;margin-bottom:14px;font-family:var(--hand);font-weight:700;color:var(--coral-deep)}
 
   a:focus-visible,.flip-inner:focus-visible{outline:3px solid var(--coral);outline-offset:3px;border-radius:8px}
 
@@ -399,9 +742,27 @@
     .reveal{opacity:1;transform:none}
   }
 
+  @media (max-width:420px){
+    :root{
+      --fs-hero:clamp(2.55rem,13vw,3rem);
+      --fs-section-title:1.62rem;
+      --fs-card-title:1.18rem;
+    }
+    .hero{min-height:76vh;padding:7vh 18px 4vh}
+    .cloud-menu{gap:10px;margin-top:32px}
+    .cloud-link{padding:12px 17px;font-size:var(--fs-caption)}
+    .polaroids{gap:12px}
+    .polaroid{padding:8px 8px 30px}
+    .polaroid:nth-child(2),
+    .polaroid:nth-child(6){margin-top:14px}
+    .flip{min-height:148px}
+    .face{min-height:148px;padding:20px}
+    .front{gap:14px;padding:18px}
+    .front .avatar{width:78px;height:78px}
+    .back{font-size:1.18rem}
+  }
+
   /* ── 이미지 채움 ── */
-  .director .portrait{overflow:hidden}
-  .director .portrait img{width:100%;height:100%;object-fit:cover;display:block}
   .frame-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0}
   .polaroid .pic img{width:100%;height:100%;object-fit:cover;border-radius:3px;display:block}
   .front .avatar{overflow:hidden}
@@ -428,7 +789,8 @@
 
 <!-- 아래 섹션들은 비어있고, JS가 haetsal.json을 읽어 채웁니다 -->
 <header class="hero" id="hero"></header>
-<section class="director wrap" id="greeting"></section>
+<!-- 원장 인사말 섹션은 제거됨 → "우리 원 스토리" 책 2번째 페이지(.sb-director)로 통합 -->
+
 <section class="overview wrap" id="overviewSec"></section>
 <section class="day wrap" id="day"></section>
 <section class="facilities wrap" id="facilitiesSec"></section>
@@ -523,7 +885,7 @@
       <div class="director-modal-photo" id="directorModalPhoto"></div>
       <p class="info-modal-greeting" id="directorModalMsg"></p>
       <div class="info-modal-motto" id="directorModalMotto"></div>
-      <div class="info-modal-values" id="directorModalValues" style="margin-top:16px"></div>
+      <div class="info-modal-values" id="directorModalValues"></div>
     </div>
   </div>
 </div>
@@ -565,40 +927,40 @@
 
 <style>
   /* ── FAQ + 상담 플로팅 진입점 ── */
-  .ask-fab{position:fixed;right:max(18px,calc((100vw - 560px)/2 + 22px));bottom:24px;z-index:45;width:54px;height:54px;border:none;border-radius:50%;background:var(--paper);color:var(--ink);font-family:var(--body);font-weight:700;font-size:1.35rem;padding:0;box-shadow:0 18px 42px -18px rgba(0,0,0,.38);cursor:pointer;border:1.5px solid rgba(120,80,60,.14);display:flex;align-items:center;justify-content:center}
+  .ask-fab{position:fixed;right:max(18px,calc((100vw - 560px)/2 + 22px));bottom:24px;z-index:45;width:54px;height:54px;border:none;border-radius:50%;background:var(--paper);color:var(--ink);font-family:var(--body);font-weight:700;font-size:1.35rem;padding:0;box-shadow:var(--card-shadow-hover);cursor:pointer;border:1.5px solid rgba(120,80,60,.14);display:flex;align-items:center;justify-content:center}
   .ask-fab:hover{transform:translateY(-2px)}
   .ask-modal-overlay{position:fixed;inset:0;z-index:70;background:rgba(0,0,0,.45);display:none;align-items:center;justify-content:center;padding:20px}
   .ask-modal-overlay.open{display:flex}
-  .ask-modal-panel{width:92vw;max-width:520px;max-height:88vh;overflow-y:auto;background:var(--paper);border-radius:24px;box-shadow:0 30px 60px -20px rgba(0,0,0,.45)}
+  .ask-modal-panel{width:92vw;max-width:520px;max-height:88vh;overflow-y:auto;background:var(--paper);border-radius:var(--card-radius-lg);box-shadow:var(--card-shadow-hover)}
   .ask-modal-header{position:sticky;top:0;z-index:2;background:var(--paper);padding:26px 32px 18px;border-radius:24px 24px 0 0}
   .ask-modal-title{font-family:var(--display);font-size:1.35rem;color:var(--ink);letter-spacing:-.4px;margin:0}
-  .ask-modal-close{position:absolute;top:22px;right:24px;width:38px;height:38px;border:none;background:var(--cream,var(--paper-warm,var(--bg-warm,#f3eee8)));border-radius:50%;font-size:1.4rem;color:var(--ink-soft);cursor:pointer;display:flex;align-items:center;justify-content:center}
+  .ask-modal-close{position:absolute;top:22px;right:24px;width:38px;height:38px;border:none;background:var(--cream);border-radius:50%;font-size:1.4rem;color:var(--ink-soft);cursor:pointer;display:flex;align-items:center;justify-content:center}
   .ask-modal-body{padding:8px 32px 34px}
-  .ask-faq-item{background:var(--cream,var(--paper-warm,var(--bg-warm,#f3eee8)));border-radius:16px;margin-bottom:10px;overflow:hidden}
+  .ask-faq-item{background:var(--cream);border-radius:var(--card-radius);margin-bottom:10px;overflow:hidden}
   .ask-faq-q{width:100%;border:none;background:transparent;text-align:left;padding:16px 18px;font-family:var(--body);font-size:.98rem;font-weight:700;color:var(--ink);cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:12px}
   .ask-faq-q::after{content:"+";flex:none;color:var(--coral,var(--leaf,var(--red,var(--char,var(--ink)))));font-weight:700}
   .ask-faq-item.open .ask-faq-q::after{content:"−"}
   .ask-faq-a{max-height:0;overflow:hidden;transition:max-height .3s ease}
-  .ask-faq-a p{padding:0 18px 16px;color:var(--ink-soft);font-size:.94rem;line-height:1.7}
-  .ask-empty{color:var(--ink-soft);font-size:.94rem;line-height:1.65;margin-bottom:16px}
+  .ask-faq-a p{padding:0 18px 16px;color:var(--ink-soft);font-size:var(--fs-caption);line-height:1.7}
+  .ask-empty{color:var(--ink-soft);font-size:var(--fs-caption);line-height:1.65;margin-bottom:16px}
   .ask-consult-btn{width:100%;border:none;border-radius:999px;background:var(--coral,var(--leaf,var(--red,var(--char,var(--ink)))));color:#fff;font-family:var(--body);font-weight:700;font-size:1rem;padding:15px 18px;cursor:pointer;box-shadow:0 14px 28px -14px rgba(0,0,0,.5)}
 
   /* ── 입학안내 / 오시는 길 (M1 추가) — 각 템플릿 공통 변수(--paper/--ink/--ink-soft/--display) 기반 ── */
   #admissionsSec[hidden],#directionsSec[hidden]{display:none}
-  .info-block{padding-top:46px;padding-bottom:14px;text-align:center}
-  .info-block .info-title{font-family:var(--display);font-size:1.55rem;color:var(--ink);letter-spacing:-.5px;margin-bottom:10px;text-align:center}
-  .info-lead{color:var(--ink-soft);font-size:.95rem;margin:0 0 18px}
-  .info-link-btn{display:inline-block;background:var(--paper);color:var(--ink);font-weight:700;font-size:1rem;text-decoration:none;padding:14px 30px;border-radius:50px;border:1.5px solid #f0d9d9;box-shadow:0 14px 34px -20px rgba(120,80,60,.5);transition:transform .25s ease}
+  .info-block{padding:var(--section-padding-tight);text-align:center}
+  .info-block .info-title{font-family:var(--display);font-size:var(--fs-card-title);color:var(--ink);letter-spacing:-.5px;margin-bottom:10px;text-align:center}
+  .info-lead{color:var(--ink-soft);font-size:var(--fs-caption);margin:0 0 18px}
+  .info-link-btn{display:inline-block;background:var(--paper);color:var(--ink);font-weight:700;font-size:1rem;text-decoration:none;padding:14px 30px;border-radius:50px;border:1.5px solid var(--badge-border);box-shadow:var(--card-shadow);transition:transform .25s ease}
   .info-link-btn:hover{transform:translateY(-2px)}
-  .adm-card{background:var(--paper);border-radius:18px;padding:4px 20px;box-shadow:0 16px 40px -22px rgba(120,80,60,.32)}
+  .adm-card{background:var(--paper);border-radius:var(--card-radius);padding:4px 20px;box-shadow:var(--card-shadow)}
   .adm-row{padding:15px 2px;border-bottom:1px solid rgba(120,80,60,.12)}
   .adm-row:last-child{border-bottom:none}
   .adm-label{font-family:var(--body);font-weight:700;font-size:.8rem;color:var(--ink-soft);letter-spacing:.3px;margin-bottom:4px}
-  .adm-value{font-size:1rem;color:var(--ink);line-height:1.6;white-space:pre-line}
+  .adm-value{font-size:var(--fs-body);color:var(--ink);line-height:1.6;white-space:pre-line}
   .adm-row.adm-notes .adm-value{color:var(--ink-soft);font-size:.92rem}
-  .dir-map{height:280px;border-radius:16px;overflow:hidden;border:1px solid #f0d9d9;background:#faf0f0}
+  .dir-map{height:280px;border-radius:var(--card-radius);overflow:hidden;border:1px solid var(--badge-border);background:var(--surface-pink-soft)}
   .dir-text{margin-top:16px;display:flex;flex-direction:column;gap:9px}
-  .dir-line{display:flex;align-items:flex-start;gap:9px;font-size:.96rem;color:var(--ink-soft);line-height:1.5}
+  .dir-line{display:flex;align-items:flex-start;gap:9px;font-size:var(--fs-body);color:var(--ink-soft);line-height:1.5}
   .dir-line::before{content:"";flex:none;width:7px;height:7px;border-radius:50%;background:currentColor;opacity:.55;margin-top:8px}
 
   /* ── 라이트박스 ── */
@@ -608,69 +970,73 @@
   .lightbox-close{position:absolute;top:18px;right:18px;width:40px;height:40px;border:none;background:rgba(255,255,255,.15);border-radius:50%;font-size:1.5rem;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center}
   .lightbox-cap{position:absolute;bottom:24px;left:50%;transform:translateX(-50%);color:rgba(255,255,255,.85);font-size:.92rem;white-space:nowrap}
 
-  /* ── 원장 인사말 미리보기 + 모달 ── */
-  .director-preview{font-family:var(--hand);font-weight:700;font-size:1.35rem;line-height:1.7;color:var(--ink);max-width:400px;margin:0 auto 8px;white-space:pre-line}
-  .director-more-btn{background:none;border:none;color:var(--coral-deep);font-weight:700;font-size:.95rem;cursor:pointer;font-family:var(--body);margin-top:8px;text-decoration:underline}
+  /* (원장 인사말 미리보기/줄 페이드인 CSS 제거됨 — 책 .sb-director 페이지로 통합) */
 
   /* ── 우리 원 현황 카드 ── */
-  .overview{padding-top:50px;padding-bottom:40px}
-  .overview-card{background:var(--paper);border-radius:24px;padding:32px 26px;box-shadow:0 20px 48px -24px rgba(120,80,60,.4)}
-  .overview-title{font-family:var(--display);font-size:1.4rem;color:var(--ink);text-align:center;margin-bottom:6px;letter-spacing:-.5px}
-  .overview-sub{font-size:.9rem;color:var(--ink-soft);text-align:center;margin-bottom:26px}
+  .overview{padding:var(--section-padding-tight)}
+  .overview-card{background:var(--paper);border-radius:var(--card-radius-lg);padding:32px 26px;box-shadow:var(--card-shadow)}
+  .overview-title{font-family:var(--display);font-size:var(--fs-card-title);color:var(--ink);text-align:center;margin-bottom:6px;letter-spacing:-.5px}
+  .overview-sub{font-size:var(--fs-caption);color:var(--ink-soft);text-align:center;margin-bottom:26px}
   .overview-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;background:rgba(120,80,60,.12);border-radius:16px;overflow:hidden}
   .overview-item{background:var(--paper);padding:20px 16px;text-align:center}
   .overview-item .o-label{font-size:.78rem;color:var(--ink-soft);font-weight:700;margin-bottom:6px}
-  .overview-item .o-value{font-family:var(--display);font-size:1.25rem;color:var(--coral-deep);font-weight:400;line-height:1.3}
-  .overview-address{display:flex;align-items:flex-start;gap:8px;margin-top:20px;padding:16px 18px;background:var(--cream);border-radius:14px;font-size:.92rem;color:var(--ink);line-height:1.5}
+  .overview-item .o-value{font-family:var(--display);font-size:var(--fs-card-title);color:var(--coral-deep);font-weight:400;line-height:1.3}
+  .overview-address{display:flex;align-items:flex-start;gap:8px;margin-top:20px;padding:16px 18px;background:var(--cream);border-radius:14px;font-size:var(--fs-caption);color:var(--ink);line-height:1.5}
   .overview-address .addr-icon{flex:none;color:var(--coral);font-weight:700}
 
   /* ── 공통 모달 (원장/시설/교육프로그램) — 통일 규격 ── */
   .info-modal-overlay{position:fixed;inset:0;z-index:60;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center;padding:20px}
   .info-modal-overlay.open{display:flex}
-  .info-modal-panel{position:relative;width:92vw;max-width:520px;min-height:70vh;max-height:88vh;overflow-y:auto;background:var(--paper);border-radius:24px;box-shadow:0 30px 60px -20px rgba(0,0,0,.45);padding:0}
+  .info-modal-panel{position:relative;width:92vw;max-width:520px;min-height:70vh;max-height:88vh;overflow-y:auto;background:var(--paper);border-radius:var(--card-radius-lg);box-shadow:var(--card-shadow-hover);padding:0}
   .info-modal-header{position:sticky;top:0;z-index:2;background:var(--paper);padding:28px 32px 18px;border-radius:24px 24px 0 0}
   .info-modal-close{position:absolute;top:24px;right:24px;width:38px;height:38px;border:none;background:var(--cream);border-radius:50%;font-size:1.4rem;color:var(--ink-soft);cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:3}
   .info-modal-body{padding:8px 32px 36px}
-  .info-modal-title{font-family:var(--display);font-size:1.45rem;color:var(--ink);letter-spacing:-.5px;margin-bottom:0}
+  .info-modal-title{font-family:var(--display);font-size:var(--fs-card-title);color:var(--ink);letter-spacing:-.5px;margin-bottom:0}
   .director-modal-photo{width:120px;height:120px;border-radius:50%;margin:0 auto 24px;overflow:hidden;box-shadow:0 0 0 7px rgba(255,255,255,.5),0 16px 34px -14px rgba(180,110,80,.4)}
   .director-modal-photo img{width:100%;height:100%;object-fit:cover;display:block}
   .info-modal-greeting{font-size:1rem;color:var(--ink-soft);line-height:1.9;white-space:pre-line;margin-bottom:24px}
   .info-modal-motto{font-family:var(--display);font-size:1.2rem;color:var(--ink);text-align:center;padding:16px;background:var(--cream);border-radius:14px}
-  .info-modal-values{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
-  .info-modal-value{font-size:.9rem;font-weight:700;color:#fff;background:var(--coral);padding:7px 18px;border-radius:30px}
+  .info-modal-values{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:16px}
+  .info-modal-value{font-size:var(--fs-caption);font-weight:700;color:#fff;background:var(--coral);padding:7px 18px;border-radius:30px}
 
   /* ── 원 시설 (배지 + 썸네일 + 모달) ── */
-  .facilities{padding-top:70px;padding-bottom:40px}
+  .facilities{padding:var(--section-padding-default)}
   .fac-badges{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin:20px 0 28px}
-  .fac-badge{font-size:.88rem;font-weight:700;color:var(--coral-deep);background:var(--paper);padding:8px 16px;border-radius:30px;box-shadow:0 6px 16px -8px rgba(120,80,60,.3)}
+  .fac-badge{font-size:var(--fs-caption);font-weight:700;color:var(--badge-text);background:var(--badge-bg);border:1px solid var(--badge-border);padding:8px 16px;border-radius:30px;box-shadow:0 6px 16px -8px rgba(120,80,60,.3)}
   .fac-thumb-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
-  .fac-thumb{border-radius:14px;overflow:hidden;aspect-ratio:4/3;background:var(--cream)}
+  .fac-thumb{border-radius:var(--card-radius);overflow:hidden;aspect-ratio:4/3;background:var(--cream)}
   .fac-thumb img{width:100%;height:100%;object-fit:cover;display:block}
-  .fac-more-btn{display:block;width:100%;padding:14px;background:none;border:1.5px solid var(--coral);border-radius:14px;color:var(--coral);font-weight:700;font-size:.95rem;cursor:pointer;font-family:var(--body);margin-top:4px}
-  .info-modal-prog-intro{font-size:.96rem;color:var(--ink-soft);line-height:1.75;margin-bottom:22px}
+  .fac-more-btn{display:block;width:100%;padding:14px;background:none;border:1.5px solid var(--coral);border-radius:14px;color:var(--coral);font-weight:700;font-size:var(--fs-caption);cursor:pointer;font-family:var(--body);margin-top:4px}
+  .info-modal-prog-intro{font-size:var(--fs-body);color:var(--ink-soft);line-height:1.75;margin-bottom:22px}
   .fac-modal-list{display:flex;flex-direction:column;gap:18px}
-  .fac-modal-item{background:var(--cream);border-radius:16px;overflow:hidden}
+  .fac-modal-item{background:var(--cream);border-radius:var(--card-radius);overflow:hidden}
   .fac-modal-item .fm-img{aspect-ratio:16/9;overflow:hidden;background:var(--paper)}
   .fac-modal-item .fm-img img{width:100%;height:100%;object-fit:cover;display:block}
   .fac-modal-item .fm-body{padding:16px 18px}
-  .fac-modal-item .fm-name{font-weight:700;font-size:1.05rem;color:var(--ink);margin-bottom:5px}
-  .fac-modal-item .fm-desc{font-size:.9rem;color:var(--ink-soft);line-height:1.6}
+  .fac-modal-item .fm-name{font-weight:700;font-size:var(--fs-card-title);color:var(--ink);margin-bottom:5px}
+  .fac-modal-item .fm-desc{font-size:var(--fs-caption);color:var(--ink-soft);line-height:1.6}
 
   /* ── 교육프로그램 (이미지 카드 + 모달) ── */
-  .programs{padding-top:70px;padding-bottom:40px}
-  .prog-card{background:var(--paper);border-radius:18px;overflow:hidden;box-shadow:0 16px 36px -18px rgba(120,80,60,.35);margin-bottom:14px}
+  .programs{padding:var(--section-padding-default)}
+  .prog-card{background:var(--paper);border-radius:var(--card-radius);overflow:hidden;box-shadow:var(--card-shadow);margin-bottom:14px}
   .prog-card .prog-img{aspect-ratio:16/9;overflow:hidden;background:var(--cream)}
   .prog-card .prog-img img{width:100%;height:100%;object-fit:cover;display:block}
   .prog-card .prog-body{padding:18px 18px 20px}
-  .prog-card .prog-name{font-weight:700;font-size:1.05rem;color:var(--ink);margin-bottom:6px}
-  .prog-card .prog-desc{font-size:.9rem;color:var(--ink-soft);line-height:1.65}
-  .prog-more-btn{display:block;width:100%;padding:14px;background:none;border:1.5px solid var(--coral);border-radius:14px;color:var(--coral);font-weight:700;font-size:.95rem;cursor:pointer;font-family:var(--body);margin-top:4px}
-  .prog-modal-item{background:var(--cream);border-radius:16px;overflow:hidden;margin-bottom:18px}
+  .prog-card .prog-name{font-weight:700;font-size:var(--fs-card-title);color:var(--ink);margin-bottom:6px}
+  .prog-card .prog-desc{font-size:var(--fs-caption);color:var(--ink-soft);line-height:1.65}
+  .prog-more-btn{display:block;width:100%;padding:14px;background:none;border:1.5px solid var(--coral);border-radius:14px;color:var(--coral);font-weight:700;font-size:var(--fs-caption);cursor:pointer;font-family:var(--body);margin-top:4px}
+  .prog-modal-item{background:var(--cream);border-radius:var(--card-radius);overflow:hidden;margin-bottom:18px}
   .prog-modal-item .pm-img{aspect-ratio:16/9;overflow:hidden;background:var(--paper)}
   .prog-modal-item .pm-img img{width:100%;height:100%;object-fit:cover;display:block}
   .prog-modal-item .pm-body{padding:16px 18px}
-  .prog-modal-item .pm-name{font-weight:700;font-size:1.05rem;color:var(--ink);margin-bottom:5px}
-  .prog-modal-item .pm-desc{font-size:.9rem;color:var(--ink-soft);line-height:1.6}
+  .prog-modal-item .pm-name{font-weight:700;font-size:var(--fs-card-title);color:var(--ink);margin-bottom:5px}
+  .prog-modal-item .pm-desc{font-size:var(--fs-caption);color:var(--ink-soft);line-height:1.6}
+  .section-intro{margin:0 auto 24px;text-align:center;color:var(--ink-soft);font-size:var(--fs-body);line-height:1.75}
+  .section-intro.compact{margin-bottom:8px}
+  .adm-preview{background:var(--paper);border-radius:var(--card-radius);padding:18px 20px;box-shadow:var(--card-shadow);margin:0 0 16px;text-align:left}
+  .adm-preview-label{font-size:.85rem;font-weight:700;color:var(--ink-soft);margin-bottom:4px}
+  .adm-preview-value{font-size:var(--fs-body);color:var(--ink);margin-bottom:12px}
+  .adm-preview-value:last-child{margin-bottom:0}
 </style>
 <script src="supabase-config.js"></script>
 <script src="kakao-config.js"></script>
@@ -970,26 +1336,20 @@ function mapRowToData(row){
   // ── 히어로 ──
   const h = c.hero;
   const cloudMenu = (c.menu || []).filter(m=>!m.cta)
-    .map(m=>`<a class="cloud-link" href="${esc(m.href)}">${esc(m.label)}</a>`).join('');
+    .map((m,i)=>`<a class="cloud-link" style="--cloud-float-delay:${(i%5)*0.6}s;animation-duration:${3.4+(i%3)*0.5}s" href="${esc(m.href)}">${esc(m.label)}</a>`).join('');
   if (data.heroPhoto) $('hero').classList.add('has-photo');
   $('hero').innerHTML = `
     ${data.heroPhoto ? `<div class="hero-bg"><img alt="${esc(c.name)}" src="${esc(data.heroPhoto)}"></div>` : ''}
+    <div class="hero-glow" aria-hidden="true"></div>
     <div class="eyebrow reveal">${escWithBr(h.eyebrow)}</div>
     <h1 class="reveal">${heroTitleHtml(h.title, h.title_accent, 'glow')}</h1>
     <p class="reveal">${escWithBr(h.subtitle)}</p>
     <nav class="cloud-menu reveal" aria-label="바로가기">${cloudMenu}</nav>`;
 
-  // ── 원장 인사말 (미리보기 + 모달) ──
-  const d = c.director;
-  // director.message는 <br> 또는 \n 으로 줄이 나뉘어 있어, 첫 4줄까지만 미리보기로 사용
-  const msgLines = (d.message||'').replace(/<br\s*\/?>/gi,'\n').split('\n');
-  const msgPreview = msgLines.slice(0, 4).join('\n');
-  $('greeting').innerHTML = `
-    <div class="badge reveal">${esc(d.badge)}</div>
-    <div class="portrait reveal"><img alt="${esc(d.photo_alt)}" src="${esc(d.photo)}"></div>
-    <p class="director-preview reveal">${escWithBr(msgPreview)}</p>
-    <div class="sign reveal">${esc(d.sign_label)}<strong>${esc(d.sign_name)}</strong></div>
-    <button type="button" class="director-more-btn reveal" id="directorModalOpenBtn">원장 인사말 더보기</button>`;
+  // ── 원장 인사말 ──
+  // 기존 별도 #greeting 섹션은 제거됨. 원장 인사말은 "우리 원 스토리" 책의
+  // 2번째 페이지(.sb-director)로 통합되어 아래 하루 스토리 렌더 블록에서 그린다.
+  // 모달용 데이터(window.__directorData__)는 하단에서 계속 노출된다.
 
   // ── 우리 원 현황 카드 ──
   // (facilities는 아래 시설 섹션에서 const fac으로 다시 쓰므로 여기선 ovFac로 분리)
@@ -1015,18 +1375,146 @@ function mapRowToData(row){
     document.getElementById('overviewSec').hidden = true;
   }
 
-  // ── 하루 스토리 (시그니처: 시간대별 빛 흐름) ──
-  const frameCls = ['frame','frame alt','frame alt2','frame alt3','frame'];
-  $('day').innerHTML = (data.day_story || []).map((m,i)=>`
-    <section class="moment" data-time="${esc(m.slot)}">
-      <div class="time reveal">${esc(m.time)}</div>
-      <div class="title reveal">${escWithBr(m.title)}</div>
-      <div class="${frameCls[i]||'frame'} reveal">
-        <img class="frame-img" alt="${esc(m.photo_alt)}" data-src="${esc(m.photo)}">
-        <div class="cap">${escWithBr(m.caption)}</div>
-      </div>
-      <p class="note reveal">${escWithBr(m.note)}</p>
-    </section>`).join('');
+  // ── 하루 스토리 (동화책: 표지 → moment별 스토리 → 마무리) ──
+  const SUN_ICON_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.4M12 19.1v2.4M4.2 4.2l1.7 1.7M18.1 18.1l1.7 1.7M2.5 12h2.4M19.1 12h2.4M4.2 19.8l1.7-1.7M18.1 5.9l1.7-1.7"/></svg>';
+  const MOON_ICON_SVG = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20.4 14.7A8.5 8.5 0 1 1 9.3 3.6a7 7 0 0 0 11.1 11.1z"/></svg>';
+  const CHEVRON_L = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 5 8 12 15 19"/></svg>';
+  const CHEVRON_R = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 5 16 12 9 19"/></svg>';
+  const BOOKMARK_HTML = '<div class="sb-bookmark" aria-hidden="true"><span class="m-icon">🌱</span></div>';
+  const ORDINALS = ['첫','두','세','네','다섯','여섯','일곱','여덟','아홉','열'];
+  function ordName(n){ return (ORDINALS[n-1] || (n + '')) + ' 번째 이야기'; }
+
+  // "오전/오후 N시" 표기를 24시간제 시각(0~23)으로 정확히 변환.
+  // 오전 12시=자정(0시), 오후 12시=정오(12시)라는 12시간제 규칙을 반영해야
+  // "오후 12시"(정오)가 저녁으로 오판되지 않는다.
+  function parseHour24(timeStr){
+    const t = timeStr || '';
+    const m = t.match(/(오전|오후)\s*(\d{1,2})시/);
+    if (!m) return null;
+    const period = m[1];
+    let hour = Number(m[2]) % 12; // 12시는 0으로 정규화
+    if (period === '오후') hour += 12;
+    return hour;
+  }
+  // 06:00~17:59는 해, 18:00~05:59는 달. time 파싱 실패 시에만 slot(dusk)으로 폴백.
+  function isDuskTime(m){
+    const hour = parseHour24(m.time);
+    if (hour != null) return hour >= 18 || hour < 6;
+    return m.slot === 'dusk';
+  }
+
+  const dayMoments = data.day_story || [];
+  const centerName = (c.name || '우리 원').replace(/\s*어린이집$/, '') || c.name;
+  const todayLabel = (function(){
+    const d = new Date();
+    return d.getFullYear() + '년 ' + (d.getMonth() + 1) + '월 ' + d.getDate() + '일';
+  })();
+
+  // 원장 인사말: 기존 별도 섹션 대신 책 2번째 페이지로 통합. 데이터는 c.director 재사용.
+  const dir = c.director || {};
+  const dirMsgLines = (dir.message || '').replace(/<br\s*\/?>/gi, '\n').split('\n');
+  const dirMsgPreview = dirMsgLines.slice(0, 4).join('\n');
+  const hasDirector = !!(dir.photo || (dir.message || '').trim() || dir.sign_name);
+
+  if (!dayMoments.length){
+    // moment가 없으면 섹션 숨김 (기존 동작과 동일한 안전 처리)
+    $('day').hidden = true;
+  } else {
+    const total = dayMoments.length;
+    // 표지 페이지
+    const coverPage = `
+      <article class="sb-page sb-cover" data-slot="morning" data-kind="cover" aria-roledescription="book page" aria-label="표지">
+        ${BOOKMARK_HTML}
+        <div>
+          <div class="cover-eyebrow">그림책처럼 보는</div>
+          <h3 class="cover-title">${esc(centerName)}의<br>우리 원 이야기</h3>
+          <div class="cover-date">${esc(todayLabel)}</div>
+          <div class="cover-mascot" aria-hidden="true">🐻</div>
+          <div class="cover-hint">책장을 넘겨 보세요 →</div>
+        </div>
+      </article>`;
+    // 원장 인사말 페이지 (표지 다음). 화면에 보이는 별도 텍스트 라벨은 없음(표지와 동일하게 라벨 생략).
+    // 접근성 라벨(aria-label)만 페이지 성격을 알려준다.
+    const directorPage = hasDirector ? `
+      <article class="sb-page sb-director" data-slot="mid-morning" data-kind="director" aria-roledescription="book page" aria-label="원장님 이야기">
+        ${BOOKMARK_HTML}
+        <div class="sb-portrait">${dir.photo ? `<img alt="${esc(dir.photo_alt)}" data-src="${esc(dir.photo)}">` : ''}</div>
+        <div class="sb-fold" aria-hidden="true"></div>
+        <div class="sb-text">
+          ${dir.badge ? `<span class="dir-badge">${esc(dir.badge)}</span>` : ''}
+          <div class="dir-sign">${esc(dir.sign_label)}<strong>${esc(dir.sign_name)}</strong></div>
+          <p class="dir-msg" id="sbDirectorMsg">${escWithBr(dirMsgPreview)}</p>
+          <button type="button" class="dir-more" id="directorModalOpenBtn">인사말 더보기<span class="btn-arrow" aria-hidden="true">→</span></button>
+        </div>
+      </article>` : '';
+    // 스토리 페이지들.
+    // 데이터에 따라 note가 비어있고 caption에 설명 문장이 들어오는 경우가 있다.
+    // 본문(.note)에는 항상 설명 문장(note || caption)을 싣고, 사진 오버레이(.cap)는
+    // note와 caption이 서로 다른 별도 문구일 때만 짧은 감성 문구로 표시해 중복/오버플로를 막는다.
+    const storyPages = dayMoments.map((m,i)=>{
+      const noteText = (m.note && m.note.trim()) ? m.note : (m.caption || '');
+      const overlayText = (m.note && m.note.trim() && m.caption && m.caption.trim() && m.caption.trim() !== m.note.trim())
+        ? m.caption : '';
+      return `
+      <article class="sb-page sb-story" data-slot="${esc(m.slot)}" data-kind="story" aria-roledescription="book page" aria-label="${esc(ordName(i+1))}">
+        ${BOOKMARK_HTML}
+        <div class="sb-photo">
+          <div class="pic">
+            <img alt="${esc(m.photo_alt)}" data-src="${esc(m.photo)}">
+            ${overlayText ? `<div class="cap">${escWithBr(overlayText)}</div>` : ''}
+          </div>
+        </div>
+        <div class="sb-fold" aria-hidden="true"></div>
+        <div class="sb-text">
+          <div class="time">${isDuskTime(m) ? MOON_ICON_SVG : SUN_ICON_SVG}${esc(m.time)}</div>
+          <h3 class="title">${escWithBr(m.title)}</h3>
+          <p class="note">${escWithBr(noteText)}</p>
+        </div>
+        <span class="sb-label" aria-label="${esc(total)}장 중 ${esc(ordName(i+1))}">
+          <span class="ord">${esc(ordName(i+1))}</span>
+          <span class="total">${esc(total)}장 중</span>
+        </span>
+      </article>`;
+    }).join('');
+    // 마무리 페이지
+    const finalePage = `
+      <article class="sb-page sb-finale" data-slot="dusk" data-kind="finale" aria-roledescription="book page" aria-label="마지막 이야기">
+        ${BOOKMARK_HTML}
+        <div>
+          <div class="fin-eyebrow">마지막 이야기</div>
+          <div class="fin-mascot" aria-hidden="true">🐻</div>
+          <h3 class="fin-title">오늘 하루도<br>잘 보냈어요</h3>
+          <p class="fin-text">내일 이야기도 기대해주세요.<br>${esc(centerName)}에서 아이의 반짝이는 순간을 계속 담아둘게요.</p>
+          <div class="fin-cta-slot" aria-hidden="true">알림장으로 이어가기</div>
+        </div>
+      </article>`;
+
+    // 점 인디케이터: 표지 + (원장) + 스토리 + 마무리 전체 페이지 수
+    const pageCount = total + 2 + (hasDirector ? 1 : 0);
+    const dotsHtml = Array.from({length: pageCount}, (_,i)=>
+      `<button type="button" role="tab" aria-label="${i+1}번째 페이지로 이동" data-goto="${i}"></button>`).join('');
+
+    $('day').innerHTML = `
+      <div class="section-eyebrow reveal">우리 원 스토리</div>
+      <h2 class="day-head-title reveal">${esc(centerName)}의 하루를 한 장씩</h2>
+      <div class="storybook reveal" role="region" aria-roledescription="storybook" aria-label="${esc(centerName)} 우리 원 이야기책">
+        <div class="sb-stage">
+          ${coverPage}
+          ${directorPage}
+          ${storyPages}
+          ${finalePage}
+        </div>
+        <div class="sb-controls">
+          <button class="sb-arrow prev" type="button" aria-label="이전 페이지">${CHEVRON_L}</button>
+          <div class="sb-dots" role="tablist" aria-label="페이지 이동">${dotsHtml}</div>
+          <button class="sb-arrow next" type="button" aria-label="다음 페이지">${CHEVRON_R}</button>
+          <button class="sb-mute" type="button" aria-label="페이지 넘김 소리 켜기/끄기" aria-pressed="false">
+            <svg class="icon-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg>
+            <svg class="icon-muted" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="22" y1="9" x2="16" y2="15"/><line x1="16" y1="9" x2="22" y2="15"/></svg>
+          </button>
+        </div>
+      </div>`;
+  }
 
   // ── 원 시설 (배지 + 썸네일 + 모달) ──
   const fac = data.center.facilities;
@@ -1039,7 +1527,7 @@ function mapRowToData(row){
     $('facilitiesSec').innerHTML = `
       <div class="section-eyebrow reveal">우리 원 시설</div>
       <h2 class="section-title reveal">안전하고 따뜻한 공간</h2>
-      <p class="fac-intro reveal" style="text-align:center;color:var(--ink-soft);font-size:.96rem;line-height:1.75;margin-bottom:8px">${escWithBr(fac.intro)}</p>
+      <p class="section-intro compact reveal">${escWithBr(fac.intro)}</p>
       <div class="fac-badges reveal">${badgesHtml}</div>
       <div class="fac-thumb-grid reveal">${thumbHtml}</div>
       <button type="button" class="fac-more-btn reveal" id="facilityModalOpenBtn">시설 전체 보기</button>`;
@@ -1084,7 +1572,7 @@ function mapRowToData(row){
     $('programSec').innerHTML = `
       <div class="section-eyebrow reveal">교육프로그램</div>
       <h2 class="section-title reveal">우리 원의 교육</h2>
-      <p class="prog-intro reveal" style="text-align:center;color:var(--ink-soft);font-size:.96rem;line-height:1.75;margin-bottom:24px">${escWithBr(prog.intro)}</p>
+      <p class="section-intro reveal">${escWithBr(prog.intro)}</p>
       ${cardsHtml}
       <button type="button" class="prog-more-btn reveal" id="programModalOpenBtn">교육프로그램 전체 보기</button>`;
   } else {
@@ -1270,6 +1758,8 @@ function initInteractions(){
   },{threshold:0.15});
   document.querySelectorAll('.reveal').forEach(function(el){ io.observe(el); });
 
+  // (원장 인사말 줄 단위 페이드인은 섹션 통합으로 제거됨 — 책 페이지의 .reveal이 담당)
+
   var palettes = {
     'morning':   {top:'#FCE9D2',bot:'#FFF6EC',sx:'16%',sy:'20%',sc:'#FFE08A',glow:'rgba(255,210,130,.55)'},
     'mid-morning':{top:'#D8EEF6',bot:'#FBF6EE',sx:'40%',sy:'14%',sc:'#FFEFA8',glow:'rgba(255,225,150,.5)'},
@@ -1277,7 +1767,6 @@ function initInteractions(){
     'afternoon': {top:'#E6E0F0',bot:'#FDEFE4',sx:'66%',sy:'18%',sc:'#FFD99A',glow:'rgba(255,200,140,.5)'},
     'dusk':      {top:'#F6C9A8',bot:'#FBE3D2',sx:'84%',sy:'30%',sc:'#FF9E66',glow:'rgba(255,150,90,.55)'}
   };
-  var moments = Array.prototype.slice.call(document.querySelectorAll('.moment'));
   var root = document.documentElement.style;
   function applyPalette(p){
     root.setProperty('--sky-top',p.top);
@@ -1287,16 +1776,192 @@ function initInteractions(){
     root.setProperty('--sun-color',p.sc);
     root.setProperty('--sun-glow',p.glow);
   }
-  var current='morning';
-  var pio = new IntersectionObserver(function(entries){
-    entries.forEach(function(e){
-      if(e.isIntersecting){
-        var t=e.target.getAttribute('data-time');
-        if(t && t!==current && palettes[t]){ current=t; applyPalette(palettes[t]); }
-      }
+
+  // ── 동화책 페이지 전환 컨트롤러 (2D 플립 + 페이지 넘김 효과음) ──
+  // 표지→원장→스토리→마무리를 순수 scaleX 압축/펼침(2D 플립, perspective 없음)으로 넘긴다.
+  // 활성 페이지의 data-slot으로 기존 시간대 빛 흐름(palettes)을 재사용해 시그니처를 유지한다.
+  (function(){
+    var book = document.querySelector('.storybook');
+    if (!book) return;
+    var pages = Array.prototype.slice.call(book.querySelectorAll('.sb-page'));
+    var dots  = Array.prototype.slice.call(book.querySelectorAll('.sb-dots button'));
+    var prevBtn = book.querySelector('.sb-arrow.prev');
+    var nextBtn = book.querySelector('.sb-arrow.next');
+    var muteBtn = book.querySelector('.sb-mute');
+    if (!pages.length) return;
+
+    var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var HALF = 240; // 접힘/펼침 각 240ms → 전체 ~480ms (CSS transition과 일치)
+
+    // ── 페이지 넘김 효과음 (Web Audio API로 합성, 외부 파일 없음) ──
+    // "물방울이 톡 떨어지는" 소리 — sine 오실레이터의 피치를 900Hz→250Hz로 빠르게
+    // 떨어뜨려 "톡" 타격감을 만들고, 아주 짧은 클릭 트랜지언트로 어택을 더하며,
+    // 40ms 뒤 조용한 2차 톤으로 "퐁~" 파문 잔향을 은은하게 얹는다.
+    // reduced-motion 사용자는 기본 음소거(단, 토글로 다시 켤 수 있음).
+    var audioCtx = null;
+    var STORAGE_KEY = 'woniya_sb_muted';
+    var stored = null;
+    try { stored = localStorage.getItem(STORAGE_KEY); } catch(e){}
+    // 저장값이 있으면 그 값을, 없으면 reduced-motion일 때 기본 음소거
+    var muted = (stored === '1') ? true : (stored === '0') ? false : !!reduceMotion;
+
+    function persistMuted(){ try { localStorage.setItem(STORAGE_KEY, muted ? '1' : '0'); } catch(e){} }
+    function reflectMute(){
+      if (!muteBtn) return;
+      muteBtn.classList.toggle('is-muted', muted);
+      muteBtn.setAttribute('aria-pressed', muted ? 'true' : 'false');
+    }
+    function synthFlipSound(){
+      try {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        var ctx = audioCtx, now = ctx.currentTime;
+
+        // 1) 메인 "톡" 톤 — sine, 900Hz→250Hz 지수 하강(100ms), 8ms 어택 후 지수 감쇠(~180ms)
+        var mainDur = 0.18;
+        var osc = ctx.createOscillator();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(900, now);
+        osc.frequency.exponentialRampToValueAtTime(250, now + 0.1);
+        var mainGain = ctx.createGain();
+        mainGain.gain.setValueAtTime(0.0001, now);
+        mainGain.gain.exponentialRampToValueAtTime(0.22, now + 0.008); // 8ms 어택
+        mainGain.gain.exponentialRampToValueAtTime(0.0001, now + mainDur); // 자연스러운 감쇠
+        osc.connect(mainGain); mainGain.connect(ctx.destination);
+        osc.start(now); osc.stop(now + mainDur);
+
+        // 2) 클릭 트랜지언트 — 아주 짧은(4ms) 고음 triangle 블립으로 타격감의 어택을 더함
+        var clickDur = 0.004;
+        var click = ctx.createOscillator();
+        click.type = 'triangle';
+        click.frequency.value = 1800;
+        var clickGain = ctx.createGain();
+        clickGain.gain.setValueAtTime(0.12, now);
+        clickGain.gain.exponentialRampToValueAtTime(0.0001, now + clickDur);
+        click.connect(clickGain); clickGain.connect(ctx.destination);
+        click.start(now); click.stop(now + clickDur);
+
+        // 3) "퐁~" 파문 잔향 — 40ms 뒤, 더 조용하고 낮은 톤으로 짧게(~90ms)
+        var rippleStart = now + 0.04;
+        var rippleDur = 0.09;
+        var ripple = ctx.createOscillator();
+        ripple.type = 'sine';
+        ripple.frequency.setValueAtTime(500, rippleStart);
+        ripple.frequency.exponentialRampToValueAtTime(300, rippleStart + rippleDur);
+        var rippleGain = ctx.createGain();
+        rippleGain.gain.setValueAtTime(0.0001, rippleStart);
+        rippleGain.gain.exponentialRampToValueAtTime(0.05, rippleStart + 0.006); // 은은하게
+        rippleGain.gain.exponentialRampToValueAtTime(0.0001, rippleStart + rippleDur);
+        ripple.connect(rippleGain); rippleGain.connect(ctx.destination);
+        ripple.start(rippleStart); ripple.stop(rippleStart + rippleDur);
+        // 전체 재생 시간: 메인(180ms) 기준, 잔향까지 포함해도 40+90=130ms로 200~250ms 이내
+      } catch(e){ /* 오디오 실패는 조용히 무시 */ }
+    }
+    function playFlipSound(){
+      if (muted) return;
+      // 오디오 노드 생성/연결은 requestAnimationFrame으로 한 틱 미뤄, 전환 시작 프레임의
+      // 스타일 계산·컴포지팅과 같은 틱에서 실행되어 메인 스레드를 블로킹하지 않게 한다.
+      if (window.requestAnimationFrame) requestAnimationFrame(synthFlipSound);
+      else synthFlipSound();
+    }
+    reflectMute();
+    if (muteBtn) muteBtn.addEventListener('click', function(){
+      muted = !muted; persistMuted(); reflectMute();
+      if (!muted) playFlipSound(); // 켤 때 짧게 미리듣기 (사용자 제스처 컨텍스트에서 오디오 활성화)
     });
-  },{rootMargin:'-45% 0px -45% 0px'});
-  moments.forEach(function(m){ pio.observe(m); });
+
+    var idx = 0;
+    var flipping = false;
+
+    function render(next){
+      if (next < 0 || next >= pages.length || next === idx || flipping) return;
+      var incoming = pages[next];
+      var outgoing = pages[idx];
+
+      if (reduceMotion){
+        playFlipSound();
+        // 플립 없이 단순 opacity 페이드 (CSS가 .is-active opacity 전환 담당)
+        outgoing.classList.remove('is-active');
+        incoming.classList.add('is-active');
+        idx = next; sync();
+        return;
+      }
+
+      flipping = true;
+      // 1단계: 현재 페이지를 가로로 접는다 (scaleX 1→.45).
+      // 효과음 합성(playFlipSound)은 requestAnimationFrame으로 미뤄지므로 여기서 호출해도
+      // 클래스 토글(스타일 변경)이 먼저 반영되고, 오디오 노드 생성은 같은 프레임 뒤로 미뤄진다.
+      book.classList.add('sb-flipping');
+      playFlipSound();
+      // 2단계: 접힌 시점에 콘텐츠 교체 (접힌 incoming을 활성화하고 outgoing 비활성화)
+      window.setTimeout(function(){
+        outgoing.classList.remove('is-active');
+        incoming.classList.add('is-active'); // .sb-flipping 상태라 incoming도 scaleX(.45)
+        void incoming.offsetWidth; // 리플로우
+        idx = next; sync();
+        // 3단계: 펼친다 (scaleX .45→1)
+        book.classList.remove('sb-flipping');
+        window.setTimeout(function(){ flipping = false; }, HALF + 40);
+      }, HALF);
+    }
+
+    function sync(){
+      dots.forEach(function(d,i){
+        d.classList.toggle('on', i === idx);
+        d.setAttribute('aria-selected', i === idx ? 'true' : 'false');
+      });
+      if (prevBtn) prevBtn.disabled = (idx === 0);
+      if (nextBtn) nextBtn.disabled = (idx === pages.length - 1);
+      var slot = pages[idx].getAttribute('data-slot');
+      if (slot && palettes[slot]) applyPalette(palettes[slot]);
+      pages.forEach(function(p,i){ p.setAttribute('aria-hidden', i === idx ? 'false' : 'true'); });
+      predecodeNeighbors();
+    }
+
+    // 인접 페이지(이전/다음) 이미지를 미리 디코딩해 플립 도중 이미지 디코딩으로 인한
+    // 지연이 생기지 않게 한다. img.decode()는 별도 스레드에서 비동기로 수행된다.
+    // (참고: 실제로는 초기 로드 시 img[data-src]가 IntersectionObserver(rootMargin:200px)로
+    // 이미 전부 src가 채워져 있어 이 단계에서는 디코딩만 남아있는 경우가 대부분이다.)
+    function predecodeNeighbors(){
+      [idx - 1, idx + 1].forEach(function(i){
+        var p = pages[i];
+        if (!p) return;
+        var img = p.querySelector('img[src]');
+        if (img && img.decode) img.decode().catch(function(){});
+      });
+    }
+
+    pages[0].classList.add('is-active');
+    sync();
+
+    if (prevBtn) prevBtn.addEventListener('click', function(){ render(idx - 1); });
+    if (nextBtn) nextBtn.addEventListener('click', function(){ render(idx + 1); });
+    dots.forEach(function(d,i){ d.addEventListener('click', function(){ render(i); }); });
+
+    // 키보드 화살표(←/→). 책이 뷰포트에 보일 때만 반응.
+    document.addEventListener('keydown', function(e){
+      if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+      var r = book.getBoundingClientRect();
+      var visible = r.top < window.innerHeight * 0.8 && r.bottom > window.innerHeight * 0.2;
+      if (!visible) return;
+      if (e.key === 'ArrowRight') render(idx + 1);
+      else render(idx - 1);
+    });
+
+    // 모바일 스와이프
+    var tx = 0, ty = 0;
+    book.addEventListener('touchstart', function(e){
+      tx = e.changedTouches[0].clientX; ty = e.changedTouches[0].clientY;
+    }, {passive:true});
+    book.addEventListener('touchend', function(e){
+      var dx = e.changedTouches[0].clientX - tx;
+      var dy = e.changedTouches[0].clientY - ty;
+      if (Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy)){
+        if (dx < 0) render(idx + 1);
+        else render(idx - 1);
+      }
+    }, {passive:true});
+  })();
 
   var c1=document.getElementById('cloud1'), c2=document.getElementById('cloud2');
   var ticking=false;
@@ -1327,6 +1992,16 @@ function initInteractions(){
     });
   },{threshold:0.4});
   fio.observe(hero); fio.observe(finale);
+
+  // 헤더 스크롤 전환 (투명 → 흰 배경). 순수 표시용 클래스 토글, 데이터/로직 아님.
+  var topbarScrollEl=document.getElementById('topbar');
+  if (topbarScrollEl){
+    var handleTopbarScroll=function(){
+      topbarScrollEl.classList.toggle('scrolled', window.scrollY > 24);
+    };
+    window.addEventListener('scroll', handleTopbarScroll, {passive:true});
+    handleTopbarScroll();
+  }
 
   var menuBtn=document.getElementById('menuBtn');
   var menuPanel=document.getElementById('menuPanel');
@@ -1430,9 +2105,9 @@ function renderInfoSections(data, c, esc){
       admSec.hidden = false;
       var adm = data.admission;
       admSec.innerHTML = '<h2 class="info-title">입학안내</h2>'
-        + '<div class="adm-preview" style="background:var(--paper);border-radius:16px;padding:18px 20px;box-shadow:0 12px 28px -18px rgba(120,80,60,.3);margin:0 0 16px;text-align:left">'
-        + (adm.target ? '<div style="font-size:.85rem;font-weight:700;color:var(--ink-soft);margin-bottom:4px">모집 대상</div><div style="font-size:.96rem;color:var(--ink);margin-bottom:12px">'+esc(adm.target)+'</div>' : '')
-        + (adm.period ? '<div style="font-size:.85rem;font-weight:700;color:var(--ink-soft);margin-bottom:4px">모집 기간</div><div style="font-size:.96rem;color:var(--ink)">'+esc(adm.period)+'</div>' : '')
+        + '<div class="adm-preview">'
+        + (adm.target ? '<div class="adm-preview-label">모집 대상</div><div class="adm-preview-value">'+esc(adm.target)+'</div>' : '')
+        + (adm.period ? '<div class="adm-preview-label">모집 기간</div><div class="adm-preview-value">'+esc(adm.period)+'</div>' : '')
         + '</div>'
         + '<a class="info-link-btn" href="admissions.html' + qs + '">입학안내 자세히 보기 →</a>';
     }

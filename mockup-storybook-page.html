@@ -1,0 +1,287 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>하루 스토리 동화책 · 스토리 페이지 목업 1장</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Gaegu:wght@700&family=Gowun+Dodum&display=swap" rel="stylesheet">
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<style>
+  /* ── sunshine 템플릿에서 가져온 브랜드 토큰 (원본 미변경, 목업용 복제) ── */
+  :root{
+    --cream:#FBF6EE;
+    --ink:#403733;
+    --ink-soft:#6E625B;
+    --coral:#FF8A6B;
+    --coral-deep:#F2715A;
+    --sage:#9CB89A;
+    --paper:#FFFFFF;
+    --display:'Gowun Dodum',sans-serif;
+    --hand:'Gaegu',cursive;
+    --body:'Pretendard',sans-serif;
+    --fs-section-title:1.8rem;
+    --fs-card-title:1.24rem;
+    --fs-body:.98rem;
+    --fs-caption:.9rem;
+    --card-shadow:0 16px 38px -22px rgba(120,80,60,.34);
+    --badge-bg:#FFF1EA;
+    --badge-text:var(--coral-deep);
+    --badge-border:#FFD7CB;
+
+    /* ── 신규(컨셉안): 동화책 스토리 페이지 전용 ── */
+    --fs-story-title:clamp(1.5rem,5vw,2rem);
+    /* 라벤더/하늘 — 브랜드 팔레트의 웜핑크와 짝을 이루는 서브 톤 */
+    --lavender:#E6DCF2;
+    --lavender-deep:#D6C7EC;
+    --sky:#DCEBF6;
+    --page-paper:#FFFDFA;
+    --page-line:#EBDFD4;
+    /* sunshine 공통 모바일 좌우 여백 토큰과 톤 맞춤 */
+    --mobile-side-padding:22px;
+  }
+
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    font-family:var(--body);color:var(--ink);
+    min-height:100vh;display:flex;align-items:center;justify-content:center;
+    padding:24px;
+    background:
+      radial-gradient(120% 90% at 20% 10%, var(--lavender) 0%, transparent 55%),
+      radial-gradient(120% 90% at 85% 90%, var(--sky) 0%, transparent 55%),
+      var(--cream);
+  }
+
+  /* ── 책 펼침면 컨테이너: 한 화면 = 한 페이지 ── */
+  .storybook{
+    position:relative;
+    width:100%;max-width:920px;
+    aspect-ratio:16/10;
+    max-height:min(86vh,720px);
+  }
+
+  /* 페이지 뒤에 겹쳐 보이는 "책장 두께" 그림자 (넘길 페이지가 남아있는 느낌) */
+  .storybook::before,
+  .storybook::after{
+    content:"";position:absolute;inset:0;
+    border-radius:22px;background:var(--page-paper);
+    box-shadow:var(--card-shadow);
+  }
+  .storybook::before{transform:rotate(-1.4deg) translateY(6px);opacity:.5}
+  .storybook::after{transform:rotate(.9deg) translateY(3px);opacity:.7}
+
+  /* ── 스토리 페이지 카드 ── */
+  .page{
+    position:absolute;inset:0;z-index:2;
+    background:var(--page-paper);
+    border-radius:22px;
+    box-shadow:var(--card-shadow);
+    padding:44px;
+    display:grid;
+    /* 사진 · 접힘선(fold) · 텍스트 3트랙. 좌우 1fr 대칭 → 접힘선이 카드 실제 중앙. */
+    grid-template-columns:1fr 36px 1fr;
+    align-items:center;
+    overflow:hidden;
+  }
+  /* 책 펼침 중앙 접힘선 — 은은한 세로 그라데이션 그림자 */
+  .fold{
+    position:relative;align-self:stretch;z-index:1;
+    background:linear-gradient(90deg,
+      rgba(120,80,60,0) 0%,
+      rgba(120,80,60,.05) 42%,
+      rgba(120,80,60,.11) 50%,
+      rgba(120,80,60,.05) 58%,
+      rgba(120,80,60,0) 100%);
+  }
+  /* 접힘선 정중앙에 얇은 하이라이트 선 하나 */
+  .fold::before{
+    content:"";position:absolute;top:6%;bottom:6%;left:50%;width:1px;
+    background:linear-gradient(180deg,transparent,rgba(120,80,60,.16),transparent);
+  }
+  /* 안쪽 종이 점선 테두리 (동화책 프레임) */
+  .page::after{
+    content:"";position:absolute;inset:16px;
+    border:1.5px dashed var(--page-line);
+    border-radius:16px;pointer-events:none;
+  }
+  /* 책갈피(bookmark) 마스코트 — 페이지 상단 모서리에 리본 태그처럼 걸침.
+     "이 이야기책의 마스코트(원이 새싹)" 느낌. 카드 위로 살짝 올라오게 배치. */
+  .bookmark{
+    position:absolute;top:-8px;right:38px;z-index:4;
+    width:40px;
+    display:flex;align-items:center;justify-content:center;
+    padding-top:12px;padding-bottom:18px; /* V자 갈래만큼 아래 여유 → 아이콘이 리본 중앙에 오도록 */
+    color:#fff;
+    background:linear-gradient(180deg,var(--coral),var(--coral-deep));
+    box-shadow:0 8px 16px -8px rgba(224,120,90,.7);
+    /* 아래 끝 리본 갈래(V자) */
+    clip-path:polygon(0 0,100% 0,100% 100%,50% 82%,0 100%);
+    border-radius:3px 3px 0 0;
+  }
+  .bookmark .m-icon{font-size:1.4rem;line-height:1;filter:drop-shadow(0 1px 1px rgba(0,0,0,.15))}
+
+  /* ── 사진(액자) ── */
+  .page-photo{
+    position:relative;z-index:1;
+    width:100%;max-width:340px;         /* 좌측 컬럼 폭을 넘지 않게 제약 */
+    justify-self:center;                 /* 컬럼 안에서 가운데 정렬 */
+    background:var(--paper);
+    padding:12px 12px 14px;
+    border-radius:6px;
+    box-shadow:0 18px 34px -20px rgba(120,80,60,.5);
+    transform:rotate(-1.5deg);
+  }
+  .page-photo .pic{
+    border-radius:4px;
+    aspect-ratio:1/1;
+    background:linear-gradient(150deg,#ffe7d4,#ffd1bd 55%,var(--lavender-deep));
+    display:flex;align-items:flex-end;
+    overflow:hidden;position:relative;
+  }
+  .page-photo .pic .ph{
+    position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+    color:rgba(255,255,255,.9);font-family:var(--hand);font-size:1rem;letter-spacing:1px;
+  }
+  /* 사진 위 손글씨 감성 문구(caption) 오버레이 */
+  .page-photo .cap{
+    position:relative;z-index:2;width:100%;
+    padding:26px 16px 14px;
+    background:linear-gradient(180deg,transparent,rgba(40,30,25,.5));
+    color:#fff;font-family:var(--hand);font-size:1.15rem;line-height:1.4;
+  }
+
+  /* ── 텍스트 영역 ── */
+  /* PC: 카드 가장자리·접힘선과 붙지 않도록 좌우 여백 확보 */
+  .page-text{position:relative;z-index:1;padding:0 20px}
+  .page-text .time{
+    display:inline-flex;align-items:center;gap:6px;
+    font-family:var(--hand);font-weight:700;font-size:var(--fs-caption);
+    color:var(--badge-text);background:var(--badge-bg);border:1px solid var(--badge-border);
+    border-radius:999px;padding:5px 14px;margin-bottom:16px;
+  }
+  .page-text .time svg{width:15px;height:15px;flex:none}
+  .page-text .title{
+    font-family:var(--display);font-size:var(--fs-story-title);
+    line-height:1.28;letter-spacing:-.5px;margin-bottom:14px;
+  }
+  .page-text .note{
+    font-family:var(--body);font-size:var(--fs-body);color:var(--ink-soft);
+    line-height:1.9;
+  }
+
+  /* ── 네비게이션 (컨셉안 반영, 목업이라 동작은 비활성) ──
+     원형 버튼 안에 chevron 아이콘. sunshine 코랄 톤 + 카드 위에 떠 있는 옅은 그림자. */
+  .nav-arrow{
+    width:48px;height:48px;border-radius:50%;border:1px solid var(--badge-border);cursor:pointer;
+    background:linear-gradient(180deg,#fff,var(--badge-bg));
+    box-shadow:0 10px 22px -10px rgba(224,120,90,.55), 0 2px 5px -3px rgba(120,80,60,.3);
+    color:var(--coral-deep);
+    display:flex;align-items:center;justify-content:center;
+    transition:background .2s ease, box-shadow .2s ease, transform .15s ease;
+  }
+  .nav-arrow svg{width:20px;height:20px;flex:none}
+  .nav-arrow:hover{
+    background:#fff;
+    box-shadow:0 14px 28px -10px rgba(224,120,90,.6), 0 2px 6px -3px rgba(120,80,60,.3);
+    transform:scale(1.06);
+  }
+  .nav-arrow:active{transform:scale(.97)}
+
+  /* 페이지 라벨: 서수 표현이 메인, "N장 중"은 작게 */
+  .page-label{
+    position:absolute;left:34px;bottom:24px;z-index:3;
+    display:flex;align-items:baseline;gap:7px;
+    font-family:var(--hand);color:var(--ink-soft);
+  }
+  .page-label .ord{font-size:1.05rem;color:var(--coral-deep)}
+  .page-label .total{font-size:.78rem;opacity:.75}
+
+  .dots{display:flex;gap:9px;z-index:5}
+  .dots span{
+    width:9px;height:9px;border-radius:50%;background:var(--lavender-deep);
+    transition:transform .2s ease,background .2s ease;
+  }
+  .dots span.on{background:var(--coral);transform:scale(1.35)}
+
+  /* 데스크톱: 화살표는 페이지 좌우 가장자리에 절대배치, 점은 페이지 아래 중앙 */
+  @media (min-width:720px){
+    .controls .nav-arrow{position:absolute;top:50%;transform:translateY(-50%);z-index:5}
+    .controls .nav-arrow.prev{left:-14px}
+    .controls .nav-arrow.next{right:-14px}
+    .controls .dots{position:absolute;left:50%;bottom:-30px;transform:translateX(-50%)}
+  }
+
+  /* ── 모바일: 세로 스택. 컨트롤(화살표·점)은 컨텐츠 아래 한 행으로 ── */
+  @media (max-width:719px){
+    body{padding:16px;align-items:flex-start}
+    .storybook{aspect-ratio:auto;max-height:none;margin-top:8px}
+    .storybook::before,.storybook::after{display:none}
+    /* 좌우 패딩을 sunshine 공통 --mobile-side-padding(22px)과 통일 */
+    .page{position:relative;inset:auto;grid-template-columns:1fr;gap:22px;padding:28px var(--mobile-side-padding) 34px}
+    .fold{display:none} /* 세로 스택에서는 중앙 접힘선 숨김 */
+    .page-photo{transform:rotate(-1deg);max-width:300px;margin:0 auto}
+    /* .page 자체가 이미 --mobile-side-padding(22px)을 갖고 있지만, 그것만으로는
+       텍스트가 카드 가장자리에 그대로 붙어 보여 "여백 없음"으로 읽힌다.
+       사진(자체 12px 매트로 시각적 인셋 있음)과 통일감 있게, 텍스트에도
+       추가 좌우 인셋을 줘 카드 가장자리와 분리되어 보이게 한다. */
+    .page-text{padding:0 var(--mobile-side-padding)}
+    .page-label{position:static;justify-content:center;margin-top:14px}
+    .controls{
+      display:flex;align-items:center;justify-content:center;gap:22px;
+      margin-top:20px;
+    }
+    .nav-arrow{width:40px;height:40px}
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .nav-arrow{transition:none}
+    .dots span{transition:none}
+  }
+</style>
+</head>
+<body>
+  <!-- 스토리 페이지 1장 (moment 1개 = 책 페이지 1장). 표지/마무리/전환로직 없음. -->
+  <div class="storybook" role="region" aria-roledescription="storybook" aria-label="하루 스토리 동화책">
+    <article class="page" aria-roledescription="book page">
+      <div class="bookmark" aria-label="원이의 이야기책" title="원이의 이야기책">
+        <span class="m-icon" aria-hidden="true">🌱</span>
+      </div>
+
+      <div class="page-photo">
+        <div class="pic">
+          <span class="ph" aria-hidden="true">사진</span>
+          <div class="cap">웃음소리로 하루를 열어요</div>
+        </div>
+      </div>
+
+      <div class="fold" aria-hidden="true"></div>
+
+      <div class="page-text">
+        <div class="time">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.4M12 19.1v2.4M4.2 4.2l1.7 1.7M18.1 18.1l1.7 1.7M2.5 12h2.4M19.1 12h2.4M4.2 19.8l1.7-1.7M18.1 5.9l1.7-1.7"/></svg>
+          오전 8시
+        </div>
+        <h2 class="title">반가운 아침,<br>등원했어요</h2>
+        <p class="note">선생님과 눈을 맞추고 인사를 나누며 하루를 시작해요. 친구들의 이름을 하나씩 부르면 교실에 작은 웃음소리가 번지고, 오늘은 또 어떤 이야기가 펼쳐질지 설레는 아침이에요.</p>
+      </div>
+
+      <span class="page-label" aria-label="7장 중 두 번째 이야기">
+        <span class="ord">두 번째 이야기</span>
+        <span class="total">7장 중</span>
+      </span>
+    </article>
+
+    <div class="controls">
+      <button class="nav-arrow prev" aria-label="이전 페이지" tabindex="-1">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 5 8 12 15 19"/></svg>
+      </button>
+      <div class="dots" aria-hidden="true">
+        <span></span><span class="on"></span><span></span><span></span><span></span><span></span><span></span>
+      </div>
+      <button class="nav-arrow next" aria-label="다음 페이지" tabindex="-1">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 5 16 12 9 19"/></svg>
+      </button>
+    </div>
+  </div>
+</body>
+</html>
