@@ -119,13 +119,31 @@ var TEMPLATE_FILES = { sunshine:'template-sunshine.html', forest:'template-fores
 
   var cfg = window.__SUPABASE_CONFIG__;
   var client = supabase.createClient(cfg.url, cfg.anonKey);
-  var slug = new URLSearchParams(location.search).get('slug') || 'haetsal';
+  var params = new URLSearchParams(location.search);
+  var slug = params.get('slug') || 'haetsal';
+  // ?preview=<id>: 템플릿 미리보기(template_centers/template_admissions 샘플 데이터).
+  // slug가 명시되면 실제 원 조회가 우선. preview는 slug가 없을 때만 인식.
+  var PREVIEW_IDS = ['sunshine', 'carnival', 'forest', 'gallery'];
+  var previewId = params.get('slug') ? '' : ((params.get('preview') || '').trim().toLowerCase());
+  if (previewId && PREVIEW_IDS.indexOf(previewId) < 0) previewId = '';
+  var isPreviewMode = !!previewId;
 
   var center;
   try {
-    var res = await client.from('centers').select('name, slug, theme, template, admissions(*)').eq('slug', slug).single();
-    if (res.error) throw res.error;
-    center = res.data;
+    if (isPreviewMode) {
+      // ── 미리보기: template_centers + template_admissions에서 조회 (실제 centers 경로와 분리) ──
+      var tcRes = await client.from('template_centers').select('name, slug, theme, template, id').eq('template_id', previewId).single();
+      if (tcRes.error) throw tcRes.error;
+      center = tcRes.data;
+      var taRes = await client.from('template_admissions').select('*').eq('template_center_id', center.id).maybeSingle();
+      if (taRes.error) throw taRes.error;
+      center.admissions = taRes.data ? [taRes.data] : [];
+    } else {
+      // ── 기존: 실제 centers/admissions 조회 (변경 없음) ──
+      var res = await client.from('centers').select('name, slug, theme, template, admissions(*)').eq('slug', slug).single();
+      if (res.error) throw res.error;
+      center = res.data;
+    }
   } catch (e) {
     console.error(e);
     content.innerHTML = '<p class="state">입학안내를 불러오지 못했어요.</p>';
@@ -135,9 +153,11 @@ var TEMPLATE_FILES = { sunshine:'template-sunshine.html', forest:'template-fores
   // 테마 상속
   if (center.theme) document.body.setAttribute('data-theme', center.theme);
 
-  // 메인 페이지 경로 (홈으로 / 상담 신청)
+  // 메인 페이지 경로 (홈으로 / 상담 신청). 미리보기 모드에서는 ?preview=로 이어간다.
   var mainFile = TEMPLATE_FILES[center.template] || 'template-sunshine.html';
-  var mainUrl = mainFile + '?slug=' + encodeURIComponent(center.slug);
+  var mainUrl = isPreviewMode
+    ? (mainFile + '?preview=' + encodeURIComponent(previewId))
+    : (mainFile + '?slug=' + encodeURIComponent(center.slug));
   document.getElementById('brandLink').href = mainUrl;
   document.getElementById('brandLink').textContent = (center.name || '원이야').replace(/\s*(어린이집|유치원)$/,'') || center.name;
   document.getElementById('backLink').href = mainUrl;

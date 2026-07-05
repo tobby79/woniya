@@ -47,6 +47,7 @@
   .page-hero h1{font-family:var(--display);font-size:clamp(2.1rem,9vw,2.8rem);font-weight:400;letter-spacing:-1px}
 
   .dir-map{height:320px;border-radius:18px;overflow:hidden;border:1px solid var(--line);background:#faf0f0}
+  .dir-map-placeholder{display:flex;align-items:center;justify-content:center;text-align:center;padding:0 24px;color:var(--ink-soft);font-size:.95rem;background:var(--cream)}
   .addr{margin-top:18px;background:var(--paper);border-radius:16px;padding:16px 18px;box-shadow:0 16px 40px -24px rgba(120,80,60,.4);font-size:1rem;color:var(--ink);display:flex;align-items:flex-start;gap:10px}
   .addr .pin{flex:none;color:var(--coral-deep);font-weight:700}
   .dir-text{margin-top:18px;display:flex;flex-direction:column;gap:12px}
@@ -96,7 +97,12 @@ function loadKakaoMap(address, containerId){
   var cfg = window.__KAKAO_CONFIG__;
   var container = document.getElementById(containerId);
   if (!container || !address) return;
-  if (!cfg || !cfg.appkey){ console.warn('[kakao] appkey 없음 — 지도를 건너뜁니다.'); return; }
+  // 지오코딩 실패(존재하지 않는 주소 등)·appkey 없음 시 빈 지도 대신 안내 문구로 대체
+  function showMapFallback(){
+    container.classList.add('dir-map-placeholder');
+    container.textContent = '지도 미리보기는 실제 등록 후 확인 가능합니다.';
+  }
+  if (!cfg || !cfg.appkey){ console.warn('[kakao] appkey 없음 — 지도를 건너뜁니다.'); showMapFallback(); return; }
   function render(){
     kakao.maps.load(function(){
       var map = new kakao.maps.Map(container, { center: new kakao.maps.LatLng(37.5665, 126.9780), level: 3 });
@@ -106,6 +112,8 @@ function loadKakaoMap(address, containerId){
           var coords = new kakao.maps.LatLng(result[0].y, result[0].x);
           map.setCenter(coords);
           new kakao.maps.Marker({ map: map, position: coords });
+        } else {
+          showMapFallback();
         }
       });
     });
@@ -128,13 +136,27 @@ function loadKakaoMap(address, containerId){
 
   var cfg = window.__SUPABASE_CONFIG__;
   var client = supabase.createClient(cfg.url, cfg.anonKey);
-  var slug = new URLSearchParams(location.search).get('slug') || 'haetsal';
+  var params = new URLSearchParams(location.search);
+  var slug = params.get('slug') || 'haetsal';
+  // ?preview=<id>: 템플릿 미리보기(template_centers 샘플 데이터). slug 명시 시 실제 원 조회 우선.
+  var PREVIEW_IDS = ['sunshine', 'carnival', 'forest', 'gallery'];
+  var previewId = params.get('slug') ? '' : ((params.get('preview') || '').trim().toLowerCase());
+  if (previewId && PREVIEW_IDS.indexOf(previewId) < 0) previewId = '';
+  var isPreviewMode = !!previewId;
 
   var center;
   try {
-    var res = await client.from('centers').select('name, address, directions_text, theme, template, slug').eq('slug', slug).single();
-    if (res.error) throw res.error;
-    center = res.data;
+    if (isPreviewMode) {
+      // ── 미리보기: template_centers에서 조회 (실제 centers 경로와 분리) ──
+      var tcRes = await client.from('template_centers').select('name, address, directions_text, theme, template, slug').eq('template_id', previewId).single();
+      if (tcRes.error) throw tcRes.error;
+      center = tcRes.data;
+    } else {
+      // ── 기존: 실제 centers 조회 (변경 없음) ──
+      var res = await client.from('centers').select('name, address, directions_text, theme, template, slug').eq('slug', slug).single();
+      if (res.error) throw res.error;
+      center = res.data;
+    }
   } catch (e) {
     console.error(e);
     content.innerHTML = '<p class="state">오시는 길을 불러오지 못했어요.</p>';
@@ -144,7 +166,9 @@ function loadKakaoMap(address, containerId){
   if (center.theme) document.body.setAttribute('data-theme', center.theme);
 
   var mainFile = TEMPLATE_FILES[center.template] || 'template-sunshine.html';
-  var mainUrl = mainFile + '?slug=' + encodeURIComponent(center.slug);
+  var mainUrl = isPreviewMode
+    ? (mainFile + '?preview=' + encodeURIComponent(previewId))
+    : (mainFile + '?slug=' + encodeURIComponent(center.slug));
   document.getElementById('brandLink').href = mainUrl;
   document.getElementById('brandLink').textContent = (center.name || '원이야').replace(/\s*(어린이집|유치원)$/,'') || center.name;
   document.getElementById('backLink').href = mainUrl;
@@ -162,15 +186,21 @@ function loadKakaoMap(address, containerId){
   }
 
   var mapId = 'kakao-map-' + (center.slug || 'center');
-  var html = '<div class="dir-map" id="' + mapId + '"></div>';
-  if (center.address) html += '<div class="addr"><span class="pin">◎</span><span>' + esc(center.address) + '</span></div>';
+  var html = '';
+  if (center.address) {
+    html += '<div class="dir-map" id="' + mapId + '"></div>';
+    html += '<div class="addr"><span class="pin">◎</span><span>' + esc(center.address) + '</span></div>';
+  } else {
+    // 주소가 없어 지도를 그릴 수 없는 경우(예: 샘플 데이터) — 빈 지도 대신 안내 문구로 대체
+    html += '<div class="dir-map dir-map-placeholder">지도 미리보기는 실제 등록 후 확인 가능합니다.</div>';
+  }
   if (dirText){
     var lines = dirText.split('/').map(function(s){ return s.trim(); }).filter(Boolean);
     html += '<div class="dir-text">' + lines.map(function(l){ return '<div class="dir-line"><span class="ic">›</span><span>' + esc(l) + '</span></div>'; }).join('') + '</div>';
   }
   content.innerHTML = html;
 
-  loadKakaoMap(center.address, mapId);
+  if (center.address) loadKakaoMap(center.address, mapId);
   document.getElementById('ctaSec').hidden = false;
 })();
 </script>

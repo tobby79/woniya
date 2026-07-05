@@ -1345,6 +1345,7 @@ function mapRowToData(row){
   const cfg = window.__SUPABASE_CONFIG__;
   const client = supabase.createClient(cfg.url, cfg.anonKey);
   let isPreviewMode = false;
+  let previewTemplateId = ''; // ?preview=<id> 미리보기일 때 상세 페이지 링크(admissions/directions)에 넘길 id
   const PREVIEW_TEMPLATE_IDS = ['sunshine', 'carnival', 'forest', 'gallery'];
   const PREVIEW_MESSAGE = '이것은 템플릿 미리보기입니다. 실제 신청은 접수되지 않습니다.';
 
@@ -1444,6 +1445,7 @@ function mapRowToData(row){
     if (previewId){
       // ── 기존: 템플릿 샘플 미리보기 (?preview=sunshine 등) — 절대 변경 금지 ──
       isPreviewMode = true;
+      previewTemplateId = previewId; // 상세 페이지 링크에서 ?preview= 로 이어가기 위해 보관
       data = await loadTemplatePreview(previewId);
     } else if (previewCenterSlug){
       // ── 신규: 관리자 draft 원 미리보기 (?preview_center=slug) ──
@@ -1940,8 +1942,11 @@ function mapRowToData(row){
   window.__programData__ = data.center.programs;
   window.__albumImgs__ = data.album?.items || [];
   if (isPreviewMode){
+    // 경고 모달은 "실제 신청/제출" 액션(입소상담·상담신청 버튼)에만 건다.
+    // 정보 열람용 네비게이션 링크(자세히 보기·통학 안내)는 경고 대상에서 제외 —
+    // 미리보기 모드에서도 admissions/directions 상세 페이지로 정상 이동해야 하므로.
     document.addEventListener('click', function(e){
-      var action = e.target.closest('#cslOpenBtn, #askConsultBtn, #admissionsSec .info-link-btn');
+      var action = e.target.closest('#cslOpenBtn, #askConsultBtn');
       if (!action) return;
       e.preventDefault();
       e.stopImmediatePropagation();
@@ -1949,7 +1954,7 @@ function mapRowToData(row){
     }, true);
   }
   initInteractions();
-  renderInfoSections(data, c, esc);
+  renderInfoSections(data, c, esc, isPreviewMode, previewTemplateId);
   setupAskPanel(data.faqs);
   initConsultationForm(client, c.id);
 })();
@@ -2400,9 +2405,13 @@ function initDeferredImages(){
 // 모집 대상(나이/사람) · 모집 기간(달력) 아이콘 — sunshine 톤에 맞춘 라인 아이콘, currentColor로 --coral-deep 상속
 var ADM_ICON_PERSON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="3.4"/><path d="M5 20c0-3.6 3.1-6.2 7-6.2s7 2.6 7 6.2"/></svg>';
 var ADM_ICON_CALENDAR = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="2.4"/><path d="M3.5 9.5h17"/><path d="M8 3v3.6M16 3v3.6"/></svg>';
-function renderInfoSections(data, c, esc){
+function renderInfoSections(data, c, esc, isPreviewMode, previewTemplateId){
   // M2: 입학안내·오시는 길은 공개형 새 페이지로 분리. 메인에는 요약+이동 버튼만 남긴다.
-  var qs = c.slug ? ('?slug=' + encodeURIComponent(c.slug)) : '';
+  // 미리보기 모드에서는 상세 페이지도 ?preview=<id>로 이어가고(샘플 데이터 조회),
+  // 실제 원(공개/관리자 미리보기)에서는 기존처럼 ?slug=<slug>로 연결한다.
+  var qs = (isPreviewMode && previewTemplateId)
+    ? ('?preview=' + encodeURIComponent(previewTemplateId))
+    : (c.slug ? ('?slug=' + encodeURIComponent(c.slug)) : '');
   var admSec = document.getElementById('admissionsSec');
   if (admSec){
     if (!data.admission){ admSec.hidden = true; }
