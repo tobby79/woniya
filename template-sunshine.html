@@ -890,19 +890,7 @@
   </div>
 </div>
 
-<!-- 시설 모달 -->
-<div class="info-modal-overlay" id="facilityModal">
-  <div class="info-modal-panel">
-    <div class="info-modal-header">
-      <h3 class="info-modal-title">우리 원 시설</h3>
-    </div>
-    <button class="info-modal-close" id="facilityModalClose">×</button>
-    <div class="info-modal-body">
-      <p class="info-modal-prog-intro" id="facilityIntro"></p>
-      <div class="fac-modal-list" id="facilityList"></div>
-    </div>
-  </div>
-</div>
+<!-- 시설 모달은 제거됨 → "시설 전체 보기" 클릭 시 같은 섹션 안에서 인라인으로 펼쳐짐 -->
 
 <!-- 교육프로그램 모달 -->
 <div class="info-modal-overlay" id="programModal">
@@ -999,22 +987,87 @@
   .info-modal-values{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:16px}
   .info-modal-value{font-size:var(--fs-caption);font-weight:700;color:#fff;background:var(--coral);padding:7px 18px;border-radius:30px}
 
-  /* ── 원 시설 (배지 + 썸네일 + 모달) ── */
+  /* ── 원 시설 (배지 + 폴라로이드 콜라주, 인라인 펼치기) ──
+     하루 스토리(.sb-photo/.sb-photo .cap)의 폴라로이드 프레임·손글씨 캡션 언어를 재사용해
+     "우리 원 시설"도 같은 코르크보드 감성의 콜라주로 통일한다.
+     "시설 전체 보기"는 모달이 아니라 같은 그리드 안에 나머지 항목을 이어붙이는 인라인 펼치기. */
   .facilities{padding:var(--section-padding-default)}
   .fac-badges{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin:20px 0 28px}
   .fac-badge{font-size:var(--fs-caption);font-weight:700;color:var(--badge-text);background:var(--badge-bg);border:1px solid var(--badge-border);padding:8px 16px;border-radius:30px;box-shadow:0 6px 16px -8px rgba(120,80,60,.3)}
-  .fac-thumb-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
-  .fac-thumb{border-radius:var(--card-radius);overflow:hidden;aspect-ratio:4/3;background:var(--cream)}
-  .fac-thumb img{width:100%;height:100%;object-fit:cover;display:block}
-  .fac-more-btn{display:block;width:100%;padding:14px;background:none;border:1.5px solid var(--coral);border-radius:14px;color:var(--coral);font-weight:700;font-size:var(--fs-caption);cursor:pointer;font-family:var(--body);margin-top:4px}
-  .info-modal-prog-intro{font-size:var(--fs-body);color:var(--ink-soft);line-height:1.75;margin-bottom:22px}
-  .fac-modal-list{display:flex;flex-direction:column;gap:18px}
-  .fac-modal-item{background:var(--cream);border-radius:var(--card-radius);overflow:hidden}
-  .fac-modal-item .fm-img{aspect-ratio:16/9;overflow:hidden;background:var(--paper)}
-  .fac-modal-item .fm-img img{width:100%;height:100%;object-fit:cover;display:block}
-  .fac-modal-item .fm-body{padding:16px 18px}
-  .fac-modal-item .fm-name{font-weight:700;font-size:var(--fs-card-title);color:var(--ink);margin-bottom:5px}
-  .fac-modal-item .fm-desc{font-size:var(--fs-caption);color:var(--ink-soft);line-height:1.6}
+
+  /* 실서비스인데 시설 항목이 비어있을 때의 중립 안내 문구(콜라주 없음) */
+  .fac-empty-notice{
+    text-align:center;color:var(--ink-soft);font-size:var(--fs-body);
+    padding:18px 0 6px;
+  }
+
+  /* 콜라주 컨테이너: PC 2열x2행 그리드. 각 폴라로이드는 nth-child로 서로 다른
+     회전값을 가져 코르크보드에 붙인 듯한 느낌을 유지하되, 2x2 안에서 균형 잡히게 배치 */
+  .fac-collage{
+    display:grid;grid-template-columns:1fr 1fr;gap:32px 28px;
+    margin:0 auto;max-width:520px;padding:10px 6px 8px;
+  }
+  .fac-polaroid{
+    position:relative;z-index:1;
+    background:var(--paper);padding:10px 10px 12px;border-radius:6px;
+    box-shadow:var(--card-shadow);transition:transform .25s ease,box-shadow .25s ease,z-index 0s;
+  }
+  .fac-polaroid:hover,.fac-polaroid:focus-within{
+    transform:rotate(0deg) scale(1.05) translateY(-4px);
+    box-shadow:var(--card-shadow-hover);z-index:5;
+  }
+  .fac-polaroid .pic{
+    border-radius:4px;aspect-ratio:4/5;overflow:hidden;position:relative;
+    background:var(--cream);display:flex;align-items:flex-end;
+  }
+  .fac-polaroid .pic img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0}
+  .fac-polaroid .cap{
+    position:relative;z-index:2;width:100%;padding:16px 8px 2px;
+    font-family:var(--hand);font-weight:700;font-size:1.05rem;line-height:1.3;
+    color:var(--ink);text-align:center;
+  }
+  /* 2x2 안에서 자연스러운 균형: 홀수 열은 살짝 왼쪽으로, 짝수 열은 오른쪽으로
+     기울고, 위/아래 행이 서로 반대 방향 각도를 가져 리듬감을 준다 */
+  .fac-polaroid:nth-child(4n+1){transform:rotate(-3deg)}
+  .fac-polaroid:nth-child(4n+2){transform:rotate(2.5deg)}
+  .fac-polaroid:nth-child(4n+3){transform:rotate(2deg)}
+  .fac-polaroid:nth-child(4n+4){transform:rotate(-2.5deg)}
+
+  /* 펼치기 대상(5번째 이후) 항목을 담는 래퍼 — 높이/투명도 전환으로 부드럽게 펼쳐짐 */
+  .fac-collage-more{
+    display:grid;grid-template-columns:1fr 1fr;gap:32px 28px;
+    max-width:520px;margin:0 auto;overflow:hidden;
+    max-height:0;opacity:0;
+    transition:max-height .45s ease,opacity .35s ease;
+  }
+  .fac-collage-more.is-expanded{max-height:4000px;opacity:1;margin-top:32px}
+  @media (prefers-reduced-motion:reduce){
+    .fac-collage-more{transition:none}
+  }
+
+  /* 모바일: 2열 그대로, 세로로 이어짐(가로 스크롤 없음). 각도는 완화해서
+     좁은 화면에서 사진이 서로 겹치거나 잘리지 않게 한다 */
+  @media (max-width:719px){
+    .fac-collage,.fac-collage-more{
+      gap:22px 14px;max-width:none;
+      padding:10px var(--mobile-side-padding) 0;
+    }
+    .fac-collage-more.is-expanded{margin-top:22px}
+    .fac-polaroid:nth-child(4n+1){transform:rotate(-2deg)}
+    .fac-polaroid:nth-child(4n+2){transform:rotate(1.5deg)}
+    .fac-polaroid:nth-child(4n+3){transform:rotate(1.5deg)}
+    .fac-polaroid:nth-child(4n+4){transform:rotate(-1.5deg)}
+    .fac-polaroid:hover,.fac-polaroid:focus-within{transform:scale(1.03);z-index:2}
+  }
+  @media (prefers-reduced-motion:reduce){
+    .fac-polaroid{transition:none}
+  }
+
+  /* "시설 전체 보기 / 접기" — 원장 인사말과 동일한 구름/필 버튼(cloud-link) 패턴 재사용 */
+  .fac-more-btn{
+    display:block;margin:28px auto 0;width:fit-content;
+    background:none;border:none;padding:0;cursor:pointer;
+  }
 
   /* ── 교육프로그램 (이미지 카드 + 모달) ── */
   .programs{padding:var(--section-padding-default)}
@@ -1025,6 +1078,7 @@
   .prog-card .prog-name{font-weight:700;font-size:var(--fs-card-title);color:var(--ink);margin-bottom:6px}
   .prog-card .prog-desc{font-size:var(--fs-caption);color:var(--ink-soft);line-height:1.65}
   .prog-more-btn{display:block;width:100%;padding:14px;background:none;border:1.5px solid var(--coral);border-radius:14px;color:var(--coral);font-weight:700;font-size:var(--fs-caption);cursor:pointer;font-family:var(--body);margin-top:4px}
+  .info-modal-prog-intro{font-size:var(--fs-body);color:var(--ink-soft);line-height:1.75;margin-bottom:22px}
   .prog-modal-item{background:var(--cream);border-radius:var(--card-radius);overflow:hidden;margin-bottom:18px}
   .prog-modal-item .pm-img{aspect-ratio:16/9;overflow:hidden;background:var(--paper)}
   .prog-modal-item .pm-img img{width:100%;height:100%;object-fit:cover;display:block}
@@ -1516,21 +1570,74 @@ function mapRowToData(row){
       </div>`;
   }
 
-  // ── 원 시설 (배지 + 썸네일 + 모달) ──
+  // ── 원 시설 (배지 + 폴라로이드 콜라주, 인라인 펼치기) ──
+  // fac.items(원장 콘솔 "시설 소개" 입력값)가 실제 시설 항목 배열. 사진은 같은 인덱스의
+  // album.items[i]와 매칭(모달 시절 로직과 동일한 짝짓기 규칙 재사용).
   const fac = data.center.facilities;
   const albumImgs = data.album?.items || [];
+  const FAC_INITIAL_COUNT = 4;
+  // placeholder 캡션: 실제 앨범 라벨(it.label)이 있으면 그대로 쓰고, 없을 때만 대체
+  const FAC_CAPTION_PLACEHOLDERS = ['놀이실', '미술 시간', '바깥 놀이터', '음악 시간'];
+  function facPolaroidHtml(f, i){
+    const img = albumImgs[i] || {};
+    const caption = (img.label && img.label.trim()) ? img.label
+      : (f && f.name) ? f.name
+      : FAC_CAPTION_PLACEHOLDERS[i % FAC_CAPTION_PLACEHOLDERS.length];
+    return `
+      <div class="fac-polaroid">
+        <div class="pic"><img data-src="${esc(img.photo || '')}" alt="${esc(caption)}"></div>
+        <div class="cap">${esc(caption)}</div>
+      </div>`;
+  }
   if (fac) {
-    const badgesHtml = (fac.items||[]).map(f=>
-      `<span class="fac-badge">${esc(f.name)}</span>`).join('');
-    const thumbHtml = albumImgs.slice(0,4).map(it=>
-      `<div class="fac-thumb"><img data-src="${esc(it.photo)}" alt="${esc(it.label)}"></div>`).join('');
+    const hasFacItems = !!(fac.items && fac.items.length);
+    // 앨범 사진 폴백은 "미리보기 전용"이다: ?preview= 샘플 데이터 렌더링(isPreviewMode)일 때만
+    // fac.items가 비어있어도 album.items로 시설 콜라주를 채운다.
+    // 실제 운영 중인 원(isPreviewMode=false)이 아직 시설 항목을 입력하지 않은 경우에는
+    // 앨범 사진을 시설 사진인 것처럼 보여주면 안 되므로, 폴백을 쓰지 않고 중립 문구만 표시한다.
+    const useAlbumFallback = !hasFacItems && isPreviewMode;
+    const items = hasFacItems ? fac.items
+      : useAlbumFallback ? albumImgs.map(it => ({ name: it.label || '' }))
+      : [];
+    // 배지는 실제 시설 카테고리(fac.items)가 있을 때만 의미가 있어, 폴백/빈 상태에서는 생략
+    const badgesHtml = hasFacItems ? items.map(f=>
+      `<span class="fac-badge">${esc(f.name)}</span>`).join('') : '';
+    const initialItems = items.slice(0, FAC_INITIAL_COUNT);
+    const restItems = items.slice(FAC_INITIAL_COUNT);
+    const initialHtml = initialItems.map((f,i)=>facPolaroidHtml(f, i)).join('');
+    const restHtml = restItems.map((f,i)=>facPolaroidHtml(f, i + FAC_INITIAL_COUNT)).join('');
+    const hasMore = restItems.length > 0;
+    // 실서비스인데 시설 항목이 하나도 없는 경우: 콜라주 대신 중립 문구만 표시
+    const isEmptyRealData = !hasFacItems && !useAlbumFallback;
     $('facilitiesSec').innerHTML = `
       <div class="section-eyebrow reveal">우리 원 시설</div>
       <h2 class="section-title reveal">안전하고 따뜻한 공간</h2>
       <p class="section-intro compact reveal">${escWithBr(fac.intro)}</p>
+      ${isEmptyRealData ? `
+      <p class="fac-empty-notice reveal">시설 정보를 준비 중입니다.</p>` : `
       <div class="fac-badges reveal">${badgesHtml}</div>
-      <div class="fac-thumb-grid reveal">${thumbHtml}</div>
-      <button type="button" class="fac-more-btn reveal" id="facilityModalOpenBtn">시설 전체 보기</button>`;
+      <div class="fac-collage reveal">${initialHtml}</div>
+      ${hasMore ? `<div class="fac-collage-more" id="facMoreGrid">${restHtml}</div>` : ''}
+      ${hasMore ? `
+      <button type="button" class="fac-more-btn reveal" id="facMoreToggleBtn" aria-expanded="false">
+        <span class="cloud-link">시설 전체 보기</span>
+      </button>` : ''}`}`;
+
+    // 시설 항목이 초기 노출 개수보다 많을 때만 버튼이 존재 → 인라인 펼치기/접기 토글
+    const moreBtn = document.getElementById('facMoreToggleBtn');
+    const moreGrid = document.getElementById('facMoreGrid');
+    if (moreBtn && moreGrid) {
+      moreBtn.addEventListener('click', function(){
+        const expanded = moreGrid.classList.toggle('is-expanded');
+        moreBtn.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+        moreBtn.querySelector('.cloud-link').textContent = expanded ? '접기' : '시설 전체 보기';
+        if (!expanded) {
+          // 접을 때는 섹션 상단이 화면 밖으로 밀려나지 않게 부드럽게 스크롤 위치 보정
+          const prefersReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+          document.getElementById('facilitiesSec').scrollIntoView({ block: 'nearest', behavior: prefersReduced ? 'auto' : 'smooth' });
+        }
+      });
+    }
   } else {
     document.getElementById('facilitiesSec').hidden = true;
   }
@@ -1665,32 +1772,7 @@ function initInteractions(){
     document.addEventListener('keydown', function(e){ if(e.key==='Escape') close(); });
   })();
 
-  // ── 시설 모달 ──
-  (function(){
-    var overlay = document.getElementById('facilityModal');
-    var closeBtn = document.getElementById('facilityModalClose');
-    var openBtn = document.getElementById('facilityModalOpenBtn');
-    if (!overlay) return;
-    function open(){
-      var fac = window.__facilityData__;
-      var albumImgs = window.__albumImgs__ || [];
-      if (!fac) return;
-      document.getElementById('facilityIntro').textContent = fac.intro || '';
-      document.getElementById('facilityList').innerHTML = (fac.items||[]).map(function(f, i){
-        var img = albumImgs[i] || null;
-        return '<div class="fac-modal-item">'
-          + (img && img.photo ? '<div class="fm-img"><img src="'+esc(img.photo || '')+'" alt="'+esc(f.name)+'"></div>' : '')
-          + '<div class="fm-body"><div class="fm-name">'+esc(f.name)+'</div><div class="fm-desc">'+escWithBr(f.desc||'')+'</div></div>'
-          + '</div>';
-      }).join('');
-      overlay.classList.add('open');
-    }
-    function close(){ overlay.classList.remove('open'); }
-    if (openBtn) openBtn.addEventListener('click', open);
-    closeBtn.addEventListener('click', close);
-    overlay.addEventListener('click', function(e){ if(e.target===overlay) close(); });
-    document.addEventListener('keydown', function(e){ if(e.key==='Escape') close(); });
-  })();
+  // (시설 모달은 제거됨 — "시설 전체 보기"는 facilitiesSec 렌더 시점에 인라인 펼치기로 처리)
 
   // ── 교육프로그램 모달 ──
   (function(){
