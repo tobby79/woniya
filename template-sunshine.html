@@ -911,8 +911,8 @@
 <section class="teachers wrap" id="teachersSec"></section>
 <section class="facilities wrap" id="facilitiesSec"></section>
 <section class="programs wrap" id="programSec"></section>
-<section class="block wrap" id="faq"></section>
 <section class="info-block wrap" id="admissionsSec" hidden></section>
+<section class="block wrap" id="faq"></section>
 <section class="info-block wrap" id="directionsSec" hidden></section>
 <section class="finale wrap" id="finale"></section>
 <footer id="footerEl"></footer>
@@ -1006,26 +1006,26 @@
 </div>
 
 <!-- 시설 모달은 제거됨 → "시설 전체 보기" 클릭 시 같은 섹션 안에서 인라인으로 펼쳐짐 -->
-
-<!-- 교육프로그램 모달 -->
-<div class="info-modal-overlay" id="programModal">
-  <div class="info-modal-panel">
-    <div class="info-modal-header">
-      <h3 class="info-modal-title">교육프로그램</h3>
-    </div>
-    <button class="info-modal-close" id="programModalClose">×</button>
-    <div class="info-modal-body">
-      <p class="info-modal-prog-intro" id="programModalIntro"></p>
-      <div id="programModalList"></div>
-    </div>
-  </div>
-</div>
+<!-- 교육프로그램 모달도 제거됨 → "프로그램 전체 보기" 클릭 시 같은 섹션 안에서 인라인으로 펼쳐짐 -->
 
 <!-- 라이트박스 -->
 <div class="lightbox-overlay" id="lightbox">
   <button class="lightbox-close" id="lightboxClose">×</button>
   <img class="lightbox-img" id="lightboxImg" alt="">
   <div class="lightbox-cap" id="lightboxCap"></div>
+</div>
+
+<!-- 시설 사진 전용 라이트박스: 이전/다음(순환) 탐색이 필요해 위 공용 라이트박스와 분리된 별도 오버레이 -->
+<div class="fac-lightbox-overlay" id="facLightbox">
+  <figure class="fac-lightbox-fig">
+    <div class="fac-lightbox-imgwrap">
+      <img class="fac-lightbox-img" id="facLightboxImg" alt="">
+      <button type="button" class="fac-lightbox-close" id="facLightboxClose" aria-label="닫기">×</button>
+      <button type="button" class="fac-lightbox-arrow prev" id="facLightboxPrev" aria-label="이전 사진">‹</button>
+      <button type="button" class="fac-lightbox-arrow next" id="facLightboxNext" aria-label="다음 사진">›</button>
+    </div>
+    <figcaption class="fac-lightbox-cap" id="facLightboxCap"></figcaption>
+  </figure>
 </div>
 
 <style>
@@ -1167,11 +1167,20 @@
     padding:18px 0 6px;
   }
 
-  /* 콜라주 컨테이너: PC 2열x2행 그리드. 각 폴라로이드는 nth-child로 서로 다른
-     회전값을 가져 코르크보드에 붙인 듯한 느낌을 유지하되, 2x2 안에서 균형 잡히게 배치 */
+  /* 콜라주 컨테이너: PC 2열x2행 그리드(플렉스 기반 — 홀수 개수일 때 마지막 항목이
+     .fac-collage-odd-last로 가운데 정렬됨, teachers .cards와 동일한 원리를 시설 전용
+     클래스로 분리). 각 폴라로이드는 nth-child로 서로 다른 회전값을 가져 코르크보드에
+     붙인 듯한 느낌을 유지하되, 2x2 안에서 균형 잡히게 배치 */
   .fac-collage{
-    display:grid;grid-template-columns:1fr 1fr;gap:32px 28px;
+    display:flex;flex-wrap:wrap;gap:32px 28px;
     margin:0 auto;max-width:520px;padding:10px 6px 8px;
+  }
+  .fac-collage .fac-polaroid{flex:0 1 calc(50% - 14px);max-width:246px}
+  /* 홀수 개수일 때 마지막 폴라로이드에 붙는 클래스: flex-basis를 100%로 넓혀
+     가운데 정렬된 한 장짜리 마지막 줄을 만든다(teachers 홀수 정렬과 동일 원리) */
+  .fac-collage .fac-polaroid.fac-odd-last,
+  .fac-collage-more .fac-polaroid.fac-odd-last{
+    flex-basis:100%;max-width:246px;margin:0 auto;
   }
   .fac-polaroid{
     position:relative;z-index:1;
@@ -1185,6 +1194,7 @@
   .fac-polaroid .pic{
     border-radius:4px;aspect-ratio:4/5;overflow:hidden;position:relative;
     background:var(--cream);display:flex;align-items:flex-end;
+    cursor:pointer;
   }
   .fac-polaroid .pic img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0}
   .fac-polaroid .cap{
@@ -1199,26 +1209,31 @@
   .fac-polaroid:nth-child(4n+3){transform:rotate(2deg)}
   .fac-polaroid:nth-child(4n+4){transform:rotate(-2.5deg)}
 
-  /* 펼치기 대상(5번째 이후) 항목을 담는 래퍼 — 높이/투명도 전환으로 부드럽게 펼쳐짐 */
+  /* 펼치기 대상(기본 노출 이후) 항목을 담는 래퍼 — 높이/투명도 전환으로 부드럽게 펼쳐짐 */
   .fac-collage-more{
-    display:grid;grid-template-columns:1fr 1fr;gap:32px 28px;
+    display:flex;flex-wrap:wrap;gap:32px 28px;
     max-width:520px;margin:0 auto;overflow:hidden;
     max-height:0;opacity:0;
     transition:max-height .45s ease,opacity .35s ease;
   }
+  .fac-collage-more .fac-polaroid{flex:0 1 calc(50% - 14px);max-width:246px}
   .fac-collage-more.is-expanded{max-height:4000px;opacity:1;margin-top:32px}
   @media (prefers-reduced-motion:reduce){
     .fac-collage-more{transition:none}
   }
 
-  /* 모바일: 2열 그대로, 세로로 이어짐(가로 스크롤 없음). 각도는 완화해서
-     좁은 화면에서 사진이 서로 겹치거나 잘리지 않게 한다 */
+  /* 모바일: 1열로 전환(기존 2열에서 변경), 세로로 이어짐. 사진 폭이 넓어지는 만큼
+     프레임 비율/캡션 폰트도 비례해서 키운다. 각도는 완화해서 넓어진 사진이
+     화면 밖으로 삐져나오지 않게 한다 */
   @media (max-width:719px){
     .fac-collage,.fac-collage-more{
-      gap:22px 14px;max-width:none;
+      flex-wrap:wrap;gap:26px;max-width:none;
       padding:10px var(--mobile-side-padding) 0;
     }
+    .fac-collage .fac-polaroid,.fac-collage-more .fac-polaroid{flex:1 1 100%;max-width:360px}
     .fac-collage-more.is-expanded{margin-top:22px}
+    .fac-polaroid .pic{aspect-ratio:4/3}
+    .fac-polaroid .cap{font-size:1.18rem;padding:18px 8px 2px}
     .fac-polaroid:nth-child(4n+1){transform:rotate(-2deg)}
     .fac-polaroid:nth-child(4n+2){transform:rotate(1.5deg)}
     .fac-polaroid:nth-child(4n+3){transform:rotate(1.5deg)}
@@ -1235,22 +1250,115 @@
     background:none;border:none;padding:0;cursor:pointer;
   }
 
-  /* ── 교육프로그램 (이미지 카드 + 모달) ── */
-  .programs{padding-block:72px 44px}
-  .prog-card{background:var(--paper);border-radius:var(--card-radius);overflow:hidden;box-shadow:var(--card-shadow);margin-bottom:14px}
-  .prog-card .prog-img{aspect-ratio:16/9;overflow:hidden;background:var(--cream)}
-  .prog-card .prog-img img{width:100%;height:100%;object-fit:cover;display:block}
-  .prog-card .prog-body{padding:18px 18px 20px}
-  .prog-card .prog-name{font-weight:700;font-size:var(--fs-card-title);color:var(--ink);margin-bottom:6px}
-  .prog-card .prog-desc{font-size:var(--fs-caption);color:var(--ink-soft);line-height:1.65}
-  .prog-more-btn{display:block;width:100%;padding:14px;background:none;border:1.5px solid var(--coral);border-radius:14px;color:var(--coral);font-weight:700;font-size:var(--fs-caption);cursor:pointer;font-family:var(--body);margin-top:4px}
-  .info-modal-prog-intro{font-size:var(--fs-body);color:var(--ink-soft);line-height:1.75;margin-bottom:22px}
-  .prog-modal-item{background:var(--cream);border-radius:var(--card-radius);overflow:hidden;margin-bottom:18px}
-  .prog-modal-item .pm-img{aspect-ratio:16/9;overflow:hidden;background:var(--paper)}
-  .prog-modal-item .pm-img img{width:100%;height:100%;object-fit:cover;display:block}
-  .prog-modal-item .pm-body{padding:16px 18px}
-  .prog-modal-item .pm-name{font-weight:700;font-size:var(--fs-card-title);color:var(--ink);margin-bottom:5px}
-  .prog-modal-item .pm-desc{font-size:var(--fs-caption);color:var(--ink-soft);line-height:1.6}
+  /* ── 시설 사진 전용 라이트박스(프로그램 섹션에는 적용하지 않음) ──
+     기존 공용 #lightbox(단일 이미지, prev/next 없음)와는 별개의 독립 오버레이.
+     시설 사진(숨겨진 펼치기 항목 포함 전체 목록)을 순환 탐색할 수 있어야 하기 때문. */
+  .fac-lightbox-overlay{
+    position:fixed;inset:0;z-index:75;background:rgba(38,28,20,.88);
+    display:none;align-items:center;justify-content:center;padding:20px;
+    overflow:visible;
+  }
+  .fac-lightbox-overlay.open{display:flex}
+  /* .fac-lightbox-fig는 이미지 크기에만 맞춰 사이즈가 결정되는 컨테이너 — 버튼을 위한
+     "여유 공간"을 padding/margin처럼 박스 너비 계산에 들어가는 값으로 주면 좁은 뷰포트에서
+     이미지 자체가 줄어드는 회귀가 재발하므로, overflow:visible만 두고 폭 계산에는
+     전혀 관여하지 않게 한다. 버튼은 아래 .fac-lightbox-imgwrap 기준 absolute로 배치되어
+     이 컨테이너 밖으로 자연스럽게 삐져나간다(잘리지 않음 — overflow:visible). */
+  .fac-lightbox-fig{
+    display:flex;flex-direction:column;align-items:center;gap:16px;
+    overflow:visible;
+  }
+  /* 이미지 wrapper: 여백 조정 이전 원래 크기 그대로 — width/max-width/margin은 절대 건드리지 않는다.
+     버튼은 이 wrapper 기준 절대 위치로 배치되며, wrapper 자체의 박스 크기에는 영향을 주지 않는다. */
+  .fac-lightbox-imgwrap{
+    position:relative;
+    max-width:min(680px,92vw);
+  }
+  .fac-lightbox-img{max-width:100%;max-height:72vh;object-fit:contain;border-radius:12px;display:block;box-shadow:0 30px 60px -20px rgba(0,0,0,.5)}
+  .fac-lightbox-cap{font-family:var(--hand);font-weight:700;font-size:1.15rem;color:#fff;text-align:center}
+  .fac-lightbox-close{
+    position:absolute;top:-64px;right:-8px;width:42px;height:42px;border:none;
+    background:rgba(255,255,255,.16);border-radius:50%;font-size:1.5rem;color:#fff;
+    cursor:pointer;display:flex;align-items:center;justify-content:center;
+  }
+  .fac-lightbox-close:hover{background:rgba(255,255,255,.28)}
+  .fac-lightbox-arrow{
+    position:absolute;top:50%;transform:translateY(-50%);width:48px;height:48px;
+    border:none;border-radius:50%;background:var(--coral);color:#fff;font-size:1.4rem;
+    cursor:pointer;display:flex;align-items:center;justify-content:center;
+    box-shadow:0 12px 26px -10px rgba(0,0,0,.5);
+  }
+  .fac-lightbox-arrow:hover{background:var(--coral-deep)}
+  .fac-lightbox-arrow.prev{left:-84px}
+  .fac-lightbox-arrow.next{right:-84px}
+  /* 이미지가 92vw로 뷰포트 폭에 거의 맞닿는 좁은 데스크톱/노트북 구간(720~899px)에서는
+     이미지 크기를 유지하는 대신 버튼 간격만 최소한으로 줄여 화면 밖으로 잘리지 않게 한다. */
+  @media (min-width:720px) and (max-width:899px){
+    .fac-lightbox-arrow.prev{left:-44px}
+    .fac-lightbox-arrow.next{right:-44px}
+    .fac-lightbox-close{right:-8px}
+  }
+  /* 모바일은 기존 그대로: 버튼을 뷰포트(오버레이) 가장자리에 고정 배치 —
+     이미지 wrapper의 상대 위치 기준을 쓰지 않도록 좌표를 오버라이드한다. */
+  @media (max-width:719px){
+    .fac-lightbox-close{position:fixed;top:20px;right:20px}
+    .fac-lightbox-arrow{position:fixed;width:40px;height:40px;font-size:1.2rem}
+    .fac-lightbox-arrow.prev{left:8px}
+    .fac-lightbox-arrow.next{right:8px}
+  }
+  @media (prefers-reduced-motion:reduce){
+    .fac-lightbox-img{transition:none}
+  }
+
+  /* ── 교육프로그램 (원형 사진 + 지그재그 그리드, 인라인 펼치기) ── */
+  /* 시설 소개의 각진 폴라로이드 콜라주와 대비되도록 원형 프레임 + 해살 점선 테두리로 차별화.
+     "프로그램 전체 보기"는 모달이 아니라 시설 섹션과 동일한 인라인 펼치기 패턴(.prog-circle-more).
+     그리드는 flexbox 기반(홀수 개수일 때 마지막 카드가 .prog-odd-last로 가운데 정렬 —
+     teachers .cards와 같은 원리를 program 전용 클래스로 분리). */
+  .programs{padding-block:72px 44px;text-align:center}
+  .prog-circle-grid{
+    display:flex;flex-wrap:wrap;justify-content:center;gap:32px 24px;
+    margin:8px auto 0;max-width:520px;
+  }
+  .prog-circle-grid .prog-circle-card,
+  .prog-circle-more .prog-circle-card{flex:0 1 calc(50% - 12px);max-width:232px}
+  .prog-circle-grid .prog-circle-card.prog-odd-last,
+  .prog-circle-more .prog-circle-card.prog-odd-last{flex-basis:100%;max-width:232px;margin:0 auto}
+  .prog-circle-card{display:flex;flex-direction:column;align-items:center;text-align:center}
+  .prog-circle-card:nth-child(2n){transform:translateY(-16px)}
+  .prog-circle-pic{
+    width:100%;max-width:192px;aspect-ratio:1/1;border-radius:50%;overflow:hidden;
+    background:var(--cream);
+    border:2px dashed var(--badge-border);
+    padding:8px;
+  }
+  .prog-circle-pic img{width:100%;height:100%;object-fit:cover;display:block;border-radius:50%}
+  .prog-circle-name{font-family:var(--hand);font-weight:700;font-size:1.15rem;color:var(--ink);margin-top:12px}
+  .prog-circle-desc{font-size:var(--fs-caption);color:var(--ink-soft);line-height:1.5;margin-top:4px}
+
+  /* 펼치기 대상(초기 노출 이후) 항목을 담는 래퍼 — fac-collage-more와 동일한 원리, program 전용 클래스 */
+  .prog-circle-more{
+    display:flex;flex-wrap:wrap;justify-content:center;gap:32px 24px;
+    max-width:520px;margin:0 auto;overflow:hidden;
+    max-height:0;opacity:0;
+    transition:max-height .45s ease,opacity .35s ease;
+  }
+  .prog-circle-more.is-expanded{max-height:4000px;opacity:1;margin-top:32px}
+  @media (prefers-reduced-motion:reduce){
+    .prog-circle-more{transition:none}
+  }
+
+  @media (max-width:719px){
+    .prog-circle-grid,.prog-circle-more{gap:26px;max-width:none}
+    .prog-circle-grid .prog-circle-card,
+    .prog-circle-more .prog-circle-card{flex-basis:100%;max-width:none}
+    .prog-circle-more.is-expanded{margin-top:26px}
+    .prog-circle-card:nth-child(2n){transform:translateY(-8px)}
+    .prog-circle-pic{max-width:168px}
+  }
+  @media (prefers-reduced-motion:reduce){
+    .prog-circle-card:nth-child(2n){transform:none}
+  }
   .section-intro{margin:0 auto 24px;text-align:center;color:var(--ink-soft);font-size:var(--fs-body);line-height:1.75}
   .section-intro.compact{margin-bottom:8px}
 </style>
@@ -1753,17 +1861,23 @@ function mapRowToData(row){
   // album.items[i]와 매칭(모달 시절 로직과 동일한 짝짓기 규칙 재사용).
   const fac = data.center.facilities;
   const albumImgs = data.album?.items || [];
-  const FAC_INITIAL_COUNT = 4;
+  // 기본 노출 개수는 PC 2x2(4장)/모바일 1열 3장으로 브레이크포인트에 따라 다르다 —
+  // teachers/TEACHER_INITIAL_COUNT와 동일하게 렌더 시점 뷰포트 폭으로 판단.
+  const FAC_INITIAL_COUNT = (window.matchMedia && window.matchMedia('(max-width:719px)').matches) ? 3 : 4;
   // placeholder 캡션: 실제 앨범 라벨(it.label)이 있으면 그대로 쓰고, 없을 때만 대체
   const FAC_CAPTION_PLACEHOLDERS = ['놀이실', '미술 시간', '바깥 놀이터', '음악 시간'];
-  function facPolaroidHtml(f, i){
+  // 라이트박스에서 순환 탐색할 전체 목록(숨겨진 펼치기 항목 포함) — facPolaroidHtml 호출 시 채워진다.
+  const facLightboxItems = [];
+  function facPolaroidHtml(f, i, isOddLast){
     const img = albumImgs[i] || {};
     const caption = (img.label && img.label.trim()) ? img.label
       : (f && f.name) ? f.name
       : FAC_CAPTION_PLACEHOLDERS[i % FAC_CAPTION_PLACEHOLDERS.length];
+    const lbIndex = facLightboxItems.length;
+    facLightboxItems.push({ photo: img.photo || '', caption });
     return `
-      <div class="fac-polaroid">
-        <div class="pic"><img data-src="${esc(img.photo || '')}" alt="${esc(caption)}"></div>
+      <div class="fac-polaroid${isOddLast ? ' fac-odd-last' : ''}">
+        <div class="pic" data-lb-index="${lbIndex}"><img data-src="${esc(img.photo || '')}" alt="${esc(caption)}"></div>
         <div class="cap">${esc(caption)}</div>
       </div>`;
   }
@@ -1782,8 +1896,9 @@ function mapRowToData(row){
       `<span class="fac-badge">${esc(f.name)}</span>`).join('') : '';
     const initialItems = items.slice(0, FAC_INITIAL_COUNT);
     const restItems = items.slice(FAC_INITIAL_COUNT);
-    const initialHtml = initialItems.map((f,i)=>facPolaroidHtml(f, i)).join('');
-    const restHtml = restItems.map((f,i)=>facPolaroidHtml(f, i + FAC_INITIAL_COUNT)).join('');
+    const isOdd = items.length % 2 === 1;
+    const initialHtml = initialItems.map((f,i)=>facPolaroidHtml(f, i, isOdd && restItems.length === 0 && i === initialItems.length - 1)).join('');
+    const restHtml = restItems.map((f,i)=>facPolaroidHtml(f, i + FAC_INITIAL_COUNT, isOdd && i === restItems.length - 1)).join('');
     const hasMore = restItems.length > 0;
     // 실서비스인데 시설 항목이 하나도 없는 경우: 콜라주 대신 중립 문구만 표시
     const isEmptyRealData = !hasFacItems && !useAlbumFallback;
@@ -1816,6 +1931,14 @@ function mapRowToData(row){
         }
       });
     }
+
+    // 시설 사진 라이트박스 연결: 숨겨진(펼치기 뒤) 항목도 포함해 전체 목록 기준으로 순환 탐색
+    document.querySelectorAll('#facilitiesSec .fac-polaroid .pic').forEach(function(pic){
+      pic.addEventListener('click', function(){
+        const idx = Number(pic.getAttribute('data-lb-index'));
+        if (window.__openFacLightbox__) window.__openFacLightbox__(idx, facLightboxItems);
+      });
+    });
   } else {
     document.getElementById('facilitiesSec').hidden = true;
   }
@@ -1902,26 +2025,57 @@ function mapRowToData(row){
     });
   })();
 
-  // ── 교육프로그램 (이미지 카드 + 모달) ──
+  // ── 교육프로그램 (원형 사진 + 지그재그 그리드, 인라인 펼치기) ──
+  // 시설 콜라주(각진 폴라로이드)와 구분되는 톤으로, 사진을 원형으로 자르고 해살 점선 테두리를 두른다.
+  // 시설 섹션이 album.items[0..3]을 이미 사용 중이므로, 겹치지 않게 [4..7] 인덱스를 우선 사용한다.
+  // 기본 노출 개수: PC는 2열 기준 "2줄"(4개), 모바일은 1열 3개 — teachers/facilities와 동일한
+  // 반응형 슬라이스 판단(렌더 시점 뷰포트 폭 기준).
   const prog = data.center.programs;
+  const PROG_INITIAL_COUNT = (window.matchMedia && window.matchMedia('(max-width:719px)').matches) ? 3 : 4;
+  function progCircleHtml(it, i, isOddLast){
+    const img = albumImgs[i + 4] || albumImgs[i % Math.max(albumImgs.length,1)] || null;
+    return `<div class="prog-circle-card reveal${isOddLast ? ' prog-odd-last' : ''}">
+      <div class="prog-circle-pic">${img && img.photo ? `<img data-src="${esc(img.photo)}" alt="${esc(it.name)}">` : ''}</div>
+      <div class="prog-circle-name">${esc(it.name)}</div>
+      <div class="prog-circle-desc">${escWithBr(it.desc)}</div>
+    </div>`;
+  }
   if (prog) {
-    const previewItems = (prog.items||[]).slice(0,2);
-    const cardsHtml = previewItems.map((it,i)=>{
-      const img = albumImgs[i+4] || albumImgs[i] || null;
-      return `<div class="prog-card reveal">
-        <div class="prog-img">${img?`<img data-src="${esc(img.photo)}" alt="${esc(it.name)}">`:''}</div>
-        <div class="prog-body">
-          <div class="prog-name">${esc(it.name)}</div>
-          <div class="prog-desc">${escWithBr(it.desc)}</div>
-        </div>
-      </div>`;
-    }).join('');
+    const progItems = prog.items || [];
+    if (albumImgs.length && albumImgs.length < 4 + progItems.length) {
+      console.warn('[programSec] 앨범 이미지 부족, 반복 사용');
+    }
+    const initialItems = progItems.slice(0, PROG_INITIAL_COUNT);
+    const restItems = progItems.slice(PROG_INITIAL_COUNT);
+    const isOdd = progItems.length % 2 === 1;
+    const initialHtml = initialItems.map((it,i)=>progCircleHtml(it, i, isOdd && restItems.length === 0 && i === initialItems.length - 1)).join('');
+    const restHtml = restItems.map((it,i)=>progCircleHtml(it, i + PROG_INITIAL_COUNT, isOdd && i === restItems.length - 1)).join('');
+    const hasMore = restItems.length > 0;
     $('programSec').innerHTML = `
-      <div class="section-eyebrow reveal">교육프로그램</div>
-      <h2 class="section-title reveal">우리 원의 교육</h2>
+      <div class="section-eyebrow reveal">골고루 배우는 하루</div>
+      <h2 class="section-title reveal">우리 아이의 성장 프로그램</h2>
       <p class="section-intro reveal">${escWithBr(prog.intro)}</p>
-      ${cardsHtml}
-      <button type="button" class="prog-more-btn reveal" id="programModalOpenBtn">교육프로그램 전체 보기</button>`;
+      <div class="prog-circle-grid">${initialHtml}</div>
+      ${hasMore ? `<div class="prog-circle-more" id="progMoreGrid">${restHtml}</div>` : ''}
+      ${hasMore ? `
+      <button type="button" class="fac-more-btn reveal" id="progMoreToggleBtn" aria-expanded="false">
+        <span class="cloud-link">프로그램 전체 보기</span>
+      </button>` : ''}`;
+
+    // 시설 섹션과 동일한 인라인 펼치기/접기 토글
+    const moreBtn = document.getElementById('progMoreToggleBtn');
+    const moreGrid = document.getElementById('progMoreGrid');
+    if (moreBtn && moreGrid) {
+      moreBtn.addEventListener('click', function(){
+        const expanded = moreGrid.classList.toggle('is-expanded');
+        moreBtn.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+        moreBtn.querySelector('.cloud-link').textContent = expanded ? '접기' : '프로그램 전체 보기';
+        if (!expanded) {
+          const prefersReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+          document.getElementById('programSec').scrollIntoView({ block: 'nearest', behavior: prefersReduced ? 'auto' : 'smooth' });
+        }
+      });
+    }
   } else {
     document.getElementById('programSec').hidden = true;
   }
@@ -1969,8 +2123,6 @@ function mapRowToData(row){
   window.__directorData__ = c.director;
   window.__philosophyData__ = data.center.philosophy;
   window.__facilityData__ = data.center.facilities;
-  window.__programData__ = data.center.programs;
-  window.__albumImgs__ = data.album?.items || [];
   if (isPreviewMode){
     // 경고 모달은 "실제 신청/제출" 액션(입소상담·상담신청 버튼)에만 건다.
     // 정보 열람용 네비게이션 링크(자세히 보기·통학 안내)는 경고 대상에서 제외 —
@@ -2028,33 +2180,7 @@ function initInteractions(){
   })();
 
   // (시설 모달은 제거됨 — "시설 전체 보기"는 facilitiesSec 렌더 시점에 인라인 펼치기로 처리)
-
-  // ── 교육프로그램 모달 ──
-  (function(){
-    var overlay = document.getElementById('programModal');
-    var closeBtn = document.getElementById('programModalClose');
-    var openBtn = document.getElementById('programModalOpenBtn');
-    if (!overlay) return;
-    function open(){
-      var prog = window.__programData__;
-      var albumImgs = window.__albumImgs__ || [];
-      if (!prog) return;
-      document.getElementById('programModalIntro').textContent = prog.intro || '';
-      document.getElementById('programModalList').innerHTML = (prog.items||[]).map(function(it, i){
-        var img = albumImgs[i+4] || albumImgs[i] || null;
-        return '<div class="prog-modal-item">'
-          + (img && img.photo ? '<div class="pm-img"><img src="'+esc(img.photo || '')+'" alt="'+esc(it.name)+'"></div>' : '')
-          + '<div class="pm-body"><div class="pm-name">'+esc(it.name)+'</div><div class="pm-desc">'+escWithBr(it.desc)+'</div></div>'
-          + '</div>';
-      }).join('');
-      overlay.classList.add('open');
-    }
-    function close(){ overlay.classList.remove('open'); }
-    if (openBtn) openBtn.addEventListener('click', open);
-    closeBtn.addEventListener('click', close);
-    overlay.addEventListener('click', function(e){ if(e.target===overlay) close(); });
-    document.addEventListener('keydown', function(e){ if(e.key==='Escape') close(); });
-  })();
+  // (교육프로그램 모달도 제거됨 — "프로그램 전체 보기"는 programSec 렌더 시점에 인라인 펼치기로 처리)
 
   // ── 라이트박스 ──
   (function(){
@@ -2073,6 +2199,48 @@ function initInteractions(){
     closeBtn.addEventListener('click', close);
     overlay.addEventListener('click', function(e){ if(e.target===overlay) close(); });
     document.addEventListener('keydown', function(e){ if(e.key==='Escape') close(); });
+  })();
+
+  // ── 시설 사진 전용 라이트박스 (이전/다음 순환 탐색) ──
+  // 위 공용 #lightbox와 완전히 분리된 독립 오버레이 — facilitiesSec 전용이며 programSec에는 연결하지 않는다.
+  (function(){
+    var overlay = document.getElementById('facLightbox');
+    var closeBtn = document.getElementById('facLightboxClose');
+    var prevBtn = document.getElementById('facLightboxPrev');
+    var nextBtn = document.getElementById('facLightboxNext');
+    var imgEl = document.getElementById('facLightboxImg');
+    var capEl = document.getElementById('facLightboxCap');
+    if (!overlay) return;
+    var items = [];
+    var current = 0;
+    function render(){
+      var it = items[current];
+      if (!it) return;
+      imgEl.src = it.photo || '';
+      imgEl.alt = it.caption || '';
+      capEl.textContent = it.caption || '';
+    }
+    function open(index, list){
+      items = list || [];
+      if (!items.length) return;
+      current = ((index % items.length) + items.length) % items.length;
+      render();
+      overlay.classList.add('open');
+    }
+    function close(){ overlay.classList.remove('open'); imgEl.src = ''; }
+    function next(){ current = (current + 1) % items.length; render(); }
+    function prev(){ current = (current - 1 + items.length) % items.length; render(); }
+    window.__openFacLightbox__ = open;
+    closeBtn.addEventListener('click', close);
+    nextBtn.addEventListener('click', next);
+    prevBtn.addEventListener('click', prev);
+    overlay.addEventListener('click', function(e){ if (e.target === overlay) close(); });
+    document.addEventListener('keydown', function(e){
+      if (!overlay.classList.contains('open')) return;
+      if (e.key === 'Escape') close();
+      else if (e.key === 'ArrowRight') next();
+      else if (e.key === 'ArrowLeft') prev();
+    });
   })();
 
   // ── '우리 반' 버튼 → ourclass.html ──
