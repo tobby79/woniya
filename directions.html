@@ -39,17 +39,25 @@
     position:sticky;top:0;z-index:20;
     --cloud-dip:16px; --cloud-unit:64px;
     padding-bottom:var(--cloud-dip);
-    background:rgba(255,250,243,.82);
+    background:var(--paper);
     backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
-    filter:drop-shadow(0 2px 4px rgba(180,140,110,.16));
+    filter:drop-shadow(0 4px 6px rgba(180,140,110,.28));
     -webkit-mask:radial-gradient(var(--cloud-dip) at 50% 100%, #0000 96%, #000) 50% 0 / var(--cloud-unit) 100% repeat-x;
     mask:radial-gradient(var(--cloud-dip) at 50% 100%, #0000 96%, #000) 50% 0 / var(--cloud-unit) 100% repeat-x;
   }
   @media (max-width:719px){ .topbar{--cloud-dip:12px; --cloud-unit:52px} }
   .topbar .inner{max-width:560px;margin:0 auto;padding:12px 22px;display:flex;align-items:center;justify-content:space-between;gap:12px}
   .topbar .brand{font-family:var(--display);font-size:1.15rem;color:var(--ink);text-decoration:none;letter-spacing:-.5px}
+  .topbar .brand .brand-text{opacity:0;transition:opacity .25s ease}
+  .topbar .brand.is-ready .brand-text{opacity:1}
+  .topbar .brand.is-ready .brand-skel{display:none}
+  /* 원 이름 로딩 중 노출되는 스켈레톤 placeholder. 데이터 도착 시 JS가 is-ready를 붙이며 사라지고 실제 텍스트가 fade-in. */
+  .topbar .brand-skel{display:inline-block;width:96px;height:1.1em;border-radius:6px;background:rgba(120,90,70,.1);vertical-align:middle}
   .topbar .back{display:inline-flex;align-items:center;gap:6px;color:var(--ink-soft);text-decoration:none;font-weight:700;font-size:.9rem;border:1.5px solid var(--line);border-radius:50px;padding:8px 16px;background:rgba(255,255,255,.6);transition:color .2s ease,border-color .2s ease}
   .topbar .back:hover{color:var(--coral-deep);border-color:var(--coral)}
+  @media (prefers-reduced-motion:reduce){
+    .topbar .brand .brand-text{transition:none}
+  }
 
   .wrap{max-width:560px;margin:0 auto;padding:0 22px;position:relative}
 
@@ -79,7 +87,7 @@
 
 <nav class="topbar">
   <div class="inner">
-    <a class="brand" id="brandLink" href="index.html">원이야</a>
+    <a class="brand" id="brandLink" href="index.html"><span class="brand-skel" id="brandSkel"></span><span class="brand-text" id="brandText"></span></a>
     <a class="back" id="backLink" href="index.html">← 홈으로</a>
   </div>
 </nav>
@@ -170,6 +178,9 @@ function loadKakaoMap(address, containerId){
     }
   } catch (e) {
     console.error(e);
+    var brandLinkErr = document.getElementById('brandLink');
+    document.getElementById('brandText').textContent = '원이야';
+    brandLinkErr.classList.add('is-ready');
     content.innerHTML = '<p class="state">오시는 길을 불러오지 못했어요.</p>';
     return;
   }
@@ -180,8 +191,10 @@ function loadKakaoMap(address, containerId){
   var mainUrl = isPreviewMode
     ? (mainFile + '?preview=' + encodeURIComponent(previewId))
     : (mainFile + '?slug=' + encodeURIComponent(center.slug));
-  document.getElementById('brandLink').href = mainUrl;
-  document.getElementById('brandLink').textContent = (center.name || '원이야').replace(/\s*(어린이집|유치원)$/,'') || center.name;
+  var brandLinkEl = document.getElementById('brandLink');
+  brandLinkEl.href = mainUrl;
+  document.getElementById('brandText').textContent = (center.name || '원이야').replace(/\s*(어린이집|유치원)$/,'') || center.name;
+  brandLinkEl.classList.add('is-ready');
   document.getElementById('backLink').href = mainUrl;
   document.getElementById('consultLink').href = mainUrl + '#finale';
   document.getElementById('heroEyebrow').textContent = center.name || '';

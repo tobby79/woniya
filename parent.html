@@ -34,7 +34,18 @@
   }
   [hidden]{display:none!important}
 
-  .topbar{padding:18px 0}
+  /* 상단 네비 (admissions.html/directions.html/template-sunshine.html과 동일한 구름 밑단 실루엣) */
+  .topbar{
+    position:sticky;top:0;z-index:20;
+    --cloud-dip:16px; --cloud-unit:64px;
+    padding:18px 0 calc(18px + var(--cloud-dip));
+    background:var(--paper);
+    backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+    filter:drop-shadow(0 4px 6px rgba(180,140,110,.28));
+    -webkit-mask:radial-gradient(var(--cloud-dip) at 50% 100%, #0000 96%, #000) 50% 0 / var(--cloud-unit) 100% repeat-x;
+    mask:radial-gradient(var(--cloud-dip) at 50% 100%, #0000 96%, #000) 50% 0 / var(--cloud-unit) 100% repeat-x;
+  }
+  @media (max-width:719px){ .topbar{--cloud-dip:12px; --cloud-unit:52px} }
   .topbar-inner{max-width:560px;margin:0 auto;padding:0 22px;display:flex;align-items:center;justify-content:space-between;gap:14px}
   .brand{font-family:var(--display);font-size:1.2rem;color:var(--ink);text-decoration:none;letter-spacing:-.5px}
   .topbar-actions{display:flex;align-items:center;gap:10px}
