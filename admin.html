@@ -280,23 +280,37 @@
   .parent-id{font-size:.82rem;color:var(--ink-soft);word-break:break-all}
   .bus-layout{display:grid;gap:16px}
   .bus-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:16px}
-  .bus-route-list,.bus-stop-list{display:flex;flex-direction:column;gap:12px}
-  .bus-route-card,.bus-stop-card{background:var(--cream);border:1.5px solid #f1e9e0;border-radius:20px;padding:16px}
+  .bus-route-list,.bus-stop-list{display:flex;flex-direction:column;gap:10px}
+  .bus-route-card,.bus-stop-card{background:var(--cream);border:1.5px solid #f1e9e0;border-radius:16px;padding:12px}
   .bus-route-card{cursor:pointer;transition:border-color .15s ease,background .15s ease}
   .bus-route-card.active{border-color:var(--coral);background:#fff8f5}
-  .bus-route-head,.bus-stop-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
-  .bus-route-title{display:flex;align-items:center;gap:9px;font-weight:900;color:var(--ink)}
-  .bus-color-dot{width:14px;height:14px;border-radius:50%;border:1.5px solid rgba(64,55,51,.16);background:var(--coral)}
-  .bus-route-meta,.bus-stop-meta{margin-top:5px;color:var(--ink-soft);font-size:.82rem}
-  .bus-actions{display:flex;align-items:center;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+  .bus-route-head,.bus-stop-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .bus-route-main,.bus-stop-main{min-width:0;flex:1}
+  .bus-route-title{display:flex;align-items:center;gap:9px;font-weight:900;color:var(--ink);min-width:0}
+  .bus-route-title span:last-child,.bus-stop-title{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .bus-stop-summary{display:flex;align-items:center;gap:8px;min-width:0}
+  .bus-stop-title{font-weight:900;color:var(--ink)}
+  .bus-color-dot{width:12px;height:12px;border-radius:50%;border:1.5px solid rgba(64,55,51,.16);background:var(--coral);flex:0 0 auto}
+  .bus-route-meta,.bus-stop-meta{color:var(--ink-soft);font-size:.82rem;white-space:nowrap}
+  .bus-actions{display:flex;align-items:center;gap:5px;flex:0 0 auto;justify-content:flex-end}
+  .bus-icon-btn{width:28px;height:28px;display:inline-flex;align-items:center;justify-content:center;border:1.5px solid #eadfd3;border-radius:9px;background:#fffaf6;color:var(--ink-soft);font-size:.8rem;font-weight:900;line-height:1;cursor:pointer}
+  .bus-icon-btn:hover{border-color:var(--coral);color:var(--coral-deep);background:#fff5ef}
+  .bus-icon-btn.bus-danger{border-color:#f1d6d0;color:var(--danger);background:#fff8f7}
+  .bus-icon-btn.bus-danger:hover{border-color:var(--danger);background:#fff3f1}
+  .bus-edit-panel{margin-top:12px;padding-top:12px;border-top:1px solid #eadfd3}
+  .bus-edit-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
+  .bus-edit-title{font-size:.85rem;font-weight:900;color:var(--ink-soft)}
   .bus-inline-grid{display:grid;grid-template-columns:1fr 84px 70px;gap:8px;margin-top:12px}
   .bus-stop-grid{display:grid;grid-template-columns:1fr 92px 92px 70px;gap:8px;margin-top:12px}
+  input[type=color]{width:44px;height:36px;padding:2px;border-radius:var(--radius)}
   .bus-empty{padding:28px 16px;text-align:center;color:var(--ink-soft);background:var(--cream);border:1.5px dashed #eadfd3;border-radius:20px}
   .bus-detail-title{font-family:var(--display);font-size:1.25rem;margin:4px 0 6px;color:var(--ink)}
-  @media (max-width:520px){
+  @media (max-width:480px){
     .bus-inline-grid,.bus-stop-grid{grid-template-columns:1fr}
-    .bus-route-head,.bus-stop-head{flex-direction:column}
-    .bus-actions{justify-content:flex-start}
+    .bus-route-head,.bus-stop-head{gap:8px}
+    .bus-stop-summary{align-items:flex-start;flex-direction:column;gap:2px}
+    .bus-actions{gap:4px}
+    .bus-icon-btn{width:26px;height:26px;border-radius:8px;font-size:.74rem}
   }
   .modal-backdrop{position:fixed;inset:0;z-index:80;background:rgba(64,55,51,.42);display:flex;align-items:center;justify-content:center;padding:22px}
   .modal-panel{width:min(100%,520px);max-height:calc(100vh - 44px);overflow:auto;background:var(--paper);border-radius:24px;padding:24px;box-shadow:0 24px 60px -24px rgba(64,55,51,.48)}
@@ -870,6 +884,8 @@
   var busRoutes = [];
   var busStopsByRoute = {};
   var selectedBusRouteId = null;
+  var editingRouteId = null;
+  var editingStopId = null;
 
   var TYPE_LABELS = { hero:'대표', day_story:'하루', teacher:'교사', facility:'시설' };
   var KIND_LABELS = { consult:'상담', waiting:'대기', info_session:'설명회' };
@@ -2638,47 +2654,64 @@
   function renderBusRouteCard(route){
     var active = route.id === selectedBusRouteId ? ' active' : '';
     var color = safeBusColor(route.route_color);
+    var editing = route.id === editingRouteId;
     return '<div class="bus-route-card' + active + '" data-route-id="' + esc(route.id) + '">' +
       '<div class="bus-route-head">' +
-        '<div>' +
+        '<div class="bus-route-main">' +
           '<div class="bus-route-title"><span class="bus-color-dot" style="background:' + esc(color) + '"></span><span>' + escWithBr(route.route_name || '이름 없는 노선') + '</span></div>' +
-          '<div class="bus-route-meta">순서 ' + esc(route.sort || 0) + '</div>' +
         '</div>' +
         '<div class="bus-actions">' +
-          '<button type="button" class="btn ghost bus-route-up" data-route-id="' + esc(route.id) + '">위</button>' +
-          '<button type="button" class="btn ghost bus-route-down" data-route-id="' + esc(route.id) + '">아래</button>' +
-          '<button type="button" class="btn danger bus-route-delete" data-route-id="' + esc(route.id) + '">삭제</button>' +
+          '<button type="button" class="bus-icon-btn bus-route-up" data-route-id="' + esc(route.id) + '" aria-label="노선 위로 이동" title="위로">▲</button>' +
+          '<button type="button" class="bus-icon-btn bus-route-down" data-route-id="' + esc(route.id) + '" aria-label="노선 아래로 이동" title="아래로">▼</button>' +
+          '<button type="button" class="bus-icon-btn bus-route-edit" data-route-id="' + esc(route.id) + '" aria-label="노선 수정" title="수정">✎</button>' +
+          '<button type="button" class="bus-icon-btn bus-danger bus-route-delete" data-route-id="' + esc(route.id) + '" aria-label="노선 삭제" title="삭제">✕</button>' +
         '</div>' +
       '</div>' +
-      '<div class="bus-inline-grid">' +
-        '<input type="text" class="bus-route-name" value="' + esc(route.route_name || '') + '" placeholder="예: A코스">' +
-        '<input type="color" class="bus-route-color" value="' + esc(color) + '" aria-label="노선 색상">' +
-        '<input type="number" class="bus-route-sort" value="' + esc(route.sort || 0) + '" aria-label="노선 순서">' +
-      '</div>' +
-      '<button type="button" class="btn ghost bus-route-save" data-route-id="' + esc(route.id) + '" style="margin-top:10px">노선 저장</button>' +
+      (editing ? '<div class="bus-edit-panel">' +
+        '<div class="bus-edit-head">' +
+          '<div class="bus-edit-title">노선 편집</div>' +
+          '<button type="button" class="bus-icon-btn bus-route-close" data-route-id="' + esc(route.id) + '" aria-label="노선 편집 닫기" title="닫기">✕</button>' +
+        '</div>' +
+        '<div class="bus-inline-grid">' +
+          '<input type="text" class="bus-route-name" value="' + esc(route.route_name || '') + '" placeholder="예: A코스">' +
+          '<input type="color" class="bus-route-color" value="' + esc(color) + '" aria-label="노선 색상">' +
+          '<input type="number" class="bus-route-sort" value="' + esc(route.sort || 0) + '" aria-label="노선 순서">' +
+        '</div>' +
+        '<button type="button" class="btn ghost bus-route-save" data-route-id="' + esc(route.id) + '" style="margin-top:10px">노선 저장</button>' +
+      '</div>' : '') +
     '</div>';
   }
 
   function renderBusStopCard(stop){
+    var editing = stop.id === editingStopId;
     return '<div class="bus-stop-card" data-stop-id="' + esc(stop.id) + '">' +
       '<div class="bus-stop-head">' +
-        '<div>' +
-          '<div class="class-card-title">' + escWithBr(stop.stop_name || '이름 없는 정류장') + '</div>' +
-          '<div class="bus-stop-meta">등원 ' + esc(timeValue(stop.pickup_time) || '-') + ' · 하원 ' + esc(timeValue(stop.dropoff_time) || '-') + ' · 순서 ' + esc(stop.sort || 0) + '</div>' +
+        '<div class="bus-stop-main">' +
+          '<div class="bus-stop-summary">' +
+            '<span class="bus-stop-title">' + escWithBr(stop.stop_name || '이름 없는 정류장') + '</span>' +
+            '<span class="bus-stop-meta">등원 ' + esc(timeValue(stop.pickup_time) || '-') + ' · 하원 ' + esc(timeValue(stop.dropoff_time) || '-') + '</span>' +
+          '</div>' +
         '</div>' +
         '<div class="bus-actions">' +
-          '<button type="button" class="btn ghost bus-stop-up" data-stop-id="' + esc(stop.id) + '">위</button>' +
-          '<button type="button" class="btn ghost bus-stop-down" data-stop-id="' + esc(stop.id) + '">아래</button>' +
-          '<button type="button" class="btn danger bus-stop-delete" data-stop-id="' + esc(stop.id) + '">삭제</button>' +
+          '<button type="button" class="bus-icon-btn bus-stop-up" data-stop-id="' + esc(stop.id) + '" aria-label="정류장 위로 이동" title="위로">▲</button>' +
+          '<button type="button" class="bus-icon-btn bus-stop-down" data-stop-id="' + esc(stop.id) + '" aria-label="정류장 아래로 이동" title="아래로">▼</button>' +
+          '<button type="button" class="bus-icon-btn bus-stop-edit" data-stop-id="' + esc(stop.id) + '" aria-label="정류장 수정" title="수정">✎</button>' +
+          '<button type="button" class="bus-icon-btn bus-danger bus-stop-delete" data-stop-id="' + esc(stop.id) + '" aria-label="정류장 삭제" title="삭제">✕</button>' +
         '</div>' +
       '</div>' +
-      '<div class="bus-stop-grid">' +
-        '<input type="text" class="bus-stop-name" value="' + esc(stop.stop_name || '') + '" placeholder="정류장명">' +
-        '<input type="time" class="bus-stop-pickup" value="' + esc(timeValue(stop.pickup_time)) + '" aria-label="등원 시간">' +
-        '<input type="time" class="bus-stop-dropoff" value="' + esc(timeValue(stop.dropoff_time)) + '" aria-label="하원 시간">' +
-        '<input type="number" class="bus-stop-sort" value="' + esc(stop.sort || 0) + '" aria-label="정류장 순서">' +
-      '</div>' +
-      '<button type="button" class="btn ghost bus-stop-save" data-stop-id="' + esc(stop.id) + '" style="margin-top:10px">정류장 저장</button>' +
+      (editing ? '<div class="bus-edit-panel">' +
+        '<div class="bus-edit-head">' +
+          '<div class="bus-edit-title">정류장 편집</div>' +
+          '<button type="button" class="bus-icon-btn bus-stop-close" data-stop-id="' + esc(stop.id) + '" aria-label="정류장 편집 닫기" title="닫기">✕</button>' +
+        '</div>' +
+        '<div class="bus-stop-grid">' +
+          '<input type="text" class="bus-stop-name" value="' + esc(stop.stop_name || '') + '" placeholder="정류장명">' +
+          '<input type="time" class="bus-stop-pickup" value="' + esc(timeValue(stop.pickup_time)) + '" aria-label="등원 시간">' +
+          '<input type="time" class="bus-stop-dropoff" value="' + esc(timeValue(stop.dropoff_time)) + '" aria-label="하원 시간">' +
+          '<input type="number" class="bus-stop-sort" value="' + esc(stop.sort || 0) + '" aria-label="정류장 순서">' +
+        '</div>' +
+        '<button type="button" class="btn ghost bus-stop-save" data-stop-id="' + esc(stop.id) + '" style="margin-top:10px">정류장 저장</button>' +
+      '</div>' : '') +
     '</div>';
   }
 
@@ -2687,6 +2720,8 @@
     if (!busRoutes.length) {
       if (busAddRouteBtn) busAddRouteBtn.hidden = true;
       selectedBusRouteId = null;
+      editingRouteId = null;
+      editingStopId = null;
       busRouteList.innerHTML = '<div class="bus-empty">등록된 노선 없음<br><button type="button" class="btn ghost bus-empty-add" style="margin-top:12px">첫 노선 추가</button></div>';
       busStopPanel.hidden = true;
       return;
@@ -2695,6 +2730,7 @@
     if (!selectedBusRouteId || !busRoutes.some(function(route){ return route.id === selectedBusRouteId; })) {
       selectedBusRouteId = busRoutes[0].id;
     }
+    if (editingRouteId && !busRoutes.some(function(route){ return route.id === editingRouteId; })) editingRouteId = null;
     busRouteList.innerHTML = busRoutes.map(renderBusRouteCard).join('');
     renderBusStops();
   }
@@ -2708,6 +2744,7 @@
     busStopPanel.hidden = false;
     busSelectedRouteTitle.innerHTML = escWithBr(route.route_name || '이름 없는 노선');
     var stops = busStopsByRoute[route.id] || [];
+    if (editingStopId && !stops.some(function(stop){ return stop.id === editingStopId; })) editingStopId = null;
     busStopList.innerHTML = stops.length
       ? stops.map(renderBusStopCard).join('')
       : '<div class="bus-empty">등록된 정류장이 없습니다.<br><button type="button" class="btn ghost bus-empty-stop-add" style="margin-top:12px">첫 정류장 추가</button></div>';
@@ -2783,6 +2820,7 @@
       setBusStatus('노선 저장 실패: ' + res.error.message, 'error');
       return;
     }
+    editingRouteId = null;
     await loadBusTab();
     markSaved();
     setBusStatus('노선을 저장했어요.', 'ok');
@@ -2845,6 +2883,7 @@
       setBusStatus('정류장 저장 실패: ' + res.error.message, 'error');
       return;
     }
+    editingStopId = null;
     await loadBusTab();
     markSaved();
     setBusStatus('정류장을 저장했어요.', 'ok');
@@ -2909,9 +2948,24 @@
     if (up) { moveBusRoute(up.dataset.routeId, -1); return; }
     var down = e.target.closest('.bus-route-down');
     if (down) { moveBusRoute(down.dataset.routeId, 1); return; }
+    var edit = e.target.closest('.bus-route-edit');
+    if (edit) {
+      selectedBusRouteId = edit.dataset.routeId;
+      editingRouteId = edit.dataset.routeId;
+      editingStopId = null;
+      renderBusRoutes();
+      return;
+    }
+    var close = e.target.closest('.bus-route-close');
+    if (close) {
+      editingRouteId = null;
+      renderBusRoutes();
+      return;
+    }
     var card = e.target.closest('.bus-route-card');
     if (card && !e.target.closest('input,button')) {
       selectedBusRouteId = card.dataset.routeId;
+      editingStopId = null;
       renderBusRoutes();
     }
   });
@@ -2925,7 +2979,19 @@
     var up = e.target.closest('.bus-stop-up');
     if (up) { moveBusStop(up.dataset.stopId, -1); return; }
     var down = e.target.closest('.bus-stop-down');
-    if (down) { moveBusStop(down.dataset.stopId, 1); }
+    if (down) { moveBusStop(down.dataset.stopId, 1); return; }
+    var edit = e.target.closest('.bus-stop-edit');
+    if (edit) {
+      editingStopId = edit.dataset.stopId;
+      editingRouteId = null;
+      renderBusRoutes();
+      return;
+    }
+    var close = e.target.closest('.bus-stop-close');
+    if (close) {
+      editingStopId = null;
+      renderBusStops();
+    }
   });
 
   function renderFaqCard(item){
