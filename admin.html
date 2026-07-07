@@ -13,12 +13,17 @@
 
   :root{
     --cream:#FBF6EE;
+    --cream-strong:#F6EFE5;
     --ink:#403733;
     --ink-soft:#6E625B;
     --coral:#FF8A6B;
     --coral-deep:#F2715A;
     --sage:#9CB89A;
     --paper:#FFFFFF;
+    --line:#f1e9e0;
+    --line-strong:#eadfd3;
+    --shadow-soft:0 18px 44px -28px rgba(120,80,60,.38);
+    --shadow-panel:0 22px 54px -34px rgba(120,80,60,.42);
     --display:'Gowun Dodum',sans-serif;
     --hand:'Gaegu',cursive;
     --body:'Pretendard',sans-serif;
@@ -34,28 +39,51 @@
     min-height:100vh;
   }
 
-  .topbar{position:sticky;top:0;left:0;right:0;z-index:40;padding:14px 0;background:rgba(255,250,243,.86);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);box-shadow:0 1px 0 rgba(180,140,110,.12)}
-  .topbar-inner{max-width:560px;margin:0 auto;padding:0 22px;display:flex;align-items:center;justify-content:space-between}
-  .topbar .brand{font-family:var(--display);font-size:1.25rem;color:var(--ink);text-decoration:none;letter-spacing:-.5px}
-  .topbar .who{display:flex;align-items:center;gap:12px;font-size:.85rem;color:var(--ink-soft)}
-  .center-links{display:flex;align-items:center;gap:12px}
-  .topbar-link{color:var(--ink-soft);font-size:.85rem;text-decoration:none;transition:color .2s ease}
-  .topbar-link:hover{color:var(--coral)}
-  .topbar-sep{color:var(--ink-soft);opacity:.3}
+  .topbar{
+    position:sticky;top:0;left:0;right:0;z-index:40;
+    padding:12px 0;background:rgba(255,250,243,.92);
+    backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+    border-bottom:1px solid rgba(234,223,211,.72);
+    box-shadow:0 12px 28px -28px rgba(120,80,60,.42)
+  }
+  .topbar-inner{
+    max-width:1180px;margin:0 auto;padding:0 24px;
+    display:grid;grid-template-columns:minmax(220px,1fr) auto minmax(220px,1fr);
+    align-items:center;gap:18px;
+  }
+  .topbar-context{text-align:center;min-width:0}
+  .topbar-kicker{display:block;font-size:.72rem;font-weight:900;letter-spacing:.08em;color:var(--sage);line-height:1.1}
+  .topbar-title{display:block;margin-top:2px;font-weight:900;color:var(--ink);font-size:.98rem;line-height:1.25;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .topbar .who{display:flex;align-items:center;justify-content:flex-end;gap:10px;min-width:0;font-size:.85rem;color:var(--ink-soft)}
+  .topbar .who #userEmail{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:240px}
+  .center-links{display:flex;align-items:center;gap:8px;min-width:0}
+  .topbar-link{
+    display:inline-flex;align-items:center;justify-content:center;gap:6px;
+    min-height:38px;border:1.5px solid var(--line);border-radius:999px;
+    padding:8px 14px;background:#fff;color:var(--ink);font-family:var(--body);
+    font-size:.86rem;font-weight:800;text-decoration:none;cursor:pointer;
+    transition:border-color .16s ease,background .16s ease,color .16s ease,transform .16s ease;
+    box-shadow:0 10px 24px -22px rgba(120,80,60,.45)
+  }
+  .topbar-link:hover{border-color:rgba(255,138,107,.42);background:#fff8f5;color:var(--coral-deep);transform:translateY(-1px)}
+  .topbar-link:disabled{opacity:.45;cursor:not-allowed;transform:none}
+  .topbar-link i{font-size:1rem;line-height:1}
 
-  .wrap{max-width:480px;margin:0 auto;padding:40px 22px 60px}
+  .wrap{max-width:1180px;margin:0 auto;padding:34px 24px 68px}
 
   [hidden]{display:none!important}
+
+  #loginView{max-width:480px;margin:0 auto}
 
   .section-eyebrow{font-family:var(--hand);font-size:1.1rem;color:var(--sage);font-weight:700}
   .section-title{font-family:var(--display);font-size:1.6rem;margin:6px 0 24px;letter-spacing:-.5px}
 
-  .panel{background:var(--paper);border-radius:24px;padding:26px;box-shadow:0 18px 44px -22px rgba(120,80,60,.35)}
+  .panel{background:var(--paper);border:1px solid rgba(241,233,224,.88);border-radius:22px;padding:26px;box-shadow:var(--shadow-panel)}
 
   label{display:block;font-size:.86rem;font-weight:700;color:var(--ink-soft);margin-bottom:6px}
   .field{margin-bottom:18px}
   input[type=email],input[type=password],input[type=text],input[type=number],input[type=time],input[type=color],textarea{
-    width:100%;border:1.5px solid #f1e9e0;border-radius:14px;padding:13px 16px;
+    width:100%;border:1.5px solid var(--line);border-radius:14px;padding:13px 16px;
     font-family:var(--body);font-size:.98rem;color:var(--ink);background:var(--cream);
     outline:none;transition:border-color .2s ease;
   }
@@ -64,14 +92,14 @@
 
   .btn{
     display:inline-flex;align-items:center;justify-content:center;
-    width:100%;border:none;border-radius:30px;padding:14px;
+    width:100%;min-height:46px;border:none;border-radius:999px;padding:13px 18px;
     background:var(--coral);color:#fff;font-weight:700;font-size:1rem;
     cursor:pointer;transition:transform .2s ease,box-shadow .2s ease;
     box-shadow:0 14px 28px -10px var(--coral-deep);
   }
   .btn:hover{transform:translateY(-2px)}
   .btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
-  .btn.ghost{background:transparent;color:var(--ink-soft);box-shadow:none;border:1.5px solid #e7dccf;width:auto;padding:8px 18px;font-size:.86rem}
+  .btn.ghost{background:#fff;color:var(--ink-soft);box-shadow:none;border:1.5px solid #e7dccf;width:auto;min-height:38px;padding:8px 18px;font-size:.86rem}
   .btn.danger{background:#fff;color:#D9534F;border:1.5px solid #f5c6c4;box-shadow:none}
   .btn.danger:hover{background:#fff5f5}
 
@@ -188,6 +216,7 @@
   .type-tab.active{background:var(--coral);color:#fff;border-color:var(--coral)}
 
   /* ── 탭 바 ── */
+  .admin-shell{display:block}
   .tab-bar{
     position:sticky;top:57px;z-index:30;
     display:flex;flex-direction:row;flex-wrap:nowrap;gap:6px;
@@ -202,11 +231,11 @@
   .tab-bar::-webkit-scrollbar{display:none}
   .tab-btn{
     flex:0 0 auto;padding:9px 16px;border-radius:30px;border:1.5px solid #f1e9e0;
-    background:var(--paper);color:var(--ink-soft);font-weight:700;font-size:.88rem;
+    background:var(--paper);color:var(--ink);font-weight:800;font-size:.88rem;
     cursor:pointer;white-space:nowrap;font-family:var(--body);transition:all .15s;
     -webkit-tap-highlight-color:transparent;
   }
-  .tab-btn.active{background:var(--coral);color:#fff;border-color:var(--coral)}
+  .tab-btn.active{background:var(--coral);color:#fff;border-color:var(--coral);box-shadow:0 12px 24px -18px var(--coral-deep)}
   .tab-panel{display:none}
   .tab-panel.active{display:block}
   .tab-placeholder{
@@ -215,16 +244,17 @@
     box-shadow:0 18px 44px -22px rgba(120,80,60,.35);
   }
   .edit-target-bar{
-    display:flex;align-items:center;justify-content:space-between;gap:12px;
-    margin-bottom:16px;padding:14px 16px;background:var(--paper);
-    border:1.5px solid #f1e9e0;border-radius:20px;
-    box-shadow:0 14px 34px -24px rgba(120,80,60,.32);
+    display:flex;align-items:center;justify-content:space-between;gap:16px;
+    margin-bottom:18px;padding:18px 20px;background:rgba(255,255,255,.86);
+    border:1.5px solid rgba(241,233,224,.95);border-radius:22px;
+    box-shadow:var(--shadow-soft);
   }
-  .edit-target-controls{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .edit-target-main{display:flex;align-items:center;gap:12px;flex-wrap:wrap;min-width:0}
+  .edit-target-controls{display:flex;align-items:center;gap:10px;flex-wrap:wrap;min-width:0}
   .edit-target-label{font-size:.82rem;font-weight:800;color:var(--ink-soft)}
   .edit-target-select{
-    border:1.5px solid #f1e9e0;border-radius:999px;padding:9px 14px;
-    background:var(--cream);color:var(--ink);font-weight:800;outline:none;
+    min-height:40px;border:1.5px solid var(--line);border-radius:999px;padding:9px 36px 9px 14px;
+    background:var(--cream);color:var(--ink);font-weight:800;outline:none;max-width:260px;
   }
   .editing-badge{
     display:inline-flex;align-items:center;justify-content:center;
@@ -235,6 +265,8 @@
   .editing-badge.template{
     background:#F2EEFF;color:#7A61C7;border-color:rgba(122,97,199,.22);
   }
+  .edit-target-actions{display:flex;align-items:center;gap:8px;flex:0 0 auto}
+  .edit-target-actions .btn{gap:6px;font-weight:800}
 
   /* ── 하루 이야기 카드 ── */
   .day-story-list{display:flex;flex-direction:column;gap:18px}
@@ -347,20 +379,66 @@
     box-shadow:0 -8px 16px -8px rgba(120,80,60,.15);
   }
 
+  @media (min-width:900px){
+    .admin-shell{
+      display:grid;grid-template-columns:224px minmax(0,1fr);
+      gap:24px;align-items:start;
+    }
+    .admin-shell .tab-panel{min-width:0}
+    .tab-bar{
+      position:sticky;top:82px;display:flex;flex-direction:column;gap:7px;
+      overflow:visible;padding:12px;margin:0;
+      background:rgba(255,255,255,.72);border:1.5px solid rgba(241,233,224,.92);
+      border-radius:22px;box-shadow:var(--shadow-soft);
+      -webkit-mask-image:none;mask-image:none;
+    }
+    .tab-btn{
+      width:100%;justify-content:flex-start;text-align:left;border-radius:14px;
+      padding:11px 13px;background:transparent;border-color:transparent;color:var(--ink-soft);
+    }
+    .tab-btn:hover{background:#fff8f5;color:var(--ink);border-color:rgba(255,138,107,.2)}
+    .tab-btn.active{background:var(--coral);color:#fff;border-color:var(--coral)}
+    .tab-save-sticky,.day-story-save-bar{
+      border-radius:18px 18px 0 0;padding:16px 0 6px;
+    }
+  }
+
+  @media (max-width:760px){
+    .topbar-inner{
+      padding:0 16px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;
+    }
+    .center-links{order:1;flex:1 1 100%;overflow-x:auto;padding-bottom:2px}
+    .topbar-context{order:0;text-align:left;flex:1 1 auto}
+    .topbar .who{order:0;flex:0 1 auto}
+    .topbar .who #userEmail{display:none}
+    .wrap{padding:28px 18px 60px}
+    .section-title{font-size:1.48rem;margin-bottom:18px}
+    .panel{padding:22px;border-radius:20px}
+    .edit-target-bar{align-items:stretch;flex-direction:column;padding:16px;margin-bottom:16px}
+    .edit-target-main{align-items:stretch;flex-direction:column}
+    .edit-target-controls{align-items:stretch;flex-direction:column}
+    .edit-target-select{max-width:none;width:100%}
+    .editing-badge{width:100%;justify-content:flex-start}
+    .edit-target-actions{justify-content:flex-start}
+    .tab-bar{top:112px;padding:12px 18px 10px;margin:0 -18px 22px}
+    .tab-btn{min-height:40px;padding:9px 14px}
+  }
+
 </style>
 </head>
 <body>
 
 <nav class="topbar">
   <div class="topbar-inner">
-    <a class="brand" href="admin.html">원이야 콘솔</a>
+    <div class="center-links" id="centerLinks" hidden>
+      <button type="button" class="topbar-link" id="viewSiteBtn"><i class="ti ti-external-link" aria-hidden="true"></i>원 페이지 보기</button>
+      <button type="button" class="topbar-link" id="previewSiteBtn"><i class="ti ti-eye" aria-hidden="true"></i>미리보기</button>
+    </div>
+    <div class="topbar-context">
+      <span class="topbar-kicker">ADMIN</span>
+      <span class="topbar-title" id="topbarTitle">우리 원 관리</span>
+    </div>
     <div class="who" id="whoBox" hidden>
-      <span class="center-links" id="centerLinks" hidden>
-        <a href="javascript:void(0)" class="topbar-link" id="viewSiteBtn">내 페이지 보기</a>
-        <span class="topbar-sep">|</span>
-        <a href="javascript:void(0)" class="topbar-link" id="changeTemplateBtn">템플릿 변경</a>
-        <span class="topbar-sep">|</span>
-      </span>
       <span id="userEmail"></span>
       <button class="btn ghost" id="logoutBtn">로그아웃</button>
     </div>
@@ -395,35 +473,41 @@
     <h1 class="section-title">우리 원 관리</h1>
 
     <div class="edit-target-bar" id="editTargetBar" hidden>
-      <div class="edit-target-controls">
-        <span class="edit-target-label">편집 대상</span>
-        <select class="edit-target-select" id="editTargetSelect" aria-label="편집 대상 선택"></select>
+      <div class="edit-target-main">
+        <div class="edit-target-controls">
+          <span class="edit-target-label">편집 대상</span>
+          <select class="edit-target-select" id="editTargetSelect" aria-label="편집 대상 선택"></select>
+        </div>
+        <span class="editing-badge" id="editingBadge">지금 편집 중: 내 원</span>
       </div>
-      <span class="editing-badge" id="editingBadge">지금 편집 중: 내 원</span>
+      <div class="edit-target-actions">
+        <button type="button" class="btn ghost" id="changeTemplateBtn"><i class="ti ti-template" aria-hidden="true"></i>템플릿 변경</button>
+      </div>
     </div>
 
     <div class="no-center" id="noCenter" hidden>
       이 계정에 연결된 원이 아직 없어요.<br>관리자에게 문의해주세요.
     </div>
 
-    <!-- 탭 바 -->
-    <div class="tab-bar" id="tabBar" hidden>
-      <button class="tab-btn active" data-tab="basic">기본 정보</button>
-      <button class="tab-btn" data-tab="intro">원 소개</button>
-      <button class="tab-btn" data-tab="day">하루 이야기</button>
-      <button class="tab-btn" data-tab="facility">시설 소개</button>
-      <button class="tab-btn" data-tab="program">프로그램 소개</button>
-      <button class="tab-btn" data-tab="teacher">선생님</button>
-      <button class="tab-btn" data-tab="class">반 관리</button>
-      <button class="tab-btn" data-tab="admission">입학안내</button>
-      <button class="tab-btn" data-tab="directions">오시는 길</button>
-      <button class="tab-btn" data-tab="bus">통학차량</button>
-      <button class="tab-btn" data-tab="faq">FAQ</button>
-      <button class="tab-btn" data-tab="consult">신청 현황</button>
-    </div>
+    <div class="admin-shell">
+      <!-- 탭 바 -->
+      <div class="tab-bar" id="tabBar" hidden>
+        <button class="tab-btn active" data-tab="basic">기본 정보</button>
+        <button class="tab-btn" data-tab="intro">원 소개</button>
+        <button class="tab-btn" data-tab="day">하루 이야기</button>
+        <button class="tab-btn" data-tab="facility">시설 소개</button>
+        <button class="tab-btn" data-tab="program">프로그램 소개</button>
+        <button class="tab-btn" data-tab="teacher">선생님</button>
+        <button class="tab-btn" data-tab="class">반 관리</button>
+        <button class="tab-btn" data-tab="admission">입학안내</button>
+        <button class="tab-btn" data-tab="directions">오시는 길</button>
+        <button class="tab-btn" data-tab="bus">통학차량</button>
+        <button class="tab-btn" data-tab="faq">FAQ</button>
+        <button class="tab-btn" data-tab="consult">신청 현황</button>
+      </div>
 
-    <!-- 탭1: 기본 정보 -->
-    <div class="tab-panel active" data-panel="basic">
+      <!-- 탭1: 기본 정보 -->
+      <div class="tab-panel active" data-panel="basic">
       <!-- 원 정보 편집 -->
       <div id="centerPanel" hidden>
         <form id="saveForm">
@@ -712,6 +796,7 @@
         </div>
       </div>
     </div>
+    </div>
   </section>
 
 </div>
@@ -785,8 +870,10 @@
   var adminView    = document.getElementById('adminView');
   var whoBox       = document.getElementById('whoBox');
   var userEmailEl  = document.getElementById('userEmail');
+  var topbarTitleEl = document.getElementById('topbarTitle');
   var centerLinks      = document.getElementById('centerLinks');
   var viewSiteBtn       = document.getElementById('viewSiteBtn');
+  var previewSiteBtn    = document.getElementById('previewSiteBtn');
   var changeTemplateBtn = document.getElementById('changeTemplateBtn');
   var editTargetBar    = document.getElementById('editTargetBar');
   var editTargetSelect = document.getElementById('editTargetSelect');
@@ -910,8 +997,28 @@
     gallery: '갤러리 템플릿'
   };
 
+  function currentTemplateFile(){
+    if (!currentCenter) return 'template-sunshine.html';
+    var key = currentCenter.template || currentCenter.template_id || (currentEditTarget && currentEditTarget.templateId) || 'sunshine';
+    return TEMPLATE_FILES[key] || 'template-sunshine.html';
+  }
+
   function isTemplateMode(){
     return currentEditTarget && currentEditTarget.type === 'template';
+  }
+
+  function currentPublicPageUrl(){
+    if (!currentCenter || isTemplateMode() || !currentCenter.slug) return '';
+    return currentTemplateFile() + '?slug=' + encodeURIComponent(currentCenter.slug);
+  }
+
+  function currentPreviewPageUrl(){
+    if (!currentCenter) return '';
+    if (isTemplateMode()) {
+      var templateId = (currentEditTarget && currentEditTarget.templateId) || currentCenter.template_id || currentCenter.template;
+      return templateId ? (currentTemplateFile() + '?preview=' + encodeURIComponent(templateId)) : '';
+    }
+    return currentPublicPageUrl();
   }
 
   function centerTable(){
@@ -3169,19 +3276,30 @@
   // ── 인증 흐름 ──
   function setEditTargetChrome(){
     var templateMode = isTemplateMode();
+    var publicUrl = currentPublicPageUrl();
+    var previewUrl = currentPreviewPageUrl();
+    if (topbarTitleEl) {
+      topbarTitleEl.textContent = templateMode
+        ? '템플릿 편집 · ' + editTargetLabel()
+        : (currentCenter && currentCenter.name ? currentCenter.name : '우리 원 관리');
+    }
     if (editingBadge) {
       editingBadge.textContent = '지금 편집 중: ' + (templateMode ? editTargetLabel() : '내 원' + (currentCenter && currentCenter.name ? ' · ' + currentCenter.name : ''));
       editingBadge.classList.toggle('template', templateMode);
     }
     if (viewSiteBtn) {
-      viewSiteBtn.textContent = templateMode ? '미리보기' : '내 페이지 보기';
+      viewSiteBtn.hidden = templateMode;
+      viewSiteBtn.disabled = !publicUrl;
       viewSiteBtn.onclick = function(){
-        if (templateMode) {
-          alert('템플릿 미리보기 연동은 준비 중입니다.');
-          return;
-        }
-        var templateFile = TEMPLATE_FILES[currentCenter.template] || 'template-sunshine.html';
-        window.open(templateFile + '?slug=' + encodeURIComponent(currentCenter.slug), '_blank');
+        if (!publicUrl) return;
+        window.open(publicUrl, '_blank');
+      };
+    }
+    if (previewSiteBtn) {
+      previewSiteBtn.disabled = !previewUrl;
+      previewSiteBtn.onclick = function(){
+        if (!previewUrl) return;
+        window.open(previewUrl, '_blank');
       };
     }
     if (changeTemplateBtn) {
@@ -3245,12 +3363,15 @@
 
   function renderEditTargetSelect(){
     if (!editTargetBar || !editTargetSelect) return;
+    var controls = editTargetBar.querySelector('.edit-target-controls');
     if (!isSuperAdmin) {
-      editTargetBar.hidden = true;
+      editTargetBar.hidden = !currentCenter;
+      if (controls) controls.hidden = true;
       editTargetSelect.innerHTML = '';
       return;
     }
     editTargetBar.hidden = false;
+    if (controls) controls.hidden = false;
     editTargetSelect.innerHTML = editTargetOptions.map(function(option){
       return '<option value="' + esc(option.value) + '">' + esc(option.label) + '</option>';
     }).join('');
@@ -3377,6 +3498,7 @@
     adminView.hidden = true;
     whoBox.hidden = true;
     centerLinks.hidden = true;
+    if (topbarTitleEl) topbarTitleEl.textContent = '우리 원 관리';
     if (editTargetBar) editTargetBar.hidden = true;
     loginForm.reset();
     loginError.textContent = '';
@@ -3391,6 +3513,7 @@
     loginView.hidden = true;
     adminView.hidden = false;
     whoBox.hidden = false;
+    if (topbarTitleEl) topbarTitleEl.textContent = '우리 원 관리';
     userEmailEl.textContent = session.user.email;
     isSuperAdmin = (session.user.email || '').toLowerCase() === ADMIN_EMAIL;
     if (isSuperAdmin) loadAdminTargets(session.user.id);
