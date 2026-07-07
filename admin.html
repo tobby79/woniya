@@ -295,24 +295,33 @@
   .bus-color-dot{width:12px;height:12px;border-radius:50%;border:1.5px solid rgba(64,55,51,.16);background:var(--coral);flex:0 0 auto}
   .bus-route-meta,.bus-stop-meta{color:var(--ink-soft);font-size:.82rem;white-space:nowrap}
   .bus-actions{display:flex;align-items:center;gap:5px;flex:0 0 auto;justify-content:flex-end}
+  .bus-move-actions{display:flex;align-items:center;gap:4px;padding-right:7px;margin-right:2px;border-right:.5px solid var(--border,#eadfd3)}
   .bus-icon-btn{width:28px;height:28px;display:inline-flex;align-items:center;justify-content:center;border:1.5px solid #eadfd3;border-radius:9px;background:#fffaf6;color:var(--ink-soft);font-size:.8rem;font-weight:900;line-height:1;cursor:pointer}
   .bus-icon-btn:hover{border-color:var(--coral);color:var(--coral-deep);background:#fff5ef}
-  .bus-icon-btn.bus-danger{border-color:#f1d6d0;color:var(--danger);background:#fff8f7}
-  .bus-icon-btn.bus-danger:hover{border-color:var(--danger);background:#fff3f1}
+  .bus-icon-btn.bus-danger{border-color:#f1d6d0;color:var(--danger,#D9534F);background:#fff8f7}
+  .bus-icon-btn.bus-danger:hover{border-color:var(--danger,#D9534F);background:#fff3f1}
   .bus-edit-panel{margin-top:12px;padding-top:12px;border-top:1px solid #eadfd3}
   .bus-edit-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
   .bus-edit-title{font-size:.85rem;font-weight:900;color:var(--ink-soft)}
+  .bus-edit-fields{display:grid;grid-template-columns:1fr 70px;gap:10px;align-items:end}
+  .bus-edit-field label{font-size:12px;margin-bottom:4px}
+  .bus-save-footer{margin-top:12px;padding-top:12px;border-top:1px solid #eadfd3}
   .bus-route-stops{margin-top:12px;padding-top:12px;border-top:1px solid #eadfd3}
   .bus-route-stops-label{font-size:12px;font-weight:900;color:var(--text-muted,var(--ink-soft));margin-bottom:8px}
   .bus-route-stops-inner{padding-left:32px}
   .bus-route-stop-add{margin-top:10px}
-  .bus-inline-grid{display:grid;grid-template-columns:1fr 84px 70px;gap:8px;margin-top:12px}
-  .bus-stop-grid{display:grid;grid-template-columns:1fr 92px 92px 70px;gap:8px;margin-top:12px}
+  .bus-stop-edit-form{display:grid;gap:10px}
+  .bus-time-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .bus-time-row{display:flex;align-items:center;gap:6px}
+  .bus-time-row input{width:64px;text-align:center;padding:10px 8px}
+  .bus-time-row span{font-size:.84rem;font-weight:800;color:var(--ink-soft)}
+  .bus-inline-grid{display:grid;grid-template-columns:1fr 84px;gap:8px;margin-top:12px}
+  .bus-stop-grid{display:grid;grid-template-columns:1fr 92px 92px;gap:8px;margin-top:12px}
   input[type=color]{width:44px;height:36px;padding:2px;border-radius:var(--radius)}
   .bus-empty{padding:28px 16px;text-align:center;color:var(--ink-soft);background:var(--cream);border:1.5px dashed #eadfd3;border-radius:20px}
   .bus-detail-title{font-family:var(--display);font-size:1.25rem;margin:4px 0 6px;color:var(--ink)}
   @media (max-width:480px){
-    .bus-inline-grid,.bus-stop-grid{grid-template-columns:1fr}
+    .bus-inline-grid,.bus-stop-grid,.bus-edit-fields,.bus-time-grid{grid-template-columns:1fr}
     .bus-route-head,.bus-stop-head{gap:8px}
     .bus-stop-summary{align-items:flex-start;flex-direction:column;gap:2px}
     .bus-route-stops-inner{padding-left:16px}
@@ -2632,6 +2641,35 @@
     return value ? String(value).slice(0, 5) : '';
   }
 
+  function timeParts(value){
+    var time = timeValue(value);
+    if (!time) return { hour:'', minute:'' };
+    var parts = time.split(':');
+    return { hour:parts[0] || '', minute:parts[1] || '' };
+  }
+
+  function composeBusTime(hourInput, minuteInput){
+    var hour = hourInput ? hourInput.value : '';
+    var minute = minuteInput ? minuteInput.value : '';
+    if (hour === '' || minute === '') return null;
+    var h = Math.max(0, Math.min(23, normalizeSortValue(hour, 0)));
+    var m = Math.max(0, Math.min(59, normalizeSortValue(minute, 0)));
+    return String(h).padStart(2, '0') + ':' + String(m).padStart(2, '0') + ':00';
+  }
+
+  function renderBusTimeInputs(prefix, label, value){
+    var parts = timeParts(value);
+    return '<div class="bus-edit-field">' +
+      '<label>' + esc(label) + '</label>' +
+      '<div class="bus-time-row">' +
+        '<input type="number" class="' + esc(prefix) + '-hour" value="' + esc(parts.hour) + '" min="0" max="23" placeholder="시" aria-label="' + esc(label) + ' 시">' +
+        '<span>시</span>' +
+        '<input type="number" class="' + esc(prefix) + '-minute" value="' + esc(parts.minute) + '" min="0" max="59" placeholder="분" aria-label="' + esc(label) + ' 분">' +
+        '<span>분</span>' +
+      '</div>' +
+    '</div>';
+  }
+
   function selectedBusRoute(){
     return busRoutes.find(function(route){ return route.id === selectedBusRouteId; }) || null;
   }
@@ -2657,10 +2695,12 @@
           '<div class="bus-route-title"><span class="bus-route-chevron" aria-hidden="true">' + (expanded ? '▾' : '▸') + '</span><span class="bus-color-dot" style="background:' + esc(color) + '"></span><span>' + escWithBr(route.route_name || '이름 없는 노선') + '</span></div>' +
         '</div>' +
         '<div class="bus-actions">' +
-          '<button type="button" class="bus-icon-btn bus-route-up" data-route-id="' + esc(route.id) + '" aria-label="노선 위로 이동" title="위로">▲</button>' +
-          '<button type="button" class="bus-icon-btn bus-route-down" data-route-id="' + esc(route.id) + '" aria-label="노선 아래로 이동" title="아래로">▼</button>' +
+          '<div class="bus-move-actions">' +
+            '<button type="button" class="bus-icon-btn bus-route-up" data-route-id="' + esc(route.id) + '" aria-label="노선 위로 이동" title="위로">▲</button>' +
+            '<button type="button" class="bus-icon-btn bus-route-down" data-route-id="' + esc(route.id) + '" aria-label="노선 아래로 이동" title="아래로">▼</button>' +
+          '</div>' +
           '<button type="button" class="bus-icon-btn bus-route-edit" data-route-id="' + esc(route.id) + '" aria-label="노선 수정" title="수정">✎</button>' +
-          '<button type="button" class="bus-icon-btn bus-danger bus-route-delete" data-route-id="' + esc(route.id) + '" aria-label="노선 삭제" title="삭제">✕</button>' +
+          '<button type="button" class="bus-icon-btn bus-danger bus-route-delete" data-route-id="' + esc(route.id) + '" aria-label="노선 삭제" title="삭제">🗑</button>' +
         '</div>' +
       '</div>' +
       (editing ? '<div class="bus-edit-panel">' +
@@ -2668,21 +2708,33 @@
           '<div class="bus-edit-title">노선 편집</div>' +
           '<button type="button" class="bus-icon-btn bus-route-close" data-route-id="' + esc(route.id) + '" aria-label="노선 편집 닫기" title="닫기">✕</button>' +
         '</div>' +
-        '<div class="bus-inline-grid">' +
-          '<input type="text" class="bus-route-name" value="' + esc(route.route_name || '') + '" placeholder="예: A코스">' +
-          '<input type="color" class="bus-route-color" value="' + esc(color) + '" aria-label="노선 색상">' +
-          '<input type="number" class="bus-route-sort" value="' + esc(route.sort || 0) + '" aria-label="노선 순서">' +
+        '<div class="bus-edit-fields">' +
+          '<div class="bus-edit-field"><label>노선명</label><input type="text" class="bus-route-name" value="' + esc(route.route_name || '') + '" placeholder="노선명을 입력하세요"></div>' +
+          '<div class="bus-edit-field"><label>색상</label><input type="color" class="bus-route-color" value="' + esc(color) + '" aria-label="노선 색상"></div>' +
         '</div>' +
-        '<button type="button" class="btn ghost bus-route-save" data-route-id="' + esc(route.id) + '" style="margin-top:10px">노선 저장</button>' +
       '</div>' : '') +
       (expanded ? renderBusStopsForRoute(route) : '') +
+      (editing ? '<div class="bus-save-footer"><button type="button" class="btn ghost bus-route-save" data-route-id="' + esc(route.id) + '">노선 저장</button></div>' : '') +
     '</div>';
   }
 
   function renderBusStopCard(stop){
     var editing = stop.id === editingStopId;
     return '<div class="bus-stop-card" data-stop-id="' + esc(stop.id) + '">' +
-      '<div class="bus-stop-head">' +
+      (editing ? '<div class="bus-edit-panel" style="margin-top:0;padding-top:0;border-top:none">' +
+        '<div class="bus-edit-head">' +
+          '<div class="bus-edit-title">정류장 편집</div>' +
+          '<button type="button" class="bus-icon-btn bus-stop-close" data-stop-id="' + esc(stop.id) + '" aria-label="정류장 편집 닫기" title="닫기">✕</button>' +
+        '</div>' +
+        '<div class="bus-stop-edit-form">' +
+          '<div class="bus-edit-field"><label>정류장명</label><input type="text" class="bus-stop-name" value="' + esc(stop.stop_name || '') + '" placeholder="정류장명을 입력하세요"></div>' +
+          '<div class="bus-time-grid">' +
+            renderBusTimeInputs('bus-stop-pickup', '등원 시간', stop.pickup_time) +
+            renderBusTimeInputs('bus-stop-dropoff', '하원 시간', stop.dropoff_time) +
+          '</div>' +
+        '</div>' +
+        '<button type="button" class="btn ghost bus-stop-save" data-stop-id="' + esc(stop.id) + '" style="margin-top:10px">정류장 저장</button>' +
+      '</div>' : '<div class="bus-stop-head">' +
         '<div class="bus-stop-main">' +
           '<div class="bus-stop-summary">' +
             '<span class="bus-stop-title">' + escWithBr(stop.stop_name || '이름 없는 정류장') + '</span>' +
@@ -2690,25 +2742,14 @@
           '</div>' +
         '</div>' +
         '<div class="bus-actions">' +
-          '<button type="button" class="bus-icon-btn bus-stop-up" data-stop-id="' + esc(stop.id) + '" aria-label="정류장 위로 이동" title="위로">▲</button>' +
-          '<button type="button" class="bus-icon-btn bus-stop-down" data-stop-id="' + esc(stop.id) + '" aria-label="정류장 아래로 이동" title="아래로">▼</button>' +
+          '<div class="bus-move-actions">' +
+            '<button type="button" class="bus-icon-btn bus-stop-up" data-stop-id="' + esc(stop.id) + '" aria-label="정류장 위로 이동" title="위로">▲</button>' +
+            '<button type="button" class="bus-icon-btn bus-stop-down" data-stop-id="' + esc(stop.id) + '" aria-label="정류장 아래로 이동" title="아래로">▼</button>' +
+          '</div>' +
           '<button type="button" class="bus-icon-btn bus-stop-edit" data-stop-id="' + esc(stop.id) + '" aria-label="정류장 수정" title="수정">✎</button>' +
-          '<button type="button" class="bus-icon-btn bus-danger bus-stop-delete" data-stop-id="' + esc(stop.id) + '" aria-label="정류장 삭제" title="삭제">✕</button>' +
+          '<button type="button" class="bus-icon-btn bus-danger bus-stop-delete" data-stop-id="' + esc(stop.id) + '" aria-label="정류장 삭제" title="삭제">🗑</button>' +
         '</div>' +
-      '</div>' +
-      (editing ? '<div class="bus-edit-panel">' +
-        '<div class="bus-edit-head">' +
-          '<div class="bus-edit-title">정류장 편집</div>' +
-          '<button type="button" class="bus-icon-btn bus-stop-close" data-stop-id="' + esc(stop.id) + '" aria-label="정류장 편집 닫기" title="닫기">✕</button>' +
-        '</div>' +
-        '<div class="bus-stop-grid">' +
-          '<input type="text" class="bus-stop-name" value="' + esc(stop.stop_name || '') + '" placeholder="정류장명">' +
-          '<input type="time" class="bus-stop-pickup" value="' + esc(timeValue(stop.pickup_time)) + '" aria-label="등원 시간">' +
-          '<input type="time" class="bus-stop-dropoff" value="' + esc(timeValue(stop.dropoff_time)) + '" aria-label="하원 시간">' +
-          '<input type="number" class="bus-stop-sort" value="' + esc(stop.sort || 0) + '" aria-label="정류장 순서">' +
-        '</div>' +
-        '<button type="button" class="btn ghost bus-stop-save" data-stop-id="' + esc(stop.id) + '" style="margin-top:10px">정류장 저장</button>' +
-      '</div>' : '') +
+      '</div>') +
     '</div>';
   }
 
@@ -2819,8 +2860,7 @@
     if (!card) return;
     var payload = {
       route_name: card.querySelector('.bus-route-name').value,
-      route_color: safeBusColor(card.querySelector('.bus-route-color').value),
-      sort: normalizeSortValue(card.querySelector('.bus-route-sort').value, 0)
+      route_color: safeBusColor(card.querySelector('.bus-route-color').value)
     };
     var res = await client.from('bus_routes').update(payload).eq('id', routeId).eq('center_id', currentCenter.id);
     if (res.error) {
@@ -2884,9 +2924,8 @@
     if (!card) return;
     var payload = {
       stop_name: card.querySelector('.bus-stop-name').value,
-      pickup_time: card.querySelector('.bus-stop-pickup').value || null,
-      dropoff_time: card.querySelector('.bus-stop-dropoff').value || null,
-      sort: normalizeSortValue(card.querySelector('.bus-stop-sort').value, 0)
+      pickup_time: composeBusTime(card.querySelector('.bus-stop-pickup-hour'), card.querySelector('.bus-stop-pickup-minute')),
+      dropoff_time: composeBusTime(card.querySelector('.bus-stop-dropoff-hour'), card.querySelector('.bus-stop-dropoff-minute'))
     };
     var res = await client.from('bus_stops').update(payload).eq('id', stopId);
     if (res.error) {
