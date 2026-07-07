@@ -282,12 +282,14 @@
   .bus-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:16px}
   .bus-route-list,.bus-stop-list{display:flex;flex-direction:column;gap:10px}
   .bus-route-card,.bus-stop-card{background:var(--cream);border:1.5px solid #f1e9e0;border-radius:16px;padding:12px}
-  .bus-route-card{cursor:pointer;transition:border-color .15s ease,background .15s ease}
+  .bus-route-card{transition:border-color .15s ease,background .15s ease}
   .bus-route-card.active{border-color:var(--coral);background:#fff8f5}
   .bus-route-head,.bus-stop-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .bus-route-head{cursor:pointer}
   .bus-route-main,.bus-stop-main{min-width:0;flex:1}
   .bus-route-title{display:flex;align-items:center;gap:9px;font-weight:900;color:var(--ink);min-width:0}
   .bus-route-title span:last-child,.bus-stop-title{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .bus-route-chevron{width:14px;color:var(--ink-soft);font-size:.76rem;line-height:1;flex:0 0 auto}
   .bus-stop-summary{display:flex;align-items:center;gap:8px;min-width:0}
   .bus-stop-title{font-weight:900;color:var(--ink)}
   .bus-color-dot{width:12px;height:12px;border-radius:50%;border:1.5px solid rgba(64,55,51,.16);background:var(--coral);flex:0 0 auto}
@@ -300,6 +302,10 @@
   .bus-edit-panel{margin-top:12px;padding-top:12px;border-top:1px solid #eadfd3}
   .bus-edit-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
   .bus-edit-title{font-size:.85rem;font-weight:900;color:var(--ink-soft)}
+  .bus-route-stops{margin-top:12px;padding-top:12px;border-top:1px solid #eadfd3}
+  .bus-route-stops-label{font-size:12px;font-weight:900;color:var(--text-muted,var(--ink-soft));margin-bottom:8px}
+  .bus-route-stops-inner{padding-left:32px}
+  .bus-route-stop-add{margin-top:10px}
   .bus-inline-grid{display:grid;grid-template-columns:1fr 84px 70px;gap:8px;margin-top:12px}
   .bus-stop-grid{display:grid;grid-template-columns:1fr 92px 92px 70px;gap:8px;margin-top:12px}
   input[type=color]{width:44px;height:36px;padding:2px;border-radius:var(--radius)}
@@ -309,6 +315,7 @@
     .bus-inline-grid,.bus-stop-grid{grid-template-columns:1fr}
     .bus-route-head,.bus-stop-head{gap:8px}
     .bus-stop-summary{align-items:flex-start;flex-direction:column;gap:2px}
+    .bus-route-stops-inner{padding-left:16px}
     .bus-actions{gap:4px}
     .bus-icon-btn{width:26px;height:26px;border-radius:8px;font-size:.74rem}
   }
@@ -664,16 +671,6 @@
             <label>노선 목록</label>
             <div class="bus-route-list" id="busRouteList"></div>
           </div>
-          <div id="busStopPanel" hidden>
-            <div class="bus-toolbar" style="margin-top:4px">
-              <div>
-                <label style="margin-bottom:0">정류장 목록</label>
-                <div class="bus-detail-title" id="busSelectedRouteTitle"></div>
-              </div>
-              <button type="button" class="btn ghost" id="busAddStopBtn">+ 정류장 추가</button>
-            </div>
-            <div class="bus-stop-list" id="busStopList"></div>
-          </div>
         </div>
         <div class="msg" id="busStatus"></div>
       </div>
@@ -853,11 +850,7 @@
   var directionsSaveStatus = document.getElementById('directionsSaveStatus');
 
   var busRouteList          = document.getElementById('busRouteList');
-  var busStopList           = document.getElementById('busStopList');
-  var busStopPanel          = document.getElementById('busStopPanel');
-  var busSelectedRouteTitle = document.getElementById('busSelectedRouteTitle');
   var busAddRouteBtn        = document.getElementById('busAddRouteBtn');
-  var busAddStopBtn         = document.getElementById('busAddStopBtn');
   var busStatus             = document.getElementById('busStatus');
 
   var faqList       = document.getElementById('faqList');
@@ -886,6 +879,8 @@
   var selectedBusRouteId = null;
   var editingRouteId = null;
   var editingStopId = null;
+  var expandedRouteId = null;
+  var busAccordionInitialized = false;
 
   var TYPE_LABELS = { hero:'대표', day_story:'하루', teacher:'교사', facility:'시설' };
   var KIND_LABELS = { consult:'상담', waiting:'대기', info_session:'설명회' };
@@ -2652,13 +2647,14 @@
   }
 
   function renderBusRouteCard(route){
-    var active = route.id === selectedBusRouteId ? ' active' : '';
+    var expanded = route.id === expandedRouteId;
+    var active = expanded ? ' active' : '';
     var color = safeBusColor(route.route_color);
     var editing = route.id === editingRouteId;
     return '<div class="bus-route-card' + active + '" data-route-id="' + esc(route.id) + '">' +
       '<div class="bus-route-head">' +
         '<div class="bus-route-main">' +
-          '<div class="bus-route-title"><span class="bus-color-dot" style="background:' + esc(color) + '"></span><span>' + escWithBr(route.route_name || '이름 없는 노선') + '</span></div>' +
+          '<div class="bus-route-title"><span class="bus-route-chevron" aria-hidden="true">' + (expanded ? '▾' : '▸') + '</span><span class="bus-color-dot" style="background:' + esc(color) + '"></span><span>' + escWithBr(route.route_name || '이름 없는 노선') + '</span></div>' +
         '</div>' +
         '<div class="bus-actions">' +
           '<button type="button" class="bus-icon-btn bus-route-up" data-route-id="' + esc(route.id) + '" aria-label="노선 위로 이동" title="위로">▲</button>' +
@@ -2679,6 +2675,7 @@
         '</div>' +
         '<button type="button" class="btn ghost bus-route-save" data-route-id="' + esc(route.id) + '" style="margin-top:10px">노선 저장</button>' +
       '</div>' : '') +
+      (expanded ? renderBusStopsForRoute(route) : '') +
     '</div>';
   }
 
@@ -2715,15 +2712,29 @@
     '</div>';
   }
 
+  function renderBusStopsForRoute(route){
+    var stops = busStopsByRoute[route.id] || [];
+    var stopList = stops.length
+      ? stops.map(renderBusStopCard).join('')
+      : '<div class="bus-empty">등록된 정류장이 없습니다.</div>';
+    return '<div class="bus-route-stops">' +
+      '<div class="bus-route-stops-label">이 노선의 정류장</div>' +
+      '<div class="bus-route-stops-inner">' +
+        '<div class="bus-stop-list">' + stopList + '</div>' +
+        '<button type="button" class="btn ghost bus-route-stop-add" data-route-id="' + esc(route.id) + '">+ 정류장 추가</button>' +
+      '</div>' +
+    '</div>';
+  }
+
   function renderBusRoutes(){
-    if (!busRouteList || !busStopPanel || !busStopList) return;
+    if (!busRouteList) return;
     if (!busRoutes.length) {
       if (busAddRouteBtn) busAddRouteBtn.hidden = true;
       selectedBusRouteId = null;
       editingRouteId = null;
       editingStopId = null;
+      expandedRouteId = null;
       busRouteList.innerHTML = '<div class="bus-empty">등록된 노선 없음<br><button type="button" class="btn ghost bus-empty-add" style="margin-top:12px">첫 노선 추가</button></div>';
-      busStopPanel.hidden = true;
       return;
     }
     if (busAddRouteBtn) busAddRouteBtn.hidden = false;
@@ -2731,23 +2742,15 @@
       selectedBusRouteId = busRoutes[0].id;
     }
     if (editingRouteId && !busRoutes.some(function(route){ return route.id === editingRouteId; })) editingRouteId = null;
+    if (expandedRouteId && !busRoutes.some(function(route){ return route.id === expandedRouteId; })) expandedRouteId = busRoutes.length === 1 ? busRoutes[0].id : null;
+    if (editingStopId && !Object.keys(busStopsByRoute).some(function(routeId){
+      return (busStopsByRoute[routeId] || []).some(function(stop){ return stop.id === editingStopId; });
+    })) editingStopId = null;
     busRouteList.innerHTML = busRoutes.map(renderBusRouteCard).join('');
-    renderBusStops();
   }
 
   function renderBusStops(){
-    var route = selectedBusRoute();
-    if (!route) {
-      busStopPanel.hidden = true;
-      return;
-    }
-    busStopPanel.hidden = false;
-    busSelectedRouteTitle.innerHTML = escWithBr(route.route_name || '이름 없는 노선');
-    var stops = busStopsByRoute[route.id] || [];
-    if (editingStopId && !stops.some(function(stop){ return stop.id === editingStopId; })) editingStopId = null;
-    busStopList.innerHTML = stops.length
-      ? stops.map(renderBusStopCard).join('')
-      : '<div class="bus-empty">등록된 정류장이 없습니다.<br><button type="button" class="btn ghost bus-empty-stop-add" style="margin-top:12px">첫 정류장 추가</button></div>';
+    renderBusRoutes();
   }
 
   async function loadBusTab(){
@@ -2782,6 +2785,10 @@
         busStopsByRoute[stop.route_id].push(stop);
       });
     }
+    if (!busAccordionInitialized) {
+      expandedRouteId = busRoutes.length === 1 ? busRoutes[0].id : null;
+      busAccordionInitialized = true;
+    }
     setBusStatus('', '');
     renderBusRoutes();
   }
@@ -2801,6 +2808,7 @@
       return;
     }
     selectedBusRouteId = res.data.id;
+    expandedRouteId = res.data.id;
     await loadBusTab();
     markSaved();
     setBusStatus('노선을 추가했어요.', 'ok');
@@ -2841,6 +2849,8 @@
       return;
     }
     selectedBusRouteId = null;
+    if (expandedRouteId === routeId) expandedRouteId = null;
+    if (editingRouteId === routeId) editingRouteId = null;
     await loadBusTab();
     markSaved();
     setBusStatus('노선을 삭제했어요.', 'ok');
@@ -2863,13 +2873,14 @@
       setBusStatus('정류장 추가 실패: ' + res.error.message, 'error');
       return;
     }
+    expandedRouteId = route.id;
     await loadBusTab();
     markSaved();
     setBusStatus('정류장을 추가했어요.', 'ok');
   }
 
   async function updateBusStop(stopId){
-    var card = busStopList.querySelector('.bus-stop-card[data-stop-id="' + stopId + '"]');
+    var card = busRouteList.querySelector('.bus-stop-card[data-stop-id="' + stopId + '"]');
     if (!card) return;
     var payload = {
       stop_name: card.querySelector('.bus-stop-name').value,
@@ -2936,10 +2947,16 @@
   }
 
   if (busAddRouteBtn) busAddRouteBtn.addEventListener('click', createBusRoute);
-  if (busAddStopBtn) busAddStopBtn.addEventListener('click', createBusStop);
   if (busRouteList) busRouteList.addEventListener('click', function(e){
     var addEmpty = e.target.closest('.bus-empty-add');
     if (addEmpty) { createBusRoute(); return; }
+    var stopAdd = e.target.closest('.bus-route-stop-add');
+    if (stopAdd) {
+      selectedBusRouteId = stopAdd.dataset.routeId;
+      expandedRouteId = stopAdd.dataset.routeId;
+      createBusStop();
+      return;
+    }
     var save = e.target.closest('.bus-route-save');
     if (save) { updateBusRoute(save.dataset.routeId); return; }
     var del = e.target.closest('.bus-route-delete');
@@ -2962,35 +2979,49 @@
       renderBusRoutes();
       return;
     }
-    var card = e.target.closest('.bus-route-card');
-    if (card && !e.target.closest('input,button')) {
-      selectedBusRouteId = card.dataset.routeId;
-      editingStopId = null;
-      renderBusRoutes();
+    var stopSave = e.target.closest('.bus-stop-save');
+    if (stopSave) { updateBusStop(stopSave.dataset.stopId); return; }
+    var stopDel = e.target.closest('.bus-stop-delete');
+    if (stopDel) { deleteBusStop(stopDel.dataset.stopId); return; }
+    var stopUp = e.target.closest('.bus-stop-up');
+    if (stopUp) {
+      var upRoute = stopUp.closest('.bus-route-card');
+      if (upRoute) selectedBusRouteId = upRoute.dataset.routeId;
+      moveBusStop(stopUp.dataset.stopId, -1);
+      return;
     }
-  });
-  if (busStopList) busStopList.addEventListener('click', function(e){
-    var addEmpty = e.target.closest('.bus-empty-stop-add');
-    if (addEmpty) { createBusStop(); return; }
-    var save = e.target.closest('.bus-stop-save');
-    if (save) { updateBusStop(save.dataset.stopId); return; }
-    var del = e.target.closest('.bus-stop-delete');
-    if (del) { deleteBusStop(del.dataset.stopId); return; }
-    var up = e.target.closest('.bus-stop-up');
-    if (up) { moveBusStop(up.dataset.stopId, -1); return; }
-    var down = e.target.closest('.bus-stop-down');
-    if (down) { moveBusStop(down.dataset.stopId, 1); return; }
-    var edit = e.target.closest('.bus-stop-edit');
-    if (edit) {
-      editingStopId = edit.dataset.stopId;
+    var stopDown = e.target.closest('.bus-stop-down');
+    if (stopDown) {
+      var downRoute = stopDown.closest('.bus-route-card');
+      if (downRoute) selectedBusRouteId = downRoute.dataset.routeId;
+      moveBusStop(stopDown.dataset.stopId, 1);
+      return;
+    }
+    var stopEdit = e.target.closest('.bus-stop-edit');
+    if (stopEdit) {
+      var editRoute = stopEdit.closest('.bus-route-card');
+      if (editRoute) {
+        selectedBusRouteId = editRoute.dataset.routeId;
+        expandedRouteId = editRoute.dataset.routeId;
+      }
+      editingStopId = stopEdit.dataset.stopId;
       editingRouteId = null;
       renderBusRoutes();
       return;
     }
-    var close = e.target.closest('.bus-stop-close');
-    if (close) {
+    var stopClose = e.target.closest('.bus-stop-close');
+    if (stopClose) {
       editingStopId = null;
-      renderBusStops();
+      renderBusRoutes();
+      return;
+    }
+    var head = e.target.closest('.bus-route-head');
+    var card = e.target.closest('.bus-route-card');
+    if (head && card && !e.target.closest('input,button')) {
+      selectedBusRouteId = card.dataset.routeId;
+      expandedRouteId = expandedRouteId === card.dataset.routeId ? null : card.dataset.routeId;
+      editingStopId = null;
+      renderBusRoutes();
     }
   });
 
@@ -3216,6 +3247,10 @@
     busRoutes = [];
     busStopsByRoute = {};
     selectedBusRouteId = null;
+    editingRouteId = null;
+    editingStopId = null;
+    expandedRouteId = null;
+    busAccordionInitialized = false;
     facilityTabLoaded = false;
     programTabLoaded = false;
 
