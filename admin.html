@@ -316,7 +316,7 @@
   .bus-time-grid{box-sizing:border-box;display:grid;grid-template-columns:1fr;gap:10px}
   .bus-time-row{box-sizing:border-box;display:flex;align-items:center;gap:6px}
   .bus-time-row input{width:64px;text-align:center;padding:10px 8px}
-  .bus-time-row span{font-size:.84rem;font-weight:800;color:var(--ink-soft)}
+  .bus-time-row span{font-size:.84rem;font-weight:600;color:rgba(110,98,91,.62)}
   .bus-inline-grid{display:grid;grid-template-columns:1fr 84px;gap:8px;margin-top:12px}
   .bus-stop-grid{display:grid;grid-template-columns:1fr 92px 92px;gap:8px;margin-top:12px}
   input[type=color]{width:44px;height:36px;padding:2px;border-radius:var(--radius)}
@@ -2642,6 +2642,11 @@
     return value ? String(value).slice(0, 5) : '';
   }
 
+  function busStopTimeSummary(stop){
+    var times = [timeValue(stop.pickup_time), timeValue(stop.dropoff_time)].filter(Boolean);
+    return times.length ? times.join(' · ') : '시간 미설정';
+  }
+
   function timeParts(value){
     var time = timeValue(value);
     if (!time) return { hour:'', minute:'' };
@@ -2663,9 +2668,9 @@
     return '<div class="bus-edit-field">' +
       '<label>' + esc(label) + '</label>' +
       '<div class="bus-time-row">' +
-        '<input type="number" class="' + esc(prefix) + '-hour" value="' + esc(parts.hour) + '" min="0" max="23" placeholder="시" aria-label="' + esc(label) + ' 시">' +
+        '<input type="number" class="' + esc(prefix) + '-hour" value="' + esc(parts.hour) + '" min="0" max="23" placeholder="00" aria-label="' + esc(label) + ' 시">' +
         '<span>시</span>' +
-        '<input type="number" class="' + esc(prefix) + '-minute" value="' + esc(parts.minute) + '" min="0" max="59" placeholder="분" aria-label="' + esc(label) + ' 분">' +
+        '<input type="number" class="' + esc(prefix) + '-minute" value="' + esc(parts.minute) + '" min="0" max="59" placeholder="00" aria-label="' + esc(label) + ' 분">' +
         '<span>분</span>' +
       '</div>' +
     '</div>';
@@ -2739,7 +2744,7 @@
         '<div class="bus-stop-main">' +
           '<div class="bus-stop-summary">' +
             '<span class="bus-stop-title">' + escWithBr(stop.stop_name || '이름 없는 정류장') + '</span>' +
-            '<span class="bus-stop-meta">등원 ' + esc(timeValue(stop.pickup_time) || '-') + ' · 하원 ' + esc(timeValue(stop.dropoff_time) || '-') + '</span>' +
+            '<span class="bus-stop-meta">' + esc(busStopTimeSummary(stop)) + '</span>' +
           '</div>' +
         '</div>' +
         '<div class="bus-actions">' +
