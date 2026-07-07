@@ -8,6 +8,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Gaegu:wght@700&display=swap" rel="stylesheet">
 <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tabler-icons/3.44.0/tabler-icons.min.css">
 <style>
 
   :root{
@@ -281,9 +282,9 @@
   .bus-layout{display:grid;gap:16px}
   .bus-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:16px}
   .bus-route-list,.bus-stop-list{display:flex;flex-direction:column;gap:10px}
-  .bus-route-card,.bus-stop-card{background:var(--cream);border:1.5px solid #f1e9e0;border-radius:16px;padding:12px}
+  .bus-route-card,.bus-stop-card{box-sizing:border-box;background:var(--cream);border:1.5px solid #f1e9e0;border-radius:16px;padding:12px}
   .bus-route-card{transition:border-color .15s ease,background .15s ease}
-  .bus-route-card.active{border-color:var(--coral);background:#fff8f5}
+  .bus-route-card.active{border-color:#F4C9BB;background:#FFFDFC}
   .bus-route-head,.bus-stop-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
   .bus-route-head{cursor:pointer}
   .bus-route-main,.bus-stop-main{min-width:0;flex:1}
@@ -296,11 +297,12 @@
   .bus-route-meta,.bus-stop-meta{color:var(--ink-soft);font-size:.82rem;white-space:nowrap}
   .bus-actions{display:flex;align-items:center;gap:5px;flex:0 0 auto;justify-content:flex-end}
   .bus-move-actions{display:flex;align-items:center;gap:4px;padding-right:7px;margin-right:2px;border-right:.5px solid var(--border,#eadfd3)}
-  .bus-icon-btn{width:28px;height:28px;display:inline-flex;align-items:center;justify-content:center;border:1.5px solid #eadfd3;border-radius:9px;background:#fffaf6;color:var(--ink-soft);font-size:.8rem;font-weight:900;line-height:1;cursor:pointer}
+  .bus-icon-btn{width:28px;height:28px;display:inline-flex;align-items:center;justify-content:center;border:1.5px solid #eadfd3;border-radius:9px;background:#FFFFFF;color:var(--ink-soft);font-size:15px;font-weight:900;line-height:1;cursor:pointer}
+  .bus-icon-btn i{font-size:15px;line-height:1}
   .bus-icon-btn:hover{border-color:var(--coral);color:var(--coral-deep);background:#fff5ef}
   .bus-icon-btn.bus-danger{border-color:#f1d6d0;color:var(--danger,#D9534F);background:#fff8f7}
   .bus-icon-btn.bus-danger:hover{border-color:var(--danger,#D9534F);background:#fff3f1}
-  .bus-edit-panel{margin-top:12px;padding-top:12px;border-top:1px solid #eadfd3}
+  .bus-edit-panel{box-sizing:border-box;margin-top:12px;padding-top:12px;border-top:1px solid #eadfd3}
   .bus-edit-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
   .bus-edit-title{font-size:.85rem;font-weight:900;color:var(--ink-soft)}
   .bus-edit-fields{display:grid;grid-template-columns:1fr 70px;gap:10px;align-items:end}
@@ -308,11 +310,11 @@
   .bus-save-footer{margin-top:12px;padding-top:12px;border-top:1px solid #eadfd3}
   .bus-route-stops{margin-top:12px;padding-top:12px;border-top:1px solid #eadfd3}
   .bus-route-stops-label{font-size:12px;font-weight:900;color:var(--text-muted,var(--ink-soft));margin-bottom:8px}
-  .bus-route-stops-inner{padding-left:32px}
+  .bus-route-stops-inner{padding-left:16px}
   .bus-route-stop-add{margin-top:10px}
-  .bus-stop-edit-form{display:grid;gap:10px}
-  .bus-time-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-  .bus-time-row{display:flex;align-items:center;gap:6px}
+  .bus-stop-edit-form{box-sizing:border-box;display:grid;gap:10px}
+  .bus-time-grid{box-sizing:border-box;display:grid;grid-template-columns:1fr;gap:10px}
+  .bus-time-row{box-sizing:border-box;display:flex;align-items:center;gap:6px}
   .bus-time-row input{width:64px;text-align:center;padding:10px 8px}
   .bus-time-row span{font-size:.84rem;font-weight:800;color:var(--ink-soft)}
   .bus-inline-grid{display:grid;grid-template-columns:1fr 84px;gap:8px;margin-top:12px}
@@ -324,7 +326,6 @@
     .bus-inline-grid,.bus-stop-grid,.bus-edit-fields,.bus-time-grid{grid-template-columns:1fr}
     .bus-route-head,.bus-stop-head{gap:8px}
     .bus-stop-summary{align-items:flex-start;flex-direction:column;gap:2px}
-    .bus-route-stops-inner{padding-left:16px}
     .bus-actions{gap:4px}
     .bus-icon-btn{width:26px;height:26px;border-radius:8px;font-size:.74rem}
   }
@@ -2692,21 +2693,21 @@
     return '<div class="bus-route-card' + active + '" data-route-id="' + esc(route.id) + '">' +
       '<div class="bus-route-head">' +
         '<div class="bus-route-main">' +
-          '<div class="bus-route-title"><span class="bus-route-chevron" aria-hidden="true">' + (expanded ? '▾' : '▸') + '</span><span class="bus-color-dot" style="background:' + esc(color) + '"></span><span>' + escWithBr(route.route_name || '이름 없는 노선') + '</span></div>' +
+          '<div class="bus-route-title"><span class="bus-route-chevron" aria-hidden="true"><i class="ti ti-chevron-' + (expanded ? 'down' : 'right') + '"></i></span><span class="bus-color-dot" style="background:' + esc(color) + '"></span><span>' + escWithBr(route.route_name || '이름 없는 노선') + '</span></div>' +
         '</div>' +
         '<div class="bus-actions">' +
           '<div class="bus-move-actions">' +
-            '<button type="button" class="bus-icon-btn bus-route-up" data-route-id="' + esc(route.id) + '" aria-label="노선 위로 이동" title="위로">▲</button>' +
-            '<button type="button" class="bus-icon-btn bus-route-down" data-route-id="' + esc(route.id) + '" aria-label="노선 아래로 이동" title="아래로">▼</button>' +
+            '<button type="button" class="bus-icon-btn bus-route-up" data-route-id="' + esc(route.id) + '" aria-label="노선 위로 이동" title="위로"><i class="ti ti-chevron-up"></i></button>' +
+            '<button type="button" class="bus-icon-btn bus-route-down" data-route-id="' + esc(route.id) + '" aria-label="노선 아래로 이동" title="아래로"><i class="ti ti-chevron-down"></i></button>' +
           '</div>' +
-          '<button type="button" class="bus-icon-btn bus-route-edit" data-route-id="' + esc(route.id) + '" aria-label="노선 수정" title="수정">✎</button>' +
-          '<button type="button" class="bus-icon-btn bus-danger bus-route-delete" data-route-id="' + esc(route.id) + '" aria-label="노선 삭제" title="삭제">🗑</button>' +
+          '<button type="button" class="bus-icon-btn bus-route-edit" data-route-id="' + esc(route.id) + '" aria-label="노선 수정" title="수정"><i class="ti ti-edit"></i></button>' +
+          '<button type="button" class="bus-icon-btn bus-danger bus-route-delete" data-route-id="' + esc(route.id) + '" aria-label="노선 삭제" title="삭제"><i class="ti ti-trash"></i></button>' +
         '</div>' +
       '</div>' +
       (editing ? '<div class="bus-edit-panel">' +
         '<div class="bus-edit-head">' +
           '<div class="bus-edit-title">노선 편집</div>' +
-          '<button type="button" class="bus-icon-btn bus-route-close" data-route-id="' + esc(route.id) + '" aria-label="노선 편집 닫기" title="닫기">✕</button>' +
+          '<button type="button" class="bus-icon-btn bus-route-close" data-route-id="' + esc(route.id) + '" aria-label="노선 편집 닫기" title="닫기"><i class="ti ti-x"></i></button>' +
         '</div>' +
         '<div class="bus-edit-fields">' +
           '<div class="bus-edit-field"><label>노선명</label><input type="text" class="bus-route-name" value="' + esc(route.route_name || '') + '" placeholder="노선명을 입력하세요"></div>' +
@@ -2724,7 +2725,7 @@
       (editing ? '<div class="bus-edit-panel" style="margin-top:0;padding-top:0;border-top:none">' +
         '<div class="bus-edit-head">' +
           '<div class="bus-edit-title">정류장 편집</div>' +
-          '<button type="button" class="bus-icon-btn bus-stop-close" data-stop-id="' + esc(stop.id) + '" aria-label="정류장 편집 닫기" title="닫기">✕</button>' +
+          '<button type="button" class="bus-icon-btn bus-stop-close" data-stop-id="' + esc(stop.id) + '" aria-label="정류장 편집 닫기" title="닫기"><i class="ti ti-x"></i></button>' +
         '</div>' +
         '<div class="bus-stop-edit-form">' +
           '<div class="bus-edit-field"><label>정류장명</label><input type="text" class="bus-stop-name" value="' + esc(stop.stop_name || '') + '" placeholder="정류장명을 입력하세요"></div>' +
@@ -2743,11 +2744,11 @@
         '</div>' +
         '<div class="bus-actions">' +
           '<div class="bus-move-actions">' +
-            '<button type="button" class="bus-icon-btn bus-stop-up" data-stop-id="' + esc(stop.id) + '" aria-label="정류장 위로 이동" title="위로">▲</button>' +
-            '<button type="button" class="bus-icon-btn bus-stop-down" data-stop-id="' + esc(stop.id) + '" aria-label="정류장 아래로 이동" title="아래로">▼</button>' +
+            '<button type="button" class="bus-icon-btn bus-stop-up" data-stop-id="' + esc(stop.id) + '" aria-label="정류장 위로 이동" title="위로"><i class="ti ti-chevron-up"></i></button>' +
+            '<button type="button" class="bus-icon-btn bus-stop-down" data-stop-id="' + esc(stop.id) + '" aria-label="정류장 아래로 이동" title="아래로"><i class="ti ti-chevron-down"></i></button>' +
           '</div>' +
-          '<button type="button" class="bus-icon-btn bus-stop-edit" data-stop-id="' + esc(stop.id) + '" aria-label="정류장 수정" title="수정">✎</button>' +
-          '<button type="button" class="bus-icon-btn bus-danger bus-stop-delete" data-stop-id="' + esc(stop.id) + '" aria-label="정류장 삭제" title="삭제">🗑</button>' +
+          '<button type="button" class="bus-icon-btn bus-stop-edit" data-stop-id="' + esc(stop.id) + '" aria-label="정류장 수정" title="수정"><i class="ti ti-edit"></i></button>' +
+          '<button type="button" class="bus-icon-btn bus-danger bus-stop-delete" data-stop-id="' + esc(stop.id) + '" aria-label="정류장 삭제" title="삭제"><i class="ti ti-trash"></i></button>' +
         '</div>' +
       '</div>') +
     '</div>';
