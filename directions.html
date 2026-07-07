@@ -217,6 +217,38 @@
   .dir-line .ic svg{width:17px;height:17px;display:block;stroke-width:1.8}
   .dir-line span:last-child{min-width:0;overflow-wrap:anywhere}
 
+  .bus-card{
+    overflow:hidden;
+    border:1px solid var(--ad-hairline);
+    border-radius:16px;
+    background:var(--ad-card);
+    box-shadow:var(--ad-shadow);
+  }
+  .bus-route{border-top:1px solid rgba(232,220,200,.85)}
+  .bus-route:first-child{border-top:0}
+  .bus-route-head{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:17px 18px 10px;
+    font-family:var(--ad-serif);
+    font-size:1.08rem;
+    color:var(--ad-ink);
+  }
+  .bus-color-dot{
+    width:14px;
+    height:14px;
+    border-radius:50%;
+    border:1px solid rgba(74,63,53,.14);
+    background:var(--ad-accent);
+    flex:none;
+  }
+  .bus-table{width:100%;border-collapse:collapse;font-size:.94rem;color:var(--ad-ink)}
+  .bus-table th,.bus-table td{padding:11px 14px;border-top:1px solid rgba(232,220,200,.7);text-align:left;vertical-align:top}
+  .bus-table th{font-size:11px;letter-spacing:2px;color:var(--ad-label);font-weight:700;text-transform:uppercase;background:var(--ad-card-soft)}
+  .bus-table td:first-child{font-family:var(--ad-serif);line-height:1.55}
+  .bus-time{white-space:nowrap;color:var(--ad-muted)}
+
   .cta{text-align:center;padding:50px 22px 10px;width:100%;max-width:560px;margin:0 auto}
   .cta-line{width:28px;height:1px;margin:0 auto 26px;background:var(--ad-hairline)}
   .cta h2{
@@ -514,6 +546,68 @@ function loadKakaoMap(address, containerId){
     return String(text || '').replace(/\[[^\]]+\]\s*/g, '').trim();
   }
 
+  function escWithBr(text){
+    return esc(text).replace(/\r?\n/g, '<br>');
+  }
+
+  function safeBusColor(value){
+    return /^#[0-9a-f]{6}$/i.test(value || '') ? value : '#C97B5F';
+  }
+
+  function timeText(value){
+    return value ? String(value).slice(0, 5) : '-';
+  }
+
+  async function loadBusScheduleSection(center, isPreviewMode){
+    if (isPreviewMode || !center || !center.slug) return '';
+    var centerRes = await client.from('centers').select('id').eq('slug', center.slug).maybeSingle();
+    if (centerRes.error || !centerRes.data || !centerRes.data.id) {
+      if (centerRes.error) console.error('[bus/center]', centerRes.error);
+      return '';
+    }
+    var routeRes = await client.from('bus_routes')
+      .select('id,center_id,route_name,route_color,sort')
+      .eq('center_id', centerRes.data.id)
+      .order('sort', { ascending:true })
+      .order('created_at', { ascending:true });
+    if (routeRes.error) {
+      console.error('[bus/routes]', routeRes.error);
+      return '';
+    }
+    var routes = routeRes.data || [];
+    if (!routes.length) return '';
+    var stopRes = await client.from('bus_stops')
+      .select('id,route_id,stop_name,pickup_time,dropoff_time,sort')
+      .in('route_id', routes.map(function(route){ return route.id; }))
+      .order('sort', { ascending:true })
+      .order('created_at', { ascending:true });
+    if (stopRes.error) {
+      console.error('[bus/stops]', stopRes.error);
+      return '';
+    }
+    var stopsByRoute = {};
+    (stopRes.data || []).forEach(function(stop){
+      if (!stopsByRoute[stop.route_id]) stopsByRoute[stop.route_id] = [];
+      stopsByRoute[stop.route_id].push(stop);
+    });
+    var routeHtml = routes.map(function(route){
+      var stops = stopsByRoute[route.id] || [];
+      if (!stops.length) return '';
+      var rows = stops.map(function(stop){
+        return '<tr><td>' + escWithBr(stop.stop_name || '') + '</td><td class="bus-time">' + esc(timeText(stop.pickup_time)) + '</td><td class="bus-time">' + esc(timeText(stop.dropoff_time)) + '</td></tr>';
+      }).join('');
+      return '<article class="bus-route">'
+        + '<div class="bus-route-head"><span class="bus-color-dot" style="background:' + esc(safeBusColor(route.route_color)) + '"></span><span>' + escWithBr(route.route_name || '통학 노선') + '</span></div>'
+        + '<table class="bus-table"><thead><tr><th>정류장</th><th>등원</th><th>하원</th></tr></thead><tbody>' + rows + '</tbody></table>'
+        + '</article>';
+    }).filter(Boolean).join('');
+    if (!routeHtml) return '';
+    return '<section class="section" aria-label="통학차량 시간표">'
+      + '<p class="section-label">SCHOOL BUS</p>'
+      + '<div class="bus-card">' + routeHtml + '</div>'
+      + '</section>';
+  }
+
   function initConsultationForm(centerId){
     var overlay = document.getElementById('cslOverlay');
     var openBtn = document.getElementById('cslOpenBtn');
@@ -663,6 +757,7 @@ function loadKakaoMap(address, containerId){
         return '<div class="dir-line" data-icon="' + esc(iconType) + '"><span class="ic">' + iconSvg(iconType) + '</span><span>' + esc(cleanDirectionText(l)) + '</span></div>';
       }).join('') + '</div></section>';
   }
+  html += await loadBusScheduleSection(center, isPreviewMode);
   content.innerHTML = html;
 
   if (center.address) loadKakaoMap(center.address, mapId);

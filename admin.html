@@ -53,7 +53,7 @@
 
   label{display:block;font-size:.86rem;font-weight:700;color:var(--ink-soft);margin-bottom:6px}
   .field{margin-bottom:18px}
-  input[type=email],input[type=password],input[type=text],textarea{
+  input[type=email],input[type=password],input[type=text],input[type=number],input[type=time],input[type=color],textarea{
     width:100%;border:1.5px solid #f1e9e0;border-radius:14px;padding:13px 16px;
     font-family:var(--body);font-size:.98rem;color:var(--ink);background:var(--cream);
     outline:none;transition:border-color .2s ease;
@@ -278,6 +278,26 @@
   .parent-code-note{margin-top:5px;font-size:.82rem;color:var(--ink-soft)}
   .class-subsection{margin-top:20px}
   .parent-id{font-size:.82rem;color:var(--ink-soft);word-break:break-all}
+  .bus-layout{display:grid;gap:16px}
+  .bus-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:16px}
+  .bus-route-list,.bus-stop-list{display:flex;flex-direction:column;gap:12px}
+  .bus-route-card,.bus-stop-card{background:var(--cream);border:1.5px solid #f1e9e0;border-radius:20px;padding:16px}
+  .bus-route-card{cursor:pointer;transition:border-color .15s ease,background .15s ease}
+  .bus-route-card.active{border-color:var(--coral);background:#fff8f5}
+  .bus-route-head,.bus-stop-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+  .bus-route-title{display:flex;align-items:center;gap:9px;font-weight:900;color:var(--ink)}
+  .bus-color-dot{width:14px;height:14px;border-radius:50%;border:1.5px solid rgba(64,55,51,.16);background:var(--coral)}
+  .bus-route-meta,.bus-stop-meta{margin-top:5px;color:var(--ink-soft);font-size:.82rem}
+  .bus-actions{display:flex;align-items:center;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+  .bus-inline-grid{display:grid;grid-template-columns:1fr 84px 70px;gap:8px;margin-top:12px}
+  .bus-stop-grid{display:grid;grid-template-columns:1fr 92px 92px 70px;gap:8px;margin-top:12px}
+  .bus-empty{padding:28px 16px;text-align:center;color:var(--ink-soft);background:var(--cream);border:1.5px dashed #eadfd3;border-radius:20px}
+  .bus-detail-title{font-family:var(--display);font-size:1.25rem;margin:4px 0 6px;color:var(--ink)}
+  @media (max-width:520px){
+    .bus-inline-grid,.bus-stop-grid{grid-template-columns:1fr}
+    .bus-route-head,.bus-stop-head{flex-direction:column}
+    .bus-actions{justify-content:flex-start}
+  }
   .modal-backdrop{position:fixed;inset:0;z-index:80;background:rgba(64,55,51,.42);display:flex;align-items:center;justify-content:center;padding:22px}
   .modal-panel{width:min(100%,520px);max-height:calc(100vh - 44px);overflow:auto;background:var(--paper);border-radius:24px;padding:24px;box-shadow:0 24px 60px -24px rgba(64,55,51,.48)}
   .modal-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:18px}
@@ -366,6 +386,7 @@
       <button class="tab-btn" data-tab="class">반 관리</button>
       <button class="tab-btn" data-tab="admission">입학안내</button>
       <button class="tab-btn" data-tab="directions">오시는 길</button>
+      <button class="tab-btn" data-tab="bus">통학차량</button>
       <button class="tab-btn" data-tab="faq">FAQ</button>
       <button class="tab-btn" data-tab="consult">신청 현황</button>
     </div>
@@ -616,6 +637,33 @@
         <div class="msg" id="directionsSaveStatus"></div>
       </div>
     </div>
+    <div class="tab-panel" data-panel="bus">
+      <div class="panel">
+        <div class="section-eyebrow" style="margin-top:0">통학차량</div>
+        <h2 class="section-title">노선과 정류장 시간표</h2>
+        <div class="bus-toolbar">
+          <p style="margin:0;color:var(--ink-soft);font-size:.9rem">노선을 선택하면 정류장과 등원/하원 시간을 관리할 수 있어요.</p>
+          <button type="button" class="btn ghost" id="busAddRouteBtn">+ 노선 추가</button>
+        </div>
+        <div class="bus-layout">
+          <div>
+            <label>노선 목록</label>
+            <div class="bus-route-list" id="busRouteList"></div>
+          </div>
+          <div id="busStopPanel" hidden>
+            <div class="bus-toolbar" style="margin-top:4px">
+              <div>
+                <label style="margin-bottom:0">정류장 목록</label>
+                <div class="bus-detail-title" id="busSelectedRouteTitle"></div>
+              </div>
+              <button type="button" class="btn ghost" id="busAddStopBtn">+ 정류장 추가</button>
+            </div>
+            <div class="bus-stop-list" id="busStopList"></div>
+          </div>
+        </div>
+        <div class="msg" id="busStatus"></div>
+      </div>
+    </div>
     <div class="tab-panel" data-panel="faq">
       <div class="panel">
         <div class="section-eyebrow" style="margin-top:0">FAQ</div>
@@ -790,6 +838,14 @@
   var directionsSaveBtn    = document.getElementById('directionsSaveBtn');
   var directionsSaveStatus = document.getElementById('directionsSaveStatus');
 
+  var busRouteList          = document.getElementById('busRouteList');
+  var busStopList           = document.getElementById('busStopList');
+  var busStopPanel          = document.getElementById('busStopPanel');
+  var busSelectedRouteTitle = document.getElementById('busSelectedRouteTitle');
+  var busAddRouteBtn        = document.getElementById('busAddRouteBtn');
+  var busAddStopBtn         = document.getElementById('busAddStopBtn');
+  var busStatus             = document.getElementById('busStatus');
+
   var faqList       = document.getElementById('faqList');
   var addFaqBtn      = document.getElementById('addFaqBtn');
   var faqSaveBtn     = document.getElementById('faqSaveBtn');
@@ -811,6 +867,9 @@
   var parentInviteRows = [];
   var parentEnrollmentRows = [];
   var selectedTeacherClassId = null;
+  var busRoutes = [];
+  var busStopsByRoute = {};
+  var selectedBusRouteId = null;
 
   var TYPE_LABELS = { hero:'대표', day_story:'하루', teacher:'교사', facility:'시설' };
   var KIND_LABELS = { consult:'상담', waiting:'대기', info_session:'설명회' };
@@ -2548,6 +2607,327 @@
   });
 
   // ── FAQ 탭 ──
+  function normalizeSortValue(value, fallback){
+    var n = parseInt(value, 10);
+    return Number.isFinite(n) ? n : fallback;
+  }
+
+  function nextSort(rows){
+    if (!rows || !rows.length) return 10;
+    return rows.reduce(function(max, row){ return Math.max(max, normalizeSortValue(row.sort, 0)); }, 0) + 10;
+  }
+
+  function timeValue(value){
+    return value ? String(value).slice(0, 5) : '';
+  }
+
+  function selectedBusRoute(){
+    return busRoutes.find(function(route){ return route.id === selectedBusRouteId; }) || null;
+  }
+
+  function setBusStatus(message, type){
+    if (!busStatus) return;
+    busStatus.innerHTML = message ? escWithBr(message) : '';
+    busStatus.className = 'msg' + (type ? ' ' + type : '');
+  }
+
+  function safeBusColor(value){
+    return /^#[0-9a-f]{6}$/i.test(value || '') ? value : '#FF8A6B';
+  }
+
+  function renderBusRouteCard(route){
+    var active = route.id === selectedBusRouteId ? ' active' : '';
+    var color = safeBusColor(route.route_color);
+    return '<div class="bus-route-card' + active + '" data-route-id="' + esc(route.id) + '">' +
+      '<div class="bus-route-head">' +
+        '<div>' +
+          '<div class="bus-route-title"><span class="bus-color-dot" style="background:' + esc(color) + '"></span><span>' + escWithBr(route.route_name || '이름 없는 노선') + '</span></div>' +
+          '<div class="bus-route-meta">순서 ' + esc(route.sort || 0) + '</div>' +
+        '</div>' +
+        '<div class="bus-actions">' +
+          '<button type="button" class="btn ghost bus-route-up" data-route-id="' + esc(route.id) + '">위</button>' +
+          '<button type="button" class="btn ghost bus-route-down" data-route-id="' + esc(route.id) + '">아래</button>' +
+          '<button type="button" class="btn danger bus-route-delete" data-route-id="' + esc(route.id) + '">삭제</button>' +
+        '</div>' +
+      '</div>' +
+      '<div class="bus-inline-grid">' +
+        '<input type="text" class="bus-route-name" value="' + esc(route.route_name || '') + '" placeholder="예: A코스">' +
+        '<input type="color" class="bus-route-color" value="' + esc(color) + '" aria-label="노선 색상">' +
+        '<input type="number" class="bus-route-sort" value="' + esc(route.sort || 0) + '" aria-label="노선 순서">' +
+      '</div>' +
+      '<button type="button" class="btn ghost bus-route-save" data-route-id="' + esc(route.id) + '" style="margin-top:10px">노선 저장</button>' +
+    '</div>';
+  }
+
+  function renderBusStopCard(stop){
+    return '<div class="bus-stop-card" data-stop-id="' + esc(stop.id) + '">' +
+      '<div class="bus-stop-head">' +
+        '<div>' +
+          '<div class="class-card-title">' + escWithBr(stop.stop_name || '이름 없는 정류장') + '</div>' +
+          '<div class="bus-stop-meta">등원 ' + esc(timeValue(stop.pickup_time) || '-') + ' · 하원 ' + esc(timeValue(stop.dropoff_time) || '-') + ' · 순서 ' + esc(stop.sort || 0) + '</div>' +
+        '</div>' +
+        '<div class="bus-actions">' +
+          '<button type="button" class="btn ghost bus-stop-up" data-stop-id="' + esc(stop.id) + '">위</button>' +
+          '<button type="button" class="btn ghost bus-stop-down" data-stop-id="' + esc(stop.id) + '">아래</button>' +
+          '<button type="button" class="btn danger bus-stop-delete" data-stop-id="' + esc(stop.id) + '">삭제</button>' +
+        '</div>' +
+      '</div>' +
+      '<div class="bus-stop-grid">' +
+        '<input type="text" class="bus-stop-name" value="' + esc(stop.stop_name || '') + '" placeholder="정류장명">' +
+        '<input type="time" class="bus-stop-pickup" value="' + esc(timeValue(stop.pickup_time)) + '" aria-label="등원 시간">' +
+        '<input type="time" class="bus-stop-dropoff" value="' + esc(timeValue(stop.dropoff_time)) + '" aria-label="하원 시간">' +
+        '<input type="number" class="bus-stop-sort" value="' + esc(stop.sort || 0) + '" aria-label="정류장 순서">' +
+      '</div>' +
+      '<button type="button" class="btn ghost bus-stop-save" data-stop-id="' + esc(stop.id) + '" style="margin-top:10px">정류장 저장</button>' +
+    '</div>';
+  }
+
+  function renderBusRoutes(){
+    if (!busRouteList || !busStopPanel || !busStopList) return;
+    if (!busRoutes.length) {
+      if (busAddRouteBtn) busAddRouteBtn.hidden = true;
+      selectedBusRouteId = null;
+      busRouteList.innerHTML = '<div class="bus-empty">등록된 노선 없음<br><button type="button" class="btn ghost bus-empty-add" style="margin-top:12px">첫 노선 추가</button></div>';
+      busStopPanel.hidden = true;
+      return;
+    }
+    if (busAddRouteBtn) busAddRouteBtn.hidden = false;
+    if (!selectedBusRouteId || !busRoutes.some(function(route){ return route.id === selectedBusRouteId; })) {
+      selectedBusRouteId = busRoutes[0].id;
+    }
+    busRouteList.innerHTML = busRoutes.map(renderBusRouteCard).join('');
+    renderBusStops();
+  }
+
+  function renderBusStops(){
+    var route = selectedBusRoute();
+    if (!route) {
+      busStopPanel.hidden = true;
+      return;
+    }
+    busStopPanel.hidden = false;
+    busSelectedRouteTitle.innerHTML = escWithBr(route.route_name || '이름 없는 노선');
+    var stops = busStopsByRoute[route.id] || [];
+    busStopList.innerHTML = stops.length
+      ? stops.map(renderBusStopCard).join('')
+      : '<div class="bus-empty">등록된 정류장이 없습니다.<br><button type="button" class="btn ghost bus-empty-stop-add" style="margin-top:12px">첫 정류장 추가</button></div>';
+  }
+
+  async function loadBusTab(){
+    if (!currentCenter || isTemplateMode()) return;
+    setBusStatus('통학차량 정보를 불러오는 중...', '');
+    var routeRes = await client.from('bus_routes')
+      .select('id,center_id,route_name,route_color,sort,created_at,updated_at')
+      .eq('center_id', currentCenter.id)
+      .order('sort', { ascending:true })
+      .order('created_at', { ascending:true });
+    if (routeRes.error) {
+      logAdminError('loadBusTab/routes', routeRes.error);
+      setBusStatus('노선을 불러오지 못했습니다: ' + routeRes.error.message, 'error');
+      return;
+    }
+    busRoutes = routeRes.data || [];
+    busStopsByRoute = {};
+    if (busRoutes.length) {
+      var routeIds = busRoutes.map(function(route){ return route.id; });
+      var stopRes = await client.from('bus_stops')
+        .select('id,route_id,stop_name,pickup_time,dropoff_time,sort,created_at')
+        .in('route_id', routeIds)
+        .order('sort', { ascending:true })
+        .order('created_at', { ascending:true });
+      if (stopRes.error) {
+        logAdminError('loadBusTab/stops', stopRes.error);
+        setBusStatus('정류장을 불러오지 못했습니다: ' + stopRes.error.message, 'error');
+        return;
+      }
+      (stopRes.data || []).forEach(function(stop){
+        if (!busStopsByRoute[stop.route_id]) busStopsByRoute[stop.route_id] = [];
+        busStopsByRoute[stop.route_id].push(stop);
+      });
+    }
+    setBusStatus('', '');
+    renderBusRoutes();
+  }
+
+  async function createBusRoute(){
+    if (!currentCenter || isTemplateMode()) return;
+    setBusStatus('노선을 추가하는 중...', '');
+    var res = await client.from('bus_routes').insert({
+      center_id: currentCenter.id,
+      route_name: '새 노선',
+      route_color: '#FF8A6B',
+      sort: nextSort(busRoutes)
+    }).select().single();
+    if (res.error) {
+      logAdminError('createBusRoute', res.error);
+      setBusStatus('노선 추가 실패: ' + res.error.message, 'error');
+      return;
+    }
+    selectedBusRouteId = res.data.id;
+    await loadBusTab();
+    markSaved();
+    setBusStatus('노선을 추가했어요.', 'ok');
+  }
+
+  async function updateBusRoute(routeId){
+    var card = busRouteList.querySelector('.bus-route-card[data-route-id="' + routeId + '"]');
+    if (!card) return;
+    var payload = {
+      route_name: card.querySelector('.bus-route-name').value,
+      route_color: safeBusColor(card.querySelector('.bus-route-color').value),
+      sort: normalizeSortValue(card.querySelector('.bus-route-sort').value, 0)
+    };
+    var res = await client.from('bus_routes').update(payload).eq('id', routeId).eq('center_id', currentCenter.id);
+    if (res.error) {
+      logAdminError('updateBusRoute', res.error);
+      setBusStatus('노선 저장 실패: ' + res.error.message, 'error');
+      return;
+    }
+    await loadBusTab();
+    markSaved();
+    setBusStatus('노선을 저장했어요.', 'ok');
+  }
+
+  async function deleteBusRoute(routeId){
+    if (!confirm('이 노선과 정류장을 삭제할까요?')) return;
+    var stopRes = await client.from('bus_stops').delete().eq('route_id', routeId);
+    if (stopRes.error) {
+      logAdminError('deleteBusRoute/stops', stopRes.error);
+      setBusStatus('정류장 삭제 실패: ' + stopRes.error.message, 'error');
+      return;
+    }
+    var routeRes = await client.from('bus_routes').delete().eq('id', routeId).eq('center_id', currentCenter.id);
+    if (routeRes.error) {
+      logAdminError('deleteBusRoute/route', routeRes.error);
+      setBusStatus('노선 삭제 실패: ' + routeRes.error.message, 'error');
+      return;
+    }
+    selectedBusRouteId = null;
+    await loadBusTab();
+    markSaved();
+    setBusStatus('노선을 삭제했어요.', 'ok');
+  }
+
+  async function createBusStop(){
+    var route = selectedBusRoute();
+    if (!route) return;
+    var stops = busStopsByRoute[route.id] || [];
+    setBusStatus('정류장을 추가하는 중...', '');
+    var res = await client.from('bus_stops').insert({
+      route_id: route.id,
+      stop_name: '새 정류장',
+      pickup_time: null,
+      dropoff_time: null,
+      sort: nextSort(stops)
+    }).select().single();
+    if (res.error) {
+      logAdminError('createBusStop', res.error);
+      setBusStatus('정류장 추가 실패: ' + res.error.message, 'error');
+      return;
+    }
+    await loadBusTab();
+    markSaved();
+    setBusStatus('정류장을 추가했어요.', 'ok');
+  }
+
+  async function updateBusStop(stopId){
+    var card = busStopList.querySelector('.bus-stop-card[data-stop-id="' + stopId + '"]');
+    if (!card) return;
+    var payload = {
+      stop_name: card.querySelector('.bus-stop-name').value,
+      pickup_time: card.querySelector('.bus-stop-pickup').value || null,
+      dropoff_time: card.querySelector('.bus-stop-dropoff').value || null,
+      sort: normalizeSortValue(card.querySelector('.bus-stop-sort').value, 0)
+    };
+    var res = await client.from('bus_stops').update(payload).eq('id', stopId);
+    if (res.error) {
+      logAdminError('updateBusStop', res.error);
+      setBusStatus('정류장 저장 실패: ' + res.error.message, 'error');
+      return;
+    }
+    await loadBusTab();
+    markSaved();
+    setBusStatus('정류장을 저장했어요.', 'ok');
+  }
+
+  async function deleteBusStop(stopId){
+    if (!confirm('이 정류장을 삭제할까요?')) return;
+    var res = await client.from('bus_stops').delete().eq('id', stopId);
+    if (res.error) {
+      logAdminError('deleteBusStop', res.error);
+      setBusStatus('정류장 삭제 실패: ' + res.error.message, 'error');
+      return;
+    }
+    await loadBusTab();
+    markSaved();
+    setBusStatus('정류장을 삭제했어요.', 'ok');
+  }
+
+  async function moveBusRoute(routeId, delta){
+    var idx = busRoutes.findIndex(function(route){ return route.id === routeId; });
+    var other = busRoutes[idx + delta];
+    if (idx < 0 || !other) return;
+    var current = busRoutes[idx];
+    var a = normalizeSortValue(current.sort, idx + 1);
+    var b = normalizeSortValue(other.sort, idx + delta + 1);
+    var res1 = await client.from('bus_routes').update({ sort:b }).eq('id', current.id).eq('center_id', currentCenter.id);
+    if (res1.error) { setBusStatus('순서 변경 실패: ' + res1.error.message, 'error'); return; }
+    var res2 = await client.from('bus_routes').update({ sort:a }).eq('id', other.id).eq('center_id', currentCenter.id);
+    if (res2.error) { setBusStatus('순서 변경 실패: ' + res2.error.message, 'error'); return; }
+    await loadBusTab();
+    markSaved();
+  }
+
+  async function moveBusStop(stopId, delta){
+    var route = selectedBusRoute();
+    if (!route) return;
+    var stops = busStopsByRoute[route.id] || [];
+    var idx = stops.findIndex(function(stop){ return stop.id === stopId; });
+    var other = stops[idx + delta];
+    if (idx < 0 || !other) return;
+    var current = stops[idx];
+    var a = normalizeSortValue(current.sort, idx + 1);
+    var b = normalizeSortValue(other.sort, idx + delta + 1);
+    var res1 = await client.from('bus_stops').update({ sort:b }).eq('id', current.id);
+    if (res1.error) { setBusStatus('순서 변경 실패: ' + res1.error.message, 'error'); return; }
+    var res2 = await client.from('bus_stops').update({ sort:a }).eq('id', other.id);
+    if (res2.error) { setBusStatus('순서 변경 실패: ' + res2.error.message, 'error'); return; }
+    await loadBusTab();
+    markSaved();
+  }
+
+  if (busAddRouteBtn) busAddRouteBtn.addEventListener('click', createBusRoute);
+  if (busAddStopBtn) busAddStopBtn.addEventListener('click', createBusStop);
+  if (busRouteList) busRouteList.addEventListener('click', function(e){
+    var addEmpty = e.target.closest('.bus-empty-add');
+    if (addEmpty) { createBusRoute(); return; }
+    var save = e.target.closest('.bus-route-save');
+    if (save) { updateBusRoute(save.dataset.routeId); return; }
+    var del = e.target.closest('.bus-route-delete');
+    if (del) { deleteBusRoute(del.dataset.routeId); return; }
+    var up = e.target.closest('.bus-route-up');
+    if (up) { moveBusRoute(up.dataset.routeId, -1); return; }
+    var down = e.target.closest('.bus-route-down');
+    if (down) { moveBusRoute(down.dataset.routeId, 1); return; }
+    var card = e.target.closest('.bus-route-card');
+    if (card && !e.target.closest('input,button')) {
+      selectedBusRouteId = card.dataset.routeId;
+      renderBusRoutes();
+    }
+  });
+  if (busStopList) busStopList.addEventListener('click', function(e){
+    var addEmpty = e.target.closest('.bus-empty-stop-add');
+    if (addEmpty) { createBusStop(); return; }
+    var save = e.target.closest('.bus-stop-save');
+    if (save) { updateBusStop(save.dataset.stopId); return; }
+    var del = e.target.closest('.bus-stop-delete');
+    if (del) { deleteBusStop(del.dataset.stopId); return; }
+    var up = e.target.closest('.bus-stop-up');
+    if (up) { moveBusStop(up.dataset.stopId, -1); return; }
+    var down = e.target.closest('.bus-stop-down');
+    if (down) { moveBusStop(down.dataset.stopId, 1); }
+  });
+
   function renderFaqCard(item){
     item = item || {};
     return '<div class="faq-item-card">' +
@@ -2676,7 +3056,7 @@
 
   function setTemplateTabVisibility(){
     var templateMode = isTemplateMode();
-    ['class', 'consult'].forEach(function(tab){
+    ['class', 'bus', 'consult'].forEach(function(tab){
       var btn = document.querySelector('.tab-btn[data-tab="' + tab + '"]');
       var panel = document.querySelector('.tab-panel[data-panel="' + tab + '"]');
       if (btn) btn.hidden = templateMode;
@@ -2685,7 +3065,7 @@
     if (templateMode) {
       consultSection.hidden = true;
       classInviteDetail.hidden = true;
-      if (document.querySelector('.tab-btn[data-tab="class"].active') || document.querySelector('.tab-btn[data-tab="consult"].active')) {
+      if (document.querySelector('.tab-btn[data-tab="class"].active') || document.querySelector('.tab-btn[data-tab="bus"].active') || document.querySelector('.tab-btn[data-tab="consult"].active')) {
         activateTab('basic');
       }
     }
@@ -2717,6 +3097,7 @@
     if (tab === 'class' && !isTemplateMode()) loadClassManagerTab();
     if (tab === 'admission') loadAdmissionTab();
     if (tab === 'directions') loadDirectionsTab();
+    if (tab === 'bus' && !isTemplateMode()) loadBusTab();
     if (tab === 'faq') loadFaqTab();
   }
 
@@ -2766,6 +3147,9 @@
     currentHeroPhoto = null;
     currentAdmissionId = null;
     selectedTeacherClassId = null;
+    busRoutes = [];
+    busStopsByRoute = {};
+    selectedBusRouteId = null;
     facilityTabLoaded = false;
     programTabLoaded = false;
 
