@@ -409,31 +409,32 @@
   .storybook::after{transform:rotate(.9deg) translateY(3px);opacity:.7}
 
   /* 페이지 트랙: 모든 sb-page를 겹쳐 두고 활성 페이지만 보인다 */
-  .sb-stage{position:absolute;inset:0;z-index:2;overflow:hidden;border-radius:22px}
+  .sb-stage{position:absolute;inset:0;z-index:2;overflow:visible;border-radius:22px;perspective:2400px}
 
   .sb-page{
     position:absolute;inset:0;
     background:var(--page-paper);border-radius:22px;box-shadow:var(--card-shadow);
     padding:44px;display:grid;
     grid-template-columns:1fr 36px 1fr;align-items:center;overflow:hidden;
-    /* 2D 플립: 활성 페이지만 보이고, JS가 scaleX 압축→교체→펼침으로 종이 넘김을 연출.
-       기본은 숨김(비활성). 활성 페이지가 scaleX(1)로 펼쳐진 상태.
+    /* 3D 힌지 플립: 활성 페이지만 보이고, JS가 왼쪽 책등(transform-origin)을 축으로
+       rotateY 회전시켜 페이지 넘김을 연출한다. 기본은 숨김(비활성).
        box-shadow는 transform과 별개로 정적으로 유지 — filter를 쓰지 않으므로
        매 프레임 재도색(repaint) 없이 transform만 컴포지터에서 처리된다. */
     opacity:0;pointer-events:none;
     transform-origin:center center;
+    backface-visibility:hidden;
   }
-  .sb-page.is-active{
-    opacity:1;pointer-events:auto;
-    transform:scaleX(1);
-    /* 전체 전환 ~480ms의 절반씩(접힘 240ms / 펼침 240ms).
-       will-change로 컴포지터 레이어를 미리 승격해 첫 프레임 버벅임을 줄인다. */
-    transition:transform .24s cubic-bezier(.4,0,.6,1);
+  .sb-page.is-active{opacity:1;pointer-events:auto;z-index:2}
+  /* 다음 페이지로: 나가는 페이지가 왼쪽 책등을 축으로 넘어간다 */
+  .sb-page.sb-leave{
+    opacity:1;pointer-events:none;z-index:6;
+    transform-origin:left center;
+    transform:rotateY(0deg);
     will-change:transform;
   }
-  /* 플립 중간(살짝 접힌) 상태 — JS가 순간적으로 토글. 압축 폭을 완화(.05→.45). */
-  .storybook.sb-flipping .sb-page.is-active{
-    transform:scaleX(.45);
+  .sb-page.sb-leave.sb-go{
+    transform:rotateY(-88deg);
+    transition:transform .42s cubic-bezier(.5,.05,.7,.2);
   }
   /* 종이가 접히는 느낌의 은은한 명암 — filter:brightness 대신 opacity 오버레이로 구현.
      opacity는 transform과 함께 컴포지터에서만 처리되어 box-shadow 재도색을 유발하지 않는다. */
@@ -441,7 +442,27 @@
     content:"";position:absolute;inset:0;background:#000;border-radius:22px;
     opacity:0;pointer-events:none;transition:opacity .24s ease;will-change:opacity;
   }
-  .storybook.sb-flipping .sb-page.is-active::before{opacity:.05}
+  /* 넘어가는 동안 종이 명암 — 기존 ::before 검정 오버레이 재사용 */
+  .sb-page.sb-leave.sb-go::before{
+    opacity:.14;
+    transition:opacity .42s ease;
+  }
+  /* 이전 페이지로: 들어오는 페이지가 접힌 상태에서 펼쳐져 내려온다 */
+  .sb-page.sb-enter{
+    opacity:1;z-index:6;
+    transform-origin:left center;
+    transform:rotateY(-88deg);
+    will-change:transform;
+  }
+  .sb-page.sb-enter::before{opacity:.14}
+  .sb-page.sb-enter.sb-go{
+    transform:rotateY(0deg);
+    transition:transform .42s cubic-bezier(.25,.7,.35,1);
+  }
+  .sb-page.sb-enter.sb-go::before{
+    opacity:0;
+    transition:opacity .42s ease;
+  }
   /* 안쪽 종이 점선 테두리 (동화책 프레임) */
   .sb-page::after{
     content:"";position:absolute;inset:16px;border:1.5px dashed var(--page-line);
@@ -638,14 +659,21 @@
     .sb-arrow{width:40px;height:40px}
     /* 모바일: 음소거 버튼을 컨트롤 행 오른쪽 끝에 */
     .sb-mute{position:absolute;right:8px;bottom:50%;transform:translateY(50%)}
+    /* 모바일은 기존처럼 display 토글 방식 유지, 3D 힌지 플립 미적용 */
+    .sb-page.sb-leave,.sb-page.sb-enter,
+    .sb-page.sb-leave.sb-go,.sb-page.sb-enter.sb-go{
+      transform:none;transition:none;
+    }
   }
   /* prefers-reduced-motion: 플립 없이 단순 opacity 페이드만 */
   @media (prefers-reduced-motion: reduce){
     .sb-page.is-active{transition:opacity .2s ease;transform:none}
-    .storybook.sb-flipping .sb-page.is-active{transform:none}
     .sb-page::before{transition:none}
-    .storybook.sb-flipping .sb-page.is-active::before{opacity:0}
     .sb-arrow,.sb-dots button{transition:none}
+    .sb-page.sb-leave,.sb-page.sb-enter,
+    .sb-page.sb-leave.sb-go,.sb-page.sb-enter.sb-go{
+      transform:none;transition:none;
+    }
   }
 
   /* ── 앨범 벽 ── */
@@ -1366,6 +1394,7 @@
 <script src="kakao-config.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="topbar.js"></script>
+<script src="page-flip-sound.js"></script>
 <script>
 // 모든 렌더 함수(async IIFE, initInteractions 등)가 공유하는 escape 헬퍼.
 // 최상단 스크립트 스코프에 둬야 initInteractions처럼 async IIFE 바깥에서 정의된
@@ -1848,12 +1877,15 @@ function mapRowToData(row){
           <button class="sb-arrow prev" type="button" aria-label="이전 페이지">${CHEVRON_L}</button>
           <div class="sb-dots" role="tablist" aria-label="페이지 이동">${dotsHtml}</div>
           <button class="sb-arrow next" type="button" aria-label="다음 페이지">${CHEVRON_R}</button>
-          <button class="sb-mute" type="button" aria-label="페이지 넘김 소리 켜기/끄기" aria-pressed="false">
+          <button class="sb-mute" type="button" aria-label="배경음 켜기/끄기" aria-pressed="false">
             <svg class="icon-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg>
             <svg class="icon-muted" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="22" y1="9" x2="16" y2="15"/><line x1="16" y1="9" x2="22" y2="15"/></svg>
           </button>
         </div>
-      </div>`;
+      </div>
+      <audio class="sb-bgm" loop preload="none" style="display:none">
+        <source data-src="audio/storybook-bgm-sunshine-01.mp3" type="audio/mpeg">
+      </audio>`;
   }
 
   // ── 원 시설 (배지 + 폴라로이드 콜라주, 인라인 펼치기) ──
@@ -2282,8 +2314,8 @@ function initInteractions(){
     root.setProperty('--sun-glow',p.glow);
   }
 
-  // ── 동화책 페이지 전환 컨트롤러 (2D 플립 + 페이지 넘김 효과음) ──
-  // 표지→원장→스토리→마무리를 순수 scaleX 압축/펼침(2D 플립, perspective 없음)으로 넘긴다.
+  // ── 동화책 페이지 전환 컨트롤러 (3D 힌지 플립 + 스토리북 배경음악) ──
+  // 표지→원장→스토리→마무리를 왼쪽 책등 축 rotateY 힌지 플립으로 넘긴다.
   // 활성 페이지의 data-slot으로 기존 시간대 빛 흐름(palettes)을 재사용해 시그니처를 유지한다.
   (function(){
     var book = document.querySelector('.storybook');
@@ -2296,83 +2328,113 @@ function initInteractions(){
     if (!pages.length) return;
 
     var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    var HALF = 240; // 접힘/펼침 각 240ms → 전체 ~480ms (CSS transition과 일치)
+    var FLIP_MS = 440; // 3D 힌지 플립 전체 지속시간 (CSS transition과 일치)
 
-    // ── 페이지 넘김 효과음 (Web Audio API로 합성, 외부 파일 없음) ──
-    // "물방울이 톡 떨어지는" 소리 — sine 오실레이터의 피치를 900Hz→250Hz로 빠르게
-    // 떨어뜨려 "톡" 타격감을 만들고, 아주 짧은 클릭 트랜지언트로 어택을 더하며,
-    // 40ms 뒤 조용한 2차 톤으로 "퐁~" 파문 잔향을 은은하게 얹는다.
     // reduced-motion 사용자는 기본 음소거(단, 토글로 다시 켤 수 있음).
-    var audioCtx = null;
-    var STORAGE_KEY = 'woniya_sb_muted';
-    var stored = null;
-    try { stored = localStorage.getItem(STORAGE_KEY); } catch(e){}
-    // 저장값이 있으면 그 값을, 없으면 reduced-motion일 때 기본 음소거
-    var muted = (stored === '1') ? true : (stored === '0') ? false : !!reduceMotion;
-
-    function persistMuted(){ try { localStorage.setItem(STORAGE_KEY, muted ? '1' : '0'); } catch(e){} }
+    // 소리 on/off 상태(배경음+클릭 효과음 공통)는 WoniyaSound(page-flip-sound.js)가 관리한다.
+    if (reduceMotion && localStorage.getItem('woniya_sound_muted') === null){
+      WoniyaSound.setMuted(true);
+    }
     function reflectMute(){
       if (!muteBtn) return;
-      muteBtn.classList.toggle('is-muted', muted);
-      muteBtn.setAttribute('aria-pressed', muted ? 'true' : 'false');
+      muteBtn.classList.toggle('is-muted', WoniyaSound.isMuted());
+      muteBtn.setAttribute('aria-pressed', WoniyaSound.isMuted() ? 'true' : 'false');
     }
-    function synthFlipSound(){
-      try {
-        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        if (audioCtx.state === 'suspended') audioCtx.resume();
-        var ctx = audioCtx, now = ctx.currentTime;
 
-        // 1) 메인 "톡" 톤 — sine, 900Hz→250Hz 지수 하강(100ms), 8ms 어택 후 지수 감쇠(~180ms)
-        var mainDur = 0.18;
-        var osc = ctx.createOscillator();
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(900, now);
-        osc.frequency.exponentialRampToValueAtTime(250, now + 0.1);
-        var mainGain = ctx.createGain();
-        mainGain.gain.setValueAtTime(0.0001, now);
-        mainGain.gain.exponentialRampToValueAtTime(0.22, now + 0.008); // 8ms 어택
-        mainGain.gain.exponentialRampToValueAtTime(0.0001, now + mainDur); // 자연스러운 감쇠
-        osc.connect(mainGain); mainGain.connect(ctx.destination);
-        osc.start(now); osc.stop(now + mainDur);
+    // ── 스토리북 배경음악 (mp3 루프, 화면에 보이는 동안만 페이드 인/아웃) ──
+    var bgm = book.parentElement ? book.parentElement.querySelector('.sb-bgm') : document.querySelector('.sb-bgm');
+    var bgmSrcLoaded = false;
+    var FADE_IN_MS = 700;
+    var FADE_OUT_MS = 500;
+    var TARGET_VOLUME = 0.25;
+    var fadeTimer = null;
+    var pendingPlay = false; // 자동재생이 막혔을 때 첫 사용자 제스처를 기다리는 플래그
 
-        // 2) 클릭 트랜지언트 — 아주 짧은(4ms) 고음 triangle 블립으로 타격감의 어택을 더함
-        var clickDur = 0.004;
-        var click = ctx.createOscillator();
-        click.type = 'triangle';
-        click.frequency.value = 1800;
-        var clickGain = ctx.createGain();
-        clickGain.gain.setValueAtTime(0.12, now);
-        clickGain.gain.exponentialRampToValueAtTime(0.0001, now + clickDur);
-        click.connect(clickGain); clickGain.connect(ctx.destination);
-        click.start(now); click.stop(now + clickDur);
-
-        // 3) "퐁~" 파문 잔향 — 40ms 뒤, 더 조용하고 낮은 톤으로 짧게(~90ms)
-        var rippleStart = now + 0.04;
-        var rippleDur = 0.09;
-        var ripple = ctx.createOscillator();
-        ripple.type = 'sine';
-        ripple.frequency.setValueAtTime(500, rippleStart);
-        ripple.frequency.exponentialRampToValueAtTime(300, rippleStart + rippleDur);
-        var rippleGain = ctx.createGain();
-        rippleGain.gain.setValueAtTime(0.0001, rippleStart);
-        rippleGain.gain.exponentialRampToValueAtTime(0.05, rippleStart + 0.006); // 은은하게
-        rippleGain.gain.exponentialRampToValueAtTime(0.0001, rippleStart + rippleDur);
-        ripple.connect(rippleGain); rippleGain.connect(ctx.destination);
-        ripple.start(rippleStart); ripple.stop(rippleStart + rippleDur);
-        // 전체 재생 시간: 메인(180ms) 기준, 잔향까지 포함해도 40+90=130ms로 200~250ms 이내
-      } catch(e){ /* 오디오 실패는 조용히 무시 */ }
+    function ensureBgmLoaded(){
+      if (bgmSrcLoaded || !bgm) return;
+      var srcEl = bgm.querySelector('source[data-src]');
+      if (srcEl){
+        srcEl.setAttribute('src', srcEl.getAttribute('data-src'));
+        bgm.load();
+      }
+      bgmSrcLoaded = true;
     }
-    function playFlipSound(){
-      if (muted) return;
-      // 오디오 노드 생성/연결은 requestAnimationFrame으로 한 틱 미뤄, 전환 시작 프레임의
-      // 스타일 계산·컴포지팅과 같은 틱에서 실행되어 메인 스레드를 블로킹하지 않게 한다.
-      if (window.requestAnimationFrame) requestAnimationFrame(synthFlipSound);
-      else synthFlipSound();
+
+    function fadeTo(targetVol, durationMs, onDone){
+      if (!bgm) return;
+      if (fadeTimer) { clearInterval(fadeTimer); fadeTimer = null; }
+      var steps = 16;
+      var stepTime = durationMs / steps;
+      var startVol = bgm.volume;
+      var diff = targetVol - startVol;
+      var i = 0;
+      fadeTimer = setInterval(function(){
+        i++;
+        bgm.volume = Math.min(1, Math.max(0, startVol + diff * (i / steps)));
+        if (i >= steps){
+          clearInterval(fadeTimer); fadeTimer = null;
+          if (onDone) onDone();
+        }
+      }, stepTime);
     }
+
+    function tryPlayBgm(){
+      if (!bgm || WoniyaSound.isMuted()) return;
+      ensureBgmLoaded();
+      bgm.volume = 0;
+      var p = bgm.play();
+      if (p && p.catch){
+        p.then(function(){
+          pendingPlay = false;
+          fadeTo(TARGET_VOLUME, FADE_IN_MS);
+        }).catch(function(){
+          // 자동재생 차단됨 — 다음 사용자 제스처(클릭)에서 다시 시도
+          pendingPlay = true;
+        });
+      } else {
+        fadeTo(TARGET_VOLUME, FADE_IN_MS);
+      }
+    }
+
+    function stopBgm(){
+      if (!bgm) return;
+      pendingPlay = false;
+      fadeTo(0, FADE_OUT_MS, function(){ bgm.pause(); });
+    }
+
+    // 스토리북이 화면에 보이는 동안만 배경음 재생
+    if ('IntersectionObserver' in window){
+      var bgmIo = new IntersectionObserver(function(entries){
+        entries.forEach(function(entry){
+          if (entry.isIntersecting) tryPlayBgm();
+          else stopBgm();
+        });
+      }, { threshold: 0.35 });
+      bgmIo.observe(book);
+    }
+
+    // 자동재생이 막혔을 경우 첫 사용자 제스처(화살표/점 클릭)에서 재시도
+    document.addEventListener('click', function retryOnGesture(){
+      if (pendingPlay) tryPlayBgm();
+    }, { passive: true });
+
     reflectMute();
     if (muteBtn) muteBtn.addEventListener('click', function(){
-      muted = !muted; persistMuted(); reflectMute();
-      if (!muted) playFlipSound(); // 켤 때 짧게 미리듣기 (사용자 제스처 컨텍스트에서 오디오 활성화)
+      WoniyaSound.setMuted(!WoniyaSound.isMuted());
+      reflectMute();
+      if (WoniyaSound.isMuted()) {
+        stopBgm();
+      } else {
+        // 현재 스토리북이 보이는 상태라면 바로 재생 시도
+        var rect = book.getBoundingClientRect();
+        var inView = rect.top < window.innerHeight && rect.bottom > 0;
+        if (inView) tryPlayBgm();
+      }
+    });
+
+    WoniyaSound.onMuteChange(function(isMuted){
+      // 다른 곳(예: 향후 추가될 다른 소리 컨트롤)에서 음소거가 바뀌어도 스토리북 BGM이 즉시 반응하도록
+      if (isMuted) { stopBgm(); }
     });
 
     var idx = 0;
@@ -2384,8 +2446,6 @@ function initInteractions(){
       var outgoing = pages[idx];
 
       if (reduceMotion){
-        playFlipSound();
-        // 플립 없이 단순 opacity 페이드 (CSS가 .is-active opacity 전환 담당)
         outgoing.classList.remove('is-active');
         incoming.classList.add('is-active');
         idx = next; sync();
@@ -2393,21 +2453,34 @@ function initInteractions(){
       }
 
       flipping = true;
-      // 1단계: 현재 페이지를 가로로 접는다 (scaleX 1→.45).
-      // 효과음 합성(playFlipSound)은 requestAnimationFrame으로 미뤄지므로 여기서 호출해도
-      // 클래스 토글(스타일 변경)이 먼저 반영되고, 오디오 노드 생성은 같은 프레임 뒤로 미뤄진다.
-      book.classList.add('sb-flipping');
-      playFlipSound();
-      // 2단계: 접힌 시점에 콘텐츠 교체 (접힌 incoming을 활성화하고 outgoing 비활성화)
-      window.setTimeout(function(){
+      WoniyaSound.playFlip();
+      var forward = next > idx;
+
+      if (forward){
+        // 들어오는 페이지를 먼저 바닥에 깔고, 나가는 페이지가 그 위에서 넘어간다
+        incoming.classList.add('is-active');
         outgoing.classList.remove('is-active');
-        incoming.classList.add('is-active'); // .sb-flipping 상태라 incoming도 scaleX(.45)
-        void incoming.offsetWidth; // 리플로우
+        outgoing.classList.add('sb-leave');
+        void outgoing.offsetWidth; // 리플로우 후 트랜지션 시작
+        outgoing.classList.add('sb-go');
+      } else {
+        // 나가는 페이지는 바닥에 그대로 두고, 들어오는 페이지가 접힌 채 위에서 펼쳐진다
+        incoming.classList.add('sb-enter');
+        void incoming.offsetWidth;
+        incoming.classList.add('sb-go');
+      }
+
+      window.setTimeout(function(){
+        if (forward){
+          outgoing.classList.remove('sb-leave','sb-go');
+        } else {
+          incoming.classList.remove('sb-enter','sb-go');
+          incoming.classList.add('is-active');
+          outgoing.classList.remove('is-active');
+        }
         idx = next; sync();
-        // 3단계: 펼친다 (scaleX .45→1)
-        book.classList.remove('sb-flipping');
-        window.setTimeout(function(){ flipping = false; }, HALF + 40);
-      }, HALF);
+        flipping = false;
+      }, FLIP_MS);
     }
 
     function sync(){
