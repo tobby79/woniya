@@ -185,6 +185,8 @@
   .modal-decide .modal-number{
     font-size:2.2rem;font-weight:700;color:var(--coral);margin:16px 0 20px;
   }
+  .modal-actions{display:flex;gap:8px;justify-content:center;margin-top:18px;flex-wrap:wrap}
+  .modal-actions .btn{flex:0 1 auto;min-width:132px}
 
   @media (max-width:760px){
     body{padding-bottom:42px}
@@ -207,6 +209,8 @@
     .modal-box{padding:18px;border-radius:20px}
     .modal-head{align-items:flex-start;flex-direction:column}
     .modal-head-actions{width:100%;justify-content:space-between;gap:10px}
+    .modal-actions{flex-direction:column}
+    .modal-actions .btn{width:100%}
     .preview-frame{height:68vh}
   }
 
@@ -249,12 +253,16 @@
 <!-- 결정 모달 -->
 <div class="modal-overlay" id="decideModal" hidden>
   <div class="modal-box modal-decide">
-    <div class="modal-title">선택 완료</div>
+    <div class="modal-title" id="decideTitle">선택 완료</div>
     <p class="modal-text" id="decideText"></p>
-    <p class="modal-text">아래 번호를 운영자에게 알려주세요.</p>
+    <p class="modal-text" id="decideSubText">아래 번호를 운영자에게 알려주세요.</p>
     <div class="modal-number" id="decideNumber"></div>
     <div class="msg" id="decideMsg"></div>
-    <button type="button" class="btn" id="decideCloseBtn">닫기</button>
+    <div class="modal-actions">
+      <button type="button" class="btn ghost" id="decideAdminBtn" hidden>원 관리로 돌아가기</button>
+      <button type="button" class="btn ghost" id="decidePublicBtn" hidden>원 페이지 보기</button>
+      <button type="button" class="btn" id="decideCloseBtn">닫기</button>
+    </div>
   </div>
 </div>
 
@@ -281,14 +289,26 @@
   var previewNewTabBtn = document.getElementById('previewNewTabBtn');
 
   var decideModal     = document.getElementById('decideModal');
+  var decideTitle     = document.getElementById('decideTitle');
   var decideText      = document.getElementById('decideText');
+  var decideSubText   = document.getElementById('decideSubText');
   var decideNumber    = document.getElementById('decideNumber');
   var decideMsg       = document.getElementById('decideMsg');
+  var decideAdminBtn  = document.getElementById('decideAdminBtn');
+  var decidePublicBtn = document.getElementById('decidePublicBtn');
   var decideCloseBtn  = document.getElementById('decideCloseBtn');
 
   function previewUrl(t){
     if (authMode && slug) return t.file + '?preview_center=' + encodeURIComponent(slug);
     return slug ? t.file + '?slug=' + encodeURIComponent(slug) : t.file + '?preview=' + encodeURIComponent(t.key);
+  }
+
+  function publicUrl(t){
+    return slug ? t.file + '?slug=' + encodeURIComponent(slug) : '';
+  }
+
+  function isOwnerChangeMode(){
+    return authMode || !!slug;
   }
 
   function adminReturnUrl(){
@@ -306,6 +326,10 @@
   }
 
   backToAdminBtn.addEventListener('click', function(){
+    goBackToAdmin();
+  });
+
+  function goBackToAdmin(){
     var fallbackUrl = adminReturnUrl();
     if (cameFromAdmin() && window.history.length > 1) {
       window.history.back();
@@ -315,7 +339,7 @@
       return;
     }
     window.location.href = fallbackUrl;
-  });
+  }
 
   // ── 카드 렌더 ──
   tplList.innerHTML = TEMPLATES.map(function(t){
@@ -418,12 +442,28 @@
 
   // ── 결정 모달 ──
   function openDecideModal(t, msgClass, msgText){
-    decideText.textContent = t.name + ' 템플릿을 선택하셨어요.';
-    decideNumber.textContent = t.number + '번 · ' + t.name;
+    var ownerMode = isOwnerChangeMode();
+    decideTitle.textContent = ownerMode ? '템플릿 변경 완료' : '선택 완료';
+    decideText.textContent = ownerMode
+      ? t.name + ' 템플릿으로 변경됐어요.'
+      : t.name + ' 템플릿을 선택하셨어요.';
+    decideSubText.textContent = ownerMode
+      ? '기존 원 정보는 유지되고, 홈페이지 분위기만 바뀝니다.'
+      : '아래 번호를 운영자에게 알려주세요.';
+    decideNumber.hidden = ownerMode;
+    decideNumber.textContent = ownerMode ? '' : (t.number + '번 · ' + t.name);
     decideMsg.className = 'msg' + (msgClass ? ' ' + msgClass : '');
     decideMsg.textContent = msgText || '';
+    decideAdminBtn.hidden = !ownerMode;
+    decidePublicBtn.hidden = !ownerMode || !publicUrl(t);
+    decidePublicBtn.disabled = !publicUrl(t);
+    decidePublicBtn.onclick = function(){
+      var url = publicUrl(t);
+      if (url) window.open(url, '_blank');
+    };
     showModal(decideModal);
   }
+  decideAdminBtn.addEventListener('click', goBackToAdmin);
   decideCloseBtn.addEventListener('click', function(){ hideModal(decideModal); });
 
   // ── 결정 버튼 동작 ──
