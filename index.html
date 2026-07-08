@@ -507,31 +507,54 @@
         audioContext.resume().catch(function(){});
       }
       var start = audioContext.currentTime;
-      [0, 0.18, 0.36].forEach(function(offset, index){
+      [0, 0.22, 0.44].forEach(function(offset, index){
         var tapStart = start + offset;
         var osc = audioContext.createOscillator();
-        var gain = audioContext.createGain();
+        var toneGain = audioContext.createGain();
         var filter = audioContext.createBiquadFilter();
+        var noise = audioContext.createBufferSource();
+        var noiseGain = audioContext.createGain();
+        var noiseFilter = audioContext.createBiquadFilter();
+        var noiseBuffer = audioContext.createBuffer(1, Math.floor(audioContext.sampleRate * 0.08), audioContext.sampleRate);
+        var noiseData = noiseBuffer.getChannelData(0);
+        var peak = index === 1 ? 0.12 : 0.1;
+        var i;
 
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(index === 1 ? 135 : 118, tapStart);
-        osc.frequency.exponentialRampToValueAtTime(82, tapStart + 0.08);
+        for (i = 0; i < noiseData.length; i++) {
+          noiseData[i] = (Math.random() * 2 - 1) * (1 - i / noiseData.length);
+        }
+
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(index === 1 ? 132 : 118, tapStart);
+        osc.frequency.exponentialRampToValueAtTime(72, tapStart + 0.13);
         filter.type = 'lowpass';
-        filter.frequency.setValueAtTime(520, tapStart);
-        gain.gain.setValueAtTime(0.0001, tapStart);
-        gain.gain.exponentialRampToValueAtTime(0.032, tapStart + 0.012);
-        gain.gain.exponentialRampToValueAtTime(0.0001, tapStart + 0.09);
+        filter.frequency.setValueAtTime(360, tapStart);
+        toneGain.gain.setValueAtTime(0.0001, tapStart);
+        toneGain.gain.exponentialRampToValueAtTime(peak, tapStart + 0.018);
+        toneGain.gain.exponentialRampToValueAtTime(0.0001, tapStart + 0.14);
+
+        noise.buffer = noiseBuffer;
+        noiseFilter.type = 'lowpass';
+        noiseFilter.frequency.setValueAtTime(300, tapStart);
+        noiseGain.gain.setValueAtTime(0.0001, tapStart);
+        noiseGain.gain.exponentialRampToValueAtTime(0.045, tapStart + 0.01);
+        noiseGain.gain.exponentialRampToValueAtTime(0.0001, tapStart + 0.07);
 
         osc.connect(filter);
-        filter.connect(gain);
-        gain.connect(audioContext.destination);
+        filter.connect(toneGain);
+        toneGain.connect(audioContext.destination);
+        noise.connect(noiseFilter);
+        noiseFilter.connect(noiseGain);
+        noiseGain.connect(audioContext.destination);
         osc.start(tapStart);
-        osc.stop(tapStart + 0.1);
+        noise.start(tapStart);
+        osc.stop(tapStart + 0.15);
+        noise.stop(tapStart + 0.08);
       });
 
       window.setTimeout(function(){
         if (audioContext.state !== 'closed') audioContext.close().catch(function(){});
-      }, 800);
+      }, 900);
     } catch (e) {}
   }
 
