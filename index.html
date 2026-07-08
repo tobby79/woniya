@@ -143,10 +143,6 @@
     background:#fff;
     opacity:1;
     pointer-events:auto;
-    transition:opacity .24s ease;
-  }
-  .center-intro-overlay.is-fading{
-    opacity:0;
   }
   .center-intro-overlay img{
     display:block;
@@ -541,29 +537,29 @@
 
   function playCenterIntroThenNavigate(url, options){
     if (introNavigationInProgress) return;
+    if (!url) return;
     introNavigationInProgress = true;
 
     var opts = options || {};
     var reduceMotion = isReducedMotion();
     var duration = reduceMotion ? 80 : (opts.durationMs || 1400);
-    var fadeMs = reduceMotion ? 0 : (opts.fadeMs || 240);
-    var overlay = null;
+    var overlay = document.createElement('div');
+
+    overlay.className = 'center-intro-overlay';
+    overlay.setAttribute('aria-hidden', 'true');
+    overlay.innerHTML = '<img src="' + escapeHtml(opts.imageSrc || 'assets/woniya-intro-sunshine.gif') + '" alt="">';
+    document.body.appendChild(overlay);
 
     if (!reduceMotion) {
-      overlay = document.createElement('div');
-      overlay.className = 'center-intro-overlay';
-      overlay.setAttribute('aria-hidden', 'true');
-      overlay.innerHTML = '<img src="' + escapeHtml(opts.imageSrc || 'assets/woniya-intro-sunshine.gif') + '" alt="">';
-      document.body.appendChild(overlay);
       playFootstepTaps();
-
-      window.setTimeout(function(){
-        overlay.classList.add('is-fading');
-      }, Math.max(0, duration - fadeMs));
     }
 
     window.setTimeout(function(){
-      window.location.href = url;
+      try {
+        window.location.assign(url);
+      } catch (e) {
+        introNavigationInProgress = false;
+      }
     }, duration);
   }
 
@@ -583,8 +579,7 @@
 
     playCenterIntroThenNavigate(url, {
       imageSrc: 'assets/woniya-intro-sunshine.gif',
-      durationMs: 1400,
-      fadeMs: 240
+      durationMs: 1400
     });
   }, true);
   listEl.addEventListener('click', function(e){
@@ -594,8 +589,7 @@
     if (card.getAttribute('data-center-intro') === 'sunshine') {
       playCenterIntroThenNavigate(card.dataset.href, {
         imageSrc: 'assets/woniya-intro-sunshine.gif',
-        durationMs: 1400,
-        fadeMs: 240
+        durationMs: 1400
       });
       return;
     }
@@ -610,8 +604,7 @@
     if (card.getAttribute('data-center-intro') === 'sunshine') {
       playCenterIntroThenNavigate(card.dataset.href, {
         imageSrc: 'assets/woniya-intro-sunshine.gif',
-        durationMs: 1400,
-        fadeMs: 240
+        durationMs: 1400
       });
       return;
     }
