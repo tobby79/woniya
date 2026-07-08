@@ -496,65 +496,16 @@
     return window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   }
 
-  function playFootstepTaps(){
+  function playIntroAudio(src){
     if (isReducedMotion()) return;
-    var AudioContext = window.AudioContext || window.webkitAudioContext;
-    if (!AudioContext) return;
 
     try {
-      var audioContext = new AudioContext();
-      if (audioContext.state === 'suspended') {
-        audioContext.resume().catch(function(){});
+      var audio = new Audio(src || 'audio/intro_work.mp3');
+      audio.volume = 0.55;
+      var playPromise = audio.play();
+      if (playPromise && playPromise.catch) {
+        playPromise.catch(function(){});
       }
-      var start = audioContext.currentTime;
-      [0, 0.22, 0.44].forEach(function(offset, index){
-        var tapStart = start + offset;
-        var osc = audioContext.createOscillator();
-        var toneGain = audioContext.createGain();
-        var filter = audioContext.createBiquadFilter();
-        var noise = audioContext.createBufferSource();
-        var noiseGain = audioContext.createGain();
-        var noiseFilter = audioContext.createBiquadFilter();
-        var noiseBuffer = audioContext.createBuffer(1, Math.floor(audioContext.sampleRate * 0.08), audioContext.sampleRate);
-        var noiseData = noiseBuffer.getChannelData(0);
-        var peak = index === 1 ? 0.12 : 0.1;
-        var i;
-
-        for (i = 0; i < noiseData.length; i++) {
-          noiseData[i] = (Math.random() * 2 - 1) * (1 - i / noiseData.length);
-        }
-
-        osc.type = 'triangle';
-        osc.frequency.setValueAtTime(index === 1 ? 132 : 118, tapStart);
-        osc.frequency.exponentialRampToValueAtTime(72, tapStart + 0.13);
-        filter.type = 'lowpass';
-        filter.frequency.setValueAtTime(360, tapStart);
-        toneGain.gain.setValueAtTime(0.0001, tapStart);
-        toneGain.gain.exponentialRampToValueAtTime(peak, tapStart + 0.018);
-        toneGain.gain.exponentialRampToValueAtTime(0.0001, tapStart + 0.14);
-
-        noise.buffer = noiseBuffer;
-        noiseFilter.type = 'lowpass';
-        noiseFilter.frequency.setValueAtTime(300, tapStart);
-        noiseGain.gain.setValueAtTime(0.0001, tapStart);
-        noiseGain.gain.exponentialRampToValueAtTime(0.045, tapStart + 0.01);
-        noiseGain.gain.exponentialRampToValueAtTime(0.0001, tapStart + 0.07);
-
-        osc.connect(filter);
-        filter.connect(toneGain);
-        toneGain.connect(audioContext.destination);
-        noise.connect(noiseFilter);
-        noiseFilter.connect(noiseGain);
-        noiseGain.connect(audioContext.destination);
-        osc.start(tapStart);
-        noise.start(tapStart);
-        osc.stop(tapStart + 0.15);
-        noise.stop(tapStart + 0.08);
-      });
-
-      window.setTimeout(function(){
-        if (audioContext.state !== 'closed') audioContext.close().catch(function(){});
-      }, 900);
     } catch (e) {}
   }
 
@@ -574,7 +525,7 @@
     document.body.appendChild(overlay);
 
     if (!reduceMotion) {
-      playFootstepTaps();
+      playIntroAudio(opts.audioSrc || 'audio/intro_work.mp3');
     }
 
     window.setTimeout(function(){
