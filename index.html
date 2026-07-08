@@ -134,6 +134,33 @@
 
   a:focus-visible,.ocard:focus-visible{outline:3px solid var(--coral);outline-offset:3px;border-radius:8px}
 
+  .center-intro-overlay{
+    position:fixed;
+    inset:0;
+    z-index:9999;
+    width:100vw;
+    height:100vh;
+    background:#fff;
+    opacity:1;
+    pointer-events:auto;
+    transition:opacity .24s ease;
+  }
+  .center-intro-overlay.is-fading{
+    opacity:0;
+  }
+  .center-intro-overlay img{
+    display:block;
+    width:100vw;
+    height:100vh;
+    object-fit:cover;
+  }
+
+  @media (prefers-reduced-motion:reduce){
+    .center-intro-overlay{
+      transition:none;
+    }
+  }
+
   /* ══════════════════ PC 레이아웃 (768px 이상) ══════════════════ */
   @media (min-width:768px){
     .head-wrap{max-width:1100px;padding:0 40px}
@@ -369,18 +396,22 @@
       var templateFile = TEMPLATE_FILES[c.template] || 'template-sunshine.html';
       var homeUrl = templateFile + '?slug=' + encodeURIComponent(c.slug);
       var admissionsUrl = 'admissions.html?slug=' + encodeURIComponent(c.slug);
+      var hasSunshineIntro = c.slug === 'sample-sunshine';
+      var introAttr = hasSunshineIntro
+        ? ' data-center-intro="sunshine" data-center-slug="' + escapeHtml(c.slug) + '"'
+        : '';
       var admissionsButton = (c.admissions || []).length
         ? '<a class="go secondary" href="' + admissionsUrl + '">입학안내 보기</a>'
         : '';
       return '' +
-        '<article class="ocard" role="link" tabindex="0" data-href="' + homeUrl + '">' +
+        '<article class="ocard" role="link" tabindex="0" data-href="' + homeUrl + '"' + introAttr + '>' +
           '<div class="photo">' + (photo ? '<img src="' + photo + '" alt="' + escapeHtml(c.name) + '">' : '') + '</div>' +
           '<div class="body">' +
             '<div class="name">' + escapeHtml(c.name) + '</div>' +
             '<div class="meta">' + escapeHtml(metaText) + '</div>' +
             '<div class="badges">' + availabilityChip + badgeChips + tagChips + '</div>' +
             '<div class="actions">' +
-              '<a class="go primary" href="' + homeUrl + '">홈페이지 보기</a>' +
+              '<a class="go primary" href="' + homeUrl + '"' + introAttr + '>홈페이지 보기</a>' +
               admissionsButton +
             '</div>' +
           '</div>' +
@@ -463,12 +494,112 @@
   syncChipActive();
   requestUserLocation();
 
+  var introNavigationInProgress = false;
+
+  function isReducedMotion(){
+    return window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  }
+
+  function playFootstepTaps(){
+    if (isReducedMotion()) return;
+    var AudioContext = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContext) return;
+
+    try {
+      var audioContext = new AudioContext();
+      if (audioContext.state === 'suspended') {
+        audioContext.resume().catch(function(){});
+      }
+      var start = audioContext.currentTime;
+      [0, 0.18, 0.36].forEach(function(offset, index){
+        var tapStart = start + offset;
+        var osc = audioContext.createOscillator();
+        var gain = audioContext.createGain();
+        var filter = audioContext.createBiquadFilter();
+
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(index === 1 ? 135 : 118, tapStart);
+        osc.frequency.exponentialRampToValueAtTime(82, tapStart + 0.08);
+        filter.type = 'lowpass';
+        filter.frequency.setValueAtTime(520, tapStart);
+        gain.gain.setValueAtTime(0.0001, tapStart);
+        gain.gain.exponentialRampToValueAtTime(0.032, tapStart + 0.012);
+        gain.gain.exponentialRampToValueAtTime(0.0001, tapStart + 0.09);
+
+        osc.connect(filter);
+        filter.connect(gain);
+        gain.connect(audioContext.destination);
+        osc.start(tapStart);
+        osc.stop(tapStart + 0.1);
+      });
+
+      window.setTimeout(function(){
+        if (audioContext.state !== 'closed') audioContext.close().catch(function(){});
+      }, 800);
+    } catch (e) {}
+  }
+
+  function playCenterIntroThenNavigate(url, options){
+    if (introNavigationInProgress) return;
+    introNavigationInProgress = true;
+
+    var opts = options || {};
+    var reduceMotion = isReducedMotion();
+    var duration = reduceMotion ? 80 : (opts.durationMs || 1400);
+    var fadeMs = reduceMotion ? 0 : (opts.fadeMs || 240);
+    var overlay = null;
+
+    if (!reduceMotion) {
+      overlay = document.createElement('div');
+      overlay.className = 'center-intro-overlay';
+      overlay.setAttribute('aria-hidden', 'true');
+      overlay.innerHTML = '<img src="' + escapeHtml(opts.imageSrc || 'assets/woniya-intro-sunshine.gif') + '" alt="">';
+      document.body.appendChild(overlay);
+      playFootstepTaps();
+
+      window.setTimeout(function(){
+        overlay.classList.add('is-fading');
+      }, Math.max(0, duration - fadeMs));
+    }
+
+    window.setTimeout(function(){
+      window.location.href = url;
+    }, duration);
+  }
+
   input.addEventListener('input', applyFilter);
   searchBtn.addEventListener('click', applyFilter);
+  document.addEventListener('click', function(e){
+    var target = e.target && e.target.nodeType === 1 ? e.target : e.target.parentElement;
+    if (!target || !target.closest) return;
+
+    var link = target.closest('a[data-center-intro="sunshine"]');
+    if (!link) return;
+    if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || link.getAttribute('target') === '_blank') return;
+
+    e.preventDefault();
+    var url = link.getAttribute('href') || link.href;
+    if (!url) return;
+
+    playCenterIntroThenNavigate(url, {
+      imageSrc: 'assets/woniya-intro-sunshine.gif',
+      durationMs: 1400,
+      fadeMs: 240
+    });
+  }, true);
   listEl.addEventListener('click', function(e){
     if (e.target.closest('a')) return;
     var card = e.target.closest('.ocard');
-    if (card && card.dataset.href) location.href = card.dataset.href;
+    if (!card || !card.dataset.href) return;
+    if (card.getAttribute('data-center-intro') === 'sunshine') {
+      playCenterIntroThenNavigate(card.dataset.href, {
+        imageSrc: 'assets/woniya-intro-sunshine.gif',
+        durationMs: 1400,
+        fadeMs: 240
+      });
+      return;
+    }
+    location.href = card.dataset.href;
   });
   listEl.addEventListener('keydown', function(e){
     if (e.key !== 'Enter' && e.key !== ' ') return;
@@ -476,6 +607,14 @@
     var card = e.target.closest('.ocard');
     if (!card || !card.dataset.href) return;
     e.preventDefault();
+    if (card.getAttribute('data-center-intro') === 'sunshine') {
+      playCenterIntroThenNavigate(card.dataset.href, {
+        imageSrc: 'assets/woniya-intro-sunshine.gif',
+        durationMs: 1400,
+        fadeMs: 240
+      });
+      return;
+    }
     location.href = card.dataset.href;
   });
   chipsEl.addEventListener('click', function(e){
