@@ -473,13 +473,12 @@
   .sb-bookmark{
     position:absolute;top:-8px;right:38px;z-index:4;width:40px;
     display:flex;align-items:center;justify-content:center;
-    padding-top:12px;padding-bottom:18px;color:#fff;
+    height:62px;color:#fff;
     background:linear-gradient(180deg,var(--coral),var(--coral-deep));
     box-shadow:0 8px 16px -8px rgba(224,120,90,.7);
     clip-path:polygon(0 0,100% 0,100% 100%,50% 82%,0 100%);
     border-radius:3px 3px 0 0;
   }
-  .sb-bookmark .m-icon{font-size:1.4rem;line-height:1;filter:drop-shadow(0 1px 1px rgba(0,0,0,.15))}
 
   /* 사진(폴라로이드 액자) */
   .sb-photo{
@@ -618,15 +617,16 @@
 
   /* 음소거 토글 (페이지 넘김 효과음) */
   .sb-mute{
-    position:absolute;right:0;bottom:-38px;z-index:6;
-    width:32px;height:32px;padding:0;border:none;border-radius:50%;cursor:pointer;
-    background:rgba(255,255,255,.85);color:var(--ink-soft);
-    box-shadow:0 6px 14px -8px rgba(120,80,60,.5);
+    position:absolute;right:18px;top:18px;z-index:7;
+    width:42px;height:42px;padding:0;border:1px solid rgba(235,194,172,.72);border-radius:50%;cursor:pointer;
+    background:rgba(255,255,255,.86);color:var(--coral-deep);
+    box-shadow:0 10px 22px -14px rgba(120,80,60,.55);
     display:flex;align-items:center;justify-content:center;
-    transition:color .2s ease,background .2s ease;
+    transition:color .2s ease,background .2s ease,transform .15s ease,box-shadow .2s ease;
+    backdrop-filter:blur(8px);
   }
-  .sb-mute:hover{background:#fff;color:var(--coral-deep)}
-  .sb-mute svg{width:17px;height:17px}
+  .sb-mute:hover{background:#fff;color:var(--coral-deep);box-shadow:0 14px 26px -14px rgba(224,120,90,.65);transform:translateY(-1px)}
+  .sb-mute svg{width:19px;height:19px}
   .sb-mute .icon-muted{display:none}
   .sb-mute.is-muted .icon-on{display:none}
   .sb-mute.is-muted .icon-muted{display:block}
@@ -657,8 +657,8 @@
     .sb-label{position:static;justify-content:center;margin-top:14px}
     .sb-controls{display:flex;align-items:center;justify-content:center;gap:22px;margin-top:20px;position:relative}
     .sb-arrow{width:40px;height:40px}
-    /* 모바일: 음소거 버튼을 컨트롤 행 오른쪽 끝에 */
-    .sb-mute{position:absolute;right:8px;bottom:50%;transform:translateY(50%)}
+    /* 모바일: 음소거 버튼은 책 카드 안쪽 상단에 두어 하단 컨트롤과 분리 */
+    .sb-mute{right:14px;top:14px;width:42px;height:42px}
     /* 모바일은 기존처럼 display 토글 방식 유지, 3D 힌지 플립 미적용 */
     .sb-page.sb-leave,.sb-page.sb-enter,
     .sb-page.sb-leave.sb-go,.sb-page.sb-enter.sb-go{
@@ -947,7 +947,12 @@
 
 <div class="float" id="float" hidden><a href="#finale"><span class="pulse"></span>입소 상담</a></div>
 
-<button type="button" class="ask-fab" id="askFab" aria-label="무엇이든 물어보세요" title="무엇이든 물어보세요">?</button>
+<button type="button" class="ask-fab" id="askFab" aria-label="무엇이든 물어보세요" title="무엇이든 물어보세요">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <path d="M6.8 18.2c1.35.86 3 1.3 4.82 1.3 4.55 0 8.24-3.02 8.24-6.75S16.17 6 11.62 6 3.38 9.02 3.38 12.75c0 1.62.7 3.11 1.87 4.27l-.5 2.98 2.05-1.8z"/>
+    <path d="M8.3 11.4h6.6M8.3 14.1h4.25"/>
+  </svg>
+</button>
 
 <div class="ask-modal-overlay" id="askModal" aria-hidden="true">
   <div class="ask-modal-panel" role="dialog" aria-modal="true" aria-labelledby="askModalTitle">
@@ -1058,8 +1063,12 @@
 
 <style>
   /* ── FAQ + 상담 플로팅 진입점 ── */
-  .ask-fab{position:fixed;right:max(18px,calc((100vw - 560px)/2 + 22px));bottom:24px;z-index:45;width:54px;height:54px;border:none;border-radius:50%;background:var(--paper);color:var(--ink);font-family:var(--body);font-weight:700;font-size:1.35rem;padding:0;box-shadow:var(--card-shadow-hover);cursor:pointer;border:1.5px solid rgba(120,80,60,.14);display:flex;align-items:center;justify-content:center}
-  .ask-fab:hover{transform:translateY(-2px)}
+  .ask-fab{position:fixed;right:max(22px,calc((100vw - 560px)/2 + 24px));bottom:max(34px,env(safe-area-inset-bottom));z-index:45;width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,.84);color:var(--coral-deep);font-family:var(--body);font-weight:700;font-size:1.35rem;padding:0;box-shadow:0 18px 34px -18px rgba(120,80,60,.55),0 4px 12px -8px rgba(224,120,90,.5);cursor:pointer;border:1.5px solid rgba(235,194,172,.86);display:flex;align-items:center;justify-content:center;backdrop-filter:blur(10px);transition:transform .2s ease,background .2s ease,box-shadow .2s ease}
+  .ask-fab:hover{transform:translateY(-2px);background:#fff;box-shadow:0 22px 40px -18px rgba(120,80,60,.58),0 6px 16px -9px rgba(224,120,90,.56)}
+  .ask-fab svg{width:25px;height:25px;display:block}
+  @media (max-width:719px){
+    .ask-fab{right:22px;bottom:max(36px,calc(env(safe-area-inset-bottom) + 28px));width:54px;height:54px}
+  }
   .ask-modal-overlay{position:fixed;inset:0;z-index:70;background:rgba(0,0,0,.45);display:none;align-items:center;justify-content:center;padding:20px}
   .ask-modal-overlay.open{display:flex}
   .ask-modal-panel{width:92vw;max-width:520px;max-height:88vh;overflow-y:auto;background:var(--paper);border-radius:var(--card-radius-lg);box-shadow:var(--card-shadow-hover)}
@@ -1749,7 +1758,7 @@ function mapRowToData(row){
   const MOON_ICON_SVG = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20.4 14.7A8.5 8.5 0 1 1 9.3 3.6a7 7 0 0 0 11.1 11.1z"/></svg>';
   const CHEVRON_L = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 5 8 12 15 19"/></svg>';
   const CHEVRON_R = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 5 16 12 9 19"/></svg>';
-  const BOOKMARK_HTML = '<div class="sb-bookmark" aria-hidden="true"><span class="m-icon">🌱</span></div>';
+  const BOOKMARK_HTML = '<div class="sb-bookmark" aria-hidden="true"></div>';
   const ORDINALS = ['첫','두','세','네','다섯','여섯','일곱','여덟','아홉','열'];
   function ordName(n){ return (ORDINALS[n-1] || (n + '')) + ' 번째 이야기'; }
 
@@ -1873,14 +1882,14 @@ function mapRowToData(row){
           ${storyPages}
           ${finalePage}
         </div>
+        <button class="sb-mute" type="button" aria-label="배경음 켜기/끄기" aria-pressed="false">
+          <svg class="icon-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg>
+          <svg class="icon-muted" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="22" y1="9" x2="16" y2="15"/><line x1="16" y1="9" x2="22" y2="15"/></svg>
+        </button>
         <div class="sb-controls">
           <button class="sb-arrow prev" type="button" aria-label="이전 페이지">${CHEVRON_L}</button>
           <div class="sb-dots" role="tablist" aria-label="페이지 이동">${dotsHtml}</div>
           <button class="sb-arrow next" type="button" aria-label="다음 페이지">${CHEVRON_R}</button>
-          <button class="sb-mute" type="button" aria-label="배경음 켜기/끄기" aria-pressed="false">
-            <svg class="icon-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg>
-            <svg class="icon-muted" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="22" y1="9" x2="16" y2="15"/><line x1="16" y1="9" x2="22" y2="15"/></svg>
-          </button>
         </div>
       </div>
       <audio class="sb-bgm" loop preload="none" style="display:none">
