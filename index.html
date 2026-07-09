@@ -65,10 +65,9 @@
   .hero-wrap{position:relative;padding:0 22px}
 
   /* ── 검색 헤더 ── */
-  .search-head{display:flex;align-items:center;justify-content:space-between;padding:18px 0 6px}
-  .search-head .logo{display:flex;align-items:center;gap:8px;font-family:var(--display);font-size:1.2rem;color:var(--ink)}
-  .search-head .logo .pin{width:26px;height:26px;border-radius:9px;background:var(--coral-deep);display:flex;align-items:center;justify-content:center}
-  .search-head .logo .pin::after{content:"";width:9px;height:9px;border-radius:50% 50% 50% 0;transform:rotate(45deg);background:#fff;margin-top:-2px}
+  .search-head{display:flex;align-items:center;justify-content:space-between;padding:12px 0 4px}
+  .search-head .logo{display:flex;align-items:center;min-width:0}
+  .search-head .logo img{display:block;height:48px;width:auto;max-width:220px;object-fit:contain}
   .search-head .reg{
     font-family:var(--body);font-weight:700;font-size:.88rem;
     color:var(--coral-deep);text-decoration:none;
@@ -177,6 +176,12 @@
     .search-foot{padding:24px 0 44px}
   }
 
+  @media (max-width:480px){
+    .search-head{padding:10px 0 4px}
+    .search-head .logo img{height:44px;max-width:170px}
+    .search-head .reg{font-size:.82rem;padding:7px 14px}
+  }
+
 </style>
 </head>
 <body>
@@ -190,7 +195,7 @@
 
 <div class="head-wrap">
   <div class="search-head">
-    <div class="logo"><span class="pin"></span>원이야</div>
+    <div class="logo"><img src="assets/woniya-logo.png" alt="원이야"></div>
     <a class="reg" href="register.html">어린이집 등록</a>
   </div>
 </div>

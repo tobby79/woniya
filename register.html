@@ -67,14 +67,19 @@
   a:focus-visible,button:focus-visible,input:focus-visible{outline:3px solid var(--coral);outline-offset:3px;border-radius:8px}
 
   /* ── 상단바 (topbar.js 미사용, 자체 간단 바) ── */
-  .topbar{padding:18px 0}
-  .topbar-inner{max-width:560px;margin:0 auto;padding:0 22px;display:flex;align-items:center;justify-content:space-between}
-  .topbar .brand{font-family:var(--display);font-size:1.2rem;color:var(--ink);text-decoration:none;letter-spacing:-.5px}
-  .topbar .back-link{font-size:.85rem;color:var(--coral-deep);text-decoration:none;font-weight:700}
-  .topbar .back-link:hover{color:var(--ink)}
+  .topbar{
+    position:fixed;top:0;left:0;right:0;z-index:50;
+    padding:10px 0;background:transparent;
+    box-shadow:none;
+    transition:background .22s ease,box-shadow .22s ease;
+  }
+  .topbar.is-scrolled{background:#fff;box-shadow:0 1px 0 rgba(180,140,130,.14)}
+  .topbar-inner{max-width:560px;margin:0 auto;padding:0 22px;display:flex;align-items:center;justify-content:center}
+  .topbar .brand{display:flex;align-items:center;justify-content:center;text-decoration:none;min-width:0}
+  .topbar .brand img{display:block;height:44px;width:auto;max-width:190px;object-fit:contain}
 
   /* ── 히어로 ── */
-  .hero{padding:30px 0 46px;text-align:center}
+  .hero{padding:94px 0 46px;text-align:center}
   .hero .eyebrow{font-family:var(--hand);font-weight:700;color:var(--coral-deep);font-size:1.2rem;margin-bottom:10px}
   .hero h1{font-family:var(--display);font-weight:400;font-size:2.2rem;line-height:1.32;letter-spacing:-.5px}
   .hero p{margin-top:16px;color:var(--ink-soft);font-size:.96rem;line-height:1.7}
@@ -166,10 +171,11 @@
   /* ══════════════════ PC 레이아웃 (768px 이상) ══════════════════ */
   @media (min-width:768px){
     .topbar-inner{max-width:1100px;padding:0 40px}
+    .topbar .brand img{height:50px;max-width:230px}
     .wrap{max-width:1100px;padding:0 40px}
     .sun{width:340px;height:340px}
 
-    .hero{padding:64px 0 70px}
+    .hero{padding:128px 0 70px}
     .hero h1{font-size:2.8rem}
     .hero p{font-size:1.02rem;max-width:520px;margin-left:auto;margin-right:auto}
 
@@ -186,6 +192,12 @@
     .panel{max-width:560px;margin:0 auto}
   }
 
+  @media (max-width:480px){
+    .topbar{padding:8px 0}
+    .topbar .brand img{height:40px;max-width:170px}
+    .hero{padding-top:86px}
+  }
+
 </style>
 </head>
 <body>
@@ -199,8 +211,7 @@
 
 <header class="topbar">
   <div class="topbar-inner">
-    <a class="brand" href="register.html">원이야</a>
-    <a class="back-link" href="index.html">검색으로</a>
+    <a class="brand" href="index.html"><img src="assets/woniya-logo.png" alt="원이야"></a>
   </div>
 </header>
 
@@ -342,6 +353,18 @@
 <script src="supabase-config.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
+(function(){
+  var header = document.querySelector('.topbar');
+  if (!header) return;
+
+  function syncHeader(){
+    header.classList.toggle('is-scrolled', window.scrollY > 24);
+  }
+
+  syncHeader();
+  window.addEventListener('scroll', syncHeader, { passive:true });
+})();
+
 (function(){
   var cfg = window.__SUPABASE_CONFIG__;
   var client = supabase.createClient(cfg.url, cfg.anonKey);
