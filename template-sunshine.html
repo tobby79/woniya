@@ -1448,6 +1448,10 @@ function mapRowToData(row){
         return true;
       });
   };
+  // sample-sunshine은 템플릿 미디어를 centers 쪽으로 복사한 공개 샘플이라
+  // 실제 운영 원과 달리 기존 미리보기처럼 앨범 사진을 시설 콜라주로 재사용한다.
+  const isTemplateSampleCopy = row.slug === 'sample-sunshine'
+    && media.some(m => m.photo_url && String(m.photo_url).indexOf('/template-previews/sunshine/') !== -1);
   const teacherFallbacks = [
     { name: '김햇살 선생님', role: '만 3세 햇살반 담임', message: '"아이의 속도에<br>맞춰 기다려 줄게요."' },
     { name: '이초록 선생님', role: '만 4세 새싹반 담임', message: '"매일의 작은 성장을<br>놓치지 않을게요."' },
@@ -1477,7 +1481,9 @@ function mapRowToData(row){
       director: row.director || { badge:'', photo:'', photo_alt:'', message:'', sign_label:'', sign_name:'', scroll_cue:'' },
       philosophy: row.philosophy || null,
       programs: row.programs || null,
-      facilities: row.facilities || null
+      facilities: isTemplateSampleCopy && row.facilities
+        ? Object.assign({}, row.facilities, { __useAlbumMediaFallback: true })
+        : row.facilities || null
     },
     day_story: byType('day_story').map(m => ({
       slot: m.slot,
@@ -1928,7 +1934,7 @@ function mapRowToData(row){
     // fac.items가 비어있어도 album.items로 시설 콜라주를 채운다.
     // 실제 운영 중인 원(isPreviewMode=false)이 아직 시설 항목을 입력하지 않은 경우에는
     // 앨범 사진을 시설 사진인 것처럼 보여주면 안 되므로, 폴백을 쓰지 않고 중립 문구만 표시한다.
-    const useAlbumFallback = !hasFacItems && isPreviewMode;
+    const useAlbumFallback = !hasFacItems && (isPreviewMode || !!fac.__useAlbumMediaFallback);
     const items = hasFacItems ? fac.items
       : useAlbumFallback ? albumImgs.map(it => ({ name: it.label || '' }))
       : [];
