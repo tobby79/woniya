@@ -327,6 +327,7 @@
   var selectedEventDate = toDateInput(new Date());
   var miniCache = { posts: [], media: [], comments: [] };
   var BUCKET = 'center-images';
+  var directClassId = new URLSearchParams(location.search).get('class_id') || '';
 
   function esc(s){
     return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){
@@ -567,6 +568,33 @@
     } catch (err) {
       miniRoot.innerHTML = '<div class="empty-mini">' + escWithBr(err && err.message ? err.message : String(err)) + '</div>';
     }
+  }
+
+  async function loadTeacherDirectMini(session){
+    var classRes = await client.from('classes')
+      .select('id,name,age_label,teacher_id,center_id')
+      .eq('id', directClassId)
+      .eq('teacher_id', session.user.id)
+      .maybeSingle();
+    if (classRes.error) throw classRes.error;
+    var miniRes = classRes.data
+      ? await client.from('class_mini').select('id').eq('class_id', directClassId).maybeSingle()
+      : { data: null, error: null };
+    if (miniRes.error) throw miniRes.error;
+    if (!classRes.data || !miniRes.data) {
+      showNotice('미니홈피를 열 수 없습니다', '담당 반이 아니거나 아직 공개되지 않은 미니홈피예요.');
+      return true;
+    }
+    approvedClasses = [Object.assign({}, classRes.data, {
+      enrollment_id: null,
+      last_notice_read_at: null
+    })];
+    classList.innerHTML = approvedClasses.map(renderClassCard).join('');
+    extraInviteBox.hidden = true;
+    extraInviteMsg.textContent = '';
+    extraInviteCode.value = '';
+    await openClassMini(directClassId);
+    return true;
   }
 
   async function renderMiniHome(){
@@ -831,6 +859,8 @@
     showPanel(loadingPanel);
 
     try {
+      if (directClassId && await loadTeacherDirectMini(session)) return;
+
       var res = await client
         .from('class_enrollments')
         .select('id, status, class_id, last_notice_read_at')
