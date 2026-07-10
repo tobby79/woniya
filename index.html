@@ -86,7 +86,7 @@
   .search-hero p{margin-top:12px;color:var(--ink-soft);font-size:.93rem}
 
   /* ── 검색바 ── */
-  .search-bar{display:flex;gap:8px;background:var(--paper);border-radius:18px;padding:8px 8px 8px 16px;margin:22px 0 0;box-shadow:0 16px 36px -20px rgba(150,90,80,.5);align-items:center}
+  .search-bar{display:flex;gap:8px;background:var(--paper);border-radius:18px;padding:8px 8px 8px 16px;margin:28px 0 0;box-shadow:0 16px 36px -20px rgba(150,90,80,.5);align-items:center}
   .search-bar .loc{color:var(--coral-deep);font-size:1.1rem}
   .search-bar input{flex:1;border:none;background:transparent;font-family:var(--body);font-size:1rem;color:var(--ink);outline:none}
   .search-bar button{flex:none;background:var(--coral-deep);color:#fff;border:none;border-radius:13px;padding:11px 18px;font-family:var(--body);font-weight:700;font-size:.95rem;cursor:pointer}
@@ -100,6 +100,7 @@
   .results-head{display:flex;align-items:baseline;gap:8px;padding:26px 0 4px}
   .results-head b{font-family:var(--display);font-size:1.15rem;color:var(--coral-deep)}
   .results-head span{color:var(--ink-soft);font-size:.86rem}
+  .results-head .result-count.is-hidden{display:none}
 
   /* ── 원 카드 ── */
   .cardlist{padding:12px 0 30px;display:flex;flex-direction:column;gap:14px}
@@ -162,18 +163,23 @@
 
     .sun{width:340px;height:340px}
 
-    .hero-wrap{min-height:52vh;display:flex;align-items:center;justify-content:center;padding:0 40px}
+    .hero-wrap{min-height:44vh;display:flex;align-items:center;justify-content:center;padding:0 40px}
     .search-hero{max-width:640px;width:100%}
     .search-hero .eyebrow{font-size:1.3rem}
     .search-hero h1{font-size:2.4rem}
     .search-hero p{font-size:1rem}
-    .search-bar{margin:30px auto 0;max-width:480px}
+    .search-bar{margin:34px auto 0;max-width:480px}
     .chips{justify-content:center;margin:0 auto}
 
     .wrap{max-width:1100px;padding:0 40px}
     .results-head{padding:36px 0 14px}
     .cardlist{display:grid;grid-template-columns:repeat(3,1fr);gap:22px}
     .search-foot{padding:24px 0 44px}
+  }
+
+  @media (min-width:1024px){
+    .hero-wrap{min-height:40vh}
+    .search-hero{padding-top:12px}
   }
 
   @media (max-width:480px){
@@ -202,9 +208,8 @@
 
 <section class="hero-wrap">
   <div class="search-hero">
-    <div class="eyebrow">정답은, 원이야</div>
-    <h1>우리 동네 어린이집,<br><span class="hl">원이야</span>에서 한눈에</h1>
-    <p>흩어져 있던 동네 어린이집·유치원을 한곳에서<br>사진과 정보로 비교해 보세요.</p>
+    <div class="eyebrow">정답은 원이야,</div>
+    <h1>우리 동네 유치원 어린이집,<br><span class="hl">원이야</span>에서 한눈에</h1>
 
     <div class="search-bar">
       <span class="loc">◎</span>
@@ -220,7 +225,6 @@
   <div class="results-head" id="resultsHead"></div>
   <div class="cardlist" id="cardList"></div>
 
-  <div class="search-foot">공개 화면에는 원 정보만 보여요.<br>아이 정보는 신청 후 안전하게 받습니다.</div>
 </div>
 
 <script src="supabase-config.js"></script>
@@ -370,7 +374,7 @@
   function renderResultsHead(query, count){
     headEl.innerHTML = query
       ? '<b>' + escapeHtml(query) + '</b><span>근처 어린이집·유치원 ' + count + '곳</span>'
-      : '<span>' + (hasLocationDistances() ? '가까운 순 · ' : '') + '등록된 어린이집·유치원 ' + count + '곳</span>';
+      : '<span>가까운 순</span><span class="result-count is-hidden">등록된 어린이집·유치원 ' + count + '곳</span>';
   }
 
   function render(list, query){
