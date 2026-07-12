@@ -661,20 +661,16 @@ function loadKakaoMap(address, containerId){
         return;
       }
       var fd = new FormData(form);
-      var kind = fd.get('kind') || '입소 상담';
       var className = (fd.get('className') || '').trim();
       var time = (fd.get('time') || '').trim();
-      var messageParts = [];
-      if (className) messageParts.push('희망 반/연령: ' + className);
-      if (time) messageParts.push('희망 상담 시간 및 문의: ' + time);
       var payload = {
         center_id: centerId,
         parent_name: (fd.get('name') || '').trim(),
         phone: (fd.get('phone') || '').trim(),
-        child_name: '',
-        child_age: '',
-        consultation_type: kind,
-        message: messageParts.join('\n')
+        kind: 'consult',
+        wish_class: className || null,
+        wish_time: time || null,
+        consent_at: new Date().toISOString()
       };
       var submitBtn = form.querySelector('button[type="submit"]');
       if (submitBtn) submitBtn.disabled = true;
