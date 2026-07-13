@@ -1171,6 +1171,7 @@
   var currentFilter = 'all';
   var currentApp = null;     // 상세 열린 신청서
   var currentSubmission = null;
+  var isMarkingApplicationSetting = false;
   var applicationsLoaded = false;
   var centerRows = [];
   var currentCenterFilter = 'all';
@@ -1417,11 +1418,10 @@
     renderLinkArea();
     renderAnswers();
     renderCreateArea();
+    renderApplicationActions();
 
     appActionStatus.textContent = '';
     appActionStatus.className = 'msg';
-    doneBtn.disabled = false;
-    rejectBtn.disabled = false;
     appModalBackdrop.hidden = false;
   }
 
@@ -1437,6 +1437,59 @@
     var s = '';
     for (var i = 0; i < 6; i++) s += chars[Math.floor(Math.random()*chars.length)];
     return 'won-' + s;
+  }
+
+  function isTerminalApplicationStatus(status){
+    return status === 'done' || status === 'rejected';
+  }
+
+  function canStartOnboarding(status){
+    return status === 'new' || status === 'setting';
+  }
+
+  function canRejectApplication(status){
+    return status === 'new' || status === 'setting';
+  }
+
+  function syncApplicationStatus(status){
+    currentApp.status = status;
+    for (var i = 0; i < appRows.length; i++){
+      if (appRows[i].app.id === currentApp.id){ appRows[i].app.status = status; break; }
+    }
+    appModalStatus.innerHTML = '현재 상태 ' + statusBadge(status);
+    renderFilters();
+    renderAppList();
+  }
+
+  async function markApplicationSetting(){
+    if (!currentApp || currentApp.status !== 'new') return true;
+    if (isMarkingApplicationSetting) return true;
+
+    isMarkingApplicationSetting = true;
+    var upRes = await client.from('center_applications')
+      .update({ status: 'setting' }).eq('id', currentApp.id);
+    isMarkingApplicationSetting = false;
+
+    if (upRes.error){
+      linkStatus.textContent = '링크는 준비됐지만 상태를 세팅중으로 바꾸지 못했습니다: ' + upRes.error.message;
+      linkStatus.className = 'msg error';
+      return false;
+    }
+
+    syncApplicationStatus('setting');
+    renderApplicationActions();
+    return true;
+  }
+
+  function renderApplicationActions(){
+    var status = currentApp ? currentApp.status : 'new';
+    var submitted = currentSubmission && currentSubmission.status === 'submitted';
+    var linked = currentApp && currentApp.linked_center_id;
+
+    rejectBtn.hidden = !canRejectApplication(status);
+    doneBtn.hidden = isTerminalApplicationStatus(status) || linked || !(status === 'setting' && submitted);
+    rejectBtn.disabled = false;
+    doneBtn.disabled = false;
   }
 
   function renderCreateArea(){
@@ -1455,6 +1508,11 @@
 
     createdBox.hidden = true;
     doneBtn.hidden = false;
+
+    if (isTerminalApplicationStatus(currentApp.status)){
+      createBox.hidden = true;
+      return;
+    }
 
     if (!submitted){
       // 답변 미도착: 생성 영역 숨김 (기존 세팅완료/반려만)
@@ -1566,8 +1624,19 @@
   function renderLinkArea(){
     linkStatus.textContent = '';
     linkStatus.className = 'msg';
+    if (!canStartOnboarding(currentApp.status)){
+      appLinkArea.innerHTML = '<div class="hint">' +
+        (currentApp.status === 'done'
+          ? '완료된 신청은 온보딩 링크를 새로 만들 수 없습니다.'
+          : '반려된 신청은 온보딩 링크를 만들 수 없습니다.') +
+        '</div>';
+      return;
+    }
     if (currentSubmission && currentSubmission.token){
       showGeneratedLink(currentSubmission.token);
+      if (currentApp.status === 'new'){
+        markApplicationSetting();
+      }
     } else {
       appLinkArea.innerHTML = '<button type="button" class="btn lavender" id="genLinkBtn">수집 폼 링크 생성</button>';
       document.getElementById('genLinkBtn').addEventListener('click', generateLink);
@@ -1601,6 +1670,12 @@
   }
 
   async function generateLink(){
+    if (!currentApp || !canStartOnboarding(currentApp.status)){
+      linkStatus.textContent = '완료 또는 반려된 신청은 온보딩 링크를 만들 수 없습니다.';
+      linkStatus.className = 'msg error';
+      return;
+    }
+
     var btn = document.getElementById('genLinkBtn');
     if (btn) btn.disabled = true;
     linkStatus.textContent = '링크를 만드는 중...';
@@ -1622,8 +1697,11 @@
       currentSubmission = existRes.data[0];
       syncSubmissionInRows();
       showGeneratedLink(currentSubmission.token);
-      linkStatus.textContent = '이미 생성된 링크를 재사용합니다.';
-      linkStatus.className = 'msg';
+      var markedExisting = await markApplicationSetting();
+      if (markedExisting){
+        linkStatus.textContent = '이미 생성된 링크를 재사용합니다.';
+        linkStatus.className = 'msg';
+      }
       return;
     }
 
@@ -1641,8 +1719,11 @@
     currentSubmission = insRes.data;
     syncSubmissionInRows();
     showGeneratedLink(currentSubmission.token);
-    linkStatus.textContent = '링크를 생성했어요.';
-    linkStatus.className = 'msg ok';
+    var markedNew = await markApplicationSetting();
+    if (markedNew){
+      linkStatus.textContent = '링크를 생성했어요.';
+      linkStatus.className = 'msg ok';
+    }
   }
 
   function generateToken(){
@@ -1737,6 +1818,16 @@
   // ── 세팅 완료 / 반려 ──
   doneBtn.addEventListener('click', async function(){
     if (!currentApp) return;
+    if (isTerminalApplicationStatus(currentApp.status)){
+      appActionStatus.textContent = '이미 처리된 신청입니다.';
+      appActionStatus.className = 'msg error';
+      return;
+    }
+    if (currentApp.status !== 'setting' || !currentSubmission || currentSubmission.status !== 'submitted'){
+      appActionStatus.textContent = '온보딩 제출이 도착한 세팅중 신청만 완료 처리할 수 있습니다.';
+      appActionStatus.className = 'msg error';
+      return;
+    }
     doneBtn.disabled = true; rejectBtn.disabled = true;
     appActionStatus.textContent = '처리 중...';
     appActionStatus.className = 'msg';
@@ -1761,11 +1852,17 @@
     appActionStatus.textContent = '세팅 완료로 처리했어요.';
     appActionStatus.className = 'msg ok';
     renderFilters(); renderAppList();
+    renderApplicationActions();
     setTimeout(closeAppModal, 700);
   });
 
   rejectBtn.addEventListener('click', async function(){
     if (!currentApp) return;
+    if (!canRejectApplication(currentApp.status)){
+      appActionStatus.textContent = '완료 또는 반려된 신청은 반려 처리할 수 없습니다.';
+      appActionStatus.className = 'msg error';
+      return;
+    }
     doneBtn.disabled = true; rejectBtn.disabled = true;
     appActionStatus.textContent = '처리 중...';
     appActionStatus.className = 'msg';
@@ -1782,6 +1879,7 @@
     appActionStatus.textContent = '반려로 처리했어요.';
     appActionStatus.className = 'msg ok';
     renderFilters(); renderAppList();
+    renderApplicationActions();
     setTimeout(closeAppModal, 700);
   });
 
