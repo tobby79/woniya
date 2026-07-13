@@ -147,6 +147,14 @@
   .field textarea{resize:vertical;min-height:88px;line-height:1.6}
   .consent-field label{display:flex;align-items:flex-start;gap:8px;font-weight:400;font-size:.86rem;color:var(--ink-soft);line-height:1.5;cursor:pointer}
   .consent-field input{margin-top:3px;flex:none}
+  .privacy-note{margin-top:8px;border:1px solid rgba(63,42,44,.12);border-radius:14px;background:rgba(255,255,255,.58);padding:11px 13px;color:var(--ink-soft);font-size:.78rem;line-height:1.55}
+  .privacy-note summary{cursor:pointer;font-weight:700;color:var(--ink);list-style:none}
+  .privacy-note summary::-webkit-details-marker{display:none}
+  .privacy-note summary::after{content:"+";float:right;color:var(--coral-deep);font-weight:700}
+  .privacy-note[open] summary::after{content:"-"}
+  .privacy-note dl{margin:8px 0 0;display:grid;grid-template-columns:64px 1fr;gap:4px 8px}
+  .privacy-note dt{font-weight:700;color:var(--ink)}
+  .privacy-note dd{margin:0}
   .btn{
     display:inline-flex;align-items:center;justify-content:center;width:100%;border:none;
     border-radius:30px;padding:15px;background:var(--coral-deep);color:#fff;font-weight:700;
@@ -337,6 +345,19 @@
       </div>
       <div class="field consent-field">
         <label><input type="checkbox" id="ap-consent" required> 개인정보 수집·이용에 동의합니다.</label>
+        <details class="privacy-note">
+          <summary>개인정보 수집·이용 안내</summary>
+          <dl>
+            <dt>수집 항목</dt>
+            <dd>원 이름, 원장 이름, 연락처, 지역, 문의 내용</dd>
+            <dt>수집 목적</dt>
+            <dd>원 등록 신청 확인 및 상담 연락</dd>
+            <dt>보유 기간</dt>
+            <dd>신청 처리 완료 후 내부 관리 기준에 따라 보관하며, 삭제 요청 시 지체 없이 삭제합니다.</dd>
+            <dt>동의 거부</dt>
+            <dd>동의하지 않을 경우 등록 신청 접수가 어렵습니다.</dd>
+          </dl>
+        </details>
       </div>
       <button type="submit" class="btn" id="applySubmitBtn">신청하기</button>
       <div class="msg error" id="applyError"></div>
@@ -344,11 +365,6 @@
     <p class="apply-done" id="applyDone" hidden>신청이 접수되었습니다.<br>곧 연락드릴게요.</p>
   </div>
 </section>
-
-<footer class="wrap footer">
-  원이야 · 우리 동네 어린이집·유치원 홈페이지<br>
-  공개 화면에는 원 정보만 보여요. 신청 정보는 안전하게 보호됩니다.
-</footer>
 
 <script src="supabase-config.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
