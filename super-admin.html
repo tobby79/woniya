@@ -524,6 +524,8 @@
       </div>
 
       <div class="modal-actions">
+        <button type="button" class="btn ghost" id="archiveBtn">보관</button>
+        <button type="button" class="btn ghost" id="unarchiveBtn" hidden>보관 해제</button>
         <button type="button" class="btn danger" id="rejectBtn">반려</button>
         <button type="button" class="btn" id="doneBtn">세팅 완료</button>
       </div>
@@ -614,6 +616,7 @@
     loginView.hidden = false;
     adminView.hidden = true;
     whoBox.hidden = true;
+    currentAdminUserId = null;
     applicationsLoaded = false;
     loginBtn.disabled = false;
     loginForm.reset();
@@ -628,6 +631,7 @@
     adminView.hidden = false;
     whoBox.hidden = false;
     userEmailEl.textContent = session.user.email;
+    currentAdminUserId = session.user.id;
     activateTab('applications');
     renderTemplateCards();
   }
@@ -1136,8 +1140,8 @@
   /* ══════════════════ 신청서 관리 ══════════════════ */
   var SITE_ORIGIN = 'woniya.vercel.app';
   var STATUS_LABELS = { new:'신규', setting:'세팅중', done:'완료', rejected:'반려' };
-  var FILTERS = ['all', 'new', 'setting', 'done', 'rejected'];
-  var FILTER_LABELS = { all:'전체', new:'신규', setting:'세팅중', done:'완료', rejected:'반려' };
+  var FILTERS = ['all', 'new', 'setting', 'done', 'rejected', 'archived'];
+  var FILTER_LABELS = { all:'전체', new:'신규', setting:'세팅중', done:'완료', rejected:'반려', archived:'보관함' };
 
   var appFilterRow = document.getElementById('appFilterRow');
   var appList = document.getElementById('appList');
@@ -1150,6 +1154,8 @@
   var appLinkArea = document.getElementById('appLinkArea');
   var linkStatus = document.getElementById('linkStatus');
   var answersArea = document.getElementById('answersArea');
+  var archiveBtn = document.getElementById('archiveBtn');
+  var unarchiveBtn = document.getElementById('unarchiveBtn');
   var rejectBtn = document.getElementById('rejectBtn');
   var doneBtn = document.getElementById('doneBtn');
   var appActionStatus = document.getElementById('appActionStatus');
@@ -1171,6 +1177,7 @@
   var currentFilter = 'all';
   var currentApp = null;     // 상세 열린 신청서
   var currentSubmission = null;
+  var currentAdminUserId = null;
   var isMarkingApplicationSetting = false;
   var applicationsLoaded = false;
   var centerRows = [];
@@ -1238,8 +1245,15 @@
   }
 
   function renderFilters(){
-    var counts = { all: appRows.length, new:0, setting:0, done:0, rejected:0 };
-    appRows.forEach(function(r){ if (counts[r.app.status] != null) counts[r.app.status]++; });
+    var counts = { all:0, new:0, setting:0, done:0, rejected:0, archived:0 };
+    appRows.forEach(function(r){
+      if (r.app.archived_at){
+        counts.archived++;
+        return;
+      }
+      counts.all++;
+      if (counts[r.app.status] != null) counts[r.app.status]++;
+    });
     appFilterRow.innerHTML = FILTERS.map(function(f){
       return '<button type="button" class="filter-btn' + (f === currentFilter ? ' active' : '') + '" data-filter="' + f + '">' +
         esc(FILTER_LABELS[f]) + '<span class="count">' + counts[f] + '</span></button>';
@@ -1248,6 +1262,8 @@
 
   function renderAppList(){
     var rows = appRows.filter(function(r){
+      if (currentFilter === 'archived') return !!r.app.archived_at;
+      if (r.app.archived_at) return false;
       return currentFilter === 'all' || r.app.status === currentFilter;
     });
     appEmpty.hidden = rows.length > 0;
@@ -1258,14 +1274,15 @@
         '<div class="app-card-head">' +
           '<div class="app-name">' + esc(a.center_name) +
             (arrived ? '<span class="badge arrived">답변 도착</span>' : '') + '</div>' +
-          statusBadge(a.status) +
+          (a.archived_at ? '<span class="badge archived">보관됨</span>' : statusBadge(a.status)) +
         '</div>' +
         '<div class="app-meta">' +
           '<div><b>원장</b> ' + esc(a.director_name) + '</div>' +
           '<div><b>연락처</b> ' + esc(a.phone) + '</div>' +
           (a.region ? '<div><b>지역</b> ' + esc(a.region) + '</div>' : '') +
         '</div>' +
-        '<div class="app-date">신청일 ' + esc(fmtDate(a.created_at)) + '</div>' +
+        '<div class="app-date">신청일 ' + esc(fmtDate(a.created_at)) +
+          (a.archived_at ? ' · 보관일 ' + esc(fmtDate(a.archived_at)) : '') + '</div>' +
       '</button>';
     }).join('');
   }
@@ -1400,6 +1417,20 @@
   });
 
   // ── 상세 모달 ──
+  function renderApplicationDetail(){
+    appModalDetail.innerHTML =
+      '<dt>원명</dt><dd>' + esc(currentApp.center_name) + '</dd>' +
+      '<dt>원장명</dt><dd>' + esc(currentApp.director_name) + '</dd>' +
+      '<dt>연락처</dt><dd>' + esc(currentApp.phone) + '</dd>' +
+      '<dt>지역</dt><dd>' + (currentApp.region ? esc(currentApp.region) : '<span class="answer-empty">미입력</span>') + '</dd>' +
+      '<dt>문의내용</dt><dd>' + (currentApp.message ? escWithBr(currentApp.message) : '<span class="answer-empty">없음</span>') + '</dd>' +
+      '<dt>신청일</dt><dd>' + esc(fmtDate(currentApp.created_at)) + '</dd>' +
+      (currentApp.archived_at
+        ? '<dt>보관일</dt><dd>' + esc(fmtDate(currentApp.archived_at)) + '</dd>' +
+          '<dt>보관 사유</dt><dd>' + (currentApp.archive_reason ? escWithBr(currentApp.archive_reason) : '<span class="answer-empty">없음</span>') + '</dd>'
+        : '');
+  }
+
   function openAppModal(row){
     currentApp = row.app;
     currentSubmission = row.submission;
@@ -1407,14 +1438,7 @@
     appModalName.textContent = currentApp.center_name;
     appModalStatus.innerHTML = '현재 상태 ' + statusBadge(currentApp.status);
 
-    appModalDetail.innerHTML =
-      '<dt>원명</dt><dd>' + esc(currentApp.center_name) + '</dd>' +
-      '<dt>원장명</dt><dd>' + esc(currentApp.director_name) + '</dd>' +
-      '<dt>연락처</dt><dd>' + esc(currentApp.phone) + '</dd>' +
-      '<dt>지역</dt><dd>' + (currentApp.region ? esc(currentApp.region) : '<span class="answer-empty">미입력</span>') + '</dd>' +
-      '<dt>문의내용</dt><dd>' + (currentApp.message ? escWithBr(currentApp.message) : '<span class="answer-empty">없음</span>') + '</dd>' +
-      '<dt>신청일</dt><dd>' + esc(fmtDate(currentApp.created_at)) + '</dd>';
-
+    renderApplicationDetail();
     renderLinkArea();
     renderAnswers();
     renderCreateArea();
@@ -1451,6 +1475,10 @@
     return status === 'new' || status === 'setting';
   }
 
+  function isApplicationArchived(app){
+    return !!(app && app.archived_at);
+  }
+
   function syncApplicationStatus(status){
     currentApp.status = status;
     for (var i = 0; i < appRows.length; i++){
@@ -1461,8 +1489,29 @@
     renderAppList();
   }
 
+  function syncApplicationArchive(fields){
+    Object.keys(fields).forEach(function(key){
+      currentApp[key] = fields[key];
+    });
+    for (var i = 0; i < appRows.length; i++){
+      if (appRows[i].app.id === currentApp.id){
+        Object.keys(fields).forEach(function(key){
+          appRows[i].app[key] = fields[key];
+        });
+        break;
+      }
+    }
+    renderFilters();
+    renderAppList();
+    renderApplicationDetail();
+    renderLinkArea();
+    renderCreateArea();
+    renderApplicationActions();
+  }
+
   async function markApplicationSetting(){
     if (!currentApp || currentApp.status !== 'new') return true;
+    if (isApplicationArchived(currentApp)) return true;
     if (isMarkingApplicationSetting) return true;
 
     isMarkingApplicationSetting = true;
@@ -1485,9 +1534,14 @@
     var status = currentApp ? currentApp.status : 'new';
     var submitted = currentSubmission && currentSubmission.status === 'submitted';
     var linked = currentApp && currentApp.linked_center_id;
+    var archived = isApplicationArchived(currentApp);
 
-    rejectBtn.hidden = !canRejectApplication(status);
-    doneBtn.hidden = isTerminalApplicationStatus(status) || linked || !(status === 'setting' && submitted);
+    archiveBtn.hidden = archived;
+    unarchiveBtn.hidden = !archived;
+    rejectBtn.hidden = archived || !canRejectApplication(status);
+    doneBtn.hidden = archived || isTerminalApplicationStatus(status) || linked || !(status === 'setting' && submitted);
+    archiveBtn.disabled = false;
+    unarchiveBtn.disabled = false;
     rejectBtn.disabled = false;
     doneBtn.disabled = false;
   }
@@ -1495,6 +1549,12 @@
   function renderCreateArea(){
     var linked = currentApp.linked_center_id;
     var submitted = currentSubmission && currentSubmission.status === 'submitted';
+
+    if (isApplicationArchived(currentApp)){
+      createBox.hidden = true;
+      createdBox.hidden = true;
+      return;
+    }
 
     if (linked){
       // 이미 생성됨: 링크만 표시, 재생성 방지
@@ -1553,6 +1613,7 @@
 
   createCenterBtn.addEventListener('click', async function(){
     if (!currentSubmission || !currentSubmission.id) return;
+    if (isApplicationArchived(currentApp)) return;
     var template = tmplSelect.value;
     var slug = slugInput.value.trim().toLowerCase();
 
@@ -1624,6 +1685,10 @@
   function renderLinkArea(){
     linkStatus.textContent = '';
     linkStatus.className = 'msg';
+    if (isApplicationArchived(currentApp)){
+      appLinkArea.innerHTML = '<div class="hint">보관된 신청은 온보딩 링크를 만들 수 없습니다.</div>';
+      return;
+    }
     if (!canStartOnboarding(currentApp.status)){
       appLinkArea.innerHTML = '<div class="hint">' +
         (currentApp.status === 'done'
@@ -1670,7 +1735,7 @@
   }
 
   async function generateLink(){
-    if (!currentApp || !canStartOnboarding(currentApp.status)){
+    if (!currentApp || isApplicationArchived(currentApp) || !canStartOnboarding(currentApp.status)){
       linkStatus.textContent = '완료 또는 반려된 신청은 온보딩 링크를 만들 수 없습니다.';
       linkStatus.className = 'msg error';
       return;
@@ -1816,8 +1881,81 @@
   }
 
   // ── 세팅 완료 / 반려 ──
+  archiveBtn.addEventListener('click', async function(){
+    if (!currentApp || isApplicationArchived(currentApp)) return;
+
+    if (currentApp.status === 'done'){
+      var ok = confirm('완료된 신청을 보관합니다. 생성된 원은 삭제되지 않고, 신청만 기본 목록에서 숨겨집니다. 계속할까요?');
+      if (!ok) return;
+    }
+
+    var reason = prompt('보관 사유를 입력해주세요. 비워두면 기본 사유로 저장됩니다.', '관리자 보관');
+    if (reason === null) return;
+    reason = reason.trim() || '관리자 보관';
+    if (reason.length > 300){
+      appActionStatus.textContent = '보관 사유는 300자 이하로 입력해주세요.';
+      appActionStatus.className = 'msg error';
+      return;
+    }
+
+    archiveBtn.disabled = true;
+    appActionStatus.textContent = '보관 처리 중...';
+    appActionStatus.className = 'msg';
+
+    var fields = {
+      archived_at: new Date().toISOString(),
+      archived_by: currentAdminUserId,
+      archive_reason: reason
+    };
+    var upRes = await client.from('center_applications')
+      .update(fields).eq('id', currentApp.id);
+    if (upRes.error){
+      archiveBtn.disabled = false;
+      appActionStatus.textContent = '보관 처리 실패: ' + upRes.error.message;
+      appActionStatus.className = 'msg error';
+      return;
+    }
+
+    syncApplicationArchive(fields);
+    appActionStatus.textContent = '신청을 보관했습니다.';
+    appActionStatus.className = 'msg ok';
+  });
+
+  unarchiveBtn.addEventListener('click', async function(){
+    if (!currentApp || !isApplicationArchived(currentApp)) return;
+    var ok = confirm('이 신청을 보관함에서 꺼내 기본 목록에 다시 표시할까요?');
+    if (!ok) return;
+
+    unarchiveBtn.disabled = true;
+    appActionStatus.textContent = '보관 해제 중...';
+    appActionStatus.className = 'msg';
+
+    var fields = {
+      archived_at: null,
+      archived_by: null,
+      archive_reason: null
+    };
+    var upRes = await client.from('center_applications')
+      .update(fields).eq('id', currentApp.id);
+    if (upRes.error){
+      unarchiveBtn.disabled = false;
+      appActionStatus.textContent = '보관 해제 실패: ' + upRes.error.message;
+      appActionStatus.className = 'msg error';
+      return;
+    }
+
+    syncApplicationArchive(fields);
+    appActionStatus.textContent = '보관을 해제했습니다.';
+    appActionStatus.className = 'msg ok';
+  });
+
   doneBtn.addEventListener('click', async function(){
     if (!currentApp) return;
+    if (isApplicationArchived(currentApp)){
+      appActionStatus.textContent = '보관된 신청은 완료 처리할 수 없습니다.';
+      appActionStatus.className = 'msg error';
+      return;
+    }
     if (isTerminalApplicationStatus(currentApp.status)){
       appActionStatus.textContent = '이미 처리된 신청입니다.';
       appActionStatus.className = 'msg error';
@@ -1858,6 +1996,11 @@
 
   rejectBtn.addEventListener('click', async function(){
     if (!currentApp) return;
+    if (isApplicationArchived(currentApp)){
+      appActionStatus.textContent = '보관된 신청은 반려 처리할 수 없습니다.';
+      appActionStatus.className = 'msg error';
+      return;
+    }
     if (!canRejectApplication(currentApp.status)){
       appActionStatus.textContent = '완료 또는 반려된 신청은 반려 처리할 수 없습니다.';
       appActionStatus.className = 'msg error';
