@@ -100,7 +100,7 @@
   .btn:hover{transform:translateY(-2px)}
   .btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
   .btn.ghost{background:#fff;color:var(--ink-soft);box-shadow:none;border:1.5px solid #e7dccf;width:auto;min-height:38px;padding:8px 18px;font-size:.86rem}
-  .btn.class-mini-btn{white-space:normal;text-align:center;line-height:1.35;padding-left:12px;padding-right:12px}
+  .btn.class-mini-btn{white-space:nowrap;text-align:center;line-height:1.35;padding-left:10px;padding-right:10px}
   .btn.danger{background:#fff;color:#D9534F;border:1.5px solid #f5c6c4;box-shadow:none}
   .btn.danger:hover{background:#fff5f5}
 
@@ -300,8 +300,8 @@
   .class-card-head>div:first-child,.class-detail-head>div:first-child{min-width:0;flex:1 1 auto}
   .class-card-title,.class-detail-title{font-weight:800;font-size:1rem;color:var(--ink)}
   .class-card-meta,.class-detail-meta,.invite-history-meta{margin-top:4px;font-size:.82rem;color:var(--ink-soft)}
-  .class-card-actions,.class-detail-actions{display:flex;align-items:center;gap:8px;flex:0 1 auto;min-width:0;max-width:100%;flex-wrap:wrap;justify-content:flex-end}
-  .class-card-actions .class-mini-btn,.class-detail-actions .class-mini-btn{flex:0 1 150px}
+  .class-card-actions,.class-detail-actions{display:flex;align-items:center;gap:6px;flex:0 0 auto;min-width:max-content;max-width:100%;flex-wrap:nowrap;justify-content:flex-end}
+  .class-card-actions .class-mini-btn,.class-detail-actions .class-mini-btn{flex:0 0 auto}
   .status-pill{display:inline-flex;align-items:center;border-radius:99px;padding:4px 10px;font-size:.75rem;font-weight:800;white-space:nowrap}
   .status-pill.assigned{background:#EDF7EE;color:#4F8B5B}
   .status-pill.pending{background:#FFF4D7;color:#A97811}
@@ -426,7 +426,7 @@
     .tab-bar{top:112px;padding:12px 18px 10px;margin:0 -18px 22px}
     .tab-btn{min-height:40px;padding:9px 14px}
     .class-card-head,.class-detail-head{flex-direction:column}
-    .class-card-actions,.class-detail-actions{width:100%;justify-content:flex-start}
+    .class-card-actions,.class-detail-actions{width:100%;min-width:0;justify-content:flex-start;flex-wrap:wrap}
     .class-card-actions .btn,.class-detail-actions .btn{flex:1 1 150px}
     .class-card-actions .class-mini-btn,.class-detail-actions .class-mini-btn{flex:0 1 150px}
   }
