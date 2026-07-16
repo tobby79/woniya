@@ -100,7 +100,7 @@
   .btn:hover{transform:translateY(-2px)}
   .btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
   .btn.ghost{background:#fff;color:var(--ink-soft);box-shadow:none;border:1.5px solid #e7dccf;width:auto;min-height:38px;padding:8px 18px;font-size:.86rem}
-  .btn.class-mini-btn{white-space:normal;text-align:center;line-height:1.35}
+  .btn.class-mini-btn{white-space:normal;text-align:center;line-height:1.35;padding-left:12px;padding-right:12px}
   .btn.danger{background:#fff;color:#D9534F;border:1.5px solid #f5c6c4;box-shadow:none}
   .btn.danger:hover{background:#fff5f5}
 
@@ -297,9 +297,11 @@
   .class-card{cursor:pointer;transition:border-color .15s ease,background .15s ease}
   .class-card.active{border-color:var(--coral);background:#fff8f5}
   .class-card-head,.class-detail-head,.invite-history-row{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+  .class-card-head>div:first-child,.class-detail-head>div:first-child{min-width:0;flex:1 1 auto}
   .class-card-title,.class-detail-title{font-weight:800;font-size:1rem;color:var(--ink)}
   .class-card-meta,.class-detail-meta,.invite-history-meta{margin-top:4px;font-size:.82rem;color:var(--ink-soft)}
-  .class-card-actions,.class-detail-actions{display:flex;align-items:center;gap:8px;flex-shrink:0;flex-wrap:wrap;justify-content:flex-end}
+  .class-card-actions,.class-detail-actions{display:flex;align-items:center;gap:8px;flex:0 1 auto;min-width:0;max-width:100%;flex-wrap:wrap;justify-content:flex-end}
+  .class-card-actions .class-mini-btn,.class-detail-actions .class-mini-btn{flex:0 1 150px}
   .status-pill{display:inline-flex;align-items:center;border-radius:99px;padding:4px 10px;font-size:.75rem;font-weight:800;white-space:nowrap}
   .status-pill.assigned{background:#EDF7EE;color:#4F8B5B}
   .status-pill.pending{background:#FFF4D7;color:#A97811}
@@ -426,6 +428,7 @@
     .class-card-head,.class-detail-head{flex-direction:column}
     .class-card-actions,.class-detail-actions{width:100%;justify-content:flex-start}
     .class-card-actions .btn,.class-detail-actions .btn{flex:1 1 150px}
+    .class-card-actions .class-mini-btn,.class-detail-actions .class-mini-btn{flex:0 1 150px}
   }
 
 </style>
@@ -2180,7 +2183,7 @@
   }
 
   function hasClassMini(classId){
-    return classMiniRows.some(function(row){ return row.class_id === classId; });
+    return classMiniRows.some(function(row){ return String(row.class_id) === String(classId); });
   }
 
   function hasPendingInvite(classId){
@@ -2195,9 +2198,9 @@
     return CLASS_ENROLLMENT_STATUS_LABELS[status] || status || '';
   }
 
-  function renderClassMiniAction(classId){
-    if (hasClassMini(classId)) {
-      return '<button type="button" class="btn ghost class-mini-btn" data-mini-class-id="' + esc(classId) + '">우리 반 미니홈피로 가기</button>';
+  function renderClassMiniAction(classId, hasMiniHome){
+    if (hasMiniHome) {
+      return '<button type="button" class="btn ghost class-mini-btn" data-mini-class-id="' + esc(classId) + '">우리 반 미니홈피</button>';
     }
     return '<button type="button" class="btn ghost class-mini-btn" disabled title="아직 미니홈피가 준비되지 않았어요">아직 미니홈피가 준비되지 않았어요</button>';
   }
@@ -2212,7 +2215,7 @@
       ? ''
       : '<button type="button" class="btn ghost class-invite-btn" data-class-id="' + esc(row.id) + '">선생님 초대</button>';
     var parentCodeAction = '<button type="button" class="btn ghost parent-code-btn" data-class-id="' + esc(row.id) + '">초대 코드 발급</button>';
-    var miniAction = renderClassMiniAction(row.id);
+    var miniAction = renderClassMiniAction(row.id, row.has_mini_home === true || hasClassMini(row.id));
 
     return '<div class="class-card' + (isSelected ? ' active' : '') + '" data-class-id="' + esc(row.id) + '">' +
       '<div class="class-card-head">' +
@@ -2295,7 +2298,7 @@
       ? '<span class="status-pill assigned">선생님 배정됨</span>'
       : '<button type="button" class="btn ghost class-invite-btn" data-class-id="' + esc(row.id) + '">선생님 초대</button>';
     var parentAction = '<button type="button" class="btn ghost parent-code-btn" data-class-id="' + esc(row.id) + '">초대 코드 발급</button>';
-    var miniAction = renderClassMiniAction(row.id);
+    var miniAction = renderClassMiniAction(row.id, row.has_mini_home === true || hasClassMini(row.id));
 
     classInviteDetail.hidden = false;
     classInviteDetail.innerHTML =
@@ -2305,7 +2308,7 @@
             '<div class="class-detail-title">' + esc(classTitle(row)) + '</div>' +
             '<div class="class-detail-meta">' + esc(classMeta(row) || '반 정보를 확인해 주세요') + '</div>' +
           '</div>' +
-          '<div class="class-detail-actions">' + miniAction + action + parentAction + '</div>' +
+          '<div class="class-detail-actions">' + action + miniAction + parentAction + '</div>' +
         '</div>' +
         '<div class="class-subsection">' +
           '<label>선생님 초대 이력</label>' +
@@ -2381,6 +2384,11 @@
         return;
       }
       classMiniRows = miniRes.data || [];
+      classRows = classRows.map(function(row){
+        return Object.assign({}, row, {
+          has_mini_home: hasClassMini(row.id)
+        });
+      });
 
       var inviteRes = await client.from('teacher_invites')
         .select('id,class_id,email,status,invited_at,accepted_at')
