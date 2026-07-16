@@ -570,22 +570,38 @@
     }
   }
 
-  async function loadTeacherDirectMini(session){
+  async function loadDirectClassMini(session){
     var classRes = await client.from('classes')
       .select('id,name,age_label,teacher_id,center_id')
       .eq('id', directClassId)
-      .eq('teacher_id', session.user.id)
       .maybeSingle();
     if (classRes.error) throw classRes.error;
-    var miniRes = classRes.data
-      ? await client.from('class_mini').select('id').eq('class_id', directClassId).maybeSingle()
-      : { data: null, error: null };
-    if (miniRes.error) throw miniRes.error;
-    if (!classRes.data || !miniRes.data) {
-      showNotice('미니홈피를 열 수 없습니다', '담당 반이 아니거나 아직 공개되지 않은 미니홈피예요.');
+
+    var classRow = classRes.data || null;
+    var isTeacher = !!(classRow && classRow.teacher_id === session.user.id);
+    var isCenterOwner = false;
+
+    if (classRow && !isTeacher && classRow.center_id) {
+      var centerRes = await client.from('centers')
+        .select('id,owner_id')
+        .eq('id', classRow.center_id)
+        .maybeSingle();
+      if (centerRes.error) throw centerRes.error;
+      isCenterOwner = !!(centerRes.data && centerRes.data.owner_id === session.user.id);
+    }
+
+    if (!classRow || (!isTeacher && !isCenterOwner)) {
+      showNotice('미니홈피를 열 수 없습니다', '해당 반의 담임 선생님 또는 원장님만 직접 접근할 수 있어요.');
       return true;
     }
-    approvedClasses = [Object.assign({}, classRes.data, {
+
+    var miniRes = await client.from('class_mini').select('id').eq('class_id', directClassId).maybeSingle();
+    if (miniRes.error) throw miniRes.error;
+    if (!miniRes.data) {
+      showNotice('아직 미니홈피가 준비되지 않았어요', '담임 선생님이 미니홈피를 준비한 뒤 다시 확인해주세요.');
+      return true;
+    }
+    approvedClasses = [Object.assign({}, classRow, {
       enrollment_id: null,
       last_notice_read_at: null
     })];
@@ -758,6 +774,7 @@
   }
 
   function renderGuestbookTab(content){
+    var canComment = !!(currentEnrollment && currentEnrollment.id);
     var list = miniCache.comments.length
       ? miniCache.comments.map(function(row){
           return '<article class="comment-item">' +
@@ -767,13 +784,14 @@
           '</article>';
         }).join('')
       : '<div class="empty-mini">아직 방명록 글이 없어요.</div>';
-    content.innerHTML = list +
-      '<form class="comment-form" id="commentForm">' +
+    content.innerHTML = list + (canComment
+      ? '<form class="comment-form" id="commentForm">' +
         '<label for="commentBody">방명록 남기기</label>' +
         '<textarea id="commentBody" required placeholder="선생님께 남길 말을 적어주세요."></textarea>' +
         '<button type="submit" class="btn" id="commentSubmit" style="margin-top:12px">등록</button>' +
         '<div class="msg" id="commentMsg"></div>' +
-      '</form>';
+      '</form>'
+      : '');
   }
 
   function renderNoticeTab(content){
@@ -815,7 +833,7 @@
     var submit = form.querySelector('#commentSubmit');
     var msg = form.querySelector('#commentMsg');
     var text = body.value.trim();
-    if (!text || !currentMiniClass || !currentSession || !currentSession.user) return;
+    if (!text || !currentMiniClass || !currentSession || !currentSession.user || !currentEnrollment || !currentEnrollment.id) return;
     submit.disabled = true;
     msg.textContent = '등록 중입니다.';
     msg.className = 'msg';
@@ -859,7 +877,7 @@
     showPanel(loadingPanel);
 
     try {
-      if (directClassId && await loadTeacherDirectMini(session)) return;
+      if (directClassId && await loadDirectClassMini(session)) return;
 
       var res = await client
         .from('class_enrollments')

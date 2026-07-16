@@ -100,6 +100,7 @@
   .btn:hover{transform:translateY(-2px)}
   .btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
   .btn.ghost{background:#fff;color:var(--ink-soft);box-shadow:none;border:1.5px solid #e7dccf;width:auto;min-height:38px;padding:8px 18px;font-size:.86rem}
+  .btn.class-mini-btn{white-space:normal;text-align:center;line-height:1.35}
   .btn.danger{background:#fff;color:#D9534F;border:1.5px solid #f5c6c4;box-shadow:none}
   .btn.danger:hover{background:#fff5f5}
 
@@ -422,6 +423,9 @@
     .edit-target-actions{justify-content:flex-start}
     .tab-bar{top:112px;padding:12px 18px 10px;margin:0 -18px 22px}
     .tab-btn{min-height:40px;padding:9px 14px}
+    .class-card-head,.class-detail-head{flex-direction:column}
+    .class-card-actions,.class-detail-actions{width:100%;justify-content:flex-start}
+    .class-card-actions .btn,.class-detail-actions .btn{flex:1 1 150px}
   }
 
 </style>
@@ -970,6 +974,7 @@
   var teacherInviteRows = [];
   var parentInviteRows = [];
   var parentEnrollmentRows = [];
+  var classMiniRows = [];
   var selectedTeacherClassId = null;
   var busRoutes = [];
   var busStopsByRoute = {};
@@ -2174,6 +2179,10 @@
     return parentInvitesForClass(classId).find(function(row){ return row.status === 'active'; });
   }
 
+  function hasClassMini(classId){
+    return classMiniRows.some(function(row){ return row.class_id === classId; });
+  }
+
   function hasPendingInvite(classId){
     return invitesForClass(classId).some(function(row){ return row.status === 'pending'; });
   }
@@ -2186,6 +2195,13 @@
     return CLASS_ENROLLMENT_STATUS_LABELS[status] || status || '';
   }
 
+  function renderClassMiniAction(classId){
+    if (hasClassMini(classId)) {
+      return '<button type="button" class="btn ghost class-mini-btn" data-mini-class-id="' + esc(classId) + '">우리 반 미니홈피로 가기</button>';
+    }
+    return '<button type="button" class="btn ghost class-mini-btn" disabled title="아직 미니홈피가 준비되지 않았어요">아직 미니홈피가 준비되지 않았어요</button>';
+  }
+
   function renderClassCard(row){
     var isSelected = selectedTeacherClassId === row.id;
     var pending = hasPendingInvite(row.id);
@@ -2196,6 +2212,7 @@
       ? ''
       : '<button type="button" class="btn ghost class-invite-btn" data-class-id="' + esc(row.id) + '">선생님 초대</button>';
     var parentCodeAction = '<button type="button" class="btn ghost parent-code-btn" data-class-id="' + esc(row.id) + '">초대 코드 발급</button>';
+    var miniAction = renderClassMiniAction(row.id);
 
     return '<div class="class-card' + (isSelected ? ' active' : '') + '" data-class-id="' + esc(row.id) + '">' +
       '<div class="class-card-head">' +
@@ -2203,7 +2220,7 @@
           '<div class="class-card-title">' + esc(classTitle(row)) + '</div>' +
           '<div class="class-card-meta">' + esc(classMeta(row) || '반 정보를 확인해 주세요') + '</div>' +
         '</div>' +
-        '<div class="class-card-actions">' + badge + action + parentCodeAction + '</div>' +
+        '<div class="class-card-actions">' + badge + miniAction + action + parentCodeAction + '</div>' +
       '</div>' +
     '</div>';
   }
@@ -2278,6 +2295,7 @@
       ? '<span class="status-pill assigned">선생님 배정됨</span>'
       : '<button type="button" class="btn ghost class-invite-btn" data-class-id="' + esc(row.id) + '">선생님 초대</button>';
     var parentAction = '<button type="button" class="btn ghost parent-code-btn" data-class-id="' + esc(row.id) + '">초대 코드 발급</button>';
+    var miniAction = renderClassMiniAction(row.id);
 
     classInviteDetail.hidden = false;
     classInviteDetail.innerHTML =
@@ -2287,7 +2305,7 @@
             '<div class="class-detail-title">' + esc(classTitle(row)) + '</div>' +
             '<div class="class-detail-meta">' + esc(classMeta(row) || '반 정보를 확인해 주세요') + '</div>' +
           '</div>' +
-          '<div class="class-detail-actions">' + action + parentAction + '</div>' +
+          '<div class="class-detail-actions">' + miniAction + action + parentAction + '</div>' +
         '</div>' +
         '<div class="class-subsection">' +
           '<label>선생님 초대 이력</label>' +
@@ -2347,9 +2365,23 @@
     teacherInviteRows = [];
     parentInviteRows = [];
     parentEnrollmentRows = [];
+    classMiniRows = [];
 
     if (classRows.length) {
       var ids = classRows.map(function(row){ return row.id; });
+      var miniRes = await client.from('class_mini')
+        .select('id,class_id')
+        .in('class_id', ids);
+
+      if (miniRes.error) {
+        logAdminError('loadClassManager/classMini', miniRes.error);
+        classManagerStatus.innerHTML = escWithBr('미니홈피 상태를 불러오지 못했습니다: ' + miniRes.error.message);
+        classManagerStatus.className = 'msg error';
+        renderClassManager();
+        return;
+      }
+      classMiniRows = miniRes.data || [];
+
       var inviteRes = await client.from('teacher_invites')
         .select('id,class_id,email,status,invited_at,accepted_at')
         .in('class_id', ids)
@@ -2529,6 +2561,13 @@
   }
 
   classManagerList.addEventListener('click', function(e){
+    var miniBtn = e.target.closest('.class-mini-btn');
+    if (miniBtn && miniBtn.dataset.miniClassId) {
+      e.stopPropagation();
+      location.href = 'parent.html?class_id=' + encodeURIComponent(miniBtn.dataset.miniClassId);
+      return;
+    }
+
     var inviteBtn = e.target.closest('.class-invite-btn');
     if (inviteBtn) {
       e.stopPropagation();
@@ -2554,6 +2593,12 @@
   });
 
   classInviteDetail.addEventListener('click', function(e){
+    var miniBtn = e.target.closest('.class-mini-btn');
+    if (miniBtn && miniBtn.dataset.miniClassId) {
+      location.href = 'parent.html?class_id=' + encodeURIComponent(miniBtn.dataset.miniClassId);
+      return;
+    }
+
     var inviteBtn = e.target.closest('.class-invite-btn');
     if (inviteBtn) {
       openTeacherInviteModal(inviteBtn.dataset.classId, '');
