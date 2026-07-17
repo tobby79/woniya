@@ -220,10 +220,24 @@
     text-decoration:none;cursor:pointer;white-space:nowrap;
   }
   .center-action-btn.primary{border-color:rgba(255,127,168,.36);color:var(--pink-deep);background:#fff6fa}
+  .center-action-btn.review{border-color:rgba(168,141,232,.36);color:#7b65c8;background:#fbf8ff}
   .center-action-btn:hover{text-decoration:none;transform:translateY(-1px)}
   .center-action-btn:disabled,.center-action-btn.disabled{
     opacity:.5;cursor:not-allowed;transform:none;background:#f7f1ed;color:var(--ink-soft);
   }
+  .center-review-note{
+    flex-basis:100%;font-size:.76rem;color:var(--ink-soft);line-height:1.45;margin-top:2px;
+  }
+  .center-review-note strong{color:#7b65c8}
+  .copy-toast{
+    position:fixed;left:50%;bottom:28px;z-index:90;transform:translate(-50%,12px);
+    min-width:220px;max-width:min(420px,calc(100vw - 32px));padding:12px 16px;
+    border-radius:999px;background:rgba(64,55,51,.94);color:#fff;text-align:center;
+    font-size:.88rem;font-weight:900;box-shadow:0 18px 40px -20px rgba(60,45,55,.65);
+    opacity:0;pointer-events:none;transition:opacity .18s ease,transform .18s ease;
+  }
+  .copy-toast.show{opacity:1;transform:translate(-50%,0)}
+  .copy-toast.error{background:rgba(185,66,66,.96)}
   .center-owner-connect{
     margin-top:14px;padding:13px;border:1.5px solid rgba(168,141,232,.22);
     border-radius:14px;background:#fbf8ff;
@@ -487,6 +501,7 @@
       <div class="center-list" id="centerList"></div>
       <div class="empty-state" id="centerEmpty" hidden>표시할 원이 없습니다.</div>
       <div class="msg" id="centerListStatus"></div>
+      <div class="copy-toast" id="copyToast" role="status" aria-live="polite"></div>
     </div>
   </section>
 
@@ -1194,6 +1209,7 @@
   var centerList = document.getElementById('centerList');
   var centerEmpty = document.getElementById('centerEmpty');
   var centerListStatus = document.getElementById('centerListStatus');
+  var copyToast = document.getElementById('copyToast');
 
   var appRows = [];          // center_applications + 조인된 submission 요약
   var currentFilter = 'all';
@@ -1380,6 +1396,14 @@
     '</form>';
   }
 
+  function renderCenterReviewNote(c, published){
+    var parts = [];
+    if (c.reviewLinkExpiresAt) parts.push('만료일 ' + esc(fmtDate(c.reviewLinkExpiresAt)));
+    if (published) parts.push('이미 공개된 원입니다. 고객 공유 링크 사용을 권장합니다.');
+    else parts.push('공개 전 원장님 확인용 링크입니다. 고객 공유 링크와 별개입니다.');
+    return '<div class="center-review-note"><strong>검수 링크</strong> ' + parts.join(' · ') + '</div>';
+  }
+
   function renderCenterList(){
     var rows = centerRows.filter(function(c){
       return currentCenterFilter === 'all' || c.status === currentCenterFilter;
@@ -1390,6 +1414,7 @@
       var published = c.status === 'published';
       var previewUrl = adminPreviewUrl(c.template, c.slug);
       var publicUrl = publicPageUrl(c.template, c.slug);
+      var reviewUrl = c.reviewLinkToken ? reviewPageUrl(c.template, c.reviewLinkToken) : '';
       var editorUrl = adminEditorUrl(c.slug);
       return '<article class="center-card" data-center-id="' + esc(c.id) + '">' +
         '<div class="center-card-head">' +
@@ -1407,12 +1432,20 @@
           '<div class="center-link-actions">' +
             '<a class="center-action-btn primary" href="' + esc(editorUrl) + '">에디터로 수정</a>' +
             '<a class="center-action-btn" href="' + esc(previewUrl) + '" target="_blank" rel="noopener">관리자 미리보기</a>' +
+            '<button type="button" class="center-action-btn review" data-create-review-link="' + esc(c.id) + '">검수 링크 만들기</button>' +
+            (reviewUrl
+              ? '<button type="button" class="center-action-btn review" data-copy-review-link="' + esc(c.id) + '">검수 링크 복사</button>'
+              : '<button type="button" class="center-action-btn disabled" disabled>검수 링크 복사</button>') +
+            (c.reviewLinkId
+              ? '<button type="button" class="center-action-btn" data-revoke-review-link="' + esc(c.id) + '">검수 링크 폐기</button>'
+              : '') +
             (published
               ? '<a class="center-action-btn primary" href="' + esc(publicUrl) + '" target="_blank" rel="noopener">공개 페이지 보기</a>'
               : '<button type="button" class="center-action-btn disabled" disabled>공개 후 사용 가능</button>') +
             (published
               ? '<button type="button" class="center-action-btn" data-copy-public-url="' + esc(publicUrl) + '">고객 공유 링크 복사</button>'
               : '<button type="button" class="center-action-btn disabled" disabled>공개 후 공유 가능</button>') +
+            renderCenterReviewNote(c, published) +
           '</div>' +
           '<label class="toggle' + (toggleable ? '' : ' disabled') + '">' +
             '<input type="checkbox" data-center-toggle="' + esc(c.id) + '"' + (published ? ' checked' : '') + (toggleable ? '' : ' disabled') + '>' +
@@ -1432,7 +1465,78 @@
     renderCenterList();
   });
 
-  centerList.addEventListener('click', function(e){
+  centerList.addEventListener('click', async function(e){
+    var createReviewBtn = e.target.closest('[data-create-review-link]');
+    if (createReviewBtn){
+      var createCenterId = createReviewBtn.getAttribute('data-create-review-link');
+      var createCenter = centerRows.filter(function(c){ return c.id === createCenterId; })[0];
+      if (!createCenter) return;
+      createReviewBtn.disabled = true;
+      centerListStatus.textContent = '검수 링크를 만드는 중입니다...';
+      centerListStatus.className = 'msg';
+      var createRes = await client.rpc('create_center_review_link', { p_center_id: createCenterId });
+      createReviewBtn.disabled = false;
+      if (createRes.error || !createRes.data || !createRes.data.token){
+        centerListStatus.textContent = '검수 링크 생성에 실패했습니다: ' + (createRes.error ? createRes.error.message : 'token missing');
+        centerListStatus.className = 'msg error';
+        return;
+      }
+      createCenter.reviewLinkId = createRes.data.link_id;
+      createCenter.reviewLinkToken = createRes.data.token;
+      createCenter.reviewLinkExpiresAt = createRes.data.expires_at;
+      var createdUrl = reviewPageUrl(createCenter.template, createCenter.reviewLinkToken);
+      copyText(createdUrl, function(ok){
+        var message = ok
+          ? '검수 링크를 복사했어요.'
+          : '복사에 실패했어요. 링크를 직접 선택해 복사해주세요.';
+        centerListStatus.textContent = message;
+        centerListStatus.className = ok ? 'msg ok' : 'msg error';
+        showCopyToast(message, ok);
+      });
+      renderCenterList();
+      return;
+    }
+
+    var copyReviewBtn = e.target.closest('[data-copy-review-link]');
+    if (copyReviewBtn){
+      var copyCenterId = copyReviewBtn.getAttribute('data-copy-review-link');
+      var copyCenter = centerRows.filter(function(c){ return c.id === copyCenterId; })[0];
+      if (!copyCenter || !copyCenter.reviewLinkToken) return;
+      copyText(reviewPageUrl(copyCenter.template, copyCenter.reviewLinkToken), function(ok){
+        var message = ok
+          ? '검수 링크를 복사했어요.'
+          : '복사에 실패했어요. 링크를 직접 선택해 복사해주세요.';
+        centerListStatus.textContent = message;
+        centerListStatus.className = ok ? 'msg ok' : 'msg error';
+        showCopyToast(message, ok);
+      });
+      return;
+    }
+
+    var revokeReviewBtn = e.target.closest('[data-revoke-review-link]');
+    if (revokeReviewBtn){
+      var revokeCenterId = revokeReviewBtn.getAttribute('data-revoke-review-link');
+      var revokeCenter = centerRows.filter(function(c){ return c.id === revokeCenterId; })[0];
+      if (!revokeCenter || !revokeCenter.reviewLinkId) return;
+      revokeReviewBtn.disabled = true;
+      centerListStatus.textContent = '검수 링크를 폐기하는 중입니다...';
+      centerListStatus.className = 'msg';
+      var revokeRes = await client.rpc('revoke_center_review_link', { p_link_id: revokeCenter.reviewLinkId });
+      revokeReviewBtn.disabled = false;
+      if (revokeRes.error){
+        centerListStatus.textContent = '검수 링크 폐기에 실패했습니다: ' + revokeRes.error.message;
+        centerListStatus.className = 'msg error';
+        return;
+      }
+      revokeCenter.reviewLinkId = '';
+      revokeCenter.reviewLinkToken = '';
+      revokeCenter.reviewLinkExpiresAt = '';
+      centerListStatus.textContent = '검수 링크를 폐기했습니다.';
+      centerListStatus.className = 'msg ok';
+      renderCenterList();
+      return;
+    }
+
     var publicBtn = e.target.closest('[data-copy-public-url]');
     if (!publicBtn) return;
     var url = publicBtn.getAttribute('data-copy-public-url');
@@ -1574,6 +1678,16 @@
     return 'https://' + SITE_ORIGIN + '/template-' + encodeURIComponent(template) + '.html?slug=' + encodeURIComponent(slug);
   }
 
+  function reviewPageUrl(template, token){
+    return 'https://' + SITE_ORIGIN + '/' + centerTemplateFile(template) + '?review_token=' + encodeURIComponent(token);
+  }
+
+  function centerTemplateFile(template){
+    var t = String(template || 'sunshine').toLowerCase();
+    if (['sunshine', 'forest', 'carnival', 'gallery'].indexOf(t) < 0) t = 'sunshine';
+    return 'template-' + t + '.html';
+  }
+
   function adminEditorUrl(slug){
     return 'admin.html?slug=' + encodeURIComponent(slug);
   }
@@ -1592,6 +1706,16 @@
 
   function canStartOnboarding(status){
     return status === 'new' || status === 'setting';
+  }
+
+  function showCopyToast(message, ok){
+    if (!copyToast) return;
+    copyToast.textContent = message;
+    copyToast.className = 'copy-toast show' + (ok ? '' : ' error');
+    clearTimeout(showCopyToast.timer);
+    showCopyToast.timer = setTimeout(function(){
+      copyToast.className = 'copy-toast' + (ok ? '' : ' error');
+    }, 2400);
   }
 
   function copyText(text, callback){

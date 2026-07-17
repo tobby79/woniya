@@ -1675,8 +1675,11 @@
       const cfg = window.__SUPABASE_CONFIG__;
       const client = supabase.createClient(cfg.url, cfg.anonKey);
       let isPreviewMode = false;
+      let isReviewMode = false;
       const PREVIEW_TEMPLATE_IDS = ['sunshine', 'carnival', 'forest', 'gallery'];
       const PREVIEW_MESSAGE = '이것은 템플릿 미리보기입니다. 실제 신청은 접수되지 않습니다.';
+
+      const REVIEW_MESSAGE = '공개 전 검수용 화면에서는 신청이 접수되지 않습니다.';
 
       function normalizePreviewId(value){
         return PREVIEW_TEMPLATE_IDS.includes(value) ? value : '';
@@ -1767,11 +1770,26 @@
 
       try {
         const params = new URLSearchParams(location.search);
-        const slugParam = params.get('slug');
-        const previewCenterSlug = (!slugParam) ? (params.get('preview_center') || '').trim() : '';
-        const previewId = (slugParam || previewCenterSlug) ? '' : normalizePreviewId(params.get('preview'));
+        const reviewToken = (params.get('review_token') || '').trim();
+        const slugParam = reviewToken ? '' : params.get('slug');
+        const previewCenterSlug = (!reviewToken && !slugParam) ? (params.get('preview_center') || '').trim() : '';
+        const previewId = (reviewToken || slugParam || previewCenterSlug) ? '' : normalizePreviewId(params.get('preview'));
 
-        if (previewId){
+        if (reviewToken){
+          const reviewRes = await client.rpc('get_center_by_review_token', { p_token: reviewToken });
+          if (reviewRes.error){
+            console.error('[review token RPC]', reviewRes.error.message, reviewRes.error);
+            document.body.innerHTML = '<p style="padding:40px;font-family:sans-serif">검수 링크 데이터를 불러오지 못했습니다. 콘솔의 RPC 오류 메시지를 확인해주세요.</p>';
+            return;
+          }
+          if (!reviewRes.data){
+            document.body.innerHTML = '<p style="padding:40px;font-family:sans-serif">검수 링크가 만료되었거나 폐기되었습니다.</p>';
+            return;
+          }
+          isReviewMode = true;
+          data = mapRowToData(reviewRes.data);
+          await signCenterPhotos(data);
+        } else if (previewId){
           // ── 기존: 템플릿 샘플 미리보기 (?preview=forest 등) — 절대 변경 금지 ──
           isPreviewMode = true;
           data = await loadTemplatePreview(previewId);
@@ -1804,7 +1822,10 @@
 
         const previewBanner = document.getElementById('previewBanner');
         if (previewBanner) {
-          if (isAdminPreviewMode) {
+          if (isReviewMode) {
+            previewBanner.textContent = '공개 전 검수용 화면입니다';
+            previewBanner.hidden = false;
+          } else if (isAdminPreviewMode) {
             previewBanner.textContent = '관리자 미리보기 — 비공개 상태';
             previewBanner.hidden = false;
           } else {
@@ -1833,6 +1854,11 @@
         if (data.admission) extra.push({ href: 'admissions.html' + qs, label: '입학안내' });
         if ((c.directions_text || '').trim()) extra.push({ href: 'directions.html' + qs, label: '오시는 길' });
         extra.push({ href: 'parent.html', label: '우리 반 미니홈피' });
+        if (isReviewMode){
+          extra = extra.filter(function(x){
+            return x.href.indexOf('admissions.html') !== 0 && x.href.indexOf('directions.html') !== 0;
+          });
+        }
         if (extra.length){
           var m = c.menu.slice();
           m = m.filter(function(x){ return x.href !== 'parent.html'; });
@@ -1993,17 +2019,18 @@
       window.__facilityData__ = data.center.facilities;
       window.__programData__ = data.center.programs;
       window.__albumImgs__ = data.album?.items || [];
-      if (isPreviewMode){
+      if (isPreviewMode || isReviewMode){
         document.addEventListener('click', function(e){
           var action = e.target.closest('#cslOpenBtn, #askConsultBtn, #admissionsSec .info-link-btn');
           if (!action) return;
           e.preventDefault();
           e.stopImmediatePropagation();
-          alert(PREVIEW_MESSAGE);
+          alert(isReviewMode ? REVIEW_MESSAGE : PREVIEW_MESSAGE);
         }, true);
       }
       initInteractions();
       renderInfoSections(data, c, esc);
+      if (isReviewMode) disableReviewDetailLinks();
       setupAskPanel(data.faqs);
       initConsultationForm(client, c.id);
     })();
@@ -2274,8 +2301,8 @@
         });
       });
       consultBtn.addEventListener('click', function(){
-        if (isPreviewMode){
-          alert(PREVIEW_MESSAGE);
+        if (isPreviewMode || isReviewMode){
+          alert(isReviewMode ? REVIEW_MESSAGE : PREVIEW_MESSAGE);
           return;
         }
         close();
@@ -2308,6 +2335,15 @@
     }
 
     // ── 입학안내(admissions) + 오시는 길(directions) 렌더 (M1) ──
+    function disableReviewDetailLinks(){
+      document.querySelectorAll('a[href^="admissions.html"], a[href^="directions.html"]').forEach(function(link){
+        var note = document.createElement('span');
+        note.className = link.className || 'info-link-btn';
+        note.textContent = '검수 모드에서는 별도 페이지 이동이 제한됩니다';
+        link.replaceWith(note);
+      });
+    }
+
     function renderInfoSections(data, c, esc){
       // M2: 입학안내·오시는 길은 공개형 새 페이지로 분리. 메인에는 요약+이동 버튼만 남긴다.
       var qs = c.slug ? ('?slug=' + encodeURIComponent(c.slug)) : '';
@@ -2377,7 +2413,7 @@
       var formWrap = document.getElementById('cslFormWrap');
       var doneWrap = document.getElementById('cslDoneWrap');
 
-      function openModal() { if (isPreviewMode){ alert(PREVIEW_MESSAGE); return; } overlay.classList.add('open'); formWrap.hidden = false; doneWrap.hidden = true; form.reset(); errorEl.textContent = ''; }
+      function openModal() { if (isPreviewMode || isReviewMode){ alert(isReviewMode ? REVIEW_MESSAGE : PREVIEW_MESSAGE); return; } overlay.classList.add('open'); formWrap.hidden = false; doneWrap.hidden = true; form.reset(); errorEl.textContent = ''; }
       function closeModal() { overlay.classList.remove('open'); }
 
       if (openBtn) openBtn.addEventListener('click', openModal);
@@ -2388,8 +2424,8 @@
       form.addEventListener('submit', async function (e) {
         e.preventDefault();
         errorEl.textContent = '';
-        if (isPreviewMode){
-          alert(PREVIEW_MESSAGE);
+        if (isPreviewMode || isReviewMode){
+          alert(isReviewMode ? REVIEW_MESSAGE : PREVIEW_MESSAGE);
           return;
         }
         if (!document.getElementById('csl-consent').checked) { errorEl.textContent = '개인정보 수집 동의가 필요해요.'; return; }

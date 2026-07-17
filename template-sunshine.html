@@ -1522,9 +1522,12 @@ function mapRowToData(row){
   const cfg = window.__SUPABASE_CONFIG__;
   const client = supabase.createClient(cfg.url, cfg.anonKey);
   let isPreviewMode = false;
+  let isReviewMode = false;
   let previewTemplateId = ''; // ?preview=<id> 미리보기일 때 상세 페이지 링크(admissions/directions)에 넘길 id
   const PREVIEW_TEMPLATE_IDS = ['sunshine', 'carnival', 'forest', 'gallery'];
   const PREVIEW_MESSAGE = '이것은 템플릿 미리보기입니다. 실제 신청은 접수되지 않습니다.';
+
+  const REVIEW_MESSAGE = '공개 전 검수용 화면에서는 신청이 접수되지 않습니다.';
 
   function normalizePreviewId(value){
     return PREVIEW_TEMPLATE_IDS.includes(value) ? value : '';
@@ -1615,11 +1618,26 @@ function mapRowToData(row){
 
   try {
     const params = new URLSearchParams(location.search);
-    const slugParam = params.get('slug');
-    const previewCenterSlug = (!slugParam) ? (params.get('preview_center') || '').trim() : '';
-    const previewId = (slugParam || previewCenterSlug) ? '' : normalizePreviewId(params.get('preview'));
+    const reviewToken = (params.get('review_token') || '').trim();
+    const slugParam = reviewToken ? '' : params.get('slug');
+    const previewCenterSlug = (!reviewToken && !slugParam) ? (params.get('preview_center') || '').trim() : '';
+    const previewId = (reviewToken || slugParam || previewCenterSlug) ? '' : normalizePreviewId(params.get('preview'));
 
-    if (previewId){
+    if (reviewToken){
+      const reviewRes = await client.rpc('get_center_by_review_token', { p_token: reviewToken });
+      if (reviewRes.error){
+        console.error('[review token RPC]', reviewRes.error.message, reviewRes.error);
+        document.body.innerHTML = '<p style="padding:40px;font-family:sans-serif">검수 링크 데이터를 불러오지 못했습니다. 콘솔의 RPC 오류 메시지를 확인해주세요.</p>';
+        return;
+      }
+      if (!reviewRes.data){
+        document.body.innerHTML = '<p style="padding:40px;font-family:sans-serif">검수 링크가 만료되었거나 폐기되었습니다.</p>';
+        return;
+      }
+      isReviewMode = true;
+      data = mapRowToData(reviewRes.data);
+      await signCenterPhotos(data);
+    } else if (previewId){
       // ── 기존: 템플릿 샘플 미리보기 (?preview=sunshine 등) — 절대 변경 금지 ──
       isPreviewMode = true;
       previewTemplateId = previewId; // 상세 페이지 링크에서 ?preview= 로 이어가기 위해 보관
@@ -1657,7 +1675,10 @@ function mapRowToData(row){
 
     const previewBanner = document.getElementById('previewBanner');
     if (previewBanner) {
-      if (isAdminPreviewMode) {
+      if (isReviewMode) {
+        previewBanner.textContent = '공개 전 검수용 화면입니다';
+        previewBanner.hidden = false;
+      } else if (isAdminPreviewMode) {
         previewBanner.textContent = '관리자 미리보기 — 비공개 상태';
         previewBanner.hidden = false;
       } else {
@@ -1696,6 +1717,11 @@ function mapRowToData(row){
     if (data.admission) extra.push({ href: 'admissions.html' + qs, label: '입학안내' });
     if ((c.directions_text || '').trim()) extra.push({ href: 'directions.html' + qs, label: '오시는 길' });
     extra.push({ href: 'parent.html', label: '우리 반 미니홈피' });
+    if (isReviewMode){
+      extra = extra.filter(function(x){
+        return x.href.indexOf('admissions.html') !== 0 && x.href.indexOf('directions.html') !== 0;
+      });
+    }
     if (extra.length){
       var m = c.menu.slice();
       m = m.filter(function(x){ return x.href !== 'parent.html'; });
@@ -2170,7 +2196,7 @@ function mapRowToData(row){
   window.__directorData__ = c.director;
   window.__philosophyData__ = data.center.philosophy;
   window.__facilityData__ = data.center.facilities;
-  if (isPreviewMode){
+  if (isPreviewMode || isReviewMode){
     // 경고 모달은 "실제 신청/제출" 액션(입소상담·상담신청 버튼)에만 건다.
     // 정보 열람용 네비게이션 링크(자세히 보기·통학 안내)는 경고 대상에서 제외 —
     // 미리보기 모드에서도 admissions/directions 상세 페이지로 정상 이동해야 하므로.
@@ -2179,11 +2205,12 @@ function mapRowToData(row){
       if (!action) return;
       e.preventDefault();
       e.stopImmediatePropagation();
-      alert(PREVIEW_MESSAGE);
+      alert(isReviewMode ? REVIEW_MESSAGE : PREVIEW_MESSAGE);
     }, true);
   }
   initInteractions();
-  renderInfoSections(data, c, esc, isPreviewMode, previewTemplateId);
+  renderInfoSections(data, c, esc, isPreviewMode, previewTemplateId, isReviewMode);
+  if (isReviewMode) disableReviewDetailLinks();
   setupAskPanel(data.faqs);
   initConsultationForm(client, c.id);
 })();
@@ -2654,8 +2681,8 @@ function setupAskPanel(faqs){
     });
   });
   consultBtn.addEventListener('click', function(){
-    if (isPreviewMode){
-      alert(PREVIEW_MESSAGE);
+    if (isPreviewMode || isReviewMode){
+      alert(isReviewMode ? REVIEW_MESSAGE : PREVIEW_MESSAGE);
       return;
     }
     close();
@@ -2691,7 +2718,16 @@ function initDeferredImages(){
 // 모집 대상(나이/사람) · 모집 기간(달력) 아이콘 — sunshine 톤에 맞춘 라인 아이콘, currentColor로 --coral-deep 상속
 var ADM_ICON_PERSON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="3.4"/><path d="M5 20c0-3.6 3.1-6.2 7-6.2s7 2.6 7 6.2"/></svg>';
 var ADM_ICON_CALENDAR = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="2.4"/><path d="M3.5 9.5h17"/><path d="M8 3v3.6M16 3v3.6"/></svg>';
-function renderInfoSections(data, c, esc, isPreviewMode, previewTemplateId){
+function disableReviewDetailLinks(){
+  document.querySelectorAll('a[href^="admissions.html"], a[href^="directions.html"]').forEach(function(link){
+    var note = document.createElement('span');
+    note.className = link.className || 'info-link-btn';
+    note.textContent = '검수 모드에서는 별도 페이지 이동이 제한됩니다';
+    link.replaceWith(note);
+  });
+}
+
+function renderInfoSections(data, c, esc, isPreviewMode, previewTemplateId, isReviewMode){
   // M2: 입학안내·오시는 길은 공개형 새 페이지로 분리. 메인에는 요약+이동 버튼만 남긴다.
   // 미리보기 모드에서는 상세 페이지도 ?preview=<id>로 이어가고(샘플 데이터 조회),
   // 실제 원(공개/관리자 미리보기)에서는 기존처럼 ?slug=<slug>로 연결한다.
@@ -2704,13 +2740,16 @@ function renderInfoSections(data, c, esc, isPreviewMode, previewTemplateId){
     else {
       admSec.hidden = false;
       var adm = data.admission;
+      var admLinkHtml = isReviewMode
+        ? '<span class="info-link-btn cloud-link">검수 모드에서는 별도 페이지 이동이 제한됩니다</span>'
+        : '<a class="info-link-btn cloud-link" href="admissions.html' + qs + '">자세히 보기 →</a>';
       admSec.innerHTML = '<div class="section-eyebrow">함께해요</div>'
         + '<h2 class="info-title">입학안내</h2>'
         + '<div class="adm-preview">'
         + (adm.target ? '<div class="adm-preview-row"><span class="adm-icon">'+ADM_ICON_PERSON+'</span><div><div class="adm-preview-label">모집 대상</div><div class="adm-preview-value">'+esc(adm.target)+'</div></div></div>' : '')
         + (adm.period ? '<div class="adm-preview-row"><span class="adm-icon">'+ADM_ICON_CALENDAR+'</span><div><div class="adm-preview-label">모집 기간</div><div class="adm-preview-value">'+esc(adm.period)+'</div></div></div>' : '')
         + '</div>'
-        + '<a class="info-link-btn cloud-link" href="admissions.html' + qs + '">자세히 보기 →</a>';
+        + admLinkHtml;
     }
   }
   var dirSec = document.getElementById('directionsSec');
@@ -2767,8 +2806,8 @@ function initConsultationForm(client, centerId){
   var doneWrap = document.getElementById('cslDoneWrap');
 
   function openModal(){
-    if (isPreviewMode){
-      alert(PREVIEW_MESSAGE);
+    if (isPreviewMode || isReviewMode){
+      alert(isReviewMode ? REVIEW_MESSAGE : PREVIEW_MESSAGE);
       return;
     }
     overlay.classList.add('open');
@@ -2787,8 +2826,8 @@ function initConsultationForm(client, centerId){
   form.addEventListener('submit', async function(e){
     e.preventDefault();
     errorEl.textContent = '';
-    if (isPreviewMode){
-      alert(PREVIEW_MESSAGE);
+    if (isPreviewMode || isReviewMode){
+      alert(isReviewMode ? REVIEW_MESSAGE : PREVIEW_MESSAGE);
       return;
     }
 
