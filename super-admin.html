@@ -212,8 +212,18 @@
   .center-card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:10px}
   .center-name{font-size:1.06rem;font-weight:900;line-height:1.3}
   .center-actions{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:14px;flex-wrap:wrap}
-  .center-actions a{font-size:.84rem;font-weight:900;color:var(--pink-deep);text-decoration:none}
-  .center-actions a:hover{text-decoration:underline}
+  .center-link-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-width:0}
+  .center-action-btn{
+    display:inline-flex;align-items:center;justify-content:center;min-height:34px;
+    border-radius:999px;padding:7px 12px;border:1.5px solid var(--line);
+    background:#fff;color:var(--ink-soft);font-size:.8rem;font-weight:900;
+    text-decoration:none;cursor:pointer;white-space:nowrap;
+  }
+  .center-action-btn.primary{border-color:rgba(255,127,168,.36);color:var(--pink-deep);background:#fff6fa}
+  .center-action-btn:hover{text-decoration:none;transform:translateY(-1px)}
+  .center-action-btn:disabled,.center-action-btn.disabled{
+    opacity:.5;cursor:not-allowed;transform:none;background:#f7f1ed;color:var(--ink-soft);
+  }
   .toggle{display:inline-flex;align-items:center;gap:8px;font-size:.8rem;font-weight:900;color:var(--ink-soft);cursor:pointer}
   .toggle input{position:absolute;opacity:0;pointer-events:none}
   .toggle-track{width:42px;height:24px;border-radius:999px;background:#dfd7d1;position:relative;transition:background .18s ease}
@@ -519,7 +529,7 @@
         </div>
         <div class="link-url">
           <input type="text" id="centerUrlInput" readonly>
-          <a class="btn ghost" id="viewCenterBtn" target="_blank" rel="noopener">원 페이지 보기</a>
+          <a class="btn ghost" id="viewCenterBtn" target="_blank" rel="noopener">관리자 미리보기</a>
         </div>
       </div>
 
@@ -1186,6 +1196,12 @@
   var CENTER_FILTERS = ['all', 'published', 'draft'];
   var CENTER_FILTER_LABELS = { all:'전체', published:'공개', draft:'비공개' };
   var CENTER_STATUS_LABELS = { draft:'비공개', published:'공개', archived:'보관됨' };
+  var CENTER_TEMPLATE_LABELS = {
+    sunshine: '햇살형',
+    forest: '숲속형',
+    carnival: '카니발형',
+    gallery: '갤러리형'
+  };
 
   function statusBadge(status){
     var s = status || 'new';
@@ -1195,6 +1211,10 @@
   function centerStatusBadge(status){
     var s = status || 'draft';
     return '<span class="badge ' + esc(s) + '">' + esc(CENTER_STATUS_LABELS[s] || s) + '</span>';
+  }
+
+  function centerTemplateLabel(template){
+    return CENTER_TEMPLATE_LABELS[template] || template || '기본 템플릿';
   }
 
   function fmtDate(ts){
@@ -1344,7 +1364,8 @@
     centerList.innerHTML = rows.map(function(c){
       var toggleable = c.status === 'draft' || c.status === 'published';
       var published = c.status === 'published';
-      var url = templatePageUrl(c.template, c.slug, c.status);
+      var previewUrl = adminPreviewUrl(c.template, c.slug);
+      var publicUrl = publicPageUrl(c.template, c.slug);
       return '<article class="center-card" data-center-id="' + esc(c.id) + '">' +
         '<div class="center-card-head">' +
           '<div class="center-name">' + esc(c.name) + '</div>' +
@@ -1352,12 +1373,20 @@
         '</div>' +
         '<div class="app-meta">' +
           '<div><b>slug</b> ' + esc(c.slug) + '</div>' +
-          '<div><b>template</b> ' + esc(c.template) + '</div>' +
-          '<div><b>owner_id</b> ' + (c.owner_id ? '연결됨' : '미연결') + '</div>' +
+          '<div><b>템플릿</b> ' + esc(centerTemplateLabel(c.template)) + '</div>' +
+          '<div><b>원장 연결</b> ' + (c.owner_id ? '원장 연결됨' : '원장 미연결') + '</div>' +
         '</div>' +
         '<div class="app-date">생성일 ' + esc(fmtDate(c.created_at)) + '</div>' +
         '<div class="center-actions">' +
-          '<a href="' + esc(url) + '" target="_blank" rel="noopener">원 페이지 보기</a>' +
+          '<div class="center-link-actions">' +
+            '<a class="center-action-btn" href="' + esc(previewUrl) + '" target="_blank" rel="noopener">관리자 미리보기</a>' +
+            (published
+              ? '<a class="center-action-btn primary" href="' + esc(publicUrl) + '" target="_blank" rel="noopener">공개 페이지 보기</a>'
+              : '<button type="button" class="center-action-btn disabled" disabled>공개 후 사용 가능</button>') +
+            (published
+              ? '<button type="button" class="center-action-btn" data-copy-public-url="' + esc(publicUrl) + '">고객 공유 링크 복사</button>'
+              : '<button type="button" class="center-action-btn disabled" disabled>공개 후 공유 가능</button>') +
+          '</div>' +
           '<label class="toggle' + (toggleable ? '' : ' disabled') + '">' +
             '<input type="checkbox" data-center-toggle="' + esc(c.id) + '"' + (published ? ' checked' : '') + (toggleable ? '' : ' disabled') + '>' +
             '<span class="toggle-track"></span>' +
@@ -1374,6 +1403,18 @@
     currentCenterFilter = btn.getAttribute('data-center-filter');
     renderCenterFilters();
     renderCenterList();
+  });
+
+  centerList.addEventListener('click', function(e){
+    var btn = e.target.closest('[data-copy-public-url]');
+    if (!btn) return;
+    var url = btn.getAttribute('data-copy-public-url');
+    copyText(url, function(ok){
+      centerListStatus.textContent = ok
+        ? '고객 공유 링크를 복사했습니다.'
+        : '복사에 실패했습니다. 공개 페이지 보기 링크를 직접 복사해 주세요.';
+      centerListStatus.className = ok ? 'msg ok' : 'msg error';
+    });
   });
 
   centerList.addEventListener('change', async function(e){
@@ -1450,9 +1491,12 @@
   }
 
   // ── 실제 원 생성 영역 ──
-  function templatePageUrl(template, slug, status){
-    var param = (status === 'published') ? 'slug' : 'preview_center';
-    return 'https://' + SITE_ORIGIN + '/template-' + encodeURIComponent(template) + '.html?' + param + '=' + encodeURIComponent(slug);
+  function adminPreviewUrl(template, slug){
+    return 'https://' + SITE_ORIGIN + '/template-' + encodeURIComponent(template) + '.html?preview_center=' + encodeURIComponent(slug);
+  }
+
+  function publicPageUrl(template, slug){
+    return 'https://' + SITE_ORIGIN + '/template-' + encodeURIComponent(template) + '.html?slug=' + encodeURIComponent(slug);
   }
 
   function suggestSlug(){
@@ -1469,6 +1513,32 @@
 
   function canStartOnboarding(status){
     return status === 'new' || status === 'setting';
+  }
+
+  function copyText(text, callback){
+    if (navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(function(){
+        callback(true);
+      }).catch(function(){
+        fallbackCopy();
+      });
+      return;
+    }
+    fallbackCopy();
+
+    function fallbackCopy(){
+      var ta = document.createElement('textarea');
+      ta.value = text;
+      ta.setAttribute('readonly', '');
+      ta.style.position = 'fixed';
+      ta.style.left = '-9999px';
+      document.body.appendChild(ta);
+      ta.select();
+      var copied = false;
+      try { copied = document.execCommand('copy'); } catch(_e){ copied = false; }
+      document.body.removeChild(ta);
+      callback(copied);
+    }
   }
 
   function canRejectApplication(status){
@@ -1598,7 +1668,7 @@
       centerUrlInput.value = '원 정보를 불러오지 못했습니다.';
       return;
     }
-    var url = templatePageUrl(res.data.template, res.data.slug, res.data.status);
+    var url = adminPreviewUrl(res.data.template, res.data.slug);
     createdCenterStatus.innerHTML = centerStatusBadge(res.data.status);
     centerUrlInput.value = url;
     viewCenterBtn.href = url;
@@ -1658,7 +1728,7 @@
     createdBox.hidden = false;
     doneBtn.hidden = true;
     // 생성 직후 원은 항상 draft(비공개) 이므로 preview_center 링크로 연결한다.
-    var url = templatePageUrl(res.data.template, res.data.slug, 'draft');
+    var url = adminPreviewUrl(res.data.template, res.data.slug);
     createdCenterStatus.innerHTML = centerStatusBadge('draft');
     centerUrlInput.value = url;
     viewCenterBtn.href = url;
