@@ -475,9 +475,23 @@
         var client  = await ensureSupabase();
         var session = (await client.auth.getSession()).data.session;
         if (session){
+          var targetRes = await client.from('centers')
+            .select('id')
+            .eq('slug', slug)
+            .eq('owner_id', session.user.id)
+            .maybeSingle();
+          if (targetRes.error) throw targetRes.error;
+          if (!targetRes.data){
+            openDecideModal(t, 'error', '변경할 원을 찾을 수 없어요. 관리자 화면에서 다시 시도해 주세요.');
+            return;
+          }
+
           var res = await client.from('centers')
             .update({ template: t.key })
-            .eq('owner_id', session.user.id);
+            .eq('id', targetRes.data.id)
+            .eq('owner_id', session.user.id)
+            .select('id')
+            .single();
           if (res.error) throw res.error;
           openDecideModal(t, 'ok', '템플릿이 변경됐어요');
           return;

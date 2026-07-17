@@ -266,6 +266,13 @@
   .editing-badge.template{
     background:#F2EEFF;color:#7A61C7;border-color:rgba(122,97,199,.22);
   }
+  .current-template-badge{
+    display:inline-flex;align-items:center;justify-content:center;
+    min-height:34px;border-radius:999px;padding:7px 13px;
+    background:#F7FBF3;color:#6F8F61;font-size:.82rem;font-weight:900;
+    border:1.5px solid rgba(156,184,154,.28);
+    white-space:nowrap;
+  }
   .edit-target-actions{display:flex;align-items:center;gap:8px;flex:0 0 auto}
   .edit-target-actions .btn{gap:6px;font-weight:800}
 
@@ -486,6 +493,7 @@
           <select class="edit-target-select" id="editTargetSelect" aria-label="편집 대상 선택"></select>
         </div>
         <span class="editing-badge" id="editingBadge">지금 편집 중: 내 원</span>
+        <span class="current-template-badge" id="currentTemplateBadge" hidden></span>
       </div>
       <div class="edit-target-actions">
         <button type="button" class="btn ghost" id="changeTemplateBtn"><i class="ti ti-template" aria-hidden="true"></i>템플릿 변경</button>
@@ -885,6 +893,7 @@
   var editTargetBar    = document.getElementById('editTargetBar');
   var editTargetSelect = document.getElementById('editTargetSelect');
   var editingBadge     = document.getElementById('editingBadge');
+  var currentTemplateBadge = document.getElementById('currentTemplateBadge');
   var loginForm    = document.getElementById('loginForm');
   var loginError   = document.getElementById('loginError');
   var logoutBtn    = document.getElementById('logoutBtn');
@@ -1004,11 +1013,23 @@
     carnival: '카니발 템플릿',
     gallery: '갤러리 템플릿'
   };
+  var TEMPLATE_DISPLAY_LABELS = {
+    sunshine: '햇살형',
+    forest: '숲속형',
+    carnival: '카니발형',
+    gallery: '갤러리형'
+  };
 
   function currentTemplateFile(){
     if (!currentCenter) return 'template-sunshine.html';
     var key = currentCenter.template || currentCenter.template_id || (currentEditTarget && currentEditTarget.templateId) || 'sunshine';
     return TEMPLATE_FILES[key] || 'template-sunshine.html';
+  }
+
+  function currentTemplateLabel(){
+    if (!currentCenter) return '기본 템플릿';
+    var key = currentCenter.template || currentCenter.template_id || (currentEditTarget && currentEditTarget.templateId) || 'sunshine';
+    return TEMPLATE_DISPLAY_LABELS[key] || key || '기본 템플릿';
   }
 
   function isTemplateMode(){
@@ -3339,6 +3360,10 @@
     if (editingBadge) {
       editingBadge.textContent = '지금 편집 중: ' + (templateMode ? editTargetLabel() : '내 원' + (currentCenter && currentCenter.name ? ' · ' + currentCenter.name : ''));
       editingBadge.classList.toggle('template', templateMode);
+    }
+    if (currentTemplateBadge) {
+      currentTemplateBadge.hidden = templateMode || !currentCenter;
+      currentTemplateBadge.textContent = '현재 템플릿 · ' + currentTemplateLabel();
     }
     if (viewSiteBtn) {
       viewSiteBtn.hidden = templateMode;
