@@ -224,6 +224,18 @@
   .center-action-btn:disabled,.center-action-btn.disabled{
     opacity:.5;cursor:not-allowed;transform:none;background:#f7f1ed;color:var(--ink-soft);
   }
+  .center-owner-connect{
+    margin-top:14px;padding:13px;border:1.5px solid rgba(168,141,232,.22);
+    border-radius:14px;background:#fbf8ff;
+  }
+  .center-owner-connect-title{font-size:.84rem;font-weight:900;color:var(--ink);margin-bottom:8px}
+  .center-owner-connect-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .center-owner-connect input{
+    flex:1 1 210px;min-height:36px;border:1.5px solid var(--line);border-radius:999px;
+    padding:8px 12px;background:#fff;color:var(--ink);font-size:.84rem;outline:none;
+  }
+  .center-owner-connect .center-action-btn{min-height:36px}
+  .center-owner-connect-note{margin-top:7px;font-size:.78rem;color:var(--ink-soft);line-height:1.45}
   .toggle{display:inline-flex;align-items:center;gap:8px;font-size:.8rem;font-weight:900;color:var(--ink-soft);cursor:pointer}
   .toggle input{position:absolute;opacity:0;pointer-events:none}
   .toggle-track{width:42px;height:24px;border-radius:999px;background:#dfd7d1;position:relative;transition:background .18s ease}
@@ -1356,6 +1368,18 @@
     }).join('');
   }
 
+  function renderCenterOwnerConnect(c){
+    if (c.owner_id) return '';
+    return '<form class="center-owner-connect" data-center-owner-connect="' + esc(c.id) + '">' +
+      '<div class="center-owner-connect-title">원장 연결</div>' +
+      '<div class="center-owner-connect-row">' +
+        '<input type="email" name="owner_email" placeholder="원장 이메일" autocomplete="email" required>' +
+        '<button type="submit" class="center-action-btn primary">원장 연결하기</button>' +
+      '</div>' +
+      '<div class="center-owner-connect-note">이미 회원가입/로그인을 완료한 원장 계정만 연결할 수 있습니다.</div>' +
+    '</form>';
+  }
+
   function renderCenterList(){
     var rows = centerRows.filter(function(c){
       return currentCenterFilter === 'all' || c.status === currentCenterFilter;
@@ -1378,6 +1402,7 @@
           '<div><b>원장 연결</b> ' + (c.owner_id ? '원장 연결됨' : '원장 미연결') + '</div>' +
         '</div>' +
         '<div class="app-date">생성일 ' + esc(fmtDate(c.created_at)) + '</div>' +
+        renderCenterOwnerConnect(c) +
         '<div class="center-actions">' +
           '<div class="center-link-actions">' +
             '<a class="center-action-btn primary" href="' + esc(editorUrl) + '">에디터로 수정</a>' +
@@ -1408,15 +1433,63 @@
   });
 
   centerList.addEventListener('click', function(e){
-    var btn = e.target.closest('[data-copy-public-url]');
-    if (!btn) return;
-    var url = btn.getAttribute('data-copy-public-url');
+    var publicBtn = e.target.closest('[data-copy-public-url]');
+    if (!publicBtn) return;
+    var url = publicBtn.getAttribute('data-copy-public-url');
     copyText(url, function(ok){
       centerListStatus.textContent = ok
         ? '고객 공유 링크를 복사했습니다.'
         : '복사에 실패했습니다. 공개 페이지 보기 링크를 직접 복사해 주세요.';
       centerListStatus.className = ok ? 'msg ok' : 'msg error';
     });
+  });
+
+  centerList.addEventListener('submit', async function(e){
+    var form = e.target.closest('[data-center-owner-connect]');
+    if (!form) return;
+    e.preventDefault();
+
+    var centerId = form.getAttribute('data-center-owner-connect');
+    var center = centerRows.filter(function(c){ return c.id === centerId; })[0];
+    if (!center || center.owner_id) return;
+
+    var input = form.querySelector('input[name="owner_email"]');
+    var submitBtn = form.querySelector('button[type="submit"]');
+    var email = input ? input.value.trim().toLowerCase() : '';
+    if (!email){
+      centerListStatus.textContent = '원장 이메일을 입력해 주세요.';
+      centerListStatus.className = 'msg error';
+      return;
+    }
+
+    if (submitBtn) submitBtn.disabled = true;
+    centerListStatus.textContent = '원장 계정을 연결하는 중입니다...';
+    centerListStatus.className = 'msg';
+
+    var res = await client.rpc('connect_center_owner_by_email', {
+      p_center_id: centerId,
+      p_email: email
+    });
+
+    if (res.error){
+      if (submitBtn) submitBtn.disabled = false;
+      var message = res.error.message || '';
+      centerListStatus.textContent = /not found|찾을 수|가입 계정/i.test(message)
+        ? '해당 이메일의 가입 계정을 찾을 수 없어요. 원장님이 먼저 회원가입/로그인을 완료했는지 확인해주세요.'
+        : '원장 계정을 연결하지 못했습니다: ' + message;
+      centerListStatus.className = 'msg error';
+      return;
+    }
+
+    for (var i = 0; i < centerRows.length; i++){
+      if (centerRows[i].id === centerId){
+        centerRows[i].owner_id = res.data && res.data.owner_id ? res.data.owner_id : centerRows[i].owner_id;
+        break;
+      }
+    }
+    centerListStatus.textContent = '원장 계정을 연결했어요.';
+    centerListStatus.className = 'msg ok';
+    renderCenterList();
   });
 
   centerList.addEventListener('change', async function(e){
