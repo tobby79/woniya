@@ -309,6 +309,9 @@
   .class-card-meta,.class-detail-meta,.invite-history-meta{margin-top:4px;font-size:.82rem;color:var(--ink-soft)}
   .class-card-actions,.class-detail-actions{display:flex;align-items:center;gap:6px;flex:0 0 auto;min-width:max-content;max-width:100%;flex-wrap:nowrap;justify-content:flex-end}
   .class-card-actions .class-mini-btn,.class-detail-actions .class-mini-btn{flex:0 0 auto}
+  .class-create-box{display:flex;align-items:flex-end;gap:10px;flex-wrap:wrap;margin:12px 0 18px;padding:14px;background:var(--cream);border:1.5px solid #f1e9e0;border-radius:18px}
+  .class-create-box .field{flex:1 1 220px;margin-bottom:0}
+  .class-create-box .btn{width:auto;flex:0 0 auto}
   .status-pill{display:inline-flex;align-items:center;border-radius:99px;padding:4px 10px;font-size:.75rem;font-weight:800;white-space:nowrap}
   .status-pill.assigned{background:#EDF7EE;color:#4F8B5B}
   .status-pill.pending{background:#FFF4D7;color:#A97811}
@@ -708,6 +711,14 @@
         <div class="section-eyebrow">반 관리</div>
         <h2 class="section-title" style="margin-top:6px">선생님 초대</h2>
 
+        <form class="class-create-box" id="classCreateForm">
+          <div class="field">
+            <label for="classCreateName">반 이름</label>
+            <input type="text" id="classCreateName" autocomplete="off" placeholder="예: 햇살반">
+          </div>
+          <button type="submit" class="btn ghost" id="classCreateSubmit">반 만들기</button>
+        </form>
+        <div class="msg" id="classCreateStatus"></div>
         <div class="class-manager-list" id="classManagerList"></div>
         <div class="msg" id="classManagerStatus"></div>
       </div>
@@ -946,6 +957,10 @@
   var classManagerList   = document.getElementById('classManagerList');
   var classManagerStatus = document.getElementById('classManagerStatus');
   var classInviteDetail  = document.getElementById('classInviteDetail');
+  var classCreateForm    = document.getElementById('classCreateForm');
+  var classCreateName    = document.getElementById('classCreateName');
+  var classCreateSubmit  = document.getElementById('classCreateSubmit');
+  var classCreateStatus  = document.getElementById('classCreateStatus');
   var teacherInviteModal = document.getElementById('teacherInviteModal');
   var teacherInviteForm  = document.getElementById('teacherInviteForm');
   var teacherInviteClassId = document.getElementById('teacherInviteClassId');
@@ -974,6 +989,7 @@
   var currentCenter = null;
   var currentOwnedCenter = null;
   var currentEditTarget = null;
+  var currentAdminSession = null;
   var isSuperAdmin = false;
   var editTargetOptions = [];
   var isLoadingTarget = false;
@@ -988,6 +1004,7 @@
   var parentEnrollmentRows = [];
   var classMiniRows = [];
   var classMiniCreatingIds = {};
+  var isCreatingClassRow = false;
   var selectedTeacherClassId = null;
   var busRoutes = [];
   var busStopsByRoute = {};
@@ -2358,6 +2375,8 @@
   }
 
   function renderClassManager(){
+    if (classCreateForm) classCreateForm.hidden = !canCreateClassForCurrentCenter();
+    if (classCreateSubmit) classCreateSubmit.textContent = classRows.length ? '반 추가' : '반 만들기';
     if (!classRows.length) {
       classManagerList.innerHTML = '<div class="no-center">등록된 반이 없습니다.</div>';
       classInviteDetail.hidden = true;
@@ -2370,6 +2389,62 @@
     }
     classManagerList.innerHTML = classRows.map(renderClassCard).join('');
     renderClassInviteDetail();
+  }
+
+  function canCreateClassForCurrentCenter(){
+    return !!(
+      currentAdminSession &&
+      currentAdminSession.user &&
+      currentCenter &&
+      currentCenter.owner_id === currentAdminSession.user.id &&
+      !isTemplateMode()
+    );
+  }
+
+  function setClassCreateStatus(message, isError){
+    if (!classCreateStatus) return;
+    classCreateStatus.innerHTML = escWithBr(message || '');
+    classCreateStatus.className = 'msg' + (isError ? ' error' : (message ? ' ok' : ''));
+  }
+
+  async function createClassRow(){
+    if (isCreatingClassRow) return;
+    var name = classCreateName ? classCreateName.value.trim() : '';
+    if (!name) {
+      setClassCreateStatus('반 이름을 입력해 주세요.', true);
+      if (classCreateName) classCreateName.focus();
+      return;
+    }
+    if (!canCreateClassForCurrentCenter()) {
+      setClassCreateStatus('현재 로그인한 원장이 소유한 원에서만 반을 만들 수 있습니다.', true);
+      return;
+    }
+
+    isCreatingClassRow = true;
+    if (classCreateSubmit) classCreateSubmit.disabled = true;
+    setClassCreateStatus('반을 만드는 중입니다.', false);
+
+    try {
+      var insertRes = await client.from('classes')
+        .insert({
+          center_id: currentCenter.id,
+          name: name
+        })
+        .select('id')
+        .single();
+      if (insertRes.error) throw insertRes.error;
+
+      if (classCreateName) classCreateName.value = '';
+      setClassCreateStatus('반이 만들어졌습니다.', false);
+      await loadClassManagerTab();
+    } catch (err) {
+      logAdminError('createClassRow', err);
+      setClassCreateStatus(errorMessage(err), true);
+    } finally {
+      isCreatingClassRow = false;
+      if (classCreateSubmit) classCreateSubmit.disabled = false;
+      renderClassManager();
+    }
   }
 
   async function loadClassManagerTab(){
@@ -2652,6 +2727,13 @@
       .eq('id', enrollmentId);
     if (res.error) throw res.error;
     await loadClassManagerTab();
+  }
+
+  if (classCreateForm) {
+    classCreateForm.addEventListener('submit', function(e){
+      e.preventDefault();
+      createClassRow();
+    });
   }
 
   classManagerList.addEventListener('click', function(e){
@@ -3682,12 +3764,14 @@
     loginError.textContent = '';
     currentCenter = null;
     currentEditTarget = null;
+    currentAdminSession = null;
     isSuperAdmin = false;
     editTargetOptions = [];
     markSaved();
   }
 
   function showLoggedIn(session){
+    currentAdminSession = session;
     loginView.hidden = true;
     adminView.hidden = false;
     whoBox.hidden = false;
