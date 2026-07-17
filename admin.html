@@ -315,10 +315,18 @@
   .status-pill{display:inline-flex;align-items:center;border-radius:99px;padding:4px 10px;font-size:.75rem;font-weight:800;white-space:nowrap}
   .status-pill.assigned{background:#EDF7EE;color:#4F8B5B}
   .status-pill.pending{background:#FFF4D7;color:#A97811}
+  .status-pill.sending{background:#EAF3FC;color:#4879A8}
+  .status-pill.sent{background:#E8F7F3;color:#397E70}
+  .status-pill.failed{background:#FCEBEC;color:#A84F58}
   .status-pill.revoked{background:#F2F0EE;color:#7B716A}
   .status-pill.empty{background:#FFF1EA;color:var(--coral-deep)}
   .invite-history-list{display:flex;flex-direction:column;gap:10px;margin-top:12px}
   .invite-history-email{font-weight:800;color:var(--ink);word-break:break-all}
+  .invite-history-error{margin-top:10px;padding:10px 12px;border-radius:10px;background:#FFF4F3;color:#9A4C50;font-size:.82rem;line-height:1.55}
+  .invite-history-error.account{background:#FFF7E8;color:#8A681D}
+  .teacher-assignment-meta{margin-top:14px;padding-top:14px;border-top:1px solid #eee3da;color:var(--ink-soft);font-size:.84rem;line-height:1.6}
+  .teacher-assignment-meta strong{color:var(--ink)}
+  .teacher-assignment-email{word-break:break-all}
   .parent-code-box{margin-top:12px;background:#fff8f5;border:1.5px solid #ffe1d6;border-radius:18px;padding:16px;text-align:center}
   .parent-code-value{font-family:var(--display);font-size:1.7rem;font-weight:800;letter-spacing:.08em;color:var(--coral-deep);word-break:break-all}
   .parent-code-note{margin-top:5px;font-size:.82rem;color:var(--ink-soft)}
@@ -436,6 +444,7 @@
     .tab-bar{top:112px;padding:12px 18px 10px;margin:0 -18px 22px}
     .tab-btn{min-height:40px;padding:9px 14px}
     .class-card-head,.class-detail-head{flex-direction:column}
+    .invite-history-row{flex-direction:column}
     .class-card-actions,.class-detail-actions{width:100%;min-width:0;justify-content:flex-start;flex-wrap:wrap}
     .class-card-actions .btn,.class-detail-actions .btn{flex:1 1 150px}
     .class-card-actions .class-mini-btn,.class-detail-actions .class-mini-btn{flex:0 1 150px}
@@ -1005,6 +1014,7 @@
   var classMiniRows = [];
   var classMiniCreatingIds = {};
   var isCreatingClassRow = false;
+  var isTeacherInviteSubmitting = false;
   var selectedTeacherClassId = null;
   var busRoutes = [];
   var busStopsByRoute = {};
@@ -1017,6 +1027,7 @@
   var TYPE_LABELS = { hero:'대표', day_story:'하루', teacher:'교사', facility:'시설' };
   var KIND_LABELS = { consult:'상담', waiting:'대기', info_session:'설명회' };
   var TEACHER_INVITE_STATUS_LABELS = { pending:'대기중', accepted:'수락됨', revoked:'취소됨' };
+  var TEACHER_DELIVERY_STATUS_LABELS = { sending:'발송 중', sent:'발송 완료', failed:'발송 실패', not_sent:'발송 대기' };
   var CLASS_INVITE_STATUS_LABELS = { active:'활성', expired:'만료', revoked:'폐기' };
   var CLASS_ENROLLMENT_STATUS_LABELS = { pending:'승인 대기', approved:'승인됨', rejected:'거절됨' };
   var ADMIN_INITIAL_SLUG = new URLSearchParams(window.location.search).get('slug');
@@ -2206,6 +2217,52 @@
     return 'empty';
   }
 
+  function teacherInviteDisplayState(row){
+    row = row || {};
+    if (row.status === 'accepted') return { label: '수락됨', className: 'assigned' };
+    if (row.status === 'revoked') return { label: '취소됨', className: 'revoked' };
+    if (row.status === 'pending') {
+      if (row.delivery_status === 'sending') return { label: TEACHER_DELIVERY_STATUS_LABELS.sending, className: 'sending' };
+      if (row.delivery_status === 'sent') return { label: TEACHER_DELIVERY_STATUS_LABELS.sent, className: 'sent' };
+      if (row.delivery_status === 'failed') return { label: TEACHER_DELIVERY_STATUS_LABELS.failed, className: 'failed' };
+      return { label: TEACHER_DELIVERY_STATUS_LABELS.not_sent, className: 'pending' };
+    }
+    return { label: inviteStatusLabel(row.status) || '상태 확인 필요', className: inviteStatusClass(row.status) };
+  }
+
+  function formatAdminDateTime(value){
+    if (!value) return '';
+    var date = new Date(value);
+    return Number.isNaN(date.getTime()) ? '' : date.toLocaleString('ko-KR');
+  }
+
+  function pendingTeacherInviteForClass(classId){
+    return invitesForClass(classId).find(function(row){ return row.status === 'pending'; });
+  }
+
+  function acceptedTeacherInviteForClass(classId){
+    return invitesForClass(classId).find(function(row){ return row.status === 'accepted'; });
+  }
+
+  function teacherInviteActionLabel(classId){
+    return pendingTeacherInviteForClass(classId) ? '다른 이메일로 초대' : '선생님 초대';
+  }
+
+  function teacherInviteErrorNotice(errorCode){
+    if (errorCode === 'auth_user_already_exists') {
+      return '이미 원이야에 가입된 이메일입니다. 새 초대 메일로는 담당 교사 연결을 완료할 수 없습니다.';
+    }
+    return '초대 메일 발송에 실패했습니다. 잠시 후 다시 시도해 주세요.';
+  }
+
+  function canRetryTeacherInvite(row){
+    var assignedClass = classRows.find(function(item){ return String(item.id) === String(row.class_id); });
+    return (!assignedClass || !assignedClass.teacher_id) &&
+      row.status === 'pending' &&
+      row.delivery_status === 'failed' &&
+      row.last_send_error_code !== 'auth_user_already_exists';
+  }
+
   function invitesForClass(classId){
     return teacherInviteRows.filter(function(row){ return row.class_id === classId; });
   }
@@ -2224,10 +2281,6 @@
 
   function hasClassMini(classId){
     return classMiniRows.some(function(row){ return String(row.class_id) === String(classId); });
-  }
-
-  function hasPendingInvite(classId){
-    return invitesForClass(classId).some(function(row){ return row.status === 'pending'; });
   }
 
   function classInviteStatusLabel(status){
@@ -2250,13 +2303,16 @@
 
   function renderClassCard(row){
     var isSelected = selectedTeacherClassId === row.id;
-    var pending = hasPendingInvite(row.id);
+    var pending = pendingTeacherInviteForClass(row.id);
+    var pendingState = pending ? teacherInviteDisplayState(pending) : null;
     var badge = row.teacher_id
-      ? '<span class="status-pill assigned">선생님 배정됨</span>'
-      : (pending ? '<span class="status-pill pending">초대 대기중</span>' : '<span class="status-pill empty">미배정</span>');
+      ? '<span class="status-pill assigned">담당 교사 배정 완료</span>'
+      : (pendingState
+        ? '<span class="status-pill ' + esc(pendingState.className) + '">' + esc(pendingState.label) + '</span>'
+        : '<span class="status-pill empty">담당 교사 미배정</span>');
     var action = row.teacher_id
       ? ''
-      : '<button type="button" class="btn ghost class-invite-btn" data-class-id="' + esc(row.id) + '">선생님 초대</button>';
+      : '<button type="button" class="btn ghost class-invite-btn" data-class-id="' + esc(row.id) + '">' + esc(teacherInviteActionLabel(row.id)) + '</button>';
     var parentCodeAction = '<button type="button" class="btn ghost parent-code-btn" data-class-id="' + esc(row.id) + '">초대 코드 발급</button>';
     var miniAction = renderClassMiniAction(row.id, row.has_mini_home === true || hasClassMini(row.id));
 
@@ -2272,21 +2328,42 @@
   }
 
   function renderInviteHistory(row){
-    var when = row.invited_at ? new Date(row.invited_at).toLocaleString('ko-KR') : '';
-    var resend = row.status === 'pending'
-      ? '<button type="button" class="btn ghost class-resend-btn" data-class-id="' + esc(row.class_id) + '" data-email="' + esc(row.email) + '">재초대</button>'
+    var state = teacherInviteDisplayState(row);
+    var attemptCount = Number(row.send_attempt_count) || 0;
+    var timeParts = ['발송 시도 ' + attemptCount + '회'];
+    var sentAt = formatAdminDateTime(row.last_sent_at);
+    var attemptedAt = formatAdminDateTime(row.last_send_attempt_at);
+    var acceptedAt = formatAdminDateTime(row.accepted_at);
+    var invitedAt = formatAdminDateTime(row.invited_at);
+    if ((row.delivery_status === 'sending' || row.delivery_status === 'failed') && attemptedAt) {
+      timeParts.push('마지막 발송 시도 ' + attemptedAt);
+    } else if (sentAt) {
+      timeParts.push('발송 ' + sentAt);
+    } else if (attemptedAt) {
+      timeParts.push('마지막 발송 시도 ' + attemptedAt);
+    } else if (invitedAt) {
+      timeParts.push('초대 생성 ' + invitedAt);
+    }
+    if (row.status === 'accepted' && acceptedAt) timeParts.push('수락 ' + acceptedAt);
+
+    var resend = canRetryTeacherInvite(row)
+      ? '<button type="button" class="btn ghost class-resend-btn" data-class-id="' + esc(row.class_id) + '" data-email="' + esc(row.email) + '">다시 보내기</button>'
+      : '';
+    var errorNotice = row.delivery_status === 'failed'
+      ? '<div class="invite-history-error' + (row.last_send_error_code === 'auth_user_already_exists' ? ' account' : '') + '">' + esc(teacherInviteErrorNotice(row.last_send_error_code)) + '</div>'
       : '';
     return '<div class="invite-history-card">' +
       '<div class="invite-history-row">' +
         '<div>' +
           '<div class="invite-history-email">' + esc(row.email) + '</div>' +
-          '<div class="invite-history-meta">' + esc(when) + '</div>' +
+          '<div class="invite-history-meta">' + esc(timeParts.join(' · ')) + '</div>' +
         '</div>' +
         '<div class="class-card-actions">' +
-          '<span class="status-pill ' + esc(inviteStatusClass(row.status)) + '">' + esc(inviteStatusLabel(row.status)) + '</span>' +
+          '<span class="status-pill ' + esc(state.className) + '">' + esc(state.label) + '</span>' +
           resend +
         '</div>' +
       '</div>' +
+      errorNotice +
     '</div>';
   }
 
@@ -2335,11 +2412,20 @@
     }
 
     var invites = invitesForClass(row.id);
+    var acceptedInvite = row.teacher_id ? acceptedTeacherInviteForClass(row.id) : null;
     var parentInvites = parentInvitesForClass(row.id);
     var pendingEnrollments = parentEnrollmentsForClass(row.id).filter(function(item){ return item.status === 'pending'; });
     var action = row.teacher_id
-      ? '<span class="status-pill assigned">선생님 배정됨</span>'
-      : '<button type="button" class="btn ghost class-invite-btn" data-class-id="' + esc(row.id) + '">선생님 초대</button>';
+      ? '<span class="status-pill assigned">담당 교사 배정 완료</span>'
+      : '<button type="button" class="btn ghost class-invite-btn" data-class-id="' + esc(row.id) + '">' + esc(teacherInviteActionLabel(row.id)) + '</button>';
+    var assignmentMeta = row.teacher_id
+      ? '<div class="teacher-assignment-meta"><strong>담당 교사 배정 완료</strong>' +
+        (acceptedInvite
+          ? '<div class="teacher-assignment-email">' + esc(acceptedInvite.email) + '</div>' +
+            (acceptedInvite.accepted_at ? '<div>수락 ' + esc(formatAdminDateTime(acceptedInvite.accepted_at)) + '</div>' : '')
+          : '') +
+        '</div>'
+      : '';
     var parentAction = '<button type="button" class="btn ghost parent-code-btn" data-class-id="' + esc(row.id) + '">초대 코드 발급</button>';
     var miniAction = renderClassMiniAction(row.id, row.has_mini_home === true || hasClassMini(row.id));
 
@@ -2353,6 +2439,7 @@
           '</div>' +
           '<div class="class-detail-actions">' + action + miniAction + parentAction + '</div>' +
         '</div>' +
+        assignmentMeta +
         '<div class="class-subsection">' +
           '<label>선생님 초대 이력</label>' +
           (invites.length
@@ -2492,7 +2579,7 @@
       });
 
       var inviteRes = await client.from('teacher_invites')
-        .select('id,class_id,email,status,invited_at,accepted_at')
+        .select('id,class_id,email,status,invited_at,accepted_at,delivery_status,send_attempt_count,last_send_attempt_at,last_sent_at,last_send_error_code')
         .in('class_id', ids)
         .order('invited_at', { ascending: false });
 
@@ -2599,12 +2686,14 @@
     }
   }
 
-  function openTeacherInviteModal(classId, email){
+  function openTeacherInviteModal(classId, email, isRetry){
     teacherInviteClassId.value = classId || '';
     teacherInviteEmail.value = email || '';
+    teacherInviteEmail.readOnly = !!isRetry;
     teacherInviteMsg.textContent = '';
     teacherInviteMsg.className = 'msg';
-    teacherInviteSubmit.disabled = false;
+    teacherInviteSubmit.disabled = isTeacherInviteSubmitting;
+    teacherInviteSubmit.textContent = isRetry ? '다시 보내기' : '초대하기';
     teacherInviteModal.hidden = false;
     setTimeout(function(){ teacherInviteEmail.focus(); }, 0);
   }
@@ -2613,9 +2702,59 @@
     teacherInviteModal.hidden = true;
     teacherInviteForm.reset();
     teacherInviteClassId.value = '';
+    teacherInviteEmail.readOnly = false;
     teacherInviteMsg.textContent = '';
     teacherInviteMsg.className = 'msg';
-    teacherInviteSubmit.disabled = false;
+    teacherInviteSubmit.disabled = isTeacherInviteSubmitting;
+    teacherInviteSubmit.textContent = '초대하기';
+  }
+
+  function teacherInviteRequestErrorMessage(errorCode){
+    if (errorCode === 'auth_user_already_exists') return teacherInviteErrorNotice(errorCode);
+    if (errorCode === 'class_already_assigned') return '이미 담당 교사가 배정된 반입니다.';
+    if (errorCode === 'unauthorized') return '로그인 세션을 확인할 수 없습니다. 다시 로그인해 주세요.';
+    if (errorCode === 'forbidden') return '이 반에 선생님을 초대할 권한이 없습니다.';
+    if (errorCode === 'invalid_request') return '반과 이메일 정보를 다시 확인해 주세요.';
+    return teacherInviteErrorNotice(errorCode);
+  }
+
+  function teacherInviteSubmitErrorMessage(error){
+    if (error && error.code) return teacherInviteRequestErrorMessage(error.code);
+    var message = errorMessage(error);
+    if (message === '로그인 세션을 확인할 수 없습니다. 다시 로그인해 주세요.') return message;
+    return teacherInviteErrorNotice('');
+  }
+
+  function formatRetryAfter(seconds){
+    var value = Math.ceil(Number(seconds));
+    if (!Number.isFinite(value) || value <= 0) return '';
+    if (value < 60) return value + '초 후';
+    return Math.ceil(value / 60) + '분 후';
+  }
+
+  function teacherInviteSuccessMessage(data){
+    data = data || {};
+    var message = '초대 메일을 발송했습니다.';
+    if (data.dispatch_action === 'send' || !data.dispatch_action) {
+      message = '초대 메일을 발송했습니다.';
+    } else if (data.dispatch_action === 'in_progress') {
+      message = '초대 메일을 발송하고 있습니다. 잠시 후 상태를 확인해 주세요.';
+    } else if (data.dispatch_action === 'already_sent') {
+      message = '최근에 초대 메일을 이미 발송했습니다.';
+    }
+    var retryAfter = formatRetryAfter(data.retry_after_seconds);
+    if (retryAfter) message += ' 재발송은 ' + retryAfter + ' 다시 시도할 수 있습니다.';
+    return message;
+  }
+
+  async function reloadClassManagerAfterTeacherInvite(){
+    try {
+      await loadClassManagerTab();
+    } catch (err) {
+      logAdminError('reloadClassManagerAfterTeacherInvite', err);
+      classManagerStatus.textContent = '최신 초대 상태를 불러오지 못했습니다. 잠시 후 다시 확인해 주세요.';
+      classManagerStatus.className = 'msg error';
+    }
   }
 
   async function sendTeacherInvite(classId, email){
@@ -2641,7 +2780,10 @@
     }
 
     if (!res.ok || !data.success) {
-      throw new Error(data.error || '초대 메일 발송에 실패했습니다.');
+      var requestError = new Error(teacherInviteRequestErrorMessage(data.error));
+      requestError.code = data.error || '';
+      requestError.retry_after_seconds = data.retry_after_seconds;
+      throw requestError;
     }
     return data;
   }
@@ -2849,7 +2991,7 @@
 
     var resendBtn = e.target.closest('.class-resend-btn');
     if (resendBtn) {
-      openTeacherInviteModal(resendBtn.dataset.classId, resendBtn.dataset.email || '');
+      openTeacherInviteModal(resendBtn.dataset.classId, resendBtn.dataset.email || '', true);
     }
   });
 
@@ -2869,24 +3011,29 @@
 
   teacherInviteForm.addEventListener('submit', async function(e){
     e.preventDefault();
+    if (isTeacherInviteSubmitting) return;
     var classId = teacherInviteClassId.value;
     var email = teacherInviteEmail.value.trim();
     if (!classId || !email) return;
 
+    isTeacherInviteSubmitting = true;
     teacherInviteSubmit.disabled = true;
     teacherInviteMsg.textContent = '초대 메일을 보내는 중...';
     teacherInviteMsg.className = 'msg';
 
     try {
-      await sendTeacherInvite(classId, email);
-      teacherInviteMsg.textContent = '초대 메일을 발송했습니다.';
+      var result = await sendTeacherInvite(classId, email);
+      await reloadClassManagerAfterTeacherInvite();
+      teacherInviteMsg.textContent = teacherInviteSuccessMessage(result);
       teacherInviteMsg.className = 'msg ok';
-      await loadClassManagerTab();
     } catch (err) {
       logAdminError('sendTeacherInvite', err);
-      teacherInviteMsg.innerHTML = escWithBr(errorMessage(err));
+      await reloadClassManagerAfterTeacherInvite();
+      var retryAfter = formatRetryAfter(err.retry_after_seconds);
+      teacherInviteMsg.textContent = teacherInviteSubmitErrorMessage(err) + (retryAfter ? ' ' + retryAfter + ' 다시 시도해 주세요.' : '');
       teacherInviteMsg.className = 'msg error';
     } finally {
+      isTeacherInviteSubmitting = false;
       teacherInviteSubmit.disabled = false;
     }
   });
