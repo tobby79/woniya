@@ -272,6 +272,7 @@
 
   var currentSession = null;
   var currentClass = null;
+  var isCreatingClassMini = false;
   var activeTab = 'diary';
   var calendarDate = firstOfMonth(new Date());
   var selectedDate = toDateInput(new Date());
@@ -327,6 +328,49 @@
   function sameMonth(a, b){ return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth(); }
   function safeName(name){ return String(name || 'photo').replace(/[^a-zA-Z0-9._-]/g, '_'); }
 
+  function setMiniHomeLinkReady(){
+    miniHomeLink.hidden = false;
+    miniHomeLink.textContent = '우리 반 미니홈피 보기';
+    miniHomeLink.href = 'parent.html?class_id=' + encodeURIComponent(currentClass.id);
+    miniHomeLink.removeAttribute('aria-disabled');
+    miniHomeLink.removeAttribute('title');
+    miniHomeLink.dataset.action = 'open';
+  }
+
+  function setMiniHomeLinkMissing(){
+    miniHomeLink.hidden = false;
+    miniHomeLink.textContent = '우리 반 미니홈피 만들기';
+    miniHomeLink.removeAttribute('href');
+    miniHomeLink.removeAttribute('aria-disabled');
+    miniHomeLink.title = '기본 미니홈피를 먼저 만들어요.';
+    miniHomeLink.dataset.action = 'create';
+  }
+
+  function setMiniHomeLinkCreating(){
+    miniHomeLink.hidden = false;
+    miniHomeLink.textContent = '만드는 중...';
+    miniHomeLink.removeAttribute('href');
+    miniHomeLink.setAttribute('aria-disabled', 'true');
+    miniHomeLink.title = '미니홈피를 만드는 중입니다.';
+    miniHomeLink.dataset.action = 'creating';
+  }
+
+  async function findClassMiniRow(classId){
+    var res = await client.from('class_mini')
+      .select('id,class_id')
+      .eq('class_id', classId)
+      .maybeSingle();
+    if (res.error) throw res.error;
+    return res.data || null;
+  }
+
+  async function refreshMiniHomeState(){
+    var miniRow = await findClassMiniRow(currentClass.id);
+    if (miniRow) setMiniHomeLinkReady();
+    else setMiniHomeLinkMissing();
+    return miniRow;
+  }
+
   async function signedUrl(path){
     if (!path) return null;
     var res = await client.storage.from(BUCKET).createSignedUrl(path, 3600);
@@ -380,21 +424,49 @@
       return;
     }
     classNameTop.textContent = currentClass.name + (currentClass.age_label ? ' · ' + currentClass.age_label : '');
-    var miniRes = await client.from('class_mini').select('id').eq('class_id', currentClass.id).maybeSingle();
-    if (miniRes.error) throw miniRes.error;
-    miniHomeLink.hidden = false;
-    if (miniRes.data) {
-      miniHomeLink.href = 'parent.html?class_id=' + encodeURIComponent(currentClass.id);
-      miniHomeLink.removeAttribute('aria-disabled');
-      miniHomeLink.removeAttribute('title');
-    } else {
-      miniHomeLink.removeAttribute('href');
-      miniHomeLink.setAttribute('aria-disabled', 'true');
-      miniHomeLink.title = '아직 공개되지 않은 미니홈피예요.';
-    }
+    await refreshMiniHomeState();
     leadText.textContent = classNameTop.textContent + ' 미니홈피를 관리하고 있어요.';
     showPanel(appPanel);
     await loadActiveTab();
+  }
+
+  async function createClassMiniForTeacher(){
+    if (isCreatingClassMini || !currentClass || !currentSession || !currentSession.user) return;
+    if (currentClass.teacher_id !== currentSession.user.id) {
+      throw new Error('현재 로그인한 담임 교사의 담당 반인지 확인할 수 없습니다.');
+    }
+
+    isCreatingClassMini = true;
+    setMiniHomeLinkCreating();
+    leadText.textContent = '우리 반 미니홈피를 만드는 중입니다...';
+
+    try {
+      var insertRes = await client.from('class_mini')
+        .insert({ class_id: currentClass.id })
+        .select('id,class_id')
+        .single();
+
+      if (insertRes.error) {
+        var existing = await findClassMiniRow(currentClass.id);
+        if (existing) {
+          setMiniHomeLinkReady();
+          leadText.textContent = '이미 만들어진 미니홈피를 확인했습니다.';
+          return;
+        }
+        throw insertRes.error;
+      }
+
+      var miniRow = insertRes.data || await findClassMiniRow(currentClass.id);
+      if (!miniRow) throw new Error('미니홈피 생성 결과를 확인하지 못했습니다. 잠시 후 다시 시도해 주세요.');
+
+      setMiniHomeLinkReady();
+      leadText.textContent = '우리 반 미니홈피가 만들어졌습니다. 보기 버튼으로 확인할 수 있어요.';
+    } catch (err) {
+      await refreshMiniHomeState();
+      throw err;
+    } finally {
+      isCreatingClassMini = false;
+    }
   }
 
   async function loadPosts(type){
@@ -1151,8 +1223,18 @@
     logoutBtn.hidden = true;
     miniHomeLink.hidden = true;
     miniHomeLink.removeAttribute('href');
+    miniHomeLink.removeAttribute('data-action');
     classNameTop.textContent = '';
     showPanel(authPanel);
+  });
+
+  miniHomeLink.addEventListener('click', function(e){
+    if (miniHomeLink.dataset.action !== 'create') return;
+    e.preventDefault();
+    createClassMiniForTeacher().catch(function(err){
+      leadText.textContent = classNameTop.textContent + ' 미니홈피를 관리하고 있어요.';
+      alert(errorMessage(err));
+    });
   });
 
   byId('tabBar').addEventListener('click', async function(e){

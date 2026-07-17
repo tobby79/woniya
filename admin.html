@@ -987,6 +987,7 @@
   var parentInviteRows = [];
   var parentEnrollmentRows = [];
   var classMiniRows = [];
+  var classMiniCreatingIds = {};
   var selectedTeacherClassId = null;
   var busRoutes = [];
   var busStopsByRoute = {};
@@ -2221,10 +2222,13 @@
   }
 
   function renderClassMiniAction(classId, hasMiniHome){
+    if (classMiniCreatingIds[classId]) {
+      return '<button type="button" class="btn ghost class-mini-btn" disabled>만드는 중...</button>';
+    }
     if (hasMiniHome) {
       return '<button type="button" class="btn ghost class-mini-btn" data-mini-class-id="' + esc(classId) + '">우리 반 미니홈피</button>';
     }
-    return '<button type="button" class="btn ghost class-mini-btn" disabled title="아직 미니홈피가 준비되지 않았어요">아직 미니홈피가 준비되지 않았어요</button>';
+    return '<button type="button" class="btn ghost class-mini-create-btn" data-class-id="' + esc(classId) + '">미니홈피 만들기</button>';
   }
 
   function renderClassCard(row){
@@ -2460,6 +2464,66 @@
     renderClassManager();
   }
 
+  async function findClassMiniRow(classId){
+    var res = await client.from('class_mini')
+      .select('id,class_id')
+      .eq('class_id', classId)
+      .maybeSingle();
+    if (res.error) throw res.error;
+    return res.data || null;
+  }
+
+  function markClassMiniCreated(row){
+    if (!row || !row.class_id) return;
+    if (!hasClassMini(row.class_id)) classMiniRows.push(row);
+    classRows = classRows.map(function(item){
+      return String(item.id) === String(row.class_id)
+        ? Object.assign({}, item, { has_mini_home: true })
+        : item;
+    });
+  }
+
+  async function createClassMiniForClass(classId){
+    if (classMiniCreatingIds[classId]) return;
+    var row = classRows.find(function(item){ return String(item.id) === String(classId); });
+    if (!currentCenter || !row || String(row.center_id) !== String(currentCenter.id)) {
+      throw new Error('현재 선택한 원의 반인지 확인할 수 없습니다. 반 목록을 새로고침해 주세요.');
+    }
+
+    classMiniCreatingIds[classId] = true;
+    classManagerStatus.textContent = '미니홈피를 만드는 중입니다...';
+    classManagerStatus.className = 'msg';
+    renderClassManager();
+
+    try {
+      var insertRes = await client.from('class_mini')
+        .insert({ class_id: classId })
+        .select('id,class_id')
+        .single();
+
+      if (insertRes.error) {
+        var existing = await findClassMiniRow(classId);
+        if (existing) {
+          markClassMiniCreated(existing);
+          classManagerStatus.textContent = '이미 만들어진 미니홈피를 확인했습니다.';
+          classManagerStatus.className = 'msg ok';
+          return;
+        }
+        throw insertRes.error;
+      }
+
+      var miniRow = insertRes.data || await findClassMiniRow(classId);
+      if (!miniRow) throw new Error('미니홈피 생성 결과를 확인하지 못했습니다. 잠시 후 다시 시도해 주세요.');
+
+      markClassMiniCreated(miniRow);
+      classManagerStatus.textContent = '미니홈피가 만들어졌습니다. 이제 우리 반 미니홈피로 이동할 수 있어요.';
+      classManagerStatus.className = 'msg ok';
+    } finally {
+      delete classMiniCreatingIds[classId];
+      renderClassManager();
+    }
+  }
+
   function openTeacherInviteModal(classId, email){
     teacherInviteClassId.value = classId || '';
     teacherInviteEmail.value = email || '';
@@ -2591,6 +2655,18 @@
   }
 
   classManagerList.addEventListener('click', function(e){
+    var createMiniBtn = e.target.closest('.class-mini-create-btn');
+    if (createMiniBtn && createMiniBtn.dataset.classId) {
+      e.stopPropagation();
+      createClassMiniForClass(createMiniBtn.dataset.classId).catch(function(err){
+        logAdminError('createClassMiniForClass', err);
+        classManagerStatus.innerHTML = escWithBr(errorMessage(err));
+        classManagerStatus.className = 'msg error';
+        renderClassManager();
+      });
+      return;
+    }
+
     var miniBtn = e.target.closest('.class-mini-btn');
     if (miniBtn && miniBtn.dataset.miniClassId) {
       e.stopPropagation();
@@ -2623,6 +2699,17 @@
   });
 
   classInviteDetail.addEventListener('click', function(e){
+    var createMiniBtn = e.target.closest('.class-mini-create-btn');
+    if (createMiniBtn && createMiniBtn.dataset.classId) {
+      createClassMiniForClass(createMiniBtn.dataset.classId).catch(function(err){
+        logAdminError('createClassMiniForClass/detail', err);
+        classManagerStatus.innerHTML = escWithBr(errorMessage(err));
+        classManagerStatus.className = 'msg error';
+        renderClassManager();
+      });
+      return;
+    }
+
     var miniBtn = e.target.closest('.class-mini-btn');
     if (miniBtn && miniBtn.dataset.miniClassId) {
       location.href = 'parent.html?class_id=' + encodeURIComponent(miniBtn.dataset.miniClassId);
