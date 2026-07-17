@@ -274,6 +274,7 @@
   var currentClass = null;
   var isCreatingClassMini = false;
   var activeTab = 'diary';
+  var requestedClassId = new URLSearchParams(location.search).get('class_id') || '';
   var calendarDate = firstOfMonth(new Date());
   var selectedDate = toDateInput(new Date());
   var monthEvents = [];
@@ -409,13 +410,29 @@
   }
 
   async function loadTeacherClass(session){
-    var res = await client.from('classes')
-      .select('id,name,age_label,teacher_id,center_id')
-      .eq('teacher_id', session.user.id)
-      .order('created_at', { ascending:true })
-      .limit(1);
-    if (res.error) throw res.error;
-    currentClass = (res.data || [])[0] || null;
+    if (requestedClassId) {
+      var requestedRes = await client.from('classes')
+        .select('id,name,age_label,teacher_id,center_id')
+        .eq('id', requestedClassId)
+        .eq('teacher_id', session.user.id)
+        .maybeSingle();
+      if (requestedRes.error || !requestedRes.data) {
+        miniHomeLink.hidden = true;
+        miniHomeLink.removeAttribute('href');
+        pageNotice.innerHTML = escWithBr('이 반의 관리 권한을 확인할 수 없습니다.\n초대받은 계정으로 로그인했는지 확인해 주세요.');
+        showPanel(noticePanel);
+        return;
+      }
+      currentClass = requestedRes.data;
+    } else {
+      var res = await client.from('classes')
+        .select('id,name,age_label,teacher_id,center_id')
+        .eq('teacher_id', session.user.id)
+        .order('created_at', { ascending:true })
+        .limit(1);
+      if (res.error) throw res.error;
+      currentClass = (res.data || [])[0] || null;
+    }
     if (!currentClass) {
       miniHomeLink.hidden = true;
       miniHomeLink.removeAttribute('href');
