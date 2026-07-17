@@ -1366,6 +1366,7 @@
       var published = c.status === 'published';
       var previewUrl = adminPreviewUrl(c.template, c.slug);
       var publicUrl = publicPageUrl(c.template, c.slug);
+      var editorUrl = adminEditorUrl(c.slug);
       return '<article class="center-card" data-center-id="' + esc(c.id) + '">' +
         '<div class="center-card-head">' +
           '<div class="center-name">' + esc(c.name) + '</div>' +
@@ -1379,6 +1380,7 @@
         '<div class="app-date">생성일 ' + esc(fmtDate(c.created_at)) + '</div>' +
         '<div class="center-actions">' +
           '<div class="center-link-actions">' +
+            '<a class="center-action-btn primary" href="' + esc(editorUrl) + '">에디터로 수정</a>' +
             '<a class="center-action-btn" href="' + esc(previewUrl) + '" target="_blank" rel="noopener">관리자 미리보기</a>' +
             (published
               ? '<a class="center-action-btn primary" href="' + esc(publicUrl) + '" target="_blank" rel="noopener">공개 페이지 보기</a>'
@@ -1497,6 +1499,10 @@
 
   function publicPageUrl(template, slug){
     return 'https://' + SITE_ORIGIN + '/template-' + encodeURIComponent(template) + '.html?slug=' + encodeURIComponent(slug);
+  }
+
+  function adminEditorUrl(slug){
+    return 'admin.html?slug=' + encodeURIComponent(slug);
   }
 
   function suggestSlug(){

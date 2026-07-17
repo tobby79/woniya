@@ -1001,6 +1001,7 @@
   var TEACHER_INVITE_STATUS_LABELS = { pending:'대기중', accepted:'수락됨', revoked:'취소됨' };
   var CLASS_INVITE_STATUS_LABELS = { active:'활성', expired:'만료', revoked:'폐기' };
   var CLASS_ENROLLMENT_STATUS_LABELS = { pending:'승인 대기', approved:'승인됨', rejected:'거절됨' };
+  var ADMIN_INITIAL_SLUG = new URLSearchParams(window.location.search).get('slug');
   var TEMPLATE_FILES = {
     sunshine: 'template-sunshine.html',
     forest: 'template-forest.html',
@@ -3530,6 +3531,13 @@
     if (ownRes.error) logAdminError('loadAdminTargets/center', ownRes.error);
     currentOwnedCenter = ownRes.data || null;
 
+    var requestedCenter = null;
+    if (ADMIN_INITIAL_SLUG) {
+      var requestedRes = await client.from('centers').select('*').eq('slug', ADMIN_INITIAL_SLUG).maybeSingle();
+      if (requestedRes.error) logAdminError('loadAdminTargets/requestedCenter', requestedRes.error);
+      requestedCenter = requestedRes.data || null;
+    }
+
     var templateRes = await client.from('template_centers').select('*');
     if (templateRes.error) {
       logAdminError('loadAdminTargets/templates', templateRes.error);
@@ -3545,8 +3553,13 @@
       return order.indexOf(a.template_id) - order.indexOf(b.template_id);
     });
     editTargetOptions = [];
+    if (requestedCenter) {
+      editTargetOptions.push({ value:'center:' + requestedCenter.id, label:'원 · ' + (requestedCenter.name || requestedCenter.slug), type:'center', id:requestedCenter.id });
+    }
     if (currentOwnedCenter) {
-      editTargetOptions.push({ value:'center:' + currentOwnedCenter.id, label:'내 원', type:'center', id:currentOwnedCenter.id });
+      if (!requestedCenter || requestedCenter.id !== currentOwnedCenter.id) {
+        editTargetOptions.push({ value:'center:' + currentOwnedCenter.id, label:'내 원', type:'center', id:currentOwnedCenter.id });
+      }
     }
     templateRows.forEach(function(row){
       editTargetOptions.push({
