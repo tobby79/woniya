@@ -1,5 +1,7 @@
 -- Add an auditable class teacher assignment lifecycle and RPC-only writes.
 
+BEGIN;
+
 create table public.class_teacher_assignments (
   id uuid primary key default gen_random_uuid(),
   class_id uuid not null references public.classes(id) on delete cascade,
@@ -410,3 +412,5 @@ revoke all on function public.accept_teacher_invite() from public;
 revoke all on function public.accept_teacher_invite() from anon;
 revoke all on function public.accept_teacher_invite() from service_role;
 grant execute on function public.accept_teacher_invite() to authenticated;
+
+COMMIT;
