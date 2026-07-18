@@ -4,6 +4,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>원이야 - 선생님 초대 수락</title>
+<script>
+  if (new URLSearchParams(window.location.search).get('flow') === 'existing') {
+    document.documentElement.classList.add('existing-teacher-flow');
+  }
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Gaegu:wght@700&family=Gowun+Dodum&display=swap" rel="stylesheet">
@@ -39,13 +44,16 @@
   .back-link{font-size:.85rem;color:var(--coral-deep);text-decoration:none;font-weight:700}
 
   .wrap{max-width:480px;margin:0 auto;padding:46px 22px 70px}
+  .existing-initial-copy{display:none}
+  .existing-teacher-flow .new-initial-copy{display:none}
+  .existing-teacher-flow .existing-initial-copy{display:inline}
   .section-eyebrow{font-family:var(--hand);font-size:1.15rem;color:var(--sage);font-weight:700;text-align:center}
   .section-title{font-family:var(--display);font-size:1.72rem;margin:8px 0 22px;letter-spacing:-.5px;line-height:1.38;text-align:center}
   .lead{color:var(--ink-soft);font-size:.95rem;text-align:center;margin-bottom:24px}
   .panel{background:var(--paper);border-radius:24px;padding:26px;box-shadow:0 18px 44px -22px rgba(120,80,60,.35)}
   .field{margin-bottom:16px}
   label{display:block;font-size:.86rem;font-weight:700;color:var(--ink-soft);margin-bottom:6px}
-  input[type=password]{
+  input[type=email],input[type=password]{
     width:100%;border:1.5px solid #f1e9e0;border-radius:14px;padding:13px 16px;
     font-family:var(--body);font-size:.98rem;color:var(--ink);background:var(--cream);
     outline:none;transition:border-color .2s ease;
@@ -66,6 +74,12 @@
   .result-title{font-family:var(--display);font-size:1.28rem;text-align:center;margin-bottom:10px}
   .result-desc{text-align:center;color:var(--ink-soft);font-size:.94rem;line-height:1.7}
   .result-actions{margin-top:22px}
+  .account-email{margin:8px 0 16px;padding:12px;border-radius:12px;background:var(--cream);font-weight:700;text-align:center;word-break:break-all}
+  .account-note{font-size:.86rem;color:var(--ink-soft);line-height:1.65;text-align:center;margin-bottom:18px}
+  .panel-actions{display:flex;flex-direction:column;gap:10px}
+  .auth-divider{display:flex;align-items:center;gap:12px;margin:18px 0;color:var(--ink-soft);font-size:.82rem}
+  .auth-divider::before,.auth-divider::after{content:'';height:1px;flex:1;background:#e7dccf}
+  .btn.kakao{background:#FEE500;color:#191919;box-shadow:0 14px 28px -12px rgba(60,45,0,.35)}
 </style>
 </head>
 <body>
@@ -78,9 +92,18 @@
 </header>
 
 <main class="wrap">
-  <div class="section-eyebrow">선생님 초대</div>
-  <h1 class="section-title">초대를 확인하고<br>비밀번호를 설정해주세요</h1>
-  <p class="lead" id="leadText">초대 링크 확인 중입니다.</p>
+  <div class="section-eyebrow" id="pageEyebrow">
+    <span class="new-initial-copy">선생님 초대</span>
+    <span class="existing-initial-copy">기존 가입 교사 연결</span>
+  </div>
+  <h1 class="section-title" id="pageTitle">
+    <span class="new-initial-copy">초대를 확인하고<br>비밀번호를 설정해주세요</span>
+    <span class="existing-initial-copy">기존 계정으로 로그인하고<br>교사 초대를 수락해주세요</span>
+  </h1>
+  <p class="lead" id="leadText">
+    <span class="new-initial-copy">초대 링크 확인 중입니다.</span>
+    <span class="existing-initial-copy">기존 계정의 로그인 상태를 확인하고 있습니다.</span>
+  </p>
 
   <section class="panel" id="loadingPanel">
     <p class="msg">세션을 확인하고 있어요.</p>
@@ -101,11 +124,38 @@
     </form>
   </section>
 
+  <section class="panel" id="existingLoginPanel" hidden>
+    <form id="existingLoginForm">
+      <div class="field">
+        <label for="existingEmail">기존 계정 이메일</label>
+        <input type="email" id="existingEmail" required autocomplete="username">
+      </div>
+      <div class="field">
+        <label for="existingPassword">비밀번호</label>
+        <input type="password" id="existingPassword" required autocomplete="current-password">
+      </div>
+      <button type="submit" class="btn" id="existingLoginSubmit">기존 계정으로 로그인</button>
+      <div class="auth-divider"><span>또는</span></div>
+      <button type="button" class="btn kakao" id="existingKakaoLoginBtn">카카오로 로그인</button>
+      <div class="msg error" id="existingLoginMsg"></div>
+    </form>
+  </section>
+
+  <section class="panel" id="existingAcceptPanel" hidden>
+    <p class="account-note">로그인한 이메일과 일치하는 대기 중인 교사 초대를 수락합니다. 같은 이메일로 수락 가능한 초대가 여러 개라면 함께 연결될 수 있습니다.</p>
+    <div class="account-email" id="existingAccountEmail"></div>
+    <div class="panel-actions">
+      <button type="button" class="btn" id="existingAcceptBtn">이 계정으로 교사 초대 수락</button>
+      <button type="button" class="btn ghost" id="existingSwitchAccountBtn">다른 계정으로 로그인</button>
+    </div>
+    <div class="msg error" id="existingAcceptMsg"></div>
+  </section>
+
   <section class="panel" id="resultPanel" hidden>
     <div class="result-title" id="resultTitle"></div>
     <p class="result-desc" id="resultDesc"></p>
     <div class="result-actions">
-      <button type="button" class="btn ghost" id="classManageBtn" disabled>반 관리 화면 준비 중</button>
+      <button type="button" class="btn ghost" id="classManageBtn" disabled hidden>반 관리 화면 준비 중</button>
     </div>
   </section>
 </main>
@@ -116,16 +166,37 @@
 (function(){
   var cfg = window.__SUPABASE_CONFIG__;
   var client = supabase.createClient(cfg.url, cfg.anonKey);
+  var isExistingFlow = new URLSearchParams(window.location.search).get('flow') === 'existing';
+  var isPasswordSubmitting = false;
+  var isExistingLoginSubmitting = false;
+  var isKakaoLoginSubmitting = false;
+  var isAcceptingInvite = false;
+  var isSwitchingAccount = false;
+  var UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
+  var pageEyebrow = document.getElementById('pageEyebrow');
+  var pageTitle = document.getElementById('pageTitle');
   var leadText = document.getElementById('leadText');
   var loadingPanel = document.getElementById('loadingPanel');
   var passwordPanel = document.getElementById('passwordPanel');
+  var existingLoginPanel = document.getElementById('existingLoginPanel');
+  var existingAcceptPanel = document.getElementById('existingAcceptPanel');
   var resultPanel = document.getElementById('resultPanel');
   var passwordForm = document.getElementById('passwordForm');
   var passwordInput = document.getElementById('password');
   var passwordConfirmInput = document.getElementById('passwordConfirm');
   var passwordSubmit = document.getElementById('passwordSubmit');
   var passwordMsg = document.getElementById('passwordMsg');
+  var existingLoginForm = document.getElementById('existingLoginForm');
+  var existingEmail = document.getElementById('existingEmail');
+  var existingPassword = document.getElementById('existingPassword');
+  var existingLoginSubmit = document.getElementById('existingLoginSubmit');
+  var existingKakaoLoginBtn = document.getElementById('existingKakaoLoginBtn');
+  var existingLoginMsg = document.getElementById('existingLoginMsg');
+  var existingAccountEmail = document.getElementById('existingAccountEmail');
+  var existingAcceptBtn = document.getElementById('existingAcceptBtn');
+  var existingSwitchAccountBtn = document.getElementById('existingSwitchAccountBtn');
+  var existingAcceptMsg = document.getElementById('existingAcceptMsg');
   var resultTitle = document.getElementById('resultTitle');
   var resultDesc = document.getElementById('resultDesc');
   var classManageBtn = document.getElementById('classManageBtn');
@@ -143,11 +214,52 @@
   function showPanel(panel){
     loadingPanel.hidden = panel !== loadingPanel;
     passwordPanel.hidden = panel !== passwordPanel;
+    existingLoginPanel.hidden = panel !== existingLoginPanel;
+    existingAcceptPanel.hidden = panel !== existingAcceptPanel;
     resultPanel.hidden = panel !== resultPanel;
+  }
+
+  function showExistingLoadingCopy(){
+    pageEyebrow.textContent = '기존 가입 교사 연결';
+    pageTitle.innerHTML = '기존 계정으로 로그인하고<br>교사 초대를 수락해주세요';
+    leadText.textContent = '기존 계정의 로그인 상태를 확인하고 있습니다.';
+  }
+
+  function showNewInviteLoadingCopy(){
+    pageEyebrow.textContent = '선생님 초대';
+    pageTitle.innerHTML = '초대를 확인하고<br>비밀번호를 설정해주세요';
+    leadText.textContent = '초대 링크 확인 중입니다.';
+  }
+
+  function showExistingLogin(message){
+    pageEyebrow.textContent = '기존 가입 교사 연결';
+    pageTitle.innerHTML = '기존 계정으로 로그인하고<br>교사 초대를 수락해주세요';
+    leadText.textContent = '원이야에 가입된 교사 본인이 직접 로그인해야 연결할 수 있습니다.';
+    existingPassword.value = '';
+    existingLoginMsg.textContent = message || '';
+    existingLoginSubmit.disabled = false;
+    existingKakaoLoginBtn.disabled = false;
+    showPanel(existingLoginPanel);
+  }
+
+  function showExistingAcceptance(session){
+    if (!session || !session.user) {
+      showExistingLogin('로그인 세션을 확인할 수 없습니다. 다시 로그인해 주세요.');
+      return;
+    }
+    pageEyebrow.textContent = '기존 가입 교사 연결';
+    pageTitle.innerHTML = '로그인한 계정으로<br>교사 초대를 수락해주세요';
+    leadText.textContent = '원장님이 바로 배정하는 방식이 아니라, 교사 본인의 확인 후 담당 반에 연결됩니다.';
+    existingAccountEmail.textContent = session.user.email || '이메일을 확인할 수 없는 계정';
+    existingAcceptMsg.textContent = '';
+    existingAcceptBtn.disabled = false;
+    existingSwitchAccountBtn.disabled = false;
+    showPanel(existingAcceptPanel);
   }
 
   function disableClassManageButton(){
     classManageBtn.disabled = true;
+    classManageBtn.hidden = true;
     classManageBtn.textContent = '반 관리 화면 준비 중';
     classManageBtn.onclick = null;
   }
@@ -155,6 +267,7 @@
   function enableClassManageButton(classId){
     var url = 'class-admin.html?class_id=' + encodeURIComponent(classId);
     classManageBtn.disabled = false;
+    classManageBtn.hidden = false;
     classManageBtn.textContent = '우리 반 관리하러 가기';
     classManageBtn.onclick = function(){
       location.href = url;
@@ -178,88 +291,153 @@
     if (res.error) throw res.error;
     var rows = res.data || [];
     rows.sort(function(a, b){
-      return ids.indexOf(a.id) - ids.indexOf(b.id);
+      return ids.indexOf(String(a.id).toLowerCase()) - ids.indexOf(String(b.id).toLowerCase());
     });
     return rows;
   }
 
-  async function acceptInvite(){
-    disableClassManageButton();
-    var rpcRes = await client.rpc('accept_teacher_invite');
-    if (rpcRes.error) {
-      leadText.textContent = '초대 연결 중 문제가 생겼습니다.';
-      resultTitle.textContent = '연결하지 못했습니다';
-      resultDesc.innerHTML = escWithBr(rpcRes.error.message);
-      showPanel(resultPanel);
-      return;
-    }
+  function normalizedLinkedClassIds(data){
+    var values = data && Array.isArray(data.linked_classes) ? data.linked_classes : [];
+    var seen = new Set();
+    return values.reduce(function(ids, value){
+      if (typeof value !== 'string') return ids;
+      var id = value.trim().toLowerCase();
+      if (!UUID_PATTERN.test(id) || seen.has(id)) return ids;
+      seen.add(id);
+      ids.push(id);
+      return ids;
+    }, []);
+  }
 
-    var linked = rpcRes.data && Array.isArray(rpcRes.data.linked_classes)
-      ? rpcRes.data.linked_classes
-      : [];
-
-    if (!linked.length) {
-      leadText.textContent = '확인된 초대가 없습니다.';
-      resultTitle.textContent = '유효한 초대를 찾을 수 없습니다';
-      resultDesc.textContent = '원장님께 다시 초대를 요청해주세요.';
-      showPanel(resultPanel);
-      return;
-    }
-
-    var sessionRes = await client.auth.getSession();
-    if (sessionRes.error) {
-      leadText.textContent = '초대 연결 중 문제가 생겼습니다.';
-      resultTitle.textContent = '연결하지 못했습니다';
-      resultDesc.innerHTML = escWithBr(sessionRes.error.message);
-      showPanel(resultPanel);
-      return;
-    }
-    var session = sessionRes.data ? sessionRes.data.session : null;
-    if (!session || !session.user) {
-      leadText.textContent = '초대 연결 중 문제가 생겼습니다.';
-      resultTitle.textContent = '연결하지 못했습니다';
-      resultDesc.textContent = '로그인 세션을 확인하지 못했습니다. 초대받은 계정으로 다시 접속해 주세요.';
-      showPanel(resultPanel);
-      return;
-    }
-
-    var verifiedClasses = [];
-    try {
-      verifiedClasses = await verifiedTeacherClassesFor(linked, session.user.id);
-    } catch (err) {
-      leadText.textContent = '초대 수락 결과를 확인해주세요.';
-      resultTitle.textContent = '담당 반 연결 확인에 실패했습니다';
-      resultDesc.innerHTML = escWithBr('초대 수락은 처리되었지만 담당 반 연결을 확인하는 중 문제가 생겼습니다.\n' + (err && err.message ? err.message : String(err)));
-      showPanel(resultPanel);
-      return;
-    }
-    if (!verifiedClasses.length) {
-      leadText.textContent = '초대 수락 결과를 확인해주세요.';
-      resultTitle.textContent = '담당 반 연결을 확인하지 못했습니다';
-      resultDesc.textContent = '초대 수락은 처리되었지만 담당 반 연결을 확인하지 못했습니다. 원장에게 다시 확인해 주세요.';
-      showPanel(resultPanel);
-      return;
-    }
-
-    var firstClass = verifiedClasses[0];
-    var names = verifiedClasses.map(function(row){
-      return row.name || '이름 없는 반';
+  function linkedClassesMatchVerifiedRows(linkedIds, rows){
+    var verifiedIds = new Set((rows || []).reduce(function(ids, row){
+      var id = row && typeof row.id === 'string' ? row.id.trim().toLowerCase() : '';
+      if (UUID_PATTERN.test(id)) ids.push(id);
+      return ids;
+    }, []));
+    return verifiedIds.size === linkedIds.length && linkedIds.every(function(id){
+      return verifiedIds.has(id);
     });
-    leadText.textContent = '초대 연결이 완료되었습니다.';
-    if (verifiedClasses.length === 1) {
-      resultTitle.textContent = names[0] + ' 선생님으로 연결되었습니다';
-    } else {
-      resultTitle.textContent = verifiedClasses.length + '개 반의 선생님으로 연결되었습니다';
-    }
-    resultDesc.textContent = names.join(', ') + ' 관리 화면으로 이동할 수 있습니다.';
-    enableClassManageButton(firstClass.id);
+  }
+
+  function showPostAcceptVerificationIssue(message){
+    disableClassManageButton();
+    leadText.textContent = '초대 수락 결과를 확인해주세요.';
+    resultTitle.textContent = '반 정보 확인이 필요합니다';
+    resultDesc.textContent = message;
     showPanel(resultPanel);
   }
 
+  function classifyAcceptError(error){
+    var code = error && error.code ? String(error.code).toLowerCase() : '';
+    var message = error && error.message ? String(error.message).toLowerCase() : '';
+    if (message.indexOf('no assignable pending teacher invite found') !== -1) {
+      return {
+        needsLogin: false,
+        message: '로그인한 이메일과 일치하는 수락 가능한 초대를 찾지 못했습니다. 초대가 이미 처리 또는 취소되었거나, 반에 담당 교사가 배정되었을 수 있습니다.'
+      };
+    }
+    if (code === 'pgrst301' || message.indexOf('jwt') !== -1 ||
+        message.indexOf('not authenticated') !== -1 ||
+        message.indexOf('unable to confirm logged-in user email') !== -1) {
+      return { needsLogin: true, message: '로그인 세션이 만료되었습니다. 다시 로그인해 주세요.' };
+    }
+    if (code === '42501' || message.indexOf('permission denied') !== -1 || message.indexOf('forbidden') !== -1) {
+      return { needsLogin: false, message: '교사 초대를 수락할 권한을 확인하지 못했습니다. 초대받은 계정으로 로그인했는지 확인해 주세요.' };
+    }
+    return { needsLogin: false, message: '교사 초대를 수락하지 못했습니다. 잠시 후 다시 시도해 주세요.' };
+  }
+
+  function showAcceptFailure(result){
+    if (isExistingFlow) {
+      if (result.needsLogin) {
+        showExistingLogin(result.message);
+      } else {
+        existingAcceptMsg.textContent = result.message;
+        showPanel(existingAcceptPanel);
+      }
+      return;
+    }
+    disableClassManageButton();
+    leadText.textContent = '초대 연결 중 문제가 생겼습니다.';
+    resultTitle.textContent = '연결하지 못했습니다';
+    resultDesc.textContent = result.message;
+    showPanel(resultPanel);
+  }
+
+  async function acceptInvite(){
+    if (isAcceptingInvite) return;
+    isAcceptingInvite = true;
+    disableClassManageButton();
+    try {
+      existingAcceptBtn.disabled = true;
+      existingAcceptMsg.textContent = isExistingFlow ? '교사 초대를 확인하고 있습니다.' : '';
+
+      var sessionRes = await client.auth.getSession();
+      var session = sessionRes.data ? sessionRes.data.session : null;
+      if (sessionRes.error || !session || !session.user) {
+        showAcceptFailure({ needsLogin: true, message: '로그인 세션이 만료되었습니다. 다시 로그인해 주세요.' });
+        return;
+      }
+
+      var rpcRes = await client.rpc('accept_teacher_invite');
+      if (rpcRes.error) {
+        showAcceptFailure(classifyAcceptError(rpcRes.error));
+        return;
+      }
+
+      var linked = normalizedLinkedClassIds(rpcRes.data);
+      if (!linked.length) {
+        showPostAcceptVerificationIssue('수락 처리 후 반 정보를 확인하지 못했습니다. 페이지를 새로고침한 뒤 다시 확인해 주세요.');
+        return;
+      }
+
+      var verifiedClasses = [];
+      try {
+        verifiedClasses = await verifiedTeacherClassesFor(linked, session.user.id);
+      } catch (_err) {
+        showPostAcceptVerificationIssue('수락 처리 후 반 정보를 확인하지 못했습니다. 페이지를 새로고침한 뒤 다시 확인해 주세요.');
+        return;
+      }
+      if (!linkedClassesMatchVerifiedRows(linked, verifiedClasses)) {
+        showPostAcceptVerificationIssue('초대 수락은 처리되었지만 일부 반 정보를 확인하지 못했습니다. 페이지를 새로고침한 뒤 다시 확인해 주세요.');
+        return;
+      }
+
+      var firstClass = verifiedClasses[0];
+      var names = verifiedClasses.map(function(row){ return row.name || '이름 없는 반'; });
+      leadText.textContent = '초대 연결이 완료되었습니다.';
+      resultTitle.textContent = verifiedClasses.length === 1
+        ? names[0] + ' 선생님으로 연결되었습니다'
+        : verifiedClasses.length + '개 반의 선생님으로 연결되었습니다';
+      resultDesc.textContent = names.join(', ') + ' 관리 화면으로 이동할 수 있습니다.';
+      enableClassManageButton(firstClass.id);
+      showPanel(resultPanel);
+    } catch (_err) {
+      showAcceptFailure({ needsLogin: false, message: '교사 초대를 수락하지 못했습니다. 잠시 후 다시 시도해 주세요.' });
+    } finally {
+      isAcceptingInvite = false;
+      if (!existingAcceptPanel.hidden) {
+        existingAcceptBtn.disabled = false;
+        if (existingAcceptMsg.textContent === '교사 초대를 확인하고 있습니다.') existingAcceptMsg.textContent = '';
+      }
+    }
+  }
+
   async function init(){
+    if (isExistingFlow) showExistingLoadingCopy();
+    else showNewInviteLoadingCopy();
     showPanel(loadingPanel);
     var res = await client.auth.getSession();
     var session = res.data ? res.data.session : null;
+    if (isExistingFlow) {
+      if (res.error || !session) {
+        showExistingLogin(res.error ? '로그인 상태를 확인하지 못했습니다. 기존 계정으로 다시 로그인해 주세요.' : '');
+      } else {
+        showExistingAcceptance(session);
+      }
+      return;
+    }
     if (!session) {
       showInvalid('유효하지 않은 접근입니다. 초대 이메일의 링크로 다시 접속해주세요.');
       return;
@@ -271,6 +449,7 @@
 
   passwordForm.addEventListener('submit', async function(e){
     e.preventDefault();
+    if (isPasswordSubmitting) return;
     passwordMsg.textContent = '';
 
     var password = passwordInput.value;
@@ -280,25 +459,113 @@
       return;
     }
 
+    isPasswordSubmitting = true;
     passwordSubmit.disabled = true;
     passwordMsg.textContent = '비밀번호를 설정하는 중입니다.';
     passwordMsg.className = 'msg';
 
-    var res = await client.auth.updateUser({ password: password });
-    if (res.error) {
-      passwordSubmit.disabled = false;
-      passwordMsg.innerHTML = escWithBr(res.error.message);
-      passwordMsg.className = 'msg error';
-      return;
-    }
+    try {
+      var res = await client.auth.updateUser({ password: password });
+      if (res.error) {
+        passwordMsg.textContent = '비밀번호를 설정하지 못했습니다. 잠시 후 다시 시도해 주세요.';
+        passwordMsg.className = 'msg error';
+        return;
+      }
 
-    passwordMsg.textContent = '';
-    await acceptInvite();
-    passwordSubmit.disabled = false;
+      passwordMsg.textContent = '';
+      await acceptInvite();
+    } catch (_err) {
+      passwordMsg.textContent = '비밀번호를 설정하지 못했습니다. 잠시 후 다시 시도해 주세요.';
+      passwordMsg.className = 'msg error';
+    } finally {
+      isPasswordSubmitting = false;
+      passwordSubmit.disabled = false;
+    }
   });
 
-  init().catch(function(err){
-    showInvalid(err && err.message ? err.message : String(err));
+  existingLoginForm.addEventListener('submit', async function(e){
+    e.preventDefault();
+    if (isExistingLoginSubmitting || isKakaoLoginSubmitting) return;
+    isExistingLoginSubmitting = true;
+    existingLoginSubmit.disabled = true;
+    existingKakaoLoginBtn.disabled = true;
+    existingLoginMsg.textContent = '기존 계정으로 로그인하고 있습니다.';
+
+    try {
+      var res = await client.auth.signInWithPassword({
+        email: existingEmail.value.trim(),
+        password: existingPassword.value
+      });
+      if (res.error || !res.data || !res.data.session) {
+        existingLoginMsg.textContent = '이메일 또는 비밀번호를 확인해 주세요.';
+        return;
+      }
+      existingPassword.value = '';
+      showExistingAcceptance(res.data.session);
+    } catch (_err) {
+      existingLoginMsg.textContent = '로그인하지 못했습니다. 잠시 후 다시 시도해 주세요.';
+    } finally {
+      isExistingLoginSubmitting = false;
+      existingLoginSubmit.disabled = false;
+      existingKakaoLoginBtn.disabled = false;
+    }
+  });
+
+  existingKakaoLoginBtn.addEventListener('click', async function(){
+    if (isKakaoLoginSubmitting || isExistingLoginSubmitting) return;
+    isKakaoLoginSubmitting = true;
+    existingKakaoLoginBtn.disabled = true;
+    existingLoginSubmit.disabled = true;
+    existingLoginMsg.textContent = '카카오 로그인 화면으로 이동하고 있습니다.';
+
+    try {
+      var res = await client.auth.signInWithOAuth({
+        provider: 'kakao',
+        options: {
+          redirectTo: window.location.origin + '/teacher-onboarding.html?flow=existing'
+        }
+      });
+      if (res.error) throw res.error;
+    } catch (_err) {
+      existingLoginMsg.textContent = '카카오 로그인에 실패했습니다. 다시 시도해 주세요.';
+      isKakaoLoginSubmitting = false;
+      existingKakaoLoginBtn.disabled = false;
+      existingLoginSubmit.disabled = false;
+    }
+  });
+
+  existingAcceptBtn.addEventListener('click', function(){
+    acceptInvite();
+  });
+
+  existingSwitchAccountBtn.addEventListener('click', async function(){
+    if (isSwitchingAccount || isAcceptingInvite) return;
+    isSwitchingAccount = true;
+    existingSwitchAccountBtn.disabled = true;
+    existingAcceptBtn.disabled = true;
+    existingAcceptMsg.textContent = '계정을 전환하고 있습니다.';
+    try {
+      var res = await client.auth.signOut();
+      if (res.error) {
+        existingAcceptMsg.textContent = '계정을 전환하지 못했습니다. 잠시 후 다시 시도해 주세요.';
+        return;
+      }
+      showExistingLogin('');
+    } catch (_err) {
+      existingAcceptMsg.textContent = '계정을 전환하지 못했습니다. 잠시 후 다시 시도해 주세요.';
+    } finally {
+      isSwitchingAccount = false;
+      existingSwitchAccountBtn.disabled = false;
+      if (!existingAcceptPanel.hidden) existingAcceptBtn.disabled = false;
+    }
+  });
+
+  init().catch(function(){
+    if (isExistingFlow) {
+      showExistingLogin('로그인 상태를 확인하지 못했습니다. 기존 계정으로 다시 로그인해 주세요.');
+    } else {
+      showInvalid('초대 링크를 확인하지 못했습니다. 초대 이메일의 링크로 다시 접속해 주세요.');
+    }
   });
 })();
 </script>

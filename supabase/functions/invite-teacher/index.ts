@@ -333,8 +333,20 @@ serve(async (req) => {
       });
     }
 
+    if (inviteError && deliveryErrorCode === "auth_user_already_exists") {
+      return jsonResponse(200, {
+        success: true,
+        invite_id: preparedData.invite_id,
+        reused: preparedData.reused,
+        dispatch_action: "existing_user_pending",
+        delivery_status: "failed",
+        retry_after_seconds: 0,
+        message: "기존 계정으로 로그인한 뒤 교사 초대를 수락해야 합니다.",
+      });
+    }
+
     if (inviteError && deliveryErrorCode) {
-      return jsonResponse(deliveryErrorCode === "auth_user_already_exists" ? 409 : 502, {
+      return jsonResponse(502, {
         success: false,
         error: deliveryErrorCode,
       });

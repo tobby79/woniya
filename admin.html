@@ -315,6 +315,7 @@
   .status-pill{display:inline-flex;align-items:center;border-radius:99px;padding:4px 10px;font-size:.75rem;font-weight:800;white-space:nowrap}
   .status-pill.assigned{background:#EDF7EE;color:#4F8B5B}
   .status-pill.pending{background:#FFF4D7;color:#A97811}
+  .status-pill.existing-user{background:#EAF3FC;color:#4879A8}
   .status-pill.sending{background:#EAF3FC;color:#4879A8}
   .status-pill.sent{background:#E8F7F3;color:#397E70}
   .status-pill.failed{background:#FCEBEC;color:#A84F58}
@@ -2222,6 +2223,9 @@
     if (row.status === 'accepted') return { label: '수락됨', className: 'assigned' };
     if (row.status === 'revoked') return { label: '취소됨', className: 'revoked' };
     if (row.status === 'pending') {
+      if (row.last_send_error_code === 'auth_user_already_exists') {
+        return { label: '기존 가입자 수락 대기', className: 'existing-user' };
+      }
       if (row.delivery_status === 'sending') return { label: TEACHER_DELIVERY_STATUS_LABELS.sending, className: 'sending' };
       if (row.delivery_status === 'sent') return { label: TEACHER_DELIVERY_STATUS_LABELS.sent, className: 'sent' };
       if (row.delivery_status === 'failed') return { label: TEACHER_DELIVERY_STATUS_LABELS.failed, className: 'failed' };
@@ -2250,17 +2254,29 @@
 
   function teacherInviteErrorNotice(errorCode){
     if (errorCode === 'auth_user_already_exists') {
-      return '이미 원이야에 가입된 이메일입니다. 새 초대 메일로는 담당 교사 연결을 완료할 수 없습니다.';
+      return '이미 원이야에 가입된 이메일입니다. 해당 교사가 기존 계정으로 로그인한 뒤 초대를 수락해야 합니다.';
     }
     return '초대 메일 발송에 실패했습니다. 잠시 후 다시 시도해 주세요.';
   }
 
+  function isExistingUserPendingInvite(row){
+    return row.status === 'pending' && row.last_send_error_code === 'auth_user_already_exists';
+  }
+
+  function classHasAssignedTeacher(classId){
+    var assignedClass = classRows.find(function(item){ return String(item.id) === String(classId); });
+    return !!(assignedClass && assignedClass.teacher_id);
+  }
+
   function canRetryTeacherInvite(row){
-    var assignedClass = classRows.find(function(item){ return String(item.id) === String(row.class_id); });
-    return (!assignedClass || !assignedClass.teacher_id) &&
+    return !classHasAssignedTeacher(row.class_id) &&
       row.status === 'pending' &&
       row.delivery_status === 'failed' &&
       row.last_send_error_code !== 'auth_user_already_exists';
+  }
+
+  function canShareExistingTeacherLink(row){
+    return !classHasAssignedTeacher(row.class_id) && isExistingUserPendingInvite(row);
   }
 
   function invitesForClass(classId){
@@ -2349,9 +2365,14 @@
     var resend = canRetryTeacherInvite(row)
       ? '<button type="button" class="btn ghost class-resend-btn" data-class-id="' + esc(row.class_id) + '" data-email="' + esc(row.email) + '">다시 보내기</button>'
       : '';
-    var errorNotice = row.delivery_status === 'failed'
-      ? '<div class="invite-history-error' + (row.last_send_error_code === 'auth_user_already_exists' ? ' account' : '') + '">' + esc(teacherInviteErrorNotice(row.last_send_error_code)) + '</div>'
+    var shareLink = canShareExistingTeacherLink(row)
+      ? '<button type="button" class="btn ghost copy-existing-teacher-link-btn">수락 안내 링크 복사</button>'
       : '';
+    var errorNotice = isExistingUserPendingInvite(row)
+      ? '<div class="invite-history-error account">' + esc(teacherInviteErrorNotice('auth_user_already_exists')) + '</div>'
+      : (row.delivery_status === 'failed'
+        ? '<div class="invite-history-error">' + esc(teacherInviteErrorNotice('')) + '</div>'
+        : '');
     return '<div class="invite-history-card">' +
       '<div class="invite-history-row">' +
         '<div>' +
@@ -2361,6 +2382,7 @@
         '<div class="class-card-actions">' +
           '<span class="status-pill ' + esc(state.className) + '">' + esc(state.label) + '</span>' +
           resend +
+          shareLink +
         '</div>' +
       '</div>' +
       errorNotice +
@@ -2741,6 +2763,8 @@
       message = '초대 메일을 발송하고 있습니다. 잠시 후 상태를 확인해 주세요.';
     } else if (data.dispatch_action === 'already_sent') {
       message = '최근에 초대 메일을 이미 발송했습니다.';
+    } else if (data.dispatch_action === 'existing_user_pending') {
+      message = '이미 가입된 이메일입니다. 해당 교사에게 로그인 및 수락 안내 링크를 전달해 주세요.';
     }
     var retryAfter = formatRetryAfter(data.retry_after_seconds);
     if (retryAfter) message += ' 재발송은 ' + retryAfter + ' 다시 시도할 수 있습니다.';
@@ -2849,12 +2873,39 @@
     throw lastError || new Error('초대 코드 발급에 실패했습니다.');
   }
 
-  async function copyInviteCode(code){
-    if (!code) return;
-    if (!navigator.clipboard || !navigator.clipboard.writeText) {
-      throw new Error('이 브라우저에서는 클립보드 복사를 지원하지 않습니다.');
+  async function copyText(text){
+    if (!text) throw new Error('복사할 내용이 없습니다.');
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      try {
+        await navigator.clipboard.writeText(text);
+        return;
+      } catch (_err) {
+        // Fall through to the legacy copy path.
+      }
     }
-    await navigator.clipboard.writeText(code);
+
+    var textarea = document.createElement('textarea');
+    textarea.value = text;
+    textarea.setAttribute('readonly', '');
+    textarea.style.position = 'fixed';
+    textarea.style.opacity = '0';
+    document.body.appendChild(textarea);
+    textarea.select();
+    var copied = false;
+    try {
+      copied = document.execCommand('copy');
+    } finally {
+      document.body.removeChild(textarea);
+    }
+    if (!copied) throw new Error('클립보드 복사를 완료하지 못했습니다.');
+  }
+
+  function copyInviteCode(code){
+    return copyText(code);
+  }
+
+  function existingTeacherOnboardingUrl(){
+    return window.location.origin + '/teacher-onboarding.html?flow=existing';
   }
 
   async function updateParentEnrollment(enrollmentId, status){
@@ -2992,6 +3043,19 @@
     var resendBtn = e.target.closest('.class-resend-btn');
     if (resendBtn) {
       openTeacherInviteModal(resendBtn.dataset.classId, resendBtn.dataset.email || '', true);
+      return;
+    }
+
+    var copyExistingTeacherLinkBtn = e.target.closest('.copy-existing-teacher-link-btn');
+    if (copyExistingTeacherLinkBtn) {
+      copyText(existingTeacherOnboardingUrl()).then(function(){
+        classManagerStatus.textContent = '교사 로그인 및 수락 안내 링크를 복사했습니다.';
+        classManagerStatus.className = 'msg ok';
+      }).catch(function(err){
+        logAdminError('copyExistingTeacherOnboardingUrl', err);
+        classManagerStatus.textContent = '안내 링크를 복사하지 못했습니다.';
+        classManagerStatus.className = 'msg error';
+      });
     }
   });
 
