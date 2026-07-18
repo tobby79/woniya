@@ -328,6 +328,7 @@
   .teacher-assignment-meta{margin-top:14px;padding-top:14px;border-top:1px solid #eee3da;color:var(--ink-soft);font-size:.84rem;line-height:1.6}
   .teacher-assignment-meta strong{color:var(--ink)}
   .teacher-assignment-email{word-break:break-all}
+  .teacher-lifecycle-note{margin:0 0 16px;color:var(--ink-soft);font-size:.9rem;line-height:1.65}
   .parent-code-box{margin-top:12px;background:#fff8f5;border:1.5px solid #ffe1d6;border-radius:18px;padding:16px;text-align:center}
   .parent-code-value{font-family:var(--display);font-size:1.7rem;font-weight:800;letter-spacing:.08em;color:var(--coral-deep);word-break:break-all}
   .parent-code-note{margin-top:5px;font-size:.82rem;color:var(--ink-soft)}
@@ -861,6 +862,34 @@
   </div>
 </div>
 
+<div class="modal-backdrop" id="teacherLifecycleModal" hidden>
+  <div class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="teacherLifecycleTitle">
+    <div class="modal-head">
+      <div>
+        <div class="section-eyebrow">담당 교사 관리</div>
+        <div class="modal-title" id="teacherLifecycleTitle">담당 교사 해제</div>
+      </div>
+      <button type="button" class="modal-close" id="teacherLifecycleClose" aria-label="닫기">×</button>
+    </div>
+    <form id="teacherLifecycleForm">
+      <p class="teacher-lifecycle-note" id="teacherLifecycleNotice"></p>
+      <div class="field">
+        <label>현재 담당 교사</label>
+        <div class="teacher-assignment-email" id="teacherLifecycleEmail"></div>
+      </div>
+      <div class="field">
+        <label for="teacherLifecycleReason">사유 <span class="optional">선택</span></label>
+        <input type="text" id="teacherLifecycleReason" maxlength="200" placeholder="예: 퇴사, 담당 반 변경">
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn ghost" id="teacherLifecycleCancel">취소</button>
+        <button type="submit" class="btn" id="teacherLifecycleSubmit">해제하기</button>
+      </div>
+      <div class="msg" id="teacherLifecycleMsg"></div>
+    </form>
+  </div>
+</div>
+
 <script src="supabase-config.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
@@ -979,6 +1008,16 @@
   var teacherInviteSubmit = document.getElementById('teacherInviteSubmit');
   var teacherInviteClose = document.getElementById('teacherInviteClose');
   var teacherInviteCancel = document.getElementById('teacherInviteCancel');
+  var teacherLifecycleModal = document.getElementById('teacherLifecycleModal');
+  var teacherLifecycleForm = document.getElementById('teacherLifecycleForm');
+  var teacherLifecycleTitle = document.getElementById('teacherLifecycleTitle');
+  var teacherLifecycleNotice = document.getElementById('teacherLifecycleNotice');
+  var teacherLifecycleEmail = document.getElementById('teacherLifecycleEmail');
+  var teacherLifecycleReason = document.getElementById('teacherLifecycleReason');
+  var teacherLifecycleMsg = document.getElementById('teacherLifecycleMsg');
+  var teacherLifecycleSubmit = document.getElementById('teacherLifecycleSubmit');
+  var teacherLifecycleClose = document.getElementById('teacherLifecycleClose');
+  var teacherLifecycleCancel = document.getElementById('teacherLifecycleCancel');
 
   var admissionSaveBtn    = document.getElementById('admissionSaveBtn');
   var admissionSaveStatus = document.getElementById('admissionSaveStatus');
@@ -1010,12 +1049,17 @@
   var programTabLoaded = false;
   var classRows = [];
   var teacherInviteRows = [];
+  var teacherAssignmentRows = [];
+  var teacherAssignmentsLoadFailed = false;
   var parentInviteRows = [];
   var parentEnrollmentRows = [];
   var classMiniRows = [];
   var classMiniCreatingIds = {};
   var isCreatingClassRow = false;
   var isTeacherInviteSubmitting = false;
+  var isTeacherLifecycleSubmitting = false;
+  var teacherLifecycleClassId = '';
+  var teacherLifecycleMode = 'unassign';
   var selectedTeacherClassId = null;
   var busRoutes = [];
   var busStopsByRoute = {};
@@ -2244,8 +2288,13 @@
     return invitesForClass(classId).find(function(row){ return row.status === 'pending'; });
   }
 
-  function acceptedTeacherInviteForClass(classId){
-    return invitesForClass(classId).find(function(row){ return row.status === 'accepted'; });
+  function activeTeacherAssignmentForClass(classRow){
+    if (!classRow || !classRow.teacher_id) return null;
+    return teacherAssignmentRows.find(function(row){
+      return row.class_id === classRow.id &&
+        !row.ended_at &&
+        String(row.teacher_user_id || '') === String(classRow.teacher_id);
+    }) || null;
   }
 
   function teacherInviteActionLabel(classId){
@@ -2434,18 +2483,27 @@
     }
 
     var invites = invitesForClass(row.id);
-    var acceptedInvite = row.teacher_id ? acceptedTeacherInviteForClass(row.id) : null;
+    var activeAssignment = row.teacher_id && !teacherAssignmentsLoadFailed
+      ? activeTeacherAssignmentForClass(row)
+      : null;
+    var canManageTeacher = !!(row.teacher_id && activeAssignment && !teacherAssignmentsLoadFailed);
     var parentInvites = parentInvitesForClass(row.id);
     var pendingEnrollments = parentEnrollmentsForClass(row.id).filter(function(item){ return item.status === 'pending'; });
     var action = row.teacher_id
-      ? '<span class="status-pill assigned">담당 교사 배정 완료</span>'
+      ? '<span class="status-pill assigned">담당 교사 배정 완료</span>' +
+        '<button type="button" class="btn ghost class-teacher-change-btn" data-class-id="' + esc(row.id) + '"' + (canManageTeacher ? '' : ' disabled') + '>담당 교사 변경</button>' +
+        '<button type="button" class="btn danger class-teacher-unassign-btn" data-class-id="' + esc(row.id) + '"' + (canManageTeacher ? '' : ' disabled') + '>담당 교사 해제</button>'
       : '<button type="button" class="btn ghost class-invite-btn" data-class-id="' + esc(row.id) + '">' + esc(teacherInviteActionLabel(row.id)) + '</button>';
     var assignmentMeta = row.teacher_id
       ? '<div class="teacher-assignment-meta"><strong>담당 교사 배정 완료</strong>' +
-        (acceptedInvite
-          ? '<div class="teacher-assignment-email">' + esc(acceptedInvite.email) + '</div>' +
-            (acceptedInvite.accepted_at ? '<div>수락 ' + esc(formatAdminDateTime(acceptedInvite.accepted_at)) + '</div>' : '')
-          : '') +
+        (teacherAssignmentsLoadFailed
+          ? '<div>배정 정보를 불러오지 못했습니다.</div>'
+          : activeAssignment
+          ? '<div class="teacher-assignment-email">' + esc(activeAssignment.teacher_email_snapshot || '이메일 정보 없음') + '</div>' +
+            (activeAssignment.assignment_source === 'invite_acceptance' && activeAssignment.assigned_at
+              ? '<div>배정 ' + esc(formatAdminDateTime(activeAssignment.assigned_at)) + '</div>'
+              : '')
+          : '<div>배정 이력 확인 필요</div>') +
         '</div>'
       : '';
     var parentAction = '<button type="button" class="btn ghost parent-code-btn" data-class-id="' + esc(row.id) + '">초대 코드 발급</button>';
@@ -2576,6 +2634,8 @@
 
     classRows = classRes.data || [];
     teacherInviteRows = [];
+    teacherAssignmentRows = [];
+    teacherAssignmentsLoadFailed = false;
     parentInviteRows = [];
     parentEnrollmentRows = [];
     classMiniRows = [];
@@ -2614,6 +2674,20 @@
       }
       teacherInviteRows = inviteRes.data || [];
 
+      var assignmentRes = await client.from('class_teacher_assignments')
+        .select('id,class_id,teacher_user_id,teacher_email_snapshot,assigned_at,assignment_source,ended_at')
+        .in('class_id', ids)
+        .is('ended_at', null);
+
+      if (assignmentRes.error) {
+        teacherAssignmentsLoadFailed = true;
+        logAdminError('loadClassManager/assignments', assignmentRes.error);
+        classManagerStatus.textContent = '담당 교사 배정 정보를 불러오지 못했습니다. 배정 여부는 반 정보를 기준으로 표시합니다.';
+        classManagerStatus.className = 'msg error';
+      } else {
+        teacherAssignmentRows = assignmentRes.data || [];
+      }
+
       var parentInviteRes = await client.from('class_invites')
         .select('id,class_id,code,status,created_at,expires_at')
         .in('class_id', ids)
@@ -2643,8 +2717,10 @@
       parentEnrollmentRows = enrollmentRes.data || [];
     }
 
-    classManagerStatus.textContent = '';
-    classManagerStatus.className = 'msg';
+    if (!classManagerStatus.textContent || classManagerStatus.textContent === '반 목록을 불러오는 중...') {
+      classManagerStatus.textContent = '';
+      classManagerStatus.className = 'msg';
+    }
     renderClassManager();
   }
 
@@ -2729,6 +2805,78 @@
     teacherInviteMsg.className = 'msg';
     teacherInviteSubmit.disabled = isTeacherInviteSubmitting;
     teacherInviteSubmit.textContent = '초대하기';
+  }
+
+  function openTeacherLifecycleModal(classId, mode){
+    var row = classRows.find(function(item){ return item.id === classId; });
+    if (!row || !row.teacher_id) return;
+    var assignment = activeTeacherAssignmentForClass(row);
+    if (teacherAssignmentsLoadFailed || !assignment) return;
+    teacherLifecycleClassId = classId;
+    teacherLifecycleMode = mode === 'change' ? 'change' : 'unassign';
+    teacherLifecycleTitle.textContent = teacherLifecycleMode === 'change' ? '담당 교사 변경' : '담당 교사 해제';
+    teacherLifecycleEmail.textContent = assignment && assignment.teacher_email_snapshot
+      ? assignment.teacher_email_snapshot
+      : '이메일 정보를 확인할 수 없습니다.';
+    teacherLifecycleNotice.textContent = teacherLifecycleMode === 'change'
+      ? '담당 교사를 변경하면 현재 교사의 접근이 즉시 종료됩니다. 새 교사가 초대를 수락하기 전까지 이 반은 담당 교사 미배정 상태가 됩니다. 초대에 실패해도 기존 교사의 권한은 자동 복구되지 않습니다.'
+      : '해제 즉시 기존 교사의 반 관리 접근이 종료됩니다.';
+    teacherLifecycleReason.value = '';
+    teacherLifecycleMsg.textContent = '';
+    teacherLifecycleMsg.className = 'msg';
+    teacherLifecycleSubmit.textContent = teacherLifecycleMode === 'change' ? '해제 후 새 교사 초대' : '해제하기';
+    teacherLifecycleSubmit.className = teacherLifecycleMode === 'change' ? 'btn' : 'btn danger';
+    teacherLifecycleSubmit.disabled = isTeacherLifecycleSubmitting;
+    teacherLifecycleModal.hidden = false;
+    setTimeout(function(){ teacherLifecycleReason.focus(); }, 0);
+  }
+
+  function closeTeacherLifecycleModal(){
+    if (isTeacherLifecycleSubmitting) return;
+    teacherLifecycleModal.hidden = true;
+    teacherLifecycleForm.reset();
+    teacherLifecycleClassId = '';
+    teacherLifecycleMode = 'unassign';
+    teacherLifecycleMsg.textContent = '';
+    teacherLifecycleMsg.className = 'msg';
+  }
+
+  function teacherLifecycleErrorMessage(error){
+    var code = error && error.code ? String(error.code).toLowerCase() : '';
+    var message = error && error.message ? String(error.message).toLowerCase() : '';
+    if (message.indexOf('class_not_found') !== -1) return '반을 찾을 수 없습니다. 목록을 새로고침해 주세요.';
+    if (message.indexOf('class_access_denied') !== -1 || code === '42501') return '이 반의 담당 교사를 변경할 권한이 없습니다.';
+    if (message.indexOf('not_authenticated') !== -1 || code === 'pgrst301' || message.indexOf('jwt') !== -1) {
+      return '로그인 세션이 만료되었습니다. 다시 로그인해 주세요.';
+    }
+    if (message.indexOf('assignment_state_conflict') !== -1) return '담당 교사 상태가 변경되었습니다. 목록을 새로고침한 뒤 다시 시도해 주세요.';
+    if (message.indexOf('reason_too_long') !== -1) return '해제 사유는 200자 이내로 입력해 주세요.';
+    if (message.indexOf('failed to fetch') !== -1 || message.indexOf('network') !== -1) return '네트워크 연결을 확인한 뒤 다시 시도해 주세요.';
+    return '담당 교사 정보를 변경하지 못했습니다. 잠시 후 다시 시도해 주세요.';
+  }
+
+  async function unassignClassTeacher(classId, reason){
+    var res = await client.rpc('unassign_class_teacher', {
+      p_class_id: classId,
+      p_reason: reason || null
+    });
+    if (res.error) throw res.error;
+    if (!res.data || res.data.success !== true ||
+        (res.data.action !== 'unassigned' && res.data.action !== 'already_unassigned')) {
+      throw new Error('invalid_unassign_result');
+    }
+    return res.data;
+  }
+
+  async function reloadClassManagerAfterTeacherLifecycle(classId){
+    try {
+      await loadClassManagerTab();
+    } catch (err) {
+      logAdminError('reloadClassManagerAfterTeacherLifecycle', err);
+      return false;
+    }
+    var row = classRows.find(function(item){ return item.id === classId; });
+    return !!row && !row.teacher_id;
   }
 
   function teacherInviteRequestErrorMessage(errorCode){
@@ -2974,6 +3122,18 @@
   });
 
   classInviteDetail.addEventListener('click', function(e){
+    var changeTeacherBtn = e.target.closest('.class-teacher-change-btn');
+    if (changeTeacherBtn) {
+      openTeacherLifecycleModal(changeTeacherBtn.dataset.classId, 'change');
+      return;
+    }
+
+    var unassignTeacherBtn = e.target.closest('.class-teacher-unassign-btn');
+    if (unassignTeacherBtn) {
+      openTeacherLifecycleModal(unassignTeacherBtn.dataset.classId, 'unassign');
+      return;
+    }
+
     var createMiniBtn = e.target.closest('.class-mini-create-btn');
     if (createMiniBtn && createMiniBtn.dataset.classId) {
       createClassMiniForClass(createMiniBtn.dataset.classId).catch(function(err){
@@ -3107,8 +3267,57 @@
   teacherInviteModal.addEventListener('click', function(e){
     if (e.target === teacherInviteModal) closeTeacherInviteModal();
   });
+
+  teacherLifecycleForm.addEventListener('submit', async function(e){
+    e.preventDefault();
+    if (isTeacherLifecycleSubmitting || !teacherLifecycleClassId) return;
+
+    var classId = teacherLifecycleClassId;
+    var mode = teacherLifecycleMode;
+    var reason = teacherLifecycleReason.value.trim();
+    isTeacherLifecycleSubmitting = true;
+    teacherLifecycleSubmit.disabled = true;
+    teacherLifecycleMsg.textContent = '담당 교사 권한을 해제하는 중입니다...';
+    teacherLifecycleMsg.className = 'msg';
+
+    try {
+      var result = await unassignClassTeacher(classId, reason);
+      var refreshed = await reloadClassManagerAfterTeacherLifecycle(classId);
+      if (!refreshed) {
+        teacherLifecycleMsg.textContent = '해제 처리는 요청되었지만 최신 반 상태를 확인하지 못했습니다. 페이지를 새로고침해 주세요.';
+        teacherLifecycleMsg.className = 'msg error';
+        return;
+      }
+
+      isTeacherLifecycleSubmitting = false;
+      closeTeacherLifecycleModal();
+      classManagerStatus.textContent = result.action === 'already_unassigned'
+        ? '이미 담당 교사가 해제된 반입니다.'
+        : '담당 교사가 해제되었습니다.';
+      classManagerStatus.className = 'msg ok';
+
+      if (mode === 'change') {
+        classManagerStatus.textContent = '담당 교사가 해제되었습니다. 새 담당 교사를 초대해 주세요.';
+        openTeacherInviteModal(classId, '');
+      }
+    } catch (err) {
+      logAdminError('unassignClassTeacher', err);
+      teacherLifecycleMsg.textContent = teacherLifecycleErrorMessage(err);
+      teacherLifecycleMsg.className = 'msg error';
+    } finally {
+      isTeacherLifecycleSubmitting = false;
+      teacherLifecycleSubmit.disabled = false;
+    }
+  });
+
+  teacherLifecycleClose.addEventListener('click', closeTeacherLifecycleModal);
+  teacherLifecycleCancel.addEventListener('click', closeTeacherLifecycleModal);
+  teacherLifecycleModal.addEventListener('click', function(e){
+    if (e.target === teacherLifecycleModal) closeTeacherLifecycleModal();
+  });
   document.addEventListener('keydown', function(e){
     if (e.key === 'Escape' && !teacherInviteModal.hidden) closeTeacherInviteModal();
+    if (e.key === 'Escape' && !teacherLifecycleModal.hidden) closeTeacherLifecycleModal();
   });
 
   async function loadAdmissionTab(){

@@ -243,6 +243,7 @@
 
   <section class="panel" id="noticePanel" hidden>
     <p class="msg" id="pageNotice"></p>
+    <a class="btn" id="noticeHomeBtn" href="index.html" hidden>원이야 홈으로</a>
   </section>
 </main>
 
@@ -272,6 +273,7 @@
 
   var currentSession = null;
   var currentClass = null;
+  var teacherAccessEnded = false;
   var isCreatingClassMini = false;
   var activeTab = 'diary';
   var requestedClassId = new URLSearchParams(location.search).get('class_id') || '';
@@ -290,6 +292,7 @@
   var appPanel = byId('appPanel');
   var noticePanel = byId('noticePanel');
   var pageNotice = byId('pageNotice');
+  var noticeHomeBtn = byId('noticeHomeBtn');
   var leadText = byId('leadText');
   var classNameTop = byId('classNameTop');
   var miniHomeLink = byId('miniHomeLink');
@@ -302,13 +305,67 @@
     });
   }
   function escWithBr(s){ return esc(s).replace(/\r?\n/g, '<br>'); }
-  function errorMessage(error){ return error && error.message ? error.message : String(error); }
+  function isTeacherAuthorizationError(error){
+    var code = error && error.code ? String(error.code).toLowerCase() : '';
+    var message = error && error.message ? String(error.message).toLowerCase() : '';
+    return code === '42501' || code === 'pgrst301' || message.indexOf('row-level security') !== -1 ||
+      message.indexOf('permission denied') !== -1 || message.indexOf('jwt') !== -1 ||
+      message.indexOf('not authorized') !== -1 || message.indexOf('unauthorized') !== -1 ||
+      message.indexOf('forbidden') !== -1;
+  }
+  function errorMessage(error){
+    if (isTeacherAuthorizationError(error)) {
+      showTeacherAccessEnded();
+      return '담당 교사 권한이 종료되었습니다.';
+    }
+    return error && error.message ? error.message : String(error);
+  }
   function showPanel(panel){
     [loadingPanel, authPanel, appPanel, noticePanel].forEach(function(item){ item.hidden = item !== panel; });
   }
   function setMsg(el, text, isError){
     el.innerHTML = escWithBr(text || '');
     el.className = 'msg' + (isError ? ' error' : '');
+  }
+
+  function showTeacherAccessEnded(){
+    if (teacherAccessEnded) return;
+    teacherAccessEnded = true;
+    currentClass = null;
+    miniHomeLink.hidden = true;
+    miniHomeLink.removeAttribute('href');
+    appPanel.querySelectorAll('button,input,textarea,select').forEach(function(el){ el.disabled = true; });
+    byId('eventModal').hidden = true;
+    byId('eventModal').querySelectorAll('button,input,textarea,select').forEach(function(el){ el.disabled = true; });
+    pageNotice.textContent = '담당 교사 권한이 종료되었습니다. 더 이상 이 반의 내용을 변경할 수 없습니다.';
+    noticeHomeBtn.hidden = false;
+    showPanel(noticePanel);
+  }
+
+  async function ensureCurrentTeacherAccess(){
+    if (teacherAccessEnded) return false;
+    if (!currentClass || !currentSession || !currentSession.user) {
+      showTeacherAccessEnded();
+      return false;
+    }
+    var res = await client.from('classes')
+      .select('id,teacher_id')
+      .eq('id', currentClass.id)
+      .eq('teacher_id', currentSession.user.id)
+      .maybeSingle();
+    if (res.error) {
+      if (isTeacherAuthorizationError(res.error)) {
+        showTeacherAccessEnded();
+        return false;
+      }
+      alert('담당 교사 권한을 확인하지 못했습니다. 네트워크 연결을 확인해 주세요.');
+      return false;
+    }
+    if (!res.data || res.data.teacher_id !== currentSession.user.id) {
+      showTeacherAccessEnded();
+      return false;
+    }
+    return true;
   }
   function firstOfMonth(date){ return new Date(date.getFullYear(), date.getMonth(), 1); }
   function toDateInput(date){
@@ -449,6 +506,7 @@
 
   async function createClassMiniForTeacher(){
     if (isCreatingClassMini || !currentClass || !currentSession || !currentSession.user) return;
+    if (!await ensureCurrentTeacherAccess()) return;
     if (currentClass.teacher_id !== currentSession.user.id) {
       throw new Error('현재 로그인한 담임 교사의 담당 반인지 확인할 수 없습니다.');
     }
@@ -564,6 +622,7 @@
   }
 
   async function saveSimplePost(type, ids){
+    if (!await ensureCurrentTeacherAccess()) return;
     var msg = byId(ids.msg);
     setMsg(msg, '저장 중입니다.');
     byId(ids.submit).disabled = true;
@@ -579,12 +638,13 @@
         ? client.from('class_posts').update({ title:payload.title, body:payload.body }).eq('id', id).eq('class_id', currentClass.id).select('id').single()
         : client.from('class_posts').insert(payload).select('id').single();
       var res = await query;
-      if (res.error) { setMsg(msg, res.error.message, true); return; }
+      if (res.error) { setMsg(msg, errorMessage(res.error), true); return; }
       var postId = id || (res.data ? res.data.id : null);
       if (!postId) { setMsg(msg, '저장 후 post_id를 확인하지 못했습니다.', true); return; }
 
       if (type === 'diary' && diaryDraftFiles.length) {
         var uploadResult = await uploadFilesToPost(postId, 'diary', diaryDraftFiles.map(function(item){ return item.file; }), msg);
+        if (teacherAccessEnded) return;
         removeUploadedDiaryDraftFiles(uploadResult.uploadedFiles);
         await renderDiaryPhotoGrid(postId);
         if (uploadResult.failed.length) {
@@ -620,6 +680,7 @@
   }
 
   async function editSimplePost(id, type){
+    if (!await ensureCurrentTeacherAccess()) return;
     var res = await client.from('class_posts').select('*').eq('id', id).eq('class_id', currentClass.id).single();
     if (res.error) { alert(errorMessage(res.error)); return; }
     var ids = type === 'diary' ? diaryIds : noticeIds;
@@ -635,6 +696,7 @@
   }
 
   async function deletePost(id, type){
+    if (!await ensureCurrentTeacherAccess()) return;
     if (!confirm('삭제할까요?')) return;
     if (type === 'album' || type === 'diary') {
       var mediaRes = await client.from('class_media').select('id,url').eq('class_id', currentClass.id).eq('post_id', id);
@@ -669,7 +731,7 @@
       .eq('post_id', postId)
       .order('uploaded_at', { ascending:false });
     if (res.error) {
-      setMsg(byId('diaryMsg'), res.error.message, true);
+      setMsg(byId('diaryMsg'), errorMessage(res.error), true);
       return;
     }
     currentDiaryMedia = res.data || [];
@@ -756,6 +818,7 @@
   }
 
   async function deleteDiaryMedia(id, storagePath){
+    if (!await ensureCurrentTeacherAccess()) return;
     if (!confirm('이 사진을 삭제할까요?')) return;
     var removeRes = await client.storage.from(BUCKET).remove([storagePath]);
     if (removeRes.error) { alert(errorMessage(removeRes.error)); return; }
@@ -778,7 +841,7 @@
       .lte('event_date', end)
       .order('event_date', { ascending:true })
       .order('created_at', { ascending:false });
-    if (res.error) { setMsg(byId('eventMsg'), res.error.message, true); return; }
+    if (res.error) { setMsg(byId('eventMsg'), errorMessage(res.error), true); return; }
     monthEvents = res.data || [];
     renderCalendar();
     renderSelectedEvents();
@@ -835,6 +898,7 @@
   }
 
   async function saveEvent(){
+    if (!await ensureCurrentTeacherAccess()) return;
     var id = byId('eventId').value;
     var payload = {
       class_id: currentClass.id,
@@ -846,7 +910,7 @@
     var res = id
       ? await client.from('class_posts').update({ title:payload.title, event_date:payload.event_date, body:payload.body }).eq('id', id).eq('class_id', currentClass.id)
       : await client.from('class_posts').insert(payload);
-    if (res.error) { setMsg(byId('eventMsg'), res.error.message, true); return; }
+    if (res.error) { setMsg(byId('eventMsg'), errorMessage(res.error), true); return; }
     selectedDate = payload.event_date;
     calendarDate = firstOfMonth(new Date(payload.event_date + 'T00:00:00'));
     byId('eventModal').hidden = true;
@@ -854,6 +918,7 @@
   }
 
   async function editEvent(id){
+    if (!await ensureCurrentTeacherAccess()) return;
     var res = await client.from('class_posts').select('*').eq('id', id).eq('class_id', currentClass.id).single();
     if (res.error) { alert(errorMessage(res.error)); return; }
     openEventModal(res.data);
@@ -897,6 +962,7 @@
   }
 
   async function saveAlbum(){
+    if (!await ensureCurrentTeacherAccess()) return;
     var msg = byId('albumMsg');
     setMsg(msg, '저장 중입니다.');
     byId('albumSubmit').disabled = true;
@@ -913,7 +979,7 @@
         ? await client.from('class_posts').update({ title:payload.title, event_date:payload.event_date, body:payload.body }).eq('id', id).eq('class_id', currentClass.id).select('id').single()
         : await client.from('class_posts').insert(payload).select('id').single();
       if (res.error) {
-        setMsg(msg, res.error.message, true);
+        setMsg(msg, errorMessage(res.error), true);
         return;
       }
       var postId = id || (res.data ? res.data.id : null);
@@ -924,6 +990,7 @@
 
       if (albumDraftFiles.length) {
         var uploadResult = await uploadFilesToPost(postId, 'album', albumDraftFiles.map(function(item){ return item.file; }), msg);
+        if (teacherAccessEnded) return;
         removeUploadedDraftFiles(uploadResult.uploadedFiles);
         renderDraftPhotoGrid();
         if (uploadResult.failed.length) {
@@ -1031,6 +1098,7 @@
   }
 
   async function editAlbum(id){
+    if (!await ensureCurrentTeacherAccess()) return;
     var res = await client.from('class_posts').select('*').eq('id', id).eq('class_id', currentClass.id).single();
     if (res.error) { alert(errorMessage(res.error)); return; }
     byId('albumId').value = res.data.id;
@@ -1042,6 +1110,7 @@
   }
 
   async function openAlbum(id){
+    if (!await ensureCurrentTeacherAccess()) return;
     var res = await client.from('class_posts').select('*').eq('id', id).eq('class_id', currentClass.id).single();
     if (res.error) { alert(errorMessage(res.error)); return; }
     currentAlbum = res.data;
@@ -1088,7 +1157,7 @@
       .eq('class_id', currentClass.id)
       .eq('post_id', currentAlbum.id)
       .order('uploaded_at', { ascending:false });
-    if (res.error) { setMsg(byId('albumUploadMsg'), res.error.message, true); return; }
+    if (res.error) { setMsg(byId('albumUploadMsg'), errorMessage(res.error), true); return; }
     var rows = res.data || [];
     var html = [albumUploadTile()];
     if (!rows.length) {
@@ -1112,9 +1181,11 @@
 
   async function uploadAlbumFiles(files){
     if (!currentAlbum || !files.length) return;
+    if (!await ensureCurrentTeacherAccess()) return;
     var msg = byId('albumUploadMsg');
     setMsg(msg, '업로드 준비 중입니다.');
     var result = await uploadFilesToPost(currentAlbum.id, 'album', files, msg);
+    if (teacherAccessEnded) return;
     if (result.failed.length) {
       setMsg(msg, files.length + '장 중 ' + result.uploadedFiles.length + '장 업로드 완료\n' + result.failed.map(function(item){ return item.name + ': ' + item.message; }).join('\n'), true);
     } else if (result.uploadedFiles.length) {
@@ -1150,12 +1221,14 @@
           }
         }
         result.failed.push({ name: file && file.name ? file.name : '이름 없는 파일', message: errorMessage(err) });
+        if (teacherAccessEnded) break;
       }
     }
     return result;
   }
 
   async function deleteMedia(id, path){
+    if (!await ensureCurrentTeacherAccess()) return;
     if (!confirm('이 사진을 삭제할까요?')) return;
     var removeRes = await client.storage.from(BUCKET).remove([path]);
     if (removeRes.error) { alert(errorMessage(removeRes.error)); return; }
@@ -1170,7 +1243,7 @@
       .eq('class_id', currentClass.id)
       .order('created_at', { ascending:false });
     if (res.error) {
-      byId('commentList').innerHTML = '<div class="empty">' + esc(res.error.message) + '</div>';
+      byId('commentList').innerHTML = '<div class="empty">' + esc(errorMessage(res.error)) + '</div>';
       return;
     }
     var rows = (res.data || []).sort(function(a, b){
@@ -1194,6 +1267,7 @@
   }
 
   async function saveReply(id){
+    if (!await ensureCurrentTeacherAccess()) return;
     var input = document.querySelector('[data-reply-input="' + id + '"]');
     var res = await client.from('class_comments')
       .update({ reply: input.value.trim(), replied_at: new Date().toISOString() })
@@ -1205,6 +1279,7 @@
 
   async function loadActiveTab(){
     if (!currentClass) return;
+    if (!await ensureCurrentTeacherAccess()) return;
     if (activeTab === 'diary') await loadDiaryTab();
     if (activeTab === 'event') await loadEventTab();
     if (activeTab === 'album') await loadAlbumTab();
