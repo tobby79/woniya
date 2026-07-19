@@ -13,6 +13,7 @@
     --cream:#FBF6EE;--ink:#403733;--ink-soft:#6E625B;--coral:#FF8A6B;
     --coral-deep:#F2715A;--sage:#9CB89A;--paper:#FFFFFF;--line:#f1e9e0;
     --display:'Gowun Dodum',sans-serif;--hand:'Gaegu',cursive;--body:'Pretendard',sans-serif;
+    --topbar-height:57px;
   }
   *{margin:0;padding:0;box-sizing:border-box}
   body{font-family:var(--body);color:var(--ink);background:var(--cream);line-height:1.6;min-height:100vh;-webkit-font-smoothing:antialiased}
@@ -20,8 +21,10 @@
   .topbar{position:sticky;top:0;z-index:40;padding:14px 0;background:rgba(255,250,243,.86);backdrop-filter:blur(10px);box-shadow:0 1px 0 rgba(180,140,110,.12)}
   .topbar-inner{max-width:980px;margin:0 auto;padding:0 22px;display:flex;align-items:center;justify-content:space-between;gap:14px}
   .brand{font-family:var(--display);font-size:1.24rem;color:var(--ink);text-decoration:none;letter-spacing:-.5px}
-  .topbar-actions{display:flex;align-items:center;gap:10px;color:var(--ink-soft);font-size:.85rem}
-  .mini-home-link{white-space:nowrap}
+  .topbar-actions{display:flex;align-items:center;gap:7px;color:var(--ink-soft);font-size:.85rem;min-width:0}
+  #classNameTop{flex:0 1 auto;max-width:260px;min-width:0;margin-right:5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#81756f;font-size:13.5px;font-weight:700}
+  #classNameTop:empty{display:none}
+  .mini-home-link,.class-switch-link{white-space:nowrap}
   .mini-home-link[aria-disabled="true"]{opacity:.55;pointer-events:none}
   .wrap{max-width:980px;margin:0 auto;padding:38px 22px 68px}
   .section-eyebrow{font-family:var(--hand);font-size:1.12rem;color:var(--sage);font-weight:700}
@@ -43,9 +46,18 @@
   .btn.ghost{background:transparent;color:var(--ink-soft);box-shadow:none;border:1.5px solid #e7dccf;width:auto;padding:8px 16px;font-size:.84rem}
   .btn.danger{background:#fff;color:#D9534F;border:1.5px solid #f5c6c4;box-shadow:none;width:auto;padding:8px 16px;font-size:.84rem}
   .btn.small{width:auto;padding:8px 16px;font-size:.84rem;box-shadow:none}
+  .topbar-actions .btn{width:auto;height:36px;min-height:36px;padding:0 14px;border-radius:10px;font-size:13px;line-height:1;font-weight:700;box-shadow:none;transition:background-color .16s ease,color .16s ease,border-color .16s ease}
+  .topbar-actions .btn:hover{transform:none}
+  .topbar-actions .btn:focus-visible{outline:2px solid rgba(242,113,90,.32);outline-offset:2px}
+  .topbar-actions .class-switch-link{background:rgba(255,255,255,.52);color:#766a63;border:1px solid #e7ddd2}
+  .topbar-actions .class-switch-link:hover{background:#fff8f1;border-color:#ded1c3;color:#5f554f}
+  .topbar-actions .mini-home-link{background:#fff0ea;color:#cf684f;border:1px solid #f9ddd3}
+  .topbar-actions .mini-home-link:hover{background:#ffe3d9;border-color:#f6d2c5;color:#b95640}
+  .topbar-actions #logoutBtn{padding:0 10px;background:transparent;color:#8a7e77;border:1px solid transparent;font-weight:600}
+  .topbar-actions #logoutBtn:hover{background:#f4ece4;color:#695f59}
   .msg{margin-top:12px;font-size:.88rem;text-align:center;color:var(--ink-soft)}
   .msg.error{color:#D9534F}.msg.ok{color:var(--sage)}
-  .tab-bar{position:sticky;top:57px;z-index:30;display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;background:var(--cream);padding:14px 22px 10px;margin:0 -22px 24px}
+  .tab-bar{position:sticky;top:var(--topbar-height);z-index:30;display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;background:var(--cream);padding:14px 22px 10px;margin:0 -22px 24px}
   .tab-bar::-webkit-scrollbar{display:none}
   .tab-btn{flex:0 0 auto;padding:9px 16px;border-radius:30px;border:1.5px solid var(--line);background:var(--paper);color:var(--ink-soft);font-weight:800;font-size:.88rem;cursor:pointer;white-space:nowrap;font-family:var(--body)}
   .tab-btn.active{background:var(--coral);color:#fff;border-color:var(--coral)}
@@ -87,7 +99,14 @@
   .detail-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:16px}
   .detail-desc{margin-top:8px;color:var(--ink-soft);font-size:.92rem;line-height:1.65;word-break:break-word}
   .detail-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
-  @media (max-width:760px){.topbar-inner{gap:10px}.topbar-actions{gap:7px;justify-content:flex-end;flex-wrap:wrap}.mini-home-link,.topbar-actions .btn.ghost{padding:7px 12px;font-size:.78rem}.layout,.split{grid-template-columns:1fr}.album-grid,.photo-grid{grid-template-columns:repeat(2,1fr)}.panel{padding:22px}.day-cell{min-height:62px}}
+  .class-selector-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:14px;margin-top:20px}
+  .class-select-card{display:flex;flex-direction:column;min-width:0;text-align:left}
+  .class-select-center,.class-select-name,.class-select-meta{overflow-wrap:anywhere}
+  .class-select-center{font-size:.8rem;font-weight:800;color:var(--sage);margin-bottom:5px}
+  .class-select-name{font-size:1.05rem;font-weight:900;color:var(--ink)}
+  .class-select-meta{font-size:.84rem;color:var(--ink-soft);margin:5px 0 14px}
+  .class-select-button{width:100%;margin-top:auto}
+  @media (max-width:760px){.topbar-inner{gap:10px;align-items:flex-start;flex-wrap:wrap}.topbar-actions{width:100%;gap:7px;justify-content:flex-start;flex-wrap:wrap}.topbar-actions #classNameTop{flex:1 0 100%;max-width:100%;margin-right:0}.topbar-actions .btn{height:36px;padding:0 12px;font-size:12.5px}.topbar-actions #logoutBtn{padding:0 10px}.layout,.split{grid-template-columns:1fr}.album-grid,.photo-grid{grid-template-columns:repeat(2,1fr)}.panel{padding:22px}.day-cell{min-height:62px}}
 </style>
 </head>
 <body>
@@ -96,6 +115,7 @@
     <a class="brand" href="index.html">원이야</a>
     <div class="topbar-actions">
       <span id="classNameTop"></span>
+      <a class="btn ghost class-switch-link" id="classSwitchLink" href="class-admin.html" hidden>반 선택</a>
       <a class="btn ghost mini-home-link" id="miniHomeLink" hidden aria-disabled="true">우리 반 미니홈피로 가기</a>
       <button type="button" class="btn ghost" id="logoutBtn" hidden>로그아웃</button>
     </div>
@@ -124,6 +144,14 @@
       <button type="submit" class="btn" id="authSubmit">로그인</button>
       <div class="msg error" id="authMsg"></div>
     </form>
+  </section>
+
+  <section class="panel" id="classSelectPanel" hidden>
+    <div class="section-eyebrow">담임 교사 공간</div>
+    <h2 class="section-title">담당 반을 선택해 주세요</h2>
+    <p class="lead">관리할 반을 선택하면 해당 반 관리 화면으로 이동합니다.</p>
+    <div class="class-selector-list" id="classSelectList"></div>
+    <p class="msg" id="classSelectMsg"></p>
   </section>
 
   <section id="appPanel" hidden>
@@ -288,15 +316,24 @@
   var currentDiaryMedia = [];
   var albumDraftFiles = [];
   var albumDraftSeq = 0;
+  var diaryFormBaseline = '';
+  var noticeFormBaseline = '';
+  var eventFormBaseline = '';
+  var albumFormBaseline = '';
 
+  var topbar = document.querySelector('.topbar');
   var loadingPanel = byId('loadingPanel');
   var authPanel = byId('authPanel');
+  var classSelectPanel = byId('classSelectPanel');
+  var classSelectList = byId('classSelectList');
+  var classSelectMsg = byId('classSelectMsg');
   var appPanel = byId('appPanel');
   var noticePanel = byId('noticePanel');
   var pageNotice = byId('pageNotice');
   var noticeHomeBtn = byId('noticeHomeBtn');
   var leadText = byId('leadText');
   var classNameTop = byId('classNameTop');
+  var classSwitchLink = byId('classSwitchLink');
   var miniHomeLink = byId('miniHomeLink');
   var logoutBtn = byId('logoutBtn');
 
@@ -307,6 +344,29 @@
     });
   }
   function escWithBr(s){ return esc(s).replace(/\r?\n/g, '<br>'); }
+  function formSnapshot(ids){
+    return JSON.stringify(ids.map(function(id){ return byId(id).value; }));
+  }
+  function rememberSimpleFormBaseline(ids){
+    var snapshot = formSnapshot([ids.id, ids.title, ids.body]);
+    if (ids.id === 'diaryId') diaryFormBaseline = snapshot;
+    if (ids.id === 'noticeId') noticeFormBaseline = snapshot;
+  }
+  function hasUnsavedTeacherWork(){
+    if (formSnapshot(['diaryId', 'diaryTitle', 'diaryBody']) !== diaryFormBaseline) return true;
+    if (formSnapshot(['noticeId', 'noticeTitle', 'noticeBody']) !== noticeFormBaseline) return true;
+    if (diaryDraftFiles.length || albumDraftFiles.length) return true;
+    if (!byId('eventModal').hidden &&
+        formSnapshot(['eventId', 'eventTitle', 'eventDate', 'eventBody']) !== eventFormBaseline) return true;
+    if (formSnapshot(['albumId', 'albumTitle', 'albumDate', 'albumBody']) !== albumFormBaseline) return true;
+    return Array.from(document.querySelectorAll('[data-reply-input]')).some(function(input){
+      return input.value.trim() !== String(input.dataset.originalValue || '').trim();
+    });
+  }
+  function syncTopbarHeight(){
+    if (!topbar) return;
+    document.documentElement.style.setProperty('--topbar-height', Math.ceil(topbar.getBoundingClientRect().height) + 'px');
+  }
   function isTeacherAuthorizationError(error){
     var code = error && error.code ? String(error.code).toLowerCase() : '';
     var message = error && error.message ? String(error.message).toLowerCase() : '';
@@ -323,7 +383,8 @@
     return error && error.message ? error.message : String(error);
   }
   function showPanel(panel){
-    [loadingPanel, authPanel, appPanel, noticePanel].forEach(function(item){ item.hidden = item !== panel; });
+    [loadingPanel, authPanel, classSelectPanel, appPanel, noticePanel].forEach(function(item){ item.hidden = item !== panel; });
+    requestAnimationFrame(syncTopbarHeight);
   }
   function setMsg(el, text, isError){
     el.innerHTML = escWithBr(text || '');
@@ -332,6 +393,7 @@
 
   function showClassAccessNotice(title, description){
     currentClass = null;
+    classSwitchLink.hidden = true;
     miniHomeLink.hidden = true;
     miniHomeLink.removeAttribute('href');
     noticeHomeBtn.hidden = true;
@@ -350,6 +412,7 @@
     if (teacherAccessEnded) return;
     teacherAccessEnded = true;
     currentClass = null;
+    classSwitchLink.hidden = true;
     miniHomeLink.hidden = true;
     miniHomeLink.removeAttribute('href');
     appPanel.querySelectorAll('button,input,textarea,select').forEach(function(el){ el.disabled = true; });
@@ -493,6 +556,65 @@
     });
   }
 
+  async function loadCenterNamesForTeacherClasses(rows){
+    var centerIds = Array.from(new Set(rows.map(function(row){ return row.center_id; }).filter(Boolean)));
+    var names = new Map();
+    if (!centerIds.length) return { names:names, incomplete:false };
+    try {
+      var res = await client.from('centers')
+        .select('id,name')
+        .in('id', centerIds);
+      if (res.error || !Array.isArray(res.data)) return { names:names, incomplete:true };
+      res.data.forEach(function(row){
+        if (row && row.id && row.name) names.set(row.id, row.name);
+      });
+      return { names:names, incomplete:names.size < centerIds.length };
+    } catch (_err) {
+      return { names:names, incomplete:true };
+    }
+  }
+
+  function renderTeacherClassChoices(rows, centerInfo){
+    currentClass = null;
+    classNameTop.textContent = '';
+    classSwitchLink.hidden = true;
+    miniHomeLink.hidden = true;
+    miniHomeLink.removeAttribute('href');
+    classSelectList.innerHTML = '';
+    rows.forEach(function(row){
+      var card = document.createElement('article');
+      card.className = 'card class-select-card';
+
+      var center = document.createElement('div');
+      center.className = 'class-select-center';
+      center.textContent = centerInfo.names.get(row.center_id) || '소속 센터';
+
+      var name = document.createElement('div');
+      name.className = 'class-select-name';
+      name.textContent = row.name || '이름 없는 반';
+
+      card.appendChild(center);
+      card.appendChild(name);
+      if (row.age_label) {
+        var meta = document.createElement('div');
+        meta.className = 'class-select-meta';
+        meta.textContent = row.age_label;
+        card.appendChild(meta);
+      }
+
+      var button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'btn small class-select-button';
+      button.dataset.classId = row.id;
+      button.textContent = '이 반 관리하기';
+      card.appendChild(button);
+      classSelectList.appendChild(card);
+    });
+    classSelectMsg.textContent = centerInfo.incomplete ? '일부 센터명은 권한에 따라 표시되지 않을 수 있습니다.' : '';
+    leadText.textContent = '담당 반이 여러 개 있습니다. 관리할 반을 선택해 주세요.';
+    showPanel(classSelectPanel);
+  }
+
   async function loadTeacherClass(session){
     var loadGeneration = ++teacherClassLoadGeneration;
     var requestedUserId = session && session.user ? session.user.id : null;
@@ -543,13 +665,41 @@
       currentClass = requestedRes.data;
     } else {
       var res = await client.from('classes')
-        .select('id,name,age_label,teacher_id,center_id')
+        .select('id,name,age_label,teacher_id,center_id,created_at')
         .eq('teacher_id', session.user.id)
         .order('created_at', { ascending:true })
-        .limit(1);
+        .order('id', { ascending:true });
       if (!isCurrentTeacherClassLoad(loadGeneration, requestedUserId, session)) return;
-      if (res.error) throw res.error;
-      currentClass = (res.data || [])[0] || null;
+      if (res.error) {
+        showClassAccessNotice(
+          '담당 반을 불러오지 못했습니다.',
+          '잠시 후 새로고침해 다시 시도해 주세요.'
+        );
+        return;
+      }
+      if (!Array.isArray(res.data) || res.data.some(function(row){ return !row || typeof row.id !== 'string' || !row.id; })) {
+        showClassAccessNotice(
+          '담당 반 정보를 확인하지 못했습니다.',
+          '잠시 후 새로고침해 다시 시도해 주세요.'
+        );
+        return;
+      }
+      var teacherClasses = res.data;
+      if (!teacherClasses.length) {
+        showClassAccessNotice(
+          '담당 반이 없습니다.',
+          '원장님이 담당 교사로 배정하면 이곳에서 반을 관리할 수 있어요.'
+        );
+        return;
+      }
+      if (teacherClasses.length === 1) {
+        location.replace('class-admin.html?class_id=' + encodeURIComponent(teacherClasses[0].id));
+        return;
+      }
+      var centerInfo = await loadCenterNamesForTeacherClasses(teacherClasses);
+      if (!isCurrentTeacherClassLoad(loadGeneration, requestedUserId, session)) return;
+      renderTeacherClassChoices(teacherClasses, centerInfo);
+      return;
     }
     if (!currentClass) {
       miniHomeLink.hidden = true;
@@ -567,6 +717,7 @@
     }
     if (!isCurrentTeacherClassLoad(loadGeneration, requestedUserId, session)) return;
     leadText.textContent = classNameTop.textContent + ' 미니홈피를 관리하고 있어요.';
+    classSwitchLink.hidden = false;
     showPanel(appPanel);
     try {
       await loadActiveTab();
@@ -724,6 +875,7 @@
           byId(ids.id).value = postId;
           byId(ids.submit).textContent = '수정 저장';
           byId(ids.cancel).hidden = false;
+          rememberSimpleFormBaseline(ids);
           setMsg(msg, '일지 내용은 저장되었지만 일부 사진 업로드에 실패했습니다.\n' + uploadResult.failed.map(function(item){ return item.name + ': ' + item.message; }).join('\n'), true);
           return;
         }
@@ -750,6 +902,7 @@
       currentDiaryMedia = [];
       clearDiaryDraftFiles();
     }
+    rememberSimpleFormBaseline(ids);
   }
 
   async function editSimplePost(id, type){
@@ -762,6 +915,7 @@
     byId(ids.body).value = res.data.body || '';
     byId(ids.submit).textContent = '수정 저장';
     byId(ids.cancel).hidden = false;
+    rememberSimpleFormBaseline(ids);
     if (type === 'diary') {
       clearDiaryDraftFiles();
       await loadDiaryMedia(id);
@@ -967,6 +1121,7 @@
     byId('eventTitle').value = row ? (row.title || '') : '';
     byId('eventDate').value = row ? row.event_date : selectedDate;
     byId('eventBody').value = row ? (row.body || '') : '';
+    eventFormBaseline = formSnapshot(['eventId', 'eventTitle', 'eventDate', 'eventBody']);
     byId('eventModal').hidden = false;
   }
 
@@ -986,6 +1141,7 @@
     if (res.error) { setMsg(byId('eventMsg'), errorMessage(res.error), true); return; }
     selectedDate = payload.event_date;
     calendarDate = firstOfMonth(new Date(payload.event_date + 'T00:00:00'));
+    eventFormBaseline = formSnapshot(['eventId', 'eventTitle', 'eventDate', 'eventBody']);
     byId('eventModal').hidden = true;
     await loadEventTab();
   }
@@ -1070,6 +1226,7 @@
           byId('albumId').value = postId;
           byId('albumSubmit').textContent = '수정 저장';
           byId('albumCancel').hidden = false;
+          albumFormBaseline = formSnapshot(['albumId', 'albumTitle', 'albumDate', 'albumBody']);
           setMsg(msg, '앨범 정보는 저장되었지만 일부 사진 업로드에 실패했습니다.\n' + uploadResult.failed.map(function(item){ return item.name + ': ' + item.message; }).join('\n'), true);
           return;
         }
@@ -1082,6 +1239,7 @@
       byId('albumSubmit').textContent = '앨범 저장';
       byId('albumCancel').hidden = true;
       clearDraftFiles();
+      albumFormBaseline = formSnapshot(['albumId', 'albumTitle', 'albumDate', 'albumBody']);
       setMsg(msg, '저장되었습니다.');
       await loadAlbumTab();
     } catch (err) {
@@ -1180,6 +1338,7 @@
     byId('albumBody').value = res.data.body || '';
     byId('albumSubmit').textContent = '수정 저장';
     byId('albumCancel').hidden = false;
+    albumFormBaseline = formSnapshot(['albumId', 'albumTitle', 'albumDate', 'albumBody']);
   }
 
   async function openAlbum(id){
@@ -1337,6 +1496,10 @@
         '<div class="actions"><button type="button" class="btn small" data-save-reply="' + esc(row.id) + '">답글 저장</button></div>' +
       '</article>';
     }).join('') : '<div class="empty">아직 방명록 글이 없습니다.</div>';
+    var replyValues = new Map(rows.map(function(row){ return [String(row.id), row.reply || '']; }));
+    byId('commentList').querySelectorAll('[data-reply-input]').forEach(function(input){
+      input.dataset.originalValue = replyValues.get(input.dataset.replyInput) || '';
+    });
   }
 
   async function saveReply(id){
@@ -1402,6 +1565,19 @@
       leadText.textContent = classNameTop.textContent + ' 미니홈피를 관리하고 있어요.';
       alert(errorMessage(err));
     });
+  });
+
+  classSwitchLink.addEventListener('click', function(e){
+    if (hasUnsavedTeacherWork() &&
+        !confirm('작성 중인 내용이 저장되지 않았습니다. 담당 반 선택 화면으로 이동할까요?')) {
+      e.preventDefault();
+    }
+  });
+
+  classSelectList.addEventListener('click', function(e){
+    var button = e.target.closest('[data-class-id]');
+    if (!button || !classSelectList.contains(button)) return;
+    location.href = 'class-admin.html?class_id=' + encodeURIComponent(button.dataset.classId);
   });
 
   byId('tabBar').addEventListener('click', async function(e){
@@ -1480,6 +1656,7 @@
     byId('albumSubmit').textContent = '앨범 저장';
     byId('albumCancel').hidden = true;
     clearDraftFiles();
+    albumFormBaseline = formSnapshot(['albumId', 'albumTitle', 'albumDate', 'albumBody']);
   });
   byId('backToAlbumsBtn').addEventListener('click', async function(){
     var btn = byId('backToAlbumsBtn');
@@ -1512,6 +1689,7 @@
       currentClass = null;
       teacherAccessEnded = false;
       logoutBtn.hidden = true;
+      classSwitchLink.hidden = true;
       miniHomeLink.hidden = true;
       miniHomeLink.removeAttribute('href');
       miniHomeLink.removeAttribute('data-action');
@@ -1540,6 +1718,15 @@
     try { await loadTeacherClass(currentSession); }
     catch (err) { pageNotice.innerHTML = escWithBr(errorMessage(err)); showPanel(noticePanel); }
   });
+  diaryFormBaseline = formSnapshot(['diaryId', 'diaryTitle', 'diaryBody']);
+  noticeFormBaseline = formSnapshot(['noticeId', 'noticeTitle', 'noticeBody']);
+  eventFormBaseline = formSnapshot(['eventId', 'eventTitle', 'eventDate', 'eventBody']);
+  albumFormBaseline = formSnapshot(['albumId', 'albumTitle', 'albumDate', 'albumBody']);
+  syncTopbarHeight();
+  window.addEventListener('resize', syncTopbarHeight);
+  if (window.ResizeObserver && topbar) {
+    new window.ResizeObserver(syncTopbarHeight).observe(topbar);
+  }
   renderDiaryPhotoGrid(null);
   renderDraftPhotoGrid();
 })();
