@@ -274,6 +274,8 @@
   var currentSession = null;
   var currentClass = null;
   var teacherAccessEnded = false;
+  var teacherClassLoadGeneration = 0;
+  var isSigningOut = false;
   var isCreatingClassMini = false;
   var activeTab = 'diary';
   var requestedClassId = new URLSearchParams(location.search).get('class_id') || '';
@@ -328,6 +330,22 @@
     el.className = 'msg' + (isError ? ' error' : '');
   }
 
+  function showClassAccessNotice(title, description){
+    currentClass = null;
+    miniHomeLink.hidden = true;
+    miniHomeLink.removeAttribute('href');
+    noticeHomeBtn.hidden = true;
+    pageNotice.innerHTML = '<strong>' + esc(title) + '</strong><br>' + esc(description);
+    showPanel(noticePanel);
+  }
+
+  function isCurrentTeacherClassLoad(loadGeneration, requestedUserId, session){
+    return !!requestedUserId &&
+      loadGeneration === teacherClassLoadGeneration &&
+      !!session && !!session.user && session.user.id === requestedUserId &&
+      !!currentSession && !!currentSession.user && currentSession.user.id === requestedUserId;
+  }
+
   function showTeacherAccessEnded(){
     if (teacherAccessEnded) return;
     teacherAccessEnded = true;
@@ -337,22 +355,31 @@
     appPanel.querySelectorAll('button,input,textarea,select').forEach(function(el){ el.disabled = true; });
     byId('eventModal').hidden = true;
     byId('eventModal').querySelectorAll('button,input,textarea,select').forEach(function(el){ el.disabled = true; });
-    pageNotice.textContent = '담당 교사 권한이 종료되었습니다. 더 이상 이 반의 내용을 변경할 수 없습니다.';
+    pageNotice.innerHTML = '<strong>담당 교사 권한이 종료되었습니다.</strong><br>현재 이 반의 담당 교사가 아니므로 관리 기능을 사용할 수 없습니다.';
     noticeHomeBtn.hidden = false;
     showPanel(noticePanel);
   }
 
   async function ensureCurrentTeacherAccess(){
     if (teacherAccessEnded) return false;
-    if (!currentClass || !currentSession || !currentSession.user) {
+    if (!currentSession || !currentSession.user) return false;
+    if (!currentClass) {
       showTeacherAccessEnded();
       return false;
     }
+    var accessGeneration = teacherClassLoadGeneration;
+    var accessUserId = currentSession.user.id;
+    var accessClassId = currentClass.id;
     var res = await client.from('classes')
       .select('id,teacher_id')
-      .eq('id', currentClass.id)
-      .eq('teacher_id', currentSession.user.id)
+      .eq('id', accessClassId)
+      .eq('teacher_id', accessUserId)
       .maybeSingle();
+    if (accessGeneration !== teacherClassLoadGeneration ||
+        !currentSession || !currentSession.user || currentSession.user.id !== accessUserId ||
+        !currentClass || currentClass.id !== accessClassId) {
+      return false;
+    }
     if (res.error) {
       if (isTeacherAuthorizationError(res.error)) {
         showTeacherAccessEnded();
@@ -467,17 +494,50 @@
   }
 
   async function loadTeacherClass(session){
+    var loadGeneration = ++teacherClassLoadGeneration;
+    var requestedUserId = session && session.user ? session.user.id : null;
+    if (!isCurrentTeacherClassLoad(loadGeneration, requestedUserId, session)) return;
     if (requestedClassId) {
       var requestedRes = await client.from('classes')
         .select('id,name,age_label,teacher_id,center_id')
         .eq('id', requestedClassId)
         .eq('teacher_id', session.user.id)
         .maybeSingle();
-      if (requestedRes.error || !requestedRes.data) {
-        miniHomeLink.hidden = true;
-        miniHomeLink.removeAttribute('href');
-        pageNotice.innerHTML = escWithBr('이 반의 관리 권한을 확인할 수 없습니다.\n초대받은 계정으로 로그인했는지 확인해 주세요.');
-        showPanel(noticePanel);
+      if (!isCurrentTeacherClassLoad(loadGeneration, requestedUserId, session)) return;
+      if (requestedRes.error) {
+        showClassAccessNotice(
+          '권한 정보를 확인하지 못했습니다.',
+          '잠시 후 새로고침해 다시 시도해 주세요.'
+        );
+        return;
+      }
+      if (!requestedRes.data) {
+        var endedAssignmentRes = await client.rpc('has_ended_class_teacher_assignment', {
+          p_class_id: requestedClassId
+        });
+        if (!isCurrentTeacherClassLoad(loadGeneration, requestedUserId, session)) return;
+        if (endedAssignmentRes.error) {
+          showClassAccessNotice(
+            '권한 정보를 확인하지 못했습니다.',
+            '잠시 후 새로고침해 다시 시도해 주세요.'
+          );
+          return;
+        }
+        if (endedAssignmentRes.data === true) {
+          showTeacherAccessEnded();
+          return;
+        }
+        if (endedAssignmentRes.data === false) {
+          showClassAccessNotice(
+            '이 반의 관리 권한을 확인할 수 없습니다.',
+            '담당 교사 계정과 접속 주소를 다시 확인해 주세요.'
+          );
+          return;
+        }
+        showClassAccessNotice(
+          '권한 정보를 확인하지 못했습니다.',
+          '잠시 후 새로고침해 다시 시도해 주세요.'
+        );
         return;
       }
       currentClass = requestedRes.data;
@@ -487,6 +547,7 @@
         .eq('teacher_id', session.user.id)
         .order('created_at', { ascending:true })
         .limit(1);
+      if (!isCurrentTeacherClassLoad(loadGeneration, requestedUserId, session)) return;
       if (res.error) throw res.error;
       currentClass = (res.data || [])[0] || null;
     }
@@ -498,10 +559,22 @@
       return;
     }
     classNameTop.textContent = currentClass.name + (currentClass.age_label ? ' · ' + currentClass.age_label : '');
-    await refreshMiniHomeState();
+    try {
+      await refreshMiniHomeState();
+    } catch (err) {
+      if (!isCurrentTeacherClassLoad(loadGeneration, requestedUserId, session)) return;
+      throw err;
+    }
+    if (!isCurrentTeacherClassLoad(loadGeneration, requestedUserId, session)) return;
     leadText.textContent = classNameTop.textContent + ' 미니홈피를 관리하고 있어요.';
     showPanel(appPanel);
-    await loadActiveTab();
+    try {
+      await loadActiveTab();
+    } catch (err) {
+      if (!isCurrentTeacherClassLoad(loadGeneration, requestedUserId, session)) return;
+      throw err;
+    }
+    if (!isCurrentTeacherClassLoad(loadGeneration, requestedUserId, session)) return;
   }
 
   async function createClassMiniForTeacher(){
@@ -1308,16 +1381,18 @@
   });
 
   logoutBtn.addEventListener('click', async function(){
+    if (isSigningOut) return;
+    isSigningOut = true;
+    logoutBtn.disabled = true;
+    teacherClassLoadGeneration += 1;
     var res = await client.auth.signOut();
-    if (res.error) { alert(errorMessage(res.error)); return; }
-    currentSession = null;
-    currentClass = null;
-    logoutBtn.hidden = true;
-    miniHomeLink.hidden = true;
-    miniHomeLink.removeAttribute('href');
-    miniHomeLink.removeAttribute('data-action');
-    classNameTop.textContent = '';
-    showPanel(authPanel);
+    if (res.error) {
+      isSigningOut = false;
+      logoutBtn.disabled = false;
+      alert('로그아웃하지 못했습니다. 잠시 후 다시 시도해 주세요.');
+      return;
+    }
+    location.reload();
   });
 
   miniHomeLink.addEventListener('click', function(e){
@@ -1427,7 +1502,32 @@
     byId('albumTitle').focus();
   });
 
-  client.auth.onAuthStateChange(function(_event, session){
+  client.auth.onAuthStateChange(function(event, session){
+    var previousUserId = currentSession && currentSession.user ? currentSession.user.id : null;
+    var nextUserId = session && session.user ? session.user.id : null;
+
+    if (event === 'SIGNED_OUT') {
+      teacherClassLoadGeneration += 1;
+      currentSession = null;
+      currentClass = null;
+      teacherAccessEnded = false;
+      logoutBtn.hidden = true;
+      miniHomeLink.hidden = true;
+      miniHomeLink.removeAttribute('href');
+      miniHomeLink.removeAttribute('data-action');
+      classNameTop.textContent = '';
+      showPanel(authPanel);
+      if (!isSigningOut) location.reload();
+      return;
+    }
+
+    if (event === 'SIGNED_IN' &&
+        (teacherAccessEnded || (previousUserId && nextUserId && previousUserId !== nextUserId))) {
+      teacherClassLoadGeneration += 1;
+      location.reload();
+      return;
+    }
+
     currentSession = session;
     logoutBtn.hidden = !session;
   });
