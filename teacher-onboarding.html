@@ -264,11 +264,11 @@
     classManageBtn.onclick = null;
   }
 
-  function enableClassManageButton(classId){
-    var url = 'class-admin.html?class_id=' + encodeURIComponent(classId);
+  function enableClassManageButton(){
+    var url = 'class-admin.html';
     classManageBtn.disabled = false;
     classManageBtn.hidden = false;
-    classManageBtn.textContent = '우리 반 관리하러 가기';
+    classManageBtn.textContent = '담당 반 관리하기';
     classManageBtn.onclick = function(){
       location.href = url;
     };
@@ -404,14 +404,15 @@
         return;
       }
 
-      var firstClass = verifiedClasses[0];
       var names = verifiedClasses.map(function(row){ return row.name || '이름 없는 반'; });
       leadText.textContent = '초대 연결이 완료되었습니다.';
       resultTitle.textContent = verifiedClasses.length === 1
         ? names[0] + ' 선생님으로 연결되었습니다'
         : verifiedClasses.length + '개 반의 선생님으로 연결되었습니다';
-      resultDesc.textContent = names.join(', ') + ' 관리 화면으로 이동할 수 있습니다.';
-      enableClassManageButton(firstClass.id);
+      resultDesc.textContent = verifiedClasses.length === 1
+        ? '담당 반 관리 화면으로 이동할 수 있어요.'
+        : names.join(', ') + ' 담당 반이 연결되었습니다. 다음 화면에서 관리할 반을 선택할 수 있어요.';
+      enableClassManageButton();
       showPanel(resultPanel);
     } catch (_err) {
       showAcceptFailure({ needsLogin: false, message: '교사 초대를 수락하지 못했습니다. 잠시 후 다시 시도해 주세요.' });
