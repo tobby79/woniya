@@ -669,6 +669,7 @@ function mapRowToData(row){
   const client = supabase.createClient(cfg.url, cfg.anonKey);
   let isPreviewMode = false;
   let isReviewMode = false;
+  let previewTemplateId = '';
   const PREVIEW_TEMPLATE_IDS = ['sunshine', 'carnival', 'forest', 'gallery'];
   const PREVIEW_MESSAGE = '이것은 템플릿 미리보기입니다. 실제 신청은 접수되지 않습니다.';
 
@@ -782,6 +783,7 @@ function mapRowToData(row){
     } else if (previewId){
       // ── 기존: 템플릿 샘플 미리보기 (?preview=carnival 등) — 절대 변경 금지 ──
       isPreviewMode = true;
+      previewTemplateId = previewId;
       data = await loadTemplatePreview(previewId);
     } else if (previewCenterSlug){
       // ── 신규: 관리자 draft 원 미리보기 (?preview_center=slug) ──
@@ -837,7 +839,9 @@ function mapRowToData(row){
   // sunshine 기준 구조 통일: 공지·행사일정 제거 → 메뉴 필터. 하루(#day)·FAQ(#faq) 섹션 유지.
   // 시설 소개/교육프로그램(인페이지 섹션) + 입학안내/오시는 길(새 페이지) 런타임 주입
   (function(){
-    var qs = c.slug ? ('?slug=' + encodeURIComponent(c.slug)) : '';
+    var qs = (isPreviewMode && previewTemplateId)
+      ? ('?preview=' + encodeURIComponent(previewTemplateId))
+      : (c.slug ? ('?slug=' + encodeURIComponent(c.slug)) : '');
     c.menu = (c.menu || []).filter(function(m){
       return m.href !== '#notice' && m.href !== '#schedule';
     });
@@ -1043,7 +1047,7 @@ function mapRowToData(row){
   window.__albumImgs__ = data.album?.items || [];
   if (isPreviewMode || isReviewMode){
     document.addEventListener('click', function(e){
-      var action = e.target.closest('#cslOpenBtn, #askConsultBtn, #admissionsSec .info-link-btn');
+      var action = e.target.closest('#cslOpenBtn, #askConsultBtn');
       if (!action) return;
       e.preventDefault();
       e.stopImmediatePropagation();
@@ -1374,7 +1378,9 @@ function disableReviewDetailLinks(){
 
 function renderInfoSections(data, c, esc){
   // M2: 입학안내·오시는 길은 공개형 새 페이지로 분리. 메인에는 요약+이동 버튼만 남긴다.
-  var qs = c.slug ? ('?slug=' + encodeURIComponent(c.slug)) : '';
+  var qs = (isPreviewMode && previewTemplateId)
+    ? ('?preview=' + encodeURIComponent(previewTemplateId))
+    : (c.slug ? ('?slug=' + encodeURIComponent(c.slug)) : '');
   var admSec = document.getElementById('admissionsSec');
   if (admSec){
     if (!data.admission){ admSec.hidden = true; }

@@ -299,7 +299,7 @@
   var decideCloseBtn  = document.getElementById('decideCloseBtn');
 
   function previewUrl(t){
-    if (authMode && slug) return t.file + '?preview_center=' + encodeURIComponent(slug);
+    if (authMode && !slug) return '';
     return slug ? t.file + '?slug=' + encodeURIComponent(slug) : t.file + '?preview=' + encodeURIComponent(t.key);
   }
 
@@ -401,8 +401,22 @@
 
   // ── 미리보기 모달 ──
   function openPreviewModal(t){
+    var url = previewUrl(t);
+    if (!url){
+      decideTitle.textContent = '미리보기를 열 수 없어요';
+      decideText.textContent = '현재 원 정보를 확인할 수 없습니다.';
+      decideSubText.textContent = '원장 콘솔에서 다시 템플릿 선택 화면을 열어 주세요.';
+      decideNumber.hidden = true;
+      decideNumber.textContent = '';
+      decideMsg.className = 'msg error';
+      decideMsg.textContent = '원 slug가 없어 미리보기를 열지 않았습니다.';
+      decideAdminBtn.hidden = true;
+      decidePublicBtn.hidden = true;
+      showModal(decideModal);
+      return;
+    }
     previewTitle.textContent = t.name;
-    previewFrame.src = previewUrl(t);
+    previewFrame.src = url;
     showModal(previewModal);
   }
   function closePreviewModal(){
