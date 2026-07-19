@@ -306,9 +306,11 @@
   .class-card-head,.class-detail-head,.invite-history-row{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
   .class-card-head>div:first-child,.class-detail-head>div:first-child{min-width:0;flex:1 1 auto}
   .class-card-title,.class-detail-title{font-weight:800;font-size:1rem;color:var(--ink)}
+  .class-detail-title-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
   .class-card-meta,.class-detail-meta,.invite-history-meta{margin-top:4px;font-size:.82rem;color:var(--ink-soft)}
   .class-card-actions,.class-detail-actions{display:flex;align-items:center;gap:6px;flex:0 0 auto;min-width:max-content;max-width:100%;flex-wrap:nowrap;justify-content:flex-end}
   .class-card-actions .class-mini-btn,.class-detail-actions .class-mini-btn{flex:0 0 auto}
+  .class-detail-actions .btn{width:auto;flex:0 0 auto;white-space:nowrap}
   .class-create-box{display:flex;align-items:flex-end;gap:10px;flex-wrap:wrap;margin:12px 0 18px;padding:14px;background:var(--cream);border:1.5px solid #f1e9e0;border-radius:18px}
   .class-create-box .field{flex:1 1 220px;margin-bottom:0}
   .class-create-box .btn{width:auto;flex:0 0 auto}
@@ -326,8 +328,14 @@
   .invite-history-error{margin-top:10px;padding:10px 12px;border-radius:10px;background:#FFF4F3;color:#9A4C50;font-size:.82rem;line-height:1.55}
   .invite-history-error.account{background:#FFF7E8;color:#8A681D}
   .teacher-assignment-meta{margin-top:14px;padding-top:14px;border-top:1px solid #eee3da;color:var(--ink-soft);font-size:.84rem;line-height:1.6}
+  .teacher-assignment-summary{display:flex;align-items:flex-end;justify-content:space-between;gap:10px 14px;flex-wrap:wrap}
+  .teacher-assignment-copy{min-width:0;flex:1 1 220px}
   .teacher-assignment-meta strong{color:var(--ink)}
-  .teacher-assignment-email{word-break:break-all}
+  .teacher-assignment-email{overflow-wrap:anywhere;word-break:break-word}
+  .teacher-assignment-actions{display:flex;align-items:center;gap:6px;flex:0 0 auto}
+  .teacher-assignment-actions .btn{width:auto;min-width:52px;min-height:32px;padding:6px 12px;font-size:.78rem;line-height:1.2;white-space:nowrap;box-shadow:none}
+  .teacher-assignment-actions .btn.danger{background:transparent;border-color:#efc2c0;color:#c84c49}
+  .teacher-assignment-actions .btn.danger:hover{background:#fff5f5}
   .teacher-lifecycle-note{margin:0 0 16px;color:var(--ink-soft);font-size:.9rem;line-height:1.65}
   .parent-code-box{margin-top:12px;background:#fff8f5;border:1.5px solid #ffe1d6;border-radius:18px;padding:16px;text-align:center}
   .parent-code-value{font-family:var(--display);font-size:1.7rem;font-weight:800;letter-spacing:.08em;color:var(--coral-deep);word-break:break-all}
@@ -450,6 +458,11 @@
     .class-card-actions,.class-detail-actions{width:100%;min-width:0;justify-content:flex-start;flex-wrap:wrap}
     .class-card-actions .btn,.class-detail-actions .btn{flex:1 1 150px}
     .class-card-actions .class-mini-btn,.class-detail-actions .class-mini-btn{flex:0 1 150px}
+    .class-detail-actions .btn{min-width:0;white-space:nowrap}
+    .teacher-assignment-summary{align-items:flex-start;flex-direction:column}
+    .teacher-assignment-copy{flex-basis:auto;width:100%}
+    .teacher-assignment-actions{width:100%}
+    .teacher-assignment-actions .btn{flex:0 0 auto;min-width:52px}
   }
 
 </style>
@@ -2489,21 +2502,30 @@
     var canManageTeacher = !!(row.teacher_id && activeAssignment && !teacherAssignmentsLoadFailed);
     var parentInvites = parentInvitesForClass(row.id);
     var pendingEnrollments = parentEnrollmentsForClass(row.id).filter(function(item){ return item.status === 'pending'; });
+    var assignmentStatus = row.teacher_id
+      ? '<span class="status-pill assigned">담당 교사 배정 완료</span>'
+      : '';
     var action = row.teacher_id
-      ? '<span class="status-pill assigned">담당 교사 배정 완료</span>' +
-        '<button type="button" class="btn ghost class-teacher-change-btn" data-class-id="' + esc(row.id) + '"' + (canManageTeacher ? '' : ' disabled') + '>담당 교사 변경</button>' +
-        '<button type="button" class="btn danger class-teacher-unassign-btn" data-class-id="' + esc(row.id) + '"' + (canManageTeacher ? '' : ' disabled') + '>담당 교사 해제</button>'
+      ? ''
       : '<button type="button" class="btn ghost class-invite-btn" data-class-id="' + esc(row.id) + '">' + esc(teacherInviteActionLabel(row.id)) + '</button>';
+    var teacherManagementActions = canManageTeacher
+      ? '<div class="teacher-assignment-actions">' +
+          '<button type="button" class="btn ghost class-teacher-change-btn" data-class-id="' + esc(row.id) + '" aria-label="담당 교사 변경" title="담당 교사 변경">변경</button>' +
+          '<button type="button" class="btn danger class-teacher-unassign-btn" data-class-id="' + esc(row.id) + '" aria-label="담당 교사 해제" title="담당 교사 해제">해제</button>' +
+        '</div>'
+      : '';
     var assignmentMeta = row.teacher_id
-      ? '<div class="teacher-assignment-meta"><strong>담당 교사 배정 완료</strong>' +
-        (teacherAssignmentsLoadFailed
-          ? '<div>배정 정보를 불러오지 못했습니다.</div>'
-          : activeAssignment
-          ? '<div class="teacher-assignment-email">' + esc(activeAssignment.teacher_email_snapshot || '이메일 정보 없음') + '</div>' +
-            (activeAssignment.assignment_source === 'invite_acceptance' && activeAssignment.assigned_at
-              ? '<div>배정 ' + esc(formatAdminDateTime(activeAssignment.assigned_at)) + '</div>'
-              : '')
-          : '<div>배정 이력 확인 필요</div>') +
+      ? '<div class="teacher-assignment-meta"><div class="teacher-assignment-summary">' +
+          '<div class="teacher-assignment-copy"><strong>현재 담당 교사</strong>' +
+          (teacherAssignmentsLoadFailed
+            ? '<div>배정 정보를 불러오지 못했습니다.</div>'
+            : activeAssignment
+            ? '<div class="teacher-assignment-email">' + esc(activeAssignment.teacher_email_snapshot || '이메일 정보 없음') + '</div>' +
+              (activeAssignment.assignment_source === 'invite_acceptance' && activeAssignment.assigned_at
+                ? '<div>배정 ' + esc(formatAdminDateTime(activeAssignment.assigned_at)) + '</div>'
+                : '')
+            : '<div>배정 이력 확인 필요</div>') +
+          '</div>' + teacherManagementActions + '</div>' +
         '</div>'
       : '';
     var parentAction = '<button type="button" class="btn ghost parent-code-btn" data-class-id="' + esc(row.id) + '">초대 코드 발급</button>';
@@ -2514,7 +2536,10 @@
       '<div class="class-detail-card">' +
         '<div class="class-detail-head">' +
           '<div>' +
-            '<div class="class-detail-title">' + esc(classTitle(row)) + '</div>' +
+            '<div class="class-detail-title-row">' +
+              '<div class="class-detail-title">' + esc(classTitle(row)) + '</div>' +
+              assignmentStatus +
+            '</div>' +
             '<div class="class-detail-meta">' + esc(classMeta(row) || '반 정보를 확인해 주세요') + '</div>' +
           '</div>' +
           '<div class="class-detail-actions">' + action + miniAction + parentAction + '</div>' +
