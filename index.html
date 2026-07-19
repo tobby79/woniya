@@ -241,6 +241,26 @@
     evaluated: '평가인증'
   };
 
+  function normalizedBadgeLabels(badges){
+    var labels = [];
+    var seen = Object.create(null);
+    function add(label){
+      var value = String(label == null ? '' : label).trim();
+      if (!value || seen[value]) return;
+      seen[value] = true;
+      labels.push(value);
+    }
+
+    if (!badges || typeof badges !== 'object') return labels;
+    if (Array.isArray(badges)) badges.forEach(add);
+    if (Array.isArray(badges.items)) badges.items.forEach(add);
+    Object.keys(badges).forEach(function(key){
+      if (key === 'items' || badges[key] !== true) return;
+      add(BADGE_LABELS[key] || key);
+    });
+    return labels;
+  }
+
   const TEMPLATE_FILES = {
     sunshine: 'template-sunshine.html',
     forest: 'template-forest.html',
@@ -384,9 +404,8 @@
       return;
     }
     listEl.innerHTML = list.map(function(c){
-      var badgeChips = Object.keys(c.badges || {})
-        .filter(function(k){ return c.badges[k]; })
-        .map(function(k){ return '<span>' + escapeHtml(BADGE_LABELS[k] || k) + '</span>'; })
+      var badgeChips = normalizedBadgeLabels(c.badges)
+        .map(function(label){ return '<span>' + escapeHtml(label) + '</span>'; })
         .join('');
       var tagChips = (c.tags || [])
         .map(function(t){ return '<span>' + escapeHtml(t) + '</span>'; })

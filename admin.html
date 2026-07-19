@@ -588,6 +588,10 @@
               <label for="f-address">주소</label>
               <input type="text" id="f-address">
             </div>
+            <div class="field" id="contactPhoneField">
+              <label for="f-contact-phone">대표전화</label>
+              <input type="tel" id="f-contact-phone" placeholder="예: 02-000-0000">
+            </div>
             <div class="field">
               <label for="f-hours">운영시간</label>
               <input type="text" id="f-hours" placeholder="예: 07:30 ~ 19:30">
@@ -4009,6 +4013,8 @@
 
   function setTemplateTabVisibility(){
     var templateMode = isTemplateMode();
+    var contactPhoneField = document.getElementById('contactPhoneField');
+    if (contactPhoneField) contactPhoneField.hidden = templateMode;
     ['class', 'bus', 'consult'].forEach(function(tab){
       var btn = document.querySelector('.tab-btn[data-tab="' + tab + '"]');
       var panel = document.querySelector('.tab-panel[data-panel="' + tab + '"]');
@@ -4124,6 +4130,7 @@
     document.getElementById('f-name').value    = currentCenter.name || '';
     document.getElementById('f-intro').value   = currentCenter.intro || '';
     document.getElementById('f-address').value = currentCenter.address || '';
+    document.getElementById('f-contact-phone').value = isTemplateMode() ? '' : (currentCenter.contact_phone || '');
     document.getElementById('f-hours').value   = currentCenter.operating_hours || '';
     loadBasicStats();
     loadPhotos();
@@ -4306,13 +4313,17 @@
         return { label: card.querySelector('.fs-label').value, value: card.querySelector('.fs-value').value };
       })
     });
-    var res = await client.from(centerTable()).update({
+    var basicPayload = {
       name:             document.getElementById('f-name').value,
       intro:            document.getElementById('f-intro').value,
       address:          document.getElementById('f-address').value,
       operating_hours:  document.getElementById('f-hours').value,
       facilities:       updatedFacilities
-    }).eq('id', currentCenter.id);
+    };
+    if (!isTemplateMode()) {
+      basicPayload.contact_phone = document.getElementById('f-contact-phone').value.trim() || null;
+    }
+    var res = await client.from(centerTable()).update(basicPayload).eq('id', currentCenter.id);
     saveStatus.className = res.error ? 'msg error' : 'msg ok';
     if (res.error) logAdminError('saveBasicInfo', res.error);
     if (!res.error) {
@@ -4320,6 +4331,7 @@
       currentCenter.intro = document.getElementById('f-intro').value;
       currentCenter.address = document.getElementById('f-address').value;
       currentCenter.operating_hours = document.getElementById('f-hours').value;
+      if (!isTemplateMode()) currentCenter.contact_phone = basicPayload.contact_phone;
       currentCenter.facilities = updatedFacilities;
       markSaved();
     }
