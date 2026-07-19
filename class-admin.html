@@ -574,6 +574,21 @@
     }
   }
 
+  async function refreshClassSwitcherVisibility(session, loadGeneration, requestedUserId){
+    classSwitchLink.hidden = true;
+    try {
+      var res = await client.from('classes')
+        .select('id')
+        .eq('teacher_id', session.user.id)
+        .limit(2);
+      if (!isCurrentTeacherClassLoad(loadGeneration, requestedUserId, session) || !currentClass) return;
+      if (res.error || !Array.isArray(res.data)) return;
+      classSwitchLink.hidden = res.data.length < 2;
+    } catch (_err) {
+      // 반 전환은 보조 기능이므로 조회 실패 시 현재 관리 화면을 그대로 유지합니다.
+    }
+  }
+
   function renderTeacherClassChoices(rows, centerInfo){
     currentClass = null;
     classNameTop.textContent = '';
@@ -717,8 +732,9 @@
     }
     if (!isCurrentTeacherClassLoad(loadGeneration, requestedUserId, session)) return;
     leadText.textContent = classNameTop.textContent + ' 미니홈피를 관리하고 있어요.';
-    classSwitchLink.hidden = false;
+    classSwitchLink.hidden = true;
     showPanel(appPanel);
+    refreshClassSwitcherVisibility(session, loadGeneration, requestedUserId);
     try {
       await loadActiveTab();
     } catch (err) {
