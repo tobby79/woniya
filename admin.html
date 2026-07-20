@@ -1139,6 +1139,9 @@
       var templateId = (currentEditTarget && currentEditTarget.templateId) || currentCenter.template_id || currentCenter.template;
       return templateId ? (currentTemplateFile() + '?preview=' + encodeURIComponent(templateId)) : '';
     }
+    if (isSuperAdmin && currentCenter.slug) {
+      return currentTemplateFile() + '?preview_center=' + encodeURIComponent(currentCenter.slug);
+    }
     return currentPublicPageUrl();
   }
 
