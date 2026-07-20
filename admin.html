@@ -4151,9 +4151,13 @@
   }
 
   async function loadAdminTargets(userId){
-    var ownRes = await client.from('centers').select('*').eq('owner_id', userId).maybeSingle();
+    var ownRes = await client.from('centers')
+      .select('*')
+      .eq('owner_id', userId)
+      .order('created_at', { ascending:false });
     if (ownRes.error) logAdminError('loadAdminTargets/center', ownRes.error);
-    currentOwnedCenter = ownRes.data || null;
+    var ownedCenters = ownRes.error || !Array.isArray(ownRes.data) ? [] : ownRes.data;
+    currentOwnedCenter = ownedCenters[0] || null;
 
     var requestedCenter = null;
     if (ADMIN_INITIAL_SLUG) {
@@ -4177,14 +4181,12 @@
       return order.indexOf(a.template_id) - order.indexOf(b.template_id);
     });
     editTargetOptions = [];
-    if (requestedCenter) {
-      editTargetOptions.push({ value:'center:' + requestedCenter.id, label:'원 · ' + (requestedCenter.name || requestedCenter.slug), type:'center', id:requestedCenter.id });
+    function addCenterOption(center){
+      if (!center || editTargetOptions.some(function(option){ return option.type === 'center' && option.id === center.id; })) return;
+      editTargetOptions.push({ value:'center:' + center.id, label:'원 · ' + (center.name || center.slug), type:'center', id:center.id });
     }
-    if (currentOwnedCenter) {
-      if (!requestedCenter || requestedCenter.id !== currentOwnedCenter.id) {
-        editTargetOptions.push({ value:'center:' + currentOwnedCenter.id, label:'내 원', type:'center', id:currentOwnedCenter.id });
-      }
-    }
+    addCenterOption(requestedCenter);
+    ownedCenters.forEach(addCenterOption);
     templateRows.forEach(function(row){
       editTargetOptions.push({
         value:'template:' + row.template_id,
