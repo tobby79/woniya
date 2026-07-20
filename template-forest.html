@@ -770,6 +770,10 @@
       cursor: pointer
     }
 
+    .flip.is-static .flip-inner {
+      cursor: default
+    }
+
     .flip.flipped .flip-inner {
       transform: rotateY(180deg)
     }
@@ -1609,6 +1613,10 @@
       return esc(normalized).replace(/\n/g, '<br>');
     }
 
+    function hasVisibleText(value){
+      return String(value ?? '').trim().length > 0;
+    }
+
     function heroTitleHtml(title, accent, accentClass){
       var titleHtml = escWithBr(title);
       var accentHtml = escWithBr(accent);
@@ -1619,7 +1627,8 @@
       return titleHtml + joiner + '<span' + cls + '>' + accentHtml + '</span>';
     }
 
-    function mapRowToData(row) {
+    function mapRowToData(row, options = {}) {
+      const { allowTeacherSampleFallback = false } = options;
       const media = row.center_media || [];
       const byType = (type) => {
         const seen = new Set();
@@ -1640,10 +1649,10 @@
       const teacherItems = byType('teacher').map((m, i) => {
         const fallback = teacherFallbacks[i % teacherFallbacks.length];
         return {
-          name: m.title || fallback.name,
-          role: m.subtitle || fallback.role,
+          name: allowTeacherSampleFallback ? (m.title || fallback.name) : (m.title ?? ''),
+          role: allowTeacherSampleFallback ? (m.subtitle || fallback.role) : (m.subtitle ?? ''),
           photo: m.photo_url,
-          message: m.caption || fallback.message
+          message: allowTeacherSampleFallback ? (m.caption || fallback.message) : (m.caption ?? '')
         };
       });
       return {
@@ -1724,7 +1733,7 @@
         if (admissionRes.error) throw admissionRes.error;
         row.center_media = mediaRes.data || [];
         row.admissions = admissionRes.data ? [admissionRes.data] : [];
-        return mapRowToData(resolveTemplateAssets(row));
+        return mapRowToData(resolveTemplateAssets(row), { allowTeacherSampleFallback: true });
       }
 
       let isAdminPreviewMode = false;
@@ -1950,6 +1959,18 @@
       const t = data.teachers, f = data.faqs;
       const albumImgs = data.album?.items || [];
 
+      function teacherCardHtml(tc){
+        const hasMessage = hasVisibleText(tc.message);
+        const flipAttrs = hasMessage
+          ? ` tabindex="0" role="button" aria-label="${esc(tc.name)} 카드 뒤집기"`
+          : '';
+        return `
+      <div class="flip${hasMessage ? '' : ' is-static'}"${flipAttrs}><div class="flip-inner">
+        <div class="face front"><div class="avatar"><img alt="${esc(tc.name)}" data-src="${esc(tc.photo)}"></div>
+          <div class="t-info"><div class="name">${esc(tc.name)}</div><div class="role">${esc(tc.role)}</div>${hasMessage ? '<div class="tap">눌러서 한마디 보기</div>' : ''}</div></div>
+        ${hasMessage ? `<div class="face back">${escWithBr(tc.message)}</div>` : ''}</div></div>`;
+      }
+
       // 우리 원 시설 (배지 + 썸네일 + 모달)
       const fac = data.center.facilities;
       if (fac) {
@@ -1972,11 +1993,7 @@
       <div class="eyebrow">🍃 우리 반 선생님</div>
       <h2>우리 원 선생님</h2>
     </div>
-    <div class="cards">${(t?.items || []).map(tc => `
-      <div class="flip" tabindex="0" role="button" aria-label="${esc(tc.name)} 카드 뒤집기"><div class="flip-inner">
-        <div class="face front"><div class="avatar"><img alt="${esc(tc.name)}" data-src="${esc(tc.photo)}"></div>
-          <div class="t-info"><div class="name">${esc(tc.name)}</div><div class="role">${esc(tc.role)}</div><div class="tap">눌러서 한마디 보기</div></div></div>
-        <div class="face back">${escWithBr(tc.message)}</div></div></div>`).join('')}</div>`;
+    <div class="cards">${(t?.items || []).map(teacherCardHtml).join('')}</div>`;
 
       // 교육프로그램 (이미지 카드 + 모달)
       const prog = data.center.programs;
@@ -2232,7 +2249,7 @@
         });
       });
 
-      document.querySelectorAll('.flip').forEach(function (card) {
+      document.querySelectorAll('.flip:not(.is-static)').forEach(function (card) {
         function toggle() { card.classList.toggle('flipped'); }
         card.addEventListener('click', toggle);
         card.addEventListener('keydown', function (ev) { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); toggle(); } });

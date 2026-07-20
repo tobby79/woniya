@@ -734,6 +734,7 @@
   }
   .flip{perspective:1200px;min-height:320px}
   .flip-inner{position:relative;width:100%;height:100%;min-height:inherit;transition:transform .45s cubic-bezier(.4,.2,.2,1);transform-style:preserve-3d;cursor:pointer}
+  .flip.is-static .flip-inner{cursor:default}
   .flip.flipped .flip-inner{transform:rotateY(180deg)}
   .face{
     position:absolute;inset:0;min-height:inherit;backface-visibility:hidden;
@@ -1423,6 +1424,10 @@ function escWithBr(text){
   return esc(normalized).replace(/\n/g, '<br>');
 }
 
+function hasVisibleText(value){
+  return String(value ?? '').trim().length > 0;
+}
+
 function heroTitleHtml(title, accent, accentClass){
   var titleHtml = escWithBr(title);
   var accentHtml = escWithBr(accent);
@@ -1435,7 +1440,8 @@ function heroTitleHtml(title, accent, accentClass){
 
 // center_media(행 단위)를 기존 haetsal.json 모양(day_story[]/album.items[]/teachers.items[])으로 되돌린다.
 // album/teachers의 eyebrow·title·sub는 아직 centers 테이블에 컬럼이 없어 고정 문구로 채운다.
-function mapRowToData(row){
+function mapRowToData(row, options = {}){
+  const { allowTeacherSampleFallback = false } = options;
   const media = row.center_media || [];
   const byType = (type) => {
     const seen = new Set();
@@ -1460,10 +1466,10 @@ function mapRowToData(row){
   const teacherItems = byType('teacher').map((m, i) => {
     const fallback = teacherFallbacks[i % teacherFallbacks.length];
     return {
-      name: m.title || fallback.name,
-      role: m.subtitle || fallback.role,
+      name: allowTeacherSampleFallback ? (m.title || fallback.name) : (m.title ?? ''),
+      role: allowTeacherSampleFallback ? (m.subtitle || fallback.role) : (m.subtitle ?? ''),
       photo: m.photo_url,
-      message: m.caption || fallback.message
+      message: allowTeacherSampleFallback ? (m.caption || fallback.message) : (m.caption ?? '')
     };
   });
 
@@ -1571,7 +1577,7 @@ function mapRowToData(row){
     if (admissionRes.error) throw admissionRes.error;
     row.center_media = mediaRes.data || [];
     row.admissions = admissionRes.data ? [admissionRes.data] : [];
-    return mapRowToData(resolveTemplateAssets(row));
+    return mapRowToData(resolveTemplateAssets(row), { allowTeacherSampleFallback: true });
   }
 
   let isAdminPreviewMode = false;
@@ -2046,20 +2052,24 @@ function mapRowToData(row){
   function teacherCardHtml(tc){
     const className = extractClassName(tc.role);
     const bs = classBadgeStyle(className);
+    const hasMessage = hasVisibleText(tc.message);
     const badgeHtml = className
       ? `<span class="class-badge" style="background:${bs.bg};color:${bs.text};border-color:${bs.border}">${esc(className)}</span>`
       : '';
+    const flipAttrs = hasMessage
+      ? ` tabindex="0" role="button" aria-label="${esc(tc.name)} 카드 뒤집기 — 한마디 보기"`
+      : '';
     return `
-      <div class="flip reveal" tabindex="0" role="button" aria-label="${esc(tc.name)} 카드 뒤집기 — 한마디 보기">
+      <div class="flip reveal${hasMessage ? '' : ' is-static'}"${flipAttrs}>
         <div class="flip-inner">
           <div class="face front">
             <div class="avatar"><div class="avatar-img"><img alt="${esc(tc.name)}" data-src="${esc(tc.photo)}"></div></div>
             <div class="name">${esc(tc.name)}</div>
             <div class="role">${esc(tc.role)}</div>
             ${badgeHtml}
-            <div class="tap">${TAP_ICON}탭하여 한마디 보기</div>
+            ${hasMessage ? `<div class="tap">${TAP_ICON}탭하여 한마디 보기</div>` : ''}
           </div>
-          <div class="face back">${escWithBr(tc.message)}</div>
+          ${hasMessage ? `<div class="face back">${escWithBr(tc.message)}</div>` : ''}
         </div>
       </div>`;
   }
@@ -2596,7 +2606,7 @@ function initInteractions(){
     },{passive:true});
   }
 
-  document.querySelectorAll('.flip').forEach(function(card){
+  document.querySelectorAll('.flip:not(.is-static)').forEach(function(card){
     function toggle(){ card.classList.toggle('flipped'); }
     card.addEventListener('click',toggle);
     card.addEventListener('keydown',function(ev){ if(ev.key==='Enter'||ev.key===' '){ ev.preventDefault(); toggle(); } });
