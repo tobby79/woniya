@@ -1056,6 +1056,7 @@
   var currentOwnedCenter = null;
   var currentEditTarget = null;
   var currentAdminSession = null;
+  var initializedAuthIdentityKey = null;
   var isSuperAdmin = false;
   var editTargetOptions = [];
   var isLoadingTarget = false;
@@ -4311,7 +4312,24 @@
       : { type:'center', id:first.id });
   }
 
+  function getAuthIdentityKey(session){
+    if (!session || !session.user) return '';
+    var userId = session.user.id || '';
+    var email = String(session.user.email || '').trim().toLowerCase();
+    if (!userId && !email) return '';
+    return [userId, email].join('|');
+  }
+
+  function initializeAuthenticatedSession(session){
+    var identityKey = getAuthIdentityKey(session);
+    currentAdminSession = session;
+    if (!identityKey || identityKey === initializedAuthIdentityKey) return;
+    initializedAuthIdentityKey = identityKey;
+    showLoggedIn(session);
+  }
+
   function showLoggedOut(){
+    initializedAuthIdentityKey = null;
     loginView.hidden = false;
     adminView.hidden = true;
     whoBox.hidden = true;
@@ -4360,12 +4378,26 @@
     await loadEditableTarget({ type:'center', id:res.data.id });
   }
 
-  client.auth.onAuthStateChange(function(_event, session){
-    if (session) showLoggedIn(session); else showLoggedOut();
-  });
+  client.auth.onAuthStateChange(function(event, session){
+    if (event === 'SIGNED_OUT') {
+      showLoggedOut();
+      return;
+    }
 
-  client.auth.getSession().then(function(res){
-    if (res.data.session) showLoggedIn(res.data.session); else showLoggedOut();
+    if (event === 'INITIAL_SESSION') {
+      if (session) initializeAuthenticatedSession(session);
+      else showLoggedOut();
+      return;
+    }
+
+    if (!session) return;
+    currentAdminSession = session;
+
+    if (event === 'TOKEN_REFRESHED' || event === 'PASSWORD_RECOVERY') return;
+
+    if (event === 'SIGNED_IN' || event === 'USER_UPDATED') {
+      initializeAuthenticatedSession(session);
+    }
   });
 
   loginForm.addEventListener('submit', async function(e){
