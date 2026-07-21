@@ -2244,8 +2244,8 @@ function mapRowToData(row, options = {}){
   initInteractions();
   renderInfoSections(data, c, esc, isPreviewMode, previewTemplateId, isReviewMode);
   if (isReviewMode) disableReviewDetailLinks();
-  setupAskPanel(data.faqs);
-  initConsultationForm(client, c.id);
+  setupAskPanel(data.faqs, isPreviewMode, isReviewMode, PREVIEW_MESSAGE, REVIEW_MESSAGE);
+  initConsultationForm(client, c.id, isPreviewMode, isReviewMode, PREVIEW_MESSAGE, REVIEW_MESSAGE);
 })();
 
 function initInteractions(){
@@ -2681,7 +2681,7 @@ function initInteractions(){
   });
 }
 
-function setupAskPanel(faqs){
+function setupAskPanel(faqs, isPreviewMode, isReviewMode, PREVIEW_MESSAGE, REVIEW_MESSAGE){
   var fab = document.getElementById('askFab');
   var overlay = document.getElementById('askModal');
   var closeBtn = document.getElementById('askModalClose');
@@ -2830,7 +2830,7 @@ function loadKakaoMap(address, containerId){
   window.__kakaoSDKPromise.then(render).catch(function(){ console.error('[kakao] SDK 로드 실패'); });
 }
 
-function initConsultationForm(client, centerId){
+function initConsultationForm(client, centerId, isPreviewMode, isReviewMode, PREVIEW_MESSAGE, REVIEW_MESSAGE){
   var overlay = document.getElementById('cslOverlay');
   var openBtn = document.getElementById('cslOpenBtn');
   var closeBtn = document.getElementById('cslCloseBtn');
