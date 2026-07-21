@@ -1060,6 +1060,8 @@
   var isSuperAdmin = false;
   var editTargetOptions = [];
   var isLoadingTarget = false;
+  var editableTargetLoadSequence = 0;
+  var activeEditableTargetContext = null;
   var hasUnsavedChanges = false;
   var teacherDraftsByCenter = Object.create(null);
   var renderedTeacherCenterId = null;
@@ -1089,6 +1091,65 @@
   var editingStopId = null;
   var expandedRouteId = null;
   var busAccordionInitialized = false;
+
+  function makeEditableTargetKey(target){
+    if (!target) return '';
+    var targetType = String(target.type || '');
+    var targetId = targetType === 'template' ? target.templateId : target.id;
+    if ((targetType !== 'center' && targetType !== 'template') || targetId === undefined || targetId === null || targetId === '') return '';
+    return targetType + ':' + String(targetId);
+  }
+
+  function beginEditableTargetLoad(target){
+    var targetType = String(target.type || '');
+    var targetId = targetType === 'template' ? target.templateId : target.id;
+    var context = {
+      requestId: ++editableTargetLoadSequence,
+      targetKey: makeEditableTargetKey(target),
+      targetType: targetType,
+      targetId: String(targetId),
+      targetRecordId: String(target.id),
+      authIdentityKey: initializedAuthIdentityKey || '',
+      centerId: targetType === 'center' ? String(target.id) : '',
+      editableCenterId: String(target.id),
+      templateId: targetType === 'template' ? String(target.templateId) : '',
+      centerTable: targetType === 'template' ? 'template_centers' : 'centers',
+      mediaTable: targetType === 'template' ? 'template_center_media' : 'center_media',
+      admissionTable: targetType === 'template' ? 'template_admissions' : 'admissions',
+      ownerKey: targetType === 'template' ? 'template_center_id' : 'center_id',
+      templateMode: targetType === 'template',
+      committed: false
+    };
+    activeEditableTargetContext = context;
+    return context;
+  }
+
+  function isCurrentEditableTargetLoad(context){
+    return Boolean(
+      context &&
+      activeEditableTargetContext &&
+      context.requestId === editableTargetLoadSequence &&
+      context.requestId === activeEditableTargetContext.requestId &&
+      context.targetKey === activeEditableTargetContext.targetKey &&
+      context.authIdentityKey === (initializedAuthIdentityKey || '')
+    );
+  }
+
+  function currentEditableTargetLoadContext(){
+    return isCurrentEditableTargetLoad(activeEditableTargetContext) && activeEditableTargetContext.committed
+      ? activeEditableTargetContext
+      : null;
+  }
+
+  function invalidateEditableTargetLoads(){
+    editableTargetLoadSequence += 1;
+    activeEditableTargetContext = null;
+    isLoadingTarget = false;
+  }
+
+  function isCurrentAdminIdentity(identityKey){
+    return Boolean(identityKey && identityKey === (initializedAuthIdentityKey || ''));
+  }
 
   var TYPE_LABELS = { hero:'대표', day_story:'하루', teacher:'교사', facility:'시설' };
   var KIND_LABELS = { consult:'상담', waiting:'대기', info_session:'설명회' };
@@ -1218,21 +1279,22 @@
   }
 
   // ── 서명 URL 발급 (1시간) ──
-  async function signedUrl(path){
+  async function signedUrl(path, targetContext){
     if (path && (/^https?:\/\//.test(path) || /^data:/i.test(path))) return path;
-    if (isTemplateMode()) {
+    var templateMode = targetContext ? targetContext.templateMode : isTemplateMode();
+    if (templateMode) {
       var publicRes = client.storage.from(TEMPLATE_BUCKET).getPublicUrl(path);
       return publicRes.data ? publicRes.data.publicUrl : null;
     }
     try {
       var res = await client.storage.from(CENTER_BUCKET).createSignedUrl(path, 3600);
       if (res.error) {
-        logAdminError('signedUrl', res.error);
+        if (!targetContext || isCurrentEditableTargetLoad(targetContext)) logAdminError('signedUrl', res.error);
         return null;
       }
       return res.data ? res.data.signedUrl : null;
     } catch (err) {
-      logAdminError('signedUrl', err);
+      if (!targetContext || isCurrentEditableTargetLoad(targetContext)) logAdminError('signedUrl', err);
       return null;
     }
   }
@@ -1272,13 +1334,18 @@
   }
 
   // ── 사진 목록 로드 ──
-  async function loadPhotos(){
-    if (!currentCenter) return;
-    var res = await client.from(mediaTable())
+  async function loadPhotos(targetContext){
+    var context = targetContext || currentEditableTargetLoadContext();
+    if (!isCurrentEditableTargetLoad(context)) return;
+    var requestedMediaTable = context.mediaTable;
+    var requestedOwnerKey = context.ownerKey;
+    var requestedCenterId = context.editableCenterId;
+    var res = await client.from(requestedMediaTable)
       .select('*')
-      .eq(ownerKey(), currentCenter.id)
+      .eq(requestedOwnerKey, requestedCenterId)
       .eq('media_type', 'hero')
       .order('sort_order', { ascending: true });
+    if (!isCurrentEditableTargetLoad(context)) return;
     if (res.error) {
       logAdminError('loadPhotos', res.error);
       uploadError.textContent = '사진 목록을 불러오지 못했어요: ' + res.error.message;
@@ -1287,15 +1354,19 @@
     }
 
     var rows = (res.data || []);
-    currentHeroPhoto = rows[0] || null;
-    if (!currentHeroPhoto || !currentHeroPhoto.photo_url){
+    var nextHeroPhoto = rows[0] || null;
+    if (!nextHeroPhoto || !nextHeroPhoto.photo_url){
+      currentHeroPhoto = null;
       setUploadZonePhoto(uploadZone, null);
       return;
     }
 
-    var url = await signedUrl(currentHeroPhoto.photo_url);
+    var url = await signedUrl(nextHeroPhoto.photo_url, context);
+    if (!isCurrentEditableTargetLoad(context)) return;
+    currentHeroPhoto = nextHeroPhoto;
     setUploadZonePhoto(uploadZone, url, function(){
-      deletePhoto(currentHeroPhoto.id, currentHeroPhoto.photo_url);
+      if (!isCurrentEditableTargetLoad(context)) return;
+      deletePhoto(nextHeroPhoto.id, nextHeroPhoto.photo_url);
     });
   }
 
@@ -1472,11 +1543,15 @@
   });
 
   // ── 상담 목록 ──
-  async function loadConsultations(centerId){
+  async function loadConsultations(targetContext){
+    var context = targetContext || currentEditableTargetLoadContext();
+    if (!isCurrentEditableTargetLoad(context) || context.templateMode || !context.centerId) return;
+    var centerId = context.centerId;
     var res = await client.from('consultations')
       .select('*')
       .eq('center_id', centerId)
       .order('created_at', { ascending: false });
+    if (!isCurrentEditableTargetLoad(context)) return;
     if (res.error) {
       logAdminError('loadConsultations', res.error);
     }
@@ -1503,7 +1578,9 @@
   }
 
   // ── 원 소개 탭: 데이터 로드 ──
-  function loadIntroTab(){
+  function loadIntroTab(targetContext){
+    var context = targetContext || currentEditableTargetLoadContext();
+    if (!isCurrentEditableTargetLoad(context)) return;
     if (!currentCenter) return;
     var d = currentCenter.director || {};
     var p = currentCenter.philosophy || {};
@@ -1516,7 +1593,8 @@
 
     setUploadZonePhoto(directorUploadZone, null);
     if (d.photo) {
-      signedUrl(d.photo).then(function(url){
+      signedUrl(d.photo, context).then(function(url){
+        if (!isCurrentEditableTargetLoad(context)) return;
         if (url) setUploadZonePhoto(directorUploadZone, url, deleteDirectorPhoto);
       });
     }
@@ -1643,7 +1721,7 @@
     '</div>';
   }
 
-  function bindDayStoryCard(row){
+  function bindDayStoryCard(row, targetContext){
     var card = dayStoryList.querySelector('.day-story-card[data-id="' + row.id + '"]');
     if (!card) return;
 
@@ -1652,8 +1730,10 @@
     var delBtn     = card.querySelector('.ds-delete-btn');
 
     if (row.photo_url) {
-      signedUrl(row.photo_url).then(function(url){
+      signedUrl(row.photo_url, targetContext).then(function(url){
+        if (!isCurrentEditableTargetLoad(targetContext)) return;
         if (url) setUploadZonePhoto(zone, url, function(){
+          if (!isCurrentEditableTargetLoad(targetContext)) return;
           deleteDayStoryPhoto(row.id, row.photo_url, zone, row);
         });
       });
@@ -1661,27 +1741,37 @@
       setUploadZonePhoto(zone, null);
     }
 
-    zone.addEventListener('click', function(){ fileInput_.click(); });
+    zone.addEventListener('click', function(){
+      if (!isCurrentEditableTargetLoad(targetContext)) return;
+      fileInput_.click();
+    });
     zone.addEventListener('dragover', function(e){ e.preventDefault(); zone.classList.add('drag-over'); });
     zone.addEventListener('dragleave', function(){ zone.classList.remove('drag-over'); });
     zone.addEventListener('drop', function(e){
       e.preventDefault();
       zone.classList.remove('drag-over');
+      if (!isCurrentEditableTargetLoad(targetContext)) return;
       handleDayStoryPhoto(row.id, e.dataTransfer.files[0], zone, row);
     });
     fileInput_.addEventListener('change', function(){
+      if (!isCurrentEditableTargetLoad(targetContext)) { fileInput_.value = ''; return; }
       if (fileInput_.files[0]) handleDayStoryPhoto(row.id, fileInput_.files[0], zone, row);
       fileInput_.value = '';
     });
 
-    delBtn.addEventListener('click', function(){ deleteDayStory(row.id, row.photo_url); });
+    delBtn.addEventListener('click', function(){
+      if (!isCurrentEditableTargetLoad(targetContext)) return;
+      deleteDayStory(row.id, row.photo_url);
+    });
   }
 
-  async function loadDayStoryTab(){
-    if (!currentCenter) return;
-    var res = await client.from(mediaTable()).select('*')
-      .eq(ownerKey(), currentCenter.id).eq('media_type', 'day_story')
+  async function loadDayStoryTab(targetContext){
+    var context = targetContext || currentEditableTargetLoadContext();
+    if (!isCurrentEditableTargetLoad(context)) return;
+    var res = await client.from(context.mediaTable).select('*')
+      .eq(context.ownerKey, context.editableCenterId).eq('media_type', 'day_story')
       .order('sort_order', { ascending: true });
+    if (!isCurrentEditableTargetLoad(context)) return;
     if (res.error) {
       logAdminError('loadDayStoryTab', res.error);
       dayStorySaveStatus.textContent = '하루 이야기 목록을 불러오지 못했어요: ' + res.error.message;
@@ -1690,7 +1780,7 @@
     }
     var rows = res.data || [];
     dayStoryList.innerHTML = rows.map(renderDayStoryCard).join('');
-    rows.forEach(function(row){ bindDayStoryCard(row); });
+    rows.forEach(function(row){ bindDayStoryCard(row, context); });
   }
 
   async function handleDayStoryPhoto(mediaId, file, zone, row){
@@ -1861,22 +1951,26 @@
     facStatList.innerHTML = (fac.stats || []).map(renderStatCard).join('');
   }
 
-  function loadFacilityTab(){
+  function loadFacilityTab(targetContext){
+    var context = targetContext || currentEditableTargetLoadContext();
+    if (!isCurrentEditableTargetLoad(context)) return;
     if (!currentCenter) return;
     var fac  = currentCenter.facilities || {};
     document.getElementById('fac-intro').value  = fac.intro || '';
     facItemList.innerHTML  = (fac.items || []).map(function(it){ return renderNameDescCard(it, 'fac-item-card', 'facility'); }).join('');
     facilityTabLoaded = true;
-    bindFacilityItemUploads();
+    bindFacilityItemUploads(context);
   }
 
-  function loadProgramTab(){
+  function loadProgramTab(targetContext){
+    var context = targetContext || currentEditableTargetLoadContext();
+    if (!isCurrentEditableTargetLoad(context)) return;
     if (!currentCenter) return;
     var prog = currentCenter.programs || {};
     document.getElementById('prog-intro').value = prog.intro || '';
     progItemList.innerHTML = (prog.items || []).map(function(it){ return renderNameDescCard(it, 'prog-item-card', 'program'); }).join('');
     programTabLoaded = true;
-    bindFacilityItemUploads();
+    bindFacilityItemUploads(context);
   }
 
   addFacStatBtn.addEventListener('click', function(){
@@ -1948,7 +2042,9 @@
       return payload;
   }
 
-  function bindFacilityItemUploads(){
+  function bindFacilityItemUploads(targetContext){
+    var context = targetContext || currentEditableTargetLoadContext();
+    if (!isCurrentEditableTargetLoad(context)) return;
     document.querySelectorAll('.item-upload-zone').forEach(function(zone){
       if (zone.dataset.bound === '1') return;
       zone.dataset.bound = '1';
@@ -1959,22 +2055,31 @@
       var photoUrl = photoInput ? photoInput.value : '';
 
       if (photoUrl) {
-        signedUrl(photoUrl).then(function(url){
-          if (url) setUploadZonePhoto(zone, url, function(){ deleteFacilityItemPhoto(card); });
+        signedUrl(photoUrl, context).then(function(url){
+          if (!isCurrentEditableTargetLoad(context)) return;
+          if (url) setUploadZonePhoto(zone, url, function(){
+            if (!isCurrentEditableTargetLoad(context)) return;
+            deleteFacilityItemPhoto(card);
+          });
         });
       } else {
         setUploadZonePhoto(zone, null);
       }
 
-      zone.addEventListener('click', function(){ fileInput_.click(); });
+      zone.addEventListener('click', function(){
+        if (!isCurrentEditableTargetLoad(context)) return;
+        fileInput_.click();
+      });
       zone.addEventListener('dragover', function(e){ e.preventDefault(); zone.classList.add('drag-over'); });
       zone.addEventListener('dragleave', function(){ zone.classList.remove('drag-over'); });
       zone.addEventListener('drop', function(e){
         e.preventDefault();
         zone.classList.remove('drag-over');
+        if (!isCurrentEditableTargetLoad(context)) return;
         handleFacilityItemPhoto(card, e.dataTransfer.files[0]);
       });
       fileInput_.addEventListener('change', function(){
+        if (!isCurrentEditableTargetLoad(context)) { fileInput_.value = ''; return; }
         if (fileInput_.files[0]) handleFacilityItemPhoto(card, fileInput_.files[0]);
         fileInput_.value = '';
       });
@@ -2163,7 +2268,7 @@
     '</div>';
   }
 
-  function bindTeacherCard(row){
+  function bindTeacherCard(row, targetContext){
     var card = teacherList.querySelector('.teacher-card[data-id="' + row.id + '"]');
     if (!card) return;
 
@@ -2172,8 +2277,10 @@
     var delBtn     = card.querySelector('.tc-delete-btn');
 
     if (row.photo_url) {
-      signedUrl(row.photo_url).then(function(url){
+      signedUrl(row.photo_url, targetContext).then(function(url){
+        if (!isCurrentEditableTargetLoad(targetContext)) return;
         if (url) setUploadZonePhoto(zone, url, function(){
+          if (!isCurrentEditableTargetLoad(targetContext)) return;
           deleteTeacherPhoto(row.id, row.photo_url, zone, row);
         });
       });
@@ -2181,33 +2288,42 @@
       setUploadZonePhoto(zone, null);
     }
 
-    zone.addEventListener('click', function(){ fileInput_.click(); });
+    zone.addEventListener('click', function(){
+      if (!isCurrentEditableTargetLoad(targetContext)) return;
+      fileInput_.click();
+    });
     zone.addEventListener('dragover', function(e){ e.preventDefault(); zone.classList.add('drag-over'); });
     zone.addEventListener('dragleave', function(){ zone.classList.remove('drag-over'); });
     zone.addEventListener('drop', function(e){
       e.preventDefault();
       zone.classList.remove('drag-over');
+      if (!isCurrentEditableTargetLoad(targetContext)) return;
       handleTeacherPhoto(row.id, e.dataTransfer.files[0], zone, row);
     });
     fileInput_.addEventListener('change', function(){
+      if (!isCurrentEditableTargetLoad(targetContext)) { fileInput_.value = ''; return; }
       if (fileInput_.files[0]) handleTeacherPhoto(row.id, fileInput_.files[0], zone, row);
       fileInput_.value = '';
     });
 
-    delBtn.addEventListener('click', function(){ deleteTeacher(row.id, row.photo_url); });
+    delBtn.addEventListener('click', function(){
+      if (!isCurrentEditableTargetLoad(targetContext)) return;
+      deleteTeacher(row.id, row.photo_url);
+    });
   }
 
-  async function loadTeacherTab(){
-    if (!currentCenter) return;
+  async function loadTeacherTab(targetContext){
+    var context = targetContext || currentEditableTargetLoadContext();
+    if (!isCurrentEditableTargetLoad(context) || !currentCenter) return;
     captureTeacherDrafts(renderedTeacherCenterId);
     var requestId = ++teacherLoadSequence;
-    var requestedCenterId = String(currentCenter.id);
-    var requestedMediaTable = mediaTable();
-    var requestedOwnerKey = ownerKey();
+    var requestedCenterId = context.editableCenterId;
+    var requestedMediaTable = context.mediaTable;
+    var requestedOwnerKey = context.ownerKey;
     var res = await client.from(requestedMediaTable).select('*')
       .eq(requestedOwnerKey, requestedCenterId).eq('media_type', 'teacher')
       .order('sort_order', { ascending: true });
-    if (requestId !== teacherLoadSequence || !currentCenter || String(currentCenter.id) !== requestedCenterId || mediaTable() !== requestedMediaTable) return;
+    if (requestId !== teacherLoadSequence || !isCurrentEditableTargetLoad(context) || !currentCenter || String(currentCenter.id) !== requestedCenterId || mediaTable() !== requestedMediaTable) return;
     if (res.error) {
       logAdminError('loadTeacherTab', res.error);
       teacherSaveStatus.textContent = '선생님 목록을 불러오지 못했어요: ' + res.error.message;
@@ -2218,7 +2334,7 @@
     captureTeacherDrafts(renderedTeacherCenterId);
     teacherList.innerHTML = rows.map(renderTeacherCard).join('');
     renderedTeacherCenterId = requestedCenterId;
-    rows.forEach(function(row){ bindTeacherCard(row); });
+    rows.forEach(function(row){ bindTeacherCard(row, context); });
     restoreTeacherDrafts(requestedCenterId);
   }
 
@@ -2747,17 +2863,18 @@
     }
   }
 
-  async function loadClassManagerTab(){
-    if (isTemplateMode()) return;
-    if (!currentCenter) return;
+  async function loadClassManagerTab(targetContext){
+    var context = targetContext || currentEditableTargetLoadContext();
+    if (!isCurrentEditableTargetLoad(context) || context.templateMode || !currentCenter) return;
     classManagerStatus.textContent = '반 목록을 불러오는 중...';
     classManagerStatus.className = 'msg';
 
     var classRes = await client.from('classes')
       .select('id,center_id,name,age_label,capacity,enrolled,waiting,status,teacher_id,created_at')
-      .eq('center_id', currentCenter.id)
+      .eq('center_id', context.centerId)
       .order('created_at', { ascending: true });
 
+    if (!isCurrentEditableTargetLoad(context)) return;
     if (classRes.error) {
       logAdminError('loadClassManager/classes', classRes.error);
       classManagerStatus.innerHTML = escWithBr('반 목록을 불러오지 못했습니다: ' + classRes.error.message);
@@ -2779,6 +2896,7 @@
         .select('id,class_id')
         .in('class_id', ids);
 
+      if (!isCurrentEditableTargetLoad(context)) return;
       if (miniRes.error) {
         logAdminError('loadClassManager/classMini', miniRes.error);
         classManagerStatus.innerHTML = escWithBr('미니홈피 상태를 불러오지 못했습니다: ' + miniRes.error.message);
@@ -2798,6 +2916,7 @@
         .in('class_id', ids)
         .order('invited_at', { ascending: false });
 
+      if (!isCurrentEditableTargetLoad(context)) return;
       if (inviteRes.error) {
         logAdminError('loadClassManager/invites', inviteRes.error);
         classManagerStatus.innerHTML = escWithBr('초대 이력을 불러오지 못했습니다: ' + inviteRes.error.message);
@@ -2812,6 +2931,7 @@
         .in('class_id', ids)
         .is('ended_at', null);
 
+      if (!isCurrentEditableTargetLoad(context)) return;
       if (assignmentRes.error) {
         teacherAssignmentsLoadFailed = true;
         logAdminError('loadClassManager/assignments', assignmentRes.error);
@@ -2826,6 +2946,7 @@
         .in('class_id', ids)
         .order('created_at', { ascending: false });
 
+      if (!isCurrentEditableTargetLoad(context)) return;
       if (parentInviteRes.error) {
         logAdminError('loadClassManager/parentInvites', parentInviteRes.error);
         classManagerStatus.innerHTML = escWithBr('학부모 초대 코드 이력을 불러오지 못했습니다: ' + parentInviteRes.error.message);
@@ -2840,6 +2961,7 @@
         .in('class_id', ids)
         .order('requested_at', { ascending: false });
 
+      if (!isCurrentEditableTargetLoad(context)) return;
       if (enrollmentRes.error) {
         logAdminError('loadClassManager/enrollments', enrollmentRes.error);
         classManagerStatus.innerHTML = escWithBr('학부모 연결 신청을 불러오지 못했습니다: ' + enrollmentRes.error.message);
@@ -3453,9 +3575,11 @@
     if (e.key === 'Escape' && !teacherLifecycleModal.hidden) closeTeacherLifecycleModal();
   });
 
-  async function loadAdmissionTab(){
-    if (!currentCenter) return;
-    var res = await client.from(admissionTable()).select('*').eq(ownerKey(), currentCenter.id).maybeSingle();
+  async function loadAdmissionTab(targetContext){
+    var context = targetContext || currentEditableTargetLoadContext();
+    if (!isCurrentEditableTargetLoad(context) || !currentCenter) return;
+    var res = await client.from(context.admissionTable).select('*').eq(context.ownerKey, context.editableCenterId).maybeSingle();
+    if (!isCurrentEditableTargetLoad(context)) return;
     if (res.error) {
       logAdminError('loadAdmissionTab', res.error);
       admissionSaveStatus.textContent = '입학안내를 불러오지 못했어요: ' + res.error.message;
@@ -3473,7 +3597,9 @@
   }
 
   admissionSaveBtn.addEventListener('click', async function(){
-    if (!currentCenter) return;
+    var context = currentEditableTargetLoadContext();
+    if (!isCurrentEditableTargetLoad(context) || !currentCenter) return;
+    var admissionId = currentAdmissionId;
     admissionSaveStatus.textContent = '저장 중...';
     admissionSaveStatus.className = 'msg';
 
@@ -3487,13 +3613,17 @@
     };
 
     var res;
-    if (currentAdmissionId) {
-      res = await client.from(admissionTable()).update(payload).eq('id', currentAdmissionId);
+    if (admissionId) {
+      res = await client.from(context.admissionTable).update(payload)
+        .eq('id', admissionId)
+        .eq(context.ownerKey, context.editableCenterId);
     } else {
-      res = await client.from(admissionTable()).insert(withOwner(payload)).select().single();
-      if (res.data) currentAdmissionId = res.data.id;
+      payload[context.ownerKey] = context.editableCenterId;
+      res = await client.from(context.admissionTable).insert(payload).select().single();
     }
 
+    if (!isCurrentEditableTargetLoad(context)) return;
+    if (!admissionId && res.data) currentAdmissionId = res.data.id;
     if (res.error){
       logAdminError('admissionSave', res.error);
       admissionSaveStatus.textContent = '저장 실패: ' + res.error.message;
@@ -3704,38 +3834,44 @@
     renderBusRoutes();
   }
 
-  async function loadBusTab(){
-    if (!currentCenter || isTemplateMode()) return;
+  async function loadBusTab(targetContext){
+    var context = targetContext || currentEditableTargetLoadContext();
+    if (!isCurrentEditableTargetLoad(context) || context.templateMode || !currentCenter) return;
     setBusStatus('통학차량 정보를 불러오는 중...', '');
     var routeRes = await client.from('bus_routes')
       .select('id,center_id,route_name,route_color,sort,created_at,updated_at')
-      .eq('center_id', currentCenter.id)
+      .eq('center_id', context.centerId)
       .order('sort', { ascending:true })
       .order('created_at', { ascending:true });
+    if (!isCurrentEditableTargetLoad(context)) return;
     if (routeRes.error) {
       logAdminError('loadBusTab/routes', routeRes.error);
       setBusStatus('노선을 불러오지 못했습니다: ' + routeRes.error.message, 'error');
       return;
     }
-    busRoutes = routeRes.data || [];
-    busStopsByRoute = {};
-    if (busRoutes.length) {
-      var routeIds = busRoutes.map(function(route){ return route.id; });
+    var nextBusRoutes = routeRes.data || [];
+    var nextBusStopsByRoute = {};
+    if (nextBusRoutes.length) {
+      var routeIds = nextBusRoutes.map(function(route){ return route.id; });
       var stopRes = await client.from('bus_stops')
         .select('id,route_id,stop_name,pickup_time,dropoff_time,sort,created_at')
         .in('route_id', routeIds)
         .order('sort', { ascending:true })
         .order('created_at', { ascending:true });
+      if (!isCurrentEditableTargetLoad(context)) return;
       if (stopRes.error) {
         logAdminError('loadBusTab/stops', stopRes.error);
         setBusStatus('정류장을 불러오지 못했습니다: ' + stopRes.error.message, 'error');
         return;
       }
       (stopRes.data || []).forEach(function(stop){
-        if (!busStopsByRoute[stop.route_id]) busStopsByRoute[stop.route_id] = [];
-        busStopsByRoute[stop.route_id].push(stop);
+        if (!nextBusStopsByRoute[stop.route_id]) nextBusStopsByRoute[stop.route_id] = [];
+        nextBusStopsByRoute[stop.route_id].push(stop);
       });
     }
+    if (!isCurrentEditableTargetLoad(context)) return;
+    busRoutes = nextBusRoutes;
+    busStopsByRoute = nextBusStopsByRoute;
     if (!busAccordionInitialized) {
       expandedRouteId = busRoutes.length === 1 ? busRoutes[0].id : null;
       busAccordionInitialized = true;
@@ -4115,7 +4251,7 @@
     if (centerLinks) centerLinks.hidden = !currentCenter;
   }
 
-  function setTemplateTabVisibility(){
+  function setTemplateTabVisibility(targetContext){
     var templateMode = isTemplateMode();
     var contactPhoneField = document.getElementById('contactPhoneField');
     if (contactPhoneField) contactPhoneField.hidden = templateMode;
@@ -4129,12 +4265,14 @@
       consultSection.hidden = true;
       classInviteDetail.hidden = true;
       if (document.querySelector('.tab-btn[data-tab="class"].active') || document.querySelector('.tab-btn[data-tab="bus"].active') || document.querySelector('.tab-btn[data-tab="consult"].active')) {
-        activateTab('basic');
+        activateTab('basic', targetContext);
       }
     }
   }
 
-  function activateTab(tab){
+  function activateTab(tab, targetContext){
+    var context = targetContext || currentEditableTargetLoadContext();
+    if (!isCurrentEditableTargetLoad(context)) return;
     var btn = document.querySelector('.tab-btn[data-tab="' + tab + '"]');
     var panel = document.querySelector('.tab-panel[data-panel="' + tab + '"]');
     if (!btn || btn.hidden || !panel || panel.hidden) return;
@@ -4143,7 +4281,7 @@
     document.querySelectorAll('.tab-panel').forEach(function(p){ p.classList.remove('active'); });
     btn.classList.add('active');
     panel.classList.add('active');
-    loadTab(tab);
+    loadTab(tab, context);
   }
 
   function activeTab(){
@@ -4151,17 +4289,19 @@
     return btn ? btn.getAttribute('data-tab') : 'basic';
   }
 
-  function loadTab(tab){
+  function loadTab(tab, targetContext){
+    var context = targetContext || currentEditableTargetLoadContext();
+    if (!isCurrentEditableTargetLoad(context)) return;
     if (tab === 'basic') loadBasicStats();
-    if (tab === 'intro') loadIntroTab();
-    if (tab === 'day') loadDayStoryTab();
-    if (tab === 'facility') loadFacilityTab();
-    if (tab === 'program') loadProgramTab();
-    if (tab === 'teacher') loadTeacherTab();
-    if (tab === 'class' && !isTemplateMode()) loadClassManagerTab();
-    if (tab === 'admission') loadAdmissionTab();
+    if (tab === 'intro') loadIntroTab(context);
+    if (tab === 'day') loadDayStoryTab(context);
+    if (tab === 'facility') loadFacilityTab(context);
+    if (tab === 'program') loadProgramTab(context);
+    if (tab === 'teacher') loadTeacherTab(context);
+    if (tab === 'class' && !context.templateMode) loadClassManagerTab(context);
+    if (tab === 'admission') loadAdmissionTab(context);
     if (tab === 'directions') loadDirectionsTab();
-    if (tab === 'bus' && !isTemplateMode()) loadBusTab();
+    if (tab === 'bus' && !context.templateMode) loadBusTab(context);
     if (tab === 'faq') loadFaqTab();
   }
 
@@ -4187,88 +4327,152 @@
   }
 
   async function loadEditableTarget(target){
+    var targetKey = makeEditableTargetKey(target);
+    if (!targetKey || !target || target.id === undefined || target.id === null || target.id === '') return;
+    var context = beginEditableTargetLoad(target);
     isLoadingTarget = true;
     saveStatus.textContent = '';
-    var res;
-    if (target.type === 'template') {
-      res = await client.from('template_centers').select('*').eq('template_id', target.templateId).single();
-    } else {
-      res = await client.from('centers').select('*').eq('id', target.id).single();
-    }
-    if (res.error || !res.data) {
-      if (res.error) logAdminError('loadEditableTarget', res.error);
+    var targetType = context.targetType;
+    var targetRecordId = target.id;
+    var targetTemplateId = target.templateId;
+
+    try {
+      var res;
+      if (targetType === 'template') {
+        res = await client.from(context.centerTable).select('*').eq('template_id', targetTemplateId).single();
+      } else {
+        res = await client.from(context.centerTable).select('*').eq('id', targetRecordId).single();
+      }
+
+      if (!isCurrentEditableTargetLoad(context)) return;
+      if (res.error || !res.data) {
+        if (res.error) logAdminError('loadEditableTarget', res.error);
+        currentCenter = null;
+        currentHeroPhoto = null;
+        currentAdmissionId = null;
+        noCenter.hidden = false;
+        tabBar.hidden = true;
+        centerPanel.hidden = true;
+        photoSection.hidden = true;
+        consultSection.hidden = true;
+        centerLinks.hidden = true;
+        return;
+      }
+
+      var nextCenter = res.data;
+      var responseMatchesTarget = targetType === 'template'
+        ? String(nextCenter.id) === context.targetRecordId && String(nextCenter.template_id) === context.targetId
+        : String(nextCenter.id) === context.targetId;
+      if (!responseMatchesTarget) throw new Error('Editable target response did not match the requested target.');
+      var nextEditTarget = targetType === 'template'
+        ? { type:'template', id:targetRecordId, templateId:targetTemplateId }
+        : { type:'center', id:targetRecordId };
+
+      currentEditTarget = nextEditTarget;
+      currentCenter = nextCenter;
+      if (targetType === 'center') currentOwnedCenter = nextCenter;
+      currentHeroPhoto = null;
+      currentAdmissionId = null;
+      selectedTeacherClassId = null;
+      classRows = [];
+      teacherInviteRows = [];
+      teacherAssignmentRows = [];
+      teacherAssignmentsLoadFailed = false;
+      parentInviteRows = [];
+      parentEnrollmentRows = [];
+      classMiniRows = [];
+      busRoutes = [];
+      busStopsByRoute = {};
+      selectedBusRouteId = null;
+      editingRouteId = null;
+      editingStopId = null;
+      expandedRouteId = null;
+      busAccordionInitialized = false;
+      facilityTabLoaded = false;
+      programTabLoaded = false;
+      context.committed = true;
+
+      setUploadZonePhoto(uploadZone, null);
+      consultList.innerHTML = '';
+      consultEmpty.hidden = true;
+      dayStoryList.innerHTML = '';
+      captureTeacherDrafts(renderedTeacherCenterId);
+      teacherList.innerHTML = '';
+      renderedTeacherCenterId = null;
+      classManagerList.innerHTML = '';
+      classInviteDetail.hidden = true;
+      classInviteDetail.innerHTML = '';
+      busRouteList.innerHTML = '';
+      document.getElementById('adm-target').value = '';
+      document.getElementById('adm-capacity').value = '';
+      document.getElementById('adm-period').value = '';
+      document.getElementById('adm-process').value = '';
+      document.getElementById('adm-supplies').value = '';
+      document.getElementById('adm-notes').value = '';
+      admissionSaveStatus.textContent = '';
+
+      noCenter.hidden = true;
+      tabBar.hidden = false;
+      centerPanel.hidden = false;
+      photoSection.hidden = false;
+      setEditTargetChrome();
+      setTemplateTabVisibility(context);
+      renderEditTargetSelect();
+
+      document.getElementById('f-name').value    = nextCenter.name || '';
+      document.getElementById('f-intro').value   = nextCenter.intro || '';
+      document.getElementById('f-address').value = nextCenter.address || '';
+      document.getElementById('f-contact-phone').value = context.templateMode ? '' : (nextCenter.contact_phone || '');
+      document.getElementById('f-hours').value   = nextCenter.operating_hours || '';
+      loadBasicStats();
+      loadPhotos(context);
+
+      if (context.templateMode) {
+        consultSection.hidden = true;
+      } else {
+        consultSection.hidden = false;
+        loadConsultations(context);
+      }
+
+      loadTab(activeTab(), context);
+      if (isCurrentEditableTargetLoad(context)) markSaved();
+    } catch (err) {
+      if (!isCurrentEditableTargetLoad(context)) return;
+      logAdminError('loadEditableTarget', err);
       currentCenter = null;
+      currentHeroPhoto = null;
+      currentAdmissionId = null;
       noCenter.hidden = false;
       tabBar.hidden = true;
       centerPanel.hidden = true;
       photoSection.hidden = true;
       consultSection.hidden = true;
       centerLinks.hidden = true;
-      isLoadingTarget = false;
-      return;
+    } finally {
+      if (isCurrentEditableTargetLoad(context)) isLoadingTarget = false;
     }
-
-    currentEditTarget = target;
-    currentCenter = res.data;
-    if (target.type === 'center') currentOwnedCenter = res.data;
-    currentHeroPhoto = null;
-    currentAdmissionId = null;
-    selectedTeacherClassId = null;
-    busRoutes = [];
-    busStopsByRoute = {};
-    selectedBusRouteId = null;
-    editingRouteId = null;
-    editingStopId = null;
-    expandedRouteId = null;
-    busAccordionInitialized = false;
-    facilityTabLoaded = false;
-    programTabLoaded = false;
-
-    noCenter.hidden = true;
-    tabBar.hidden = false;
-    centerPanel.hidden = false;
-    photoSection.hidden = false;
-    setEditTargetChrome();
-    setTemplateTabVisibility();
-    renderEditTargetSelect();
-
-    document.getElementById('f-name').value    = currentCenter.name || '';
-    document.getElementById('f-intro').value   = currentCenter.intro || '';
-    document.getElementById('f-address').value = currentCenter.address || '';
-    document.getElementById('f-contact-phone').value = isTemplateMode() ? '' : (currentCenter.contact_phone || '');
-    document.getElementById('f-hours').value   = currentCenter.operating_hours || '';
-    loadBasicStats();
-    loadPhotos();
-
-    if (isTemplateMode()) {
-      consultSection.hidden = true;
-    } else {
-      consultSection.hidden = false;
-      loadConsultations(currentCenter.id);
-    }
-
-    loadTab(activeTab());
-    markSaved();
-    isLoadingTarget = false;
   }
 
-  async function loadAdminTargets(userId){
+  async function loadAdminTargets(userId, authIdentityKey){
+    if (!isCurrentAdminIdentity(authIdentityKey)) return;
     var ownRes = await client.from('centers')
       .select('*')
       .eq('owner_id', userId)
       .order('created_at', { ascending:false });
+    if (!isCurrentAdminIdentity(authIdentityKey)) return;
     if (ownRes.error) logAdminError('loadAdminTargets/center', ownRes.error);
     var ownedCenters = ownRes.error || !Array.isArray(ownRes.data) ? [] : ownRes.data;
-    currentOwnedCenter = ownedCenters[0] || null;
 
     var requestedCenter = null;
     if (ADMIN_INITIAL_SLUG) {
       var requestedRes = await client.from('centers').select('*').eq('slug', ADMIN_INITIAL_SLUG).maybeSingle();
+      if (!isCurrentAdminIdentity(authIdentityKey)) return;
       if (requestedRes.error) logAdminError('loadAdminTargets/requestedCenter', requestedRes.error);
       requestedCenter = requestedRes.data || null;
     }
 
     var templateRes = await client.from('template_centers').select('*');
+    if (!isCurrentAdminIdentity(authIdentityKey)) return;
     if (templateRes.error) {
       logAdminError('loadAdminTargets/templates', templateRes.error);
       noCenter.hidden = false;
@@ -4282,15 +4486,15 @@
       var order = ['sunshine', 'forest', 'carnival', 'gallery'];
       return order.indexOf(a.template_id) - order.indexOf(b.template_id);
     });
-    editTargetOptions = [];
+    var nextEditTargetOptions = [];
     function addCenterOption(center){
-      if (!center || editTargetOptions.some(function(option){ return option.type === 'center' && option.id === center.id; })) return;
-      editTargetOptions.push({ value:'center:' + center.id, label:'원 · ' + (center.name || center.slug), type:'center', id:center.id });
+      if (!center || nextEditTargetOptions.some(function(option){ return option.type === 'center' && option.id === center.id; })) return;
+      nextEditTargetOptions.push({ value:'center:' + center.id, label:'원 · ' + (center.name || center.slug), type:'center', id:center.id });
     }
     addCenterOption(requestedCenter);
     ownedCenters.forEach(addCenterOption);
     templateRows.forEach(function(row){
-      editTargetOptions.push({
+      nextEditTargetOptions.push({
         value:'template:' + row.template_id,
         label:TEMPLATE_LABELS[row.template_id] || row.template_id,
         type:'template',
@@ -4298,6 +4502,9 @@
         templateId:row.template_id
       });
     });
+    if (!isCurrentAdminIdentity(authIdentityKey)) return;
+    currentOwnedCenter = ownedCenters[0] || null;
+    editTargetOptions = nextEditTargetOptions;
     renderEditTargetSelect();
 
     var first = editTargetOptions[0];
@@ -4324,11 +4531,13 @@
     var identityKey = getAuthIdentityKey(session);
     currentAdminSession = session;
     if (!identityKey || identityKey === initializedAuthIdentityKey) return;
+    if (initializedAuthIdentityKey && identityKey !== initializedAuthIdentityKey) invalidateEditableTargetLoads();
     initializedAuthIdentityKey = identityKey;
     showLoggedIn(session);
   }
 
   function showLoggedOut(){
+    invalidateEditableTargetLoads();
     initializedAuthIdentityKey = null;
     loginView.hidden = false;
     adminView.hidden = true;
@@ -4354,13 +4563,15 @@
     if (topbarTitleEl) topbarTitleEl.textContent = '우리 원 관리';
     userEmailEl.textContent = session.user.email;
     isSuperAdmin = (session.user.email || '').toLowerCase() === ADMIN_EMAIL;
-    if (isSuperAdmin) loadAdminTargets(session.user.id);
-    else loadCenter(session.user.id);
+    if (isSuperAdmin) loadAdminTargets(session.user.id, initializedAuthIdentityKey);
+    else loadCenter(session.user.id, initializedAuthIdentityKey);
   }
 
-  async function loadCenter(userId){
+  async function loadCenter(userId, authIdentityKey){
+    if (!isCurrentAdminIdentity(authIdentityKey)) return;
     saveStatus.textContent = '';
     var res = await client.from('centers').select('*').eq('owner_id', userId).single();
+    if (!isCurrentAdminIdentity(authIdentityKey)) return;
     if (res.error || !res.data){
       if (res.error) logAdminError('loadCenter', res.error);
       currentCenter = null;
