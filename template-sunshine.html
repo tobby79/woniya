@@ -1540,9 +1540,10 @@ function mapRowToData(row, options = {}){
   }
 
   function publicTemplateUrl(path){
-    if (!path || /^https?:\/\//.test(path) || /^data:/i.test(path)) return path;
-    const res = client.storage.from('template-previews').getPublicUrl(path);
-    return res && res.data && res.data.publicUrl ? res.data.publicUrl : path;
+    const value = String(path || '').trim();
+    if (!value || /^(?:https?:\/\/|data:|blob:)/i.test(value)) return value;
+    const res = client.storage.from('template-previews').getPublicUrl(value);
+    return res && res.data && res.data.publicUrl ? res.data.publicUrl : value;
   }
 
   function resolveTemplateAssets(row){
@@ -1585,8 +1586,9 @@ function mapRowToData(row, options = {}){
   // Storage 경로를 한 번의 batch 서명 요청으로 변환
   async function signPaths(paths){
     const unique = Array.from(new Set(paths.filter(function(path){
-      return path && !/^https?:\/\//.test(path);
-    })));
+      const value = String(path || '').trim();
+      return value && !/^(?:https?:\/\/|data:|blob:)/i.test(value);
+    }).map(function(path){ return String(path).trim(); })));
     const signedMap = new Map();
     if (unique.length){
       const res = await fetch(cfg.url + '/storage/v1/object/sign/center-images', {
@@ -1605,20 +1607,36 @@ function mapRowToData(row, options = {}){
         signedMap.set(item.path || unique[index], signedUrl);
       });
     }
-    return function(path){ return signedMap.get(path) || path; };
+    return function(path){
+      const value = String(path || '').trim();
+      return signedMap.get(value) || value;
+    };
   }
 
   async function signCenterPhotos(data){
+    const facilities = data.center.facilities;
+    const programs = data.center.programs;
     const resolveSignedPath = await signPaths([]
       .concat((data.day_story || []).map(m => m.photo))
       .concat((data.album?.items || []).map(it => it.photo))
       .concat((data.teachers?.items || []).map(tc => tc.photo))
+      .concat((facilities?.items || []).map(it => it && it.photo_url))
+      .concat((programs?.items || []).map(it => it && it.photo_url))
       .concat(data.center.director ? [data.center.director.photo] : [])
       .concat(data.heroPhoto ? [data.heroPhoto] : []));
     if (data.heroPhoto){ data.heroPhoto = resolveSignedPath(data.heroPhoto); }
     for (const m of data.day_story){ m.photo = resolveSignedPath(m.photo); }
     for (const it of data.album.items){ it.photo = resolveSignedPath(it.photo); }
     for (const tc of data.teachers.items){ tc.photo = resolveSignedPath(tc.photo); }
+    ['facilities', 'programs'].forEach(function(key){
+      const section = data.center[key];
+      if (!section || !Array.isArray(section.items)) return;
+      data.center[key] = Object.assign({}, section, {
+        items: section.items.map(function(item){
+          return item ? Object.assign({}, item, { photo_url: resolveSignedPath(item.photo_url) }) : item;
+        })
+      });
+    });
     if (data.center.director){ data.center.director.photo = resolveSignedPath(data.center.director.photo); }
   }
 
@@ -1830,10 +1848,12 @@ function mapRowToData(row, options = {}){
   const dir = c.director || {};
   const dirMsgLines = (dir.message || '').replace(/<br\s*\/?>/gi, '\n').split('\n');
   const dirMsgPreview = dirMsgLines.slice(0, 4).join('\n');
-  const hasDirector = !!(dir.photo || (dir.message || '').trim() || dir.sign_name);
+  const directorPhoto = String(dir.photo || '').trim();
+  const directorMessage = String(dir.message || '').trim();
+  const hasDirector = [directorPhoto, directorMessage, dir.badge, dir.sign_label, dir.sign_name]
+    .some(function(value){ return String(value || '').trim(); });
 
-  if (!dayMoments.length){
-    // moment가 없으면 섹션 숨김 (기존 동작과 동일한 안전 처리)
+  if (!hasDirector && !dayMoments.length){
     $('day').hidden = true;
   } else {
     const total = dayMoments.length;
@@ -1854,13 +1874,13 @@ function mapRowToData(row, options = {}){
     const directorPage = hasDirector ? `
       <article class="sb-page sb-director" data-slot="mid-morning" data-kind="director" aria-roledescription="book page" aria-label="원장님 이야기">
         ${BOOKMARK_HTML}
-        <div class="sb-portrait">${dir.photo ? `<img alt="${esc(dir.photo_alt)}" data-src="${esc(dir.photo)}">` : ''}</div>
+        <div class="sb-portrait">${directorPhoto ? `<img alt="${esc(dir.photo_alt)}" data-src="${esc(directorPhoto)}">` : ''}</div>
         <div class="sb-fold" aria-hidden="true"></div>
         <div class="sb-text">
           ${dir.badge ? `<span class="dir-badge">${esc(dir.badge)}</span>` : ''}
-          <div class="dir-sign">${esc(dir.sign_label)}<strong>${esc(dir.sign_name)}</strong></div>
-          <p class="dir-msg" id="sbDirectorMsg">${escWithBr(dirMsgPreview)}</p>
-          <button type="button" class="dir-more" id="directorModalOpenBtn">인사말 더보기<span class="btn-arrow" aria-hidden="true">→</span></button>
+          ${(String(dir.sign_label || '').trim() || String(dir.sign_name || '').trim()) ? `<div class="dir-sign">${esc(dir.sign_label)}<strong>${esc(dir.sign_name)}</strong></div>` : ''}
+          ${directorMessage ? `<p class="dir-msg" id="sbDirectorMsg">${escWithBr(dirMsgPreview)}</p>` : ''}
+          ${directorMessage ? `<button type="button" class="dir-more" id="directorModalOpenBtn">인사말 더보기<span class="btn-arrow" aria-hidden="true">→</span></button>` : ''}
         </div>
       </article>` : '';
     // 스토리 페이지들.
@@ -1891,7 +1911,7 @@ function mapRowToData(row, options = {}){
           <span class="total">${esc(total)}장 중</span>
         </span>
       </article>`;
-    }).join('');
+    });
     // 마무리 페이지
     const finalePage = `
       <article class="sb-page sb-finale" data-slot="dusk" data-kind="finale" aria-roledescription="book page" aria-label="마지막 이야기">
@@ -1905,8 +1925,12 @@ function mapRowToData(row, options = {}){
         </div>
       </article>`;
 
-    // 점 인디케이터: 표지 + (원장) + 스토리 + 마무리 전체 페이지 수
-    const pageCount = total + 2 + (hasDirector ? 1 : 0);
+    // 실제 생성한 페이지 배열을 페이지 이동과 점 인디케이터의 단일 기준으로 사용한다.
+    const pages = [coverPage];
+    if (directorPage) pages.push(directorPage);
+    pages.push.apply(pages, storyPages);
+    pages.push(finalePage);
+    const pageCount = pages.length;
     const dotsHtml = Array.from({length: pageCount}, (_,i)=>
       `<button type="button" role="tab" aria-label="${i+1}번째 페이지로 이동" data-goto="${i}"></button>`).join('');
 
@@ -1915,10 +1939,7 @@ function mapRowToData(row, options = {}){
       <h2 class="day-head-title reveal">${esc(centerName)}의 하루를 한 장씩</h2>
       <div class="storybook reveal" role="region" aria-roledescription="storybook" aria-label="${esc(centerName)} 우리 원 이야기책">
         <div class="sb-stage">
-          ${coverPage}
-          ${directorPage}
-          ${storyPages}
-          ${finalePage}
+          ${pages.join('')}
         </div>
         <button class="sb-mute" type="button" aria-label="배경음 켜기/끄기" aria-pressed="false">
           <svg class="icon-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg>
@@ -1949,14 +1970,15 @@ function mapRowToData(row, options = {}){
   const facLightboxItems = [];
   function facPolaroidHtml(f, i, isOddLast){
     const img = albumImgs[i] || {};
+    const resolvedPhoto = String((f && f.photo_url) || '').trim() || String(img.photo || '').trim();
     const caption = (img.label && img.label.trim()) ? img.label
       : (f && f.name) ? f.name
       : FAC_CAPTION_PLACEHOLDERS[i % FAC_CAPTION_PLACEHOLDERS.length];
-    const lbIndex = facLightboxItems.length;
-    facLightboxItems.push({ photo: img.photo || '', caption });
+    const lbIndex = resolvedPhoto ? facLightboxItems.length : -1;
+    if (resolvedPhoto) facLightboxItems.push({ photo: resolvedPhoto, caption });
     return `
       <div class="fac-polaroid${isOddLast ? ' fac-odd-last' : ''}">
-        <div class="pic" data-lb-index="${lbIndex}"><img data-src="${esc(img.photo || '')}" alt="${esc(caption)}"></div>
+        <div class="pic"${resolvedPhoto ? ` data-lb-index="${lbIndex}"><img data-src="${esc(resolvedPhoto)}" alt="${esc(caption)}">` : '>'}</div>
         <div class="cap">${esc(caption)}</div>
       </div>`;
   }
@@ -2012,7 +2034,7 @@ function mapRowToData(row, options = {}){
     }
 
     // 시설 사진 라이트박스 연결: 숨겨진(펼치기 뒤) 항목도 포함해 전체 목록 기준으로 순환 탐색
-    document.querySelectorAll('#facilitiesSec .fac-polaroid .pic').forEach(function(pic){
+    document.querySelectorAll('#facilitiesSec .fac-polaroid .pic[data-lb-index]').forEach(function(pic){
       pic.addEventListener('click', function(){
         const idx = Number(pic.getAttribute('data-lb-index'));
         if (window.__openFacLightbox__) window.__openFacLightbox__(idx, facLightboxItems);
@@ -2117,8 +2139,9 @@ function mapRowToData(row, options = {}){
   const PROG_INITIAL_COUNT = (window.matchMedia && window.matchMedia('(max-width:719px)').matches) ? 3 : 4;
   function progCircleHtml(it, i, isOddLast){
     const img = albumImgs[i + 4] || albumImgs[i % Math.max(albumImgs.length,1)] || null;
+    const resolvedPhoto = String(it.photo_url || '').trim() || String((img && img.photo) || '').trim();
     return `<div class="prog-circle-card reveal${isOddLast ? ' prog-odd-last' : ''}">
-      <div class="prog-circle-pic">${img && img.photo ? `<img data-src="${esc(img.photo)}" alt="${esc(it.name)}">` : ''}</div>
+      <div class="prog-circle-pic">${resolvedPhoto ? `<img data-src="${esc(resolvedPhoto)}" alt="${esc(it.name)}">` : ''}</div>
       <div class="prog-circle-name">${esc(it.name)}</div>
       <div class="prog-circle-desc">${escWithBr(it.desc)}</div>
     </div>`;
@@ -2241,7 +2264,8 @@ function initInteractions(){
       if (d) {
         document.getElementById('directorModalMsg').textContent = (d.message || '').replace(/<br\s*\/?>/gi,'\n');
         var photoEl = document.getElementById('directorModalPhoto');
-        if (photoEl) photoEl.innerHTML = d.photo ? '<img alt="'+esc(d.photo_alt||'')+'" src="'+esc(d.photo || '')+'">' : '';
+        var directorPhoto = String(d.photo || '').trim();
+        if (photoEl) photoEl.innerHTML = directorPhoto ? '<img alt="'+esc(d.photo_alt||'')+'" src="'+esc(directorPhoto)+'">' : '';
       }
       var mottoEl = document.getElementById('directorModalMotto');
       var valEl = document.getElementById('directorModalValues');

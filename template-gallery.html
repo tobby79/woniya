@@ -586,9 +586,10 @@ function mapRowToData(row, options = {}){
   }
 
   function publicTemplateUrl(path){
-    if (!path || /^https?:\/\//.test(path) || /^data:/i.test(path)) return path;
-    const res = client.storage.from('template-previews').getPublicUrl(path);
-    return res && res.data && res.data.publicUrl ? res.data.publicUrl : path;
+    const value = String(path || '').trim();
+    if (!value || /^(?:https?:\/\/|data:|blob:)/i.test(value)) return value;
+    const res = client.storage.from('template-previews').getPublicUrl(value);
+    return res && res.data && res.data.publicUrl ? res.data.publicUrl : value;
   }
 
   function resolveTemplateAssets(row){
@@ -630,8 +631,9 @@ function mapRowToData(row, options = {}){
 
   async function signPaths(paths){
     const unique = Array.from(new Set(paths.filter(function(path){
-      return path && !/^https?:\/\//.test(path);
-    })));
+      const value = String(path || '').trim();
+      return value && !/^(?:https?:\/\/|data:|blob:)/i.test(value);
+    }).map(function(path){ return String(path).trim(); })));
     const signedMap = new Map();
     if (unique.length){
       const res = await fetch(cfg.url + '/storage/v1/object/sign/center-images', {
@@ -650,17 +652,33 @@ function mapRowToData(row, options = {}){
         signedMap.set(item.path || unique[index], signedUrl);
       });
     }
-    return function(path){ return signedMap.get(path) || path; };
+    return function(path){
+      const value = String(path || '').trim();
+      return signedMap.get(value) || value;
+    };
   }
 
   async function signCenterPhotos(data){
+    const facilities = data.center.facilities;
+    const programs = data.center.programs;
     const resolveSignedPath = await signPaths([data.heroPhoto]
       .concat((data.album?.items || []).map(it => it.photo))
       .concat((data.teachers?.items || []).map(tc => tc.photo))
+      .concat((facilities?.items || []).map(it => it && it.photo_url))
+      .concat((programs?.items || []).map(it => it && it.photo_url))
       .concat(data.center.director ? [data.center.director.photo] : []));
     data.heroPhoto = resolveSignedPath(data.heroPhoto);
     for (const it of data.album.items){ it.photo = resolveSignedPath(it.photo); }
     for (const tc of data.teachers.items){ tc.photo = resolveSignedPath(tc.photo); }
+    ['facilities', 'programs'].forEach(function(key){
+      const section = data.center[key];
+      if (!section || !Array.isArray(section.items)) return;
+      data.center[key] = Object.assign({}, section, {
+        items: section.items.map(function(item){
+          return item ? Object.assign({}, item, { photo_url: resolveSignedPath(item.photo_url) }) : item;
+        })
+      });
+    });
     if (data.center.director){ data.center.director.photo = resolveSignedPath(data.center.director.photo); }
   }
 
@@ -786,13 +804,14 @@ function mapRowToData(row, options = {}){
 
   // 원장 인사말 (미리보기 + 모달)
   const d = c.director;
+  const directorPhoto = String(d.photo || '').trim();
   const msgLines = (d.message||'').replace(/<br\s*\/?>/gi,'\n').split('\n');
   const msgPreview = msgLines.slice(0, 4).join('\n');
   $('greeting').innerHTML = `
     <div class="quote-mark reveal">"</div>
     <p class="msg reveal">${escWithBr(msgPreview)}</p>
     <div class="who reveal">
-      <div class="portrait"><img alt="${esc(d.photo_alt)}" src="${esc(d.photo)}"></div>
+      <div class="portrait">${directorPhoto ? `<img alt="${esc(d.photo_alt)}" src="${esc(directorPhoto)}">` : ''}</div>
       <div class="name">${esc(d.sign_label)}<strong>${esc(d.sign_name)}</strong></div>
     </div>
     <button type="button" class="director-more-btn reveal" id="directorModalOpenBtn" style="margin-top:24px">원장 인사말 더보기</button>`;
@@ -839,8 +858,13 @@ function mapRowToData(row, options = {}){
   // 우리 원 시설 (배지 + 썸네일 + 모달)
   const fac = data.center.facilities;
   if (fac) {
-    const badgesHtml = (fac.items||[]).map(ff=>`<span class="fac-badge">${esc(ff.name)}</span>`).join('');
-    const thumbHtml = albumItems.slice(0,4).map(it=>`<div class="fac-thumb"><img data-src="${esc(it.photo)}" alt="${esc(it.label)}"></div>`).join('');
+    const facilityItems = fac.items || [];
+    const badgesHtml = facilityItems.map(ff=>`<span class="fac-badge">${esc(ff.name)}</span>`).join('');
+    const facilityThumbItems = facilityItems.length ? facilityItems.slice(0,4) : albumItems.slice(0,4).map(it=>({ name:it.label, photo_url:it.photo }));
+    const thumbHtml = facilityThumbItems.map((it,i)=>{
+      const resolvedPhoto = String(it.photo_url || '').trim() || String((albumItems[i] || {}).photo || '').trim();
+      return `<div class="fac-thumb">${resolvedPhoto ? `<img data-src="${esc(resolvedPhoto)}" alt="${esc(it.name)}">` : ''}</div>`;
+    }).join('');
     $('facilitiesSec').innerHTML = `
     <div class="sec-head reveal">
       <div class="sec-label">Facilities</div>
@@ -873,8 +897,9 @@ function mapRowToData(row, options = {}){
     const previewItems = (prog.items||[]).slice(0,2);
     const cardsHtml = previewItems.map((it,i)=>{
       const img = albumItems[i+4] || albumItems[i] || null;
+      const resolvedPhoto = String(it.photo_url || '').trim() || String((img && img.photo) || '').trim();
       return `<div class="prog-card reveal">
-        <div class="prog-img">${img?`<img data-src="${esc(img.photo)}" alt="${esc(it.name)}">`:''}</div>
+        <div class="prog-img">${resolvedPhoto ? `<img data-src="${esc(resolvedPhoto)}" alt="${esc(it.name)}">` : ''}</div>
         <div class="prog-body"><div class="prog-name">${esc(it.name)}</div><div class="prog-desc">${escWithBr(it.desc)}</div></div>
       </div>`;
     }).join('');
@@ -925,10 +950,10 @@ function mapRowToData(row, options = {}){
     }, true);
   }
   initInteractions();
-  renderInfoSections(data, c, esc);
+  renderInfoSections(data, c, esc, isPreviewMode, previewTemplateId, isReviewMode);
   if (isReviewMode) disableReviewDetailLinks();
-  setupAskPanel(data.faqs);
-  initConsultationForm(client, c.id);
+  setupAskPanel(data.faqs, isPreviewMode, isReviewMode, PREVIEW_MESSAGE, REVIEW_MESSAGE);
+  initConsultationForm(client, c.id, isPreviewMode, isReviewMode, PREVIEW_MESSAGE, REVIEW_MESSAGE);
 })();
 
 function initInteractions(){
@@ -946,7 +971,8 @@ function initInteractions(){
       if (d) {
         document.getElementById('directorModalMsg').textContent = (d.message || '').replace(/<br\s*\/?>/gi,'\n');
         var photoEl = document.getElementById('directorModalPhoto');
-        if (photoEl) photoEl.innerHTML = d.photo ? '<img alt="'+esc(d.photo_alt||'')+'" src="'+esc(d.photo || '')+'">' : '';
+        var directorPhoto = String(d.photo || '').trim();
+        if (photoEl) photoEl.innerHTML = directorPhoto ? '<img alt="'+esc(d.photo_alt||'')+'" src="'+esc(directorPhoto)+'">' : '';
       }
       var mottoEl = document.getElementById('directorModalMotto');
       var valEl = document.getElementById('directorModalValues');
@@ -974,8 +1000,9 @@ function initInteractions(){
       document.getElementById('facilityIntro').textContent = fac.intro || '';
       document.getElementById('facilityList').innerHTML = (fac.items||[]).map(function(f, i){
         var img = albumImgs[i] || null;
+        var resolvedPhoto = String(f.photo_url || '').trim() || String((img && img.photo) || '').trim();
         return '<div class="fac-modal-item">'
-          + (img && img.photo ? '<div class="fm-img"><img src="'+esc(img.photo || '')+'" alt="'+esc(f.name)+'"></div>' : '')
+          + (resolvedPhoto ? '<div class="fm-img"><img src="'+esc(resolvedPhoto)+'" alt="'+esc(f.name)+'"></div>' : '')
           + '<div class="fm-body"><div class="fm-name">'+esc(f.name)+'</div><div class="fm-desc">'+escWithBr(f.desc||'')+'</div></div>'
           + '</div>';
       }).join('');
@@ -1001,8 +1028,9 @@ function initInteractions(){
       document.getElementById('programModalIntro').textContent = prog.intro || '';
       document.getElementById('programModalList').innerHTML = (prog.items||[]).map(function(it, i){
         var img = albumImgs[i+4] || albumImgs[i] || null;
+        var resolvedPhoto = String(it.photo_url || '').trim() || String((img && img.photo) || '').trim();
         return '<div class="prog-modal-item">'
-          + (img && img.photo ? '<div class="pm-img"><img src="'+esc(img.photo || '')+'" alt="'+esc(it.name)+'"></div>' : '')
+          + (resolvedPhoto ? '<div class="pm-img"><img src="'+esc(resolvedPhoto)+'" alt="'+esc(it.name)+'"></div>' : '')
           + '<div class="pm-body"><div class="pm-name">'+esc(it.name)+'</div><div class="pm-desc">'+escWithBr(it.desc)+'</div></div>'
           + '</div>';
       }).join('');
@@ -1118,7 +1146,7 @@ function initInteractions(){
   });
 }
 
-function setupAskPanel(faqs){
+function setupAskPanel(faqs, isPreviewMode, isReviewMode, PREVIEW_MESSAGE, REVIEW_MESSAGE){
   var fab = document.getElementById('askFab');
   var overlay = document.getElementById('askModal');
   var closeBtn = document.getElementById('askModalClose');
@@ -1195,7 +1223,7 @@ function disableReviewDetailLinks(){
   });
 }
 
-function renderInfoSections(data, c, esc){
+function renderInfoSections(data, c, esc, isPreviewMode, previewTemplateId, isReviewMode){
   // M2: 입학안내·오시는 길은 공개형 새 페이지로 분리. 메인에는 요약+이동 버튼만 남긴다.
   var qs = (isPreviewMode && previewTemplateId)
     ? ('?preview=' + encodeURIComponent(previewTemplateId))
@@ -1257,7 +1285,7 @@ function loadKakaoMap(address, containerId){
   window.__kakaoSDKPromise.then(render).catch(function(){ console.error('[kakao] SDK 로드 실패'); });
 }
 
-function initConsultationForm(client, centerId){
+function initConsultationForm(client, centerId, isPreviewMode, isReviewMode, PREVIEW_MESSAGE, REVIEW_MESSAGE){
   var overlay = document.getElementById('cslOverlay');
   var openBtn = document.getElementById('cslOpenBtn');
   var closeBtn = document.getElementById('cslCloseBtn');
