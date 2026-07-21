@@ -1060,6 +1060,9 @@
   var editTargetOptions = [];
   var isLoadingTarget = false;
   var hasUnsavedChanges = false;
+  var teacherDraftsByCenter = Object.create(null);
+  var renderedTeacherCenterId = null;
+  var teacherLoadSequence = 0;
   var selectedType  = 'hero';
   var currentHeroPhoto = null;
   var facilityTabLoaded = false;
@@ -1178,7 +1181,7 @@
   }
 
   function markSaved(){
-    hasUnsavedChanges = false;
+    hasUnsavedChanges = hasTeacherDrafts();
   }
 
   function editTargetLabel(){
@@ -2063,6 +2066,75 @@
   });
 
   // ── 선생님 탭 ──
+  function teacherDraftBucket(centerId, create){
+    if (!centerId) return null;
+    var key = String(centerId);
+    if (!teacherDraftsByCenter[key] && create) teacherDraftsByCenter[key] = Object.create(null);
+    return teacherDraftsByCenter[key] || null;
+  }
+
+  function hasTeacherDrafts(){
+    return Object.keys(teacherDraftsByCenter).some(function(centerId){
+      return Object.keys(teacherDraftsByCenter[centerId]).length > 0;
+    });
+  }
+
+  function setTeacherDraftFromCard(centerId, card){
+    if (!centerId || !card || !card.dataset.id) return false;
+    var nameInput = card.querySelector('.tc-name');
+    var roleInput = card.querySelector('.tc-role');
+    var messageInput = card.querySelector('.tc-message');
+    if (!nameInput || !roleInput || !messageInput) return false;
+    teacherDraftBucket(centerId, true)[card.dataset.id] = {
+      title: nameInput.value,
+      subtitle: roleInput.value,
+      caption: messageInput.value
+    };
+    return true;
+  }
+
+  function captureTeacherDrafts(centerId){
+    if (!centerId || String(centerId) !== renderedTeacherCenterId) return;
+    var drafts = teacherDraftBucket(centerId, false);
+    if (!drafts) return;
+    teacherList.querySelectorAll('.teacher-card').forEach(function(card){
+      if (card.dataset.id && Object.prototype.hasOwnProperty.call(drafts, card.dataset.id)) {
+        setTeacherDraftFromCard(centerId, card);
+      }
+    });
+  }
+
+  function restoreTeacherDrafts(centerId){
+    var drafts = teacherDraftBucket(centerId, false);
+    if (!drafts) return false;
+    var restored = false;
+    teacherList.querySelectorAll('.teacher-card').forEach(function(card){
+      var draft = card.dataset.id ? drafts[card.dataset.id] : null;
+      if (!draft) return;
+      var nameInput = card.querySelector('.tc-name');
+      var roleInput = card.querySelector('.tc-role');
+      var messageInput = card.querySelector('.tc-message');
+      if (!nameInput || !roleInput || !messageInput) return;
+      nameInput.value = draft.title;
+      roleInput.value = draft.subtitle;
+      messageInput.value = draft.caption;
+      restored = true;
+    });
+    if (restored) hasUnsavedChanges = true;
+    return restored;
+  }
+
+  function clearTeacherDraft(centerId, teacherId){
+    var drafts = teacherDraftBucket(centerId, false);
+    if (!drafts || !teacherId) return;
+    delete drafts[teacherId];
+    if (!Object.keys(drafts).length) delete teacherDraftsByCenter[String(centerId)];
+  }
+
+  function clearTeacherDrafts(centerId){
+    if (centerId) delete teacherDraftsByCenter[String(centerId)];
+  }
+
   function renderTeacherCard(row){
     return '<div class="teacher-card" data-id="' + row.id + '">' +
       '<div class="field">' +
@@ -2126,9 +2198,15 @@
 
   async function loadTeacherTab(){
     if (!currentCenter) return;
-    var res = await client.from(mediaTable()).select('*')
-      .eq(ownerKey(), currentCenter.id).eq('media_type', 'teacher')
+    captureTeacherDrafts(renderedTeacherCenterId);
+    var requestId = ++teacherLoadSequence;
+    var requestedCenterId = String(currentCenter.id);
+    var requestedMediaTable = mediaTable();
+    var requestedOwnerKey = ownerKey();
+    var res = await client.from(requestedMediaTable).select('*')
+      .eq(requestedOwnerKey, requestedCenterId).eq('media_type', 'teacher')
       .order('sort_order', { ascending: true });
+    if (requestId !== teacherLoadSequence || !currentCenter || String(currentCenter.id) !== requestedCenterId || mediaTable() !== requestedMediaTable) return;
     if (res.error) {
       logAdminError('loadTeacherTab', res.error);
       teacherSaveStatus.textContent = '선생님 목록을 불러오지 못했어요: ' + res.error.message;
@@ -2136,12 +2214,16 @@
       return;
     }
     var rows = res.data || [];
+    captureTeacherDrafts(renderedTeacherCenterId);
     teacherList.innerHTML = rows.map(renderTeacherCard).join('');
+    renderedTeacherCenterId = requestedCenterId;
     rows.forEach(function(row){ bindTeacherCard(row); });
+    restoreTeacherDrafts(requestedCenterId);
   }
 
   async function handleTeacherPhoto(mediaId, file, zone, row){
     if (!file || !currentCenter) return;
+    captureTeacherDrafts(renderedTeacherCenterId);
     var compressed = await compressImage(file);
     var path = storagePath('teacher', Date.now() + '_' + compressed.name);
     var upRes = await client.storage.from(storageBucket()).upload(path, compressed, { cacheControl:'3600', upsert:false });
@@ -2161,6 +2243,7 @@
 
   async function deleteTeacherPhoto(mediaId, photoUrl, zone, row){
     if (!photoUrl || !confirm('이 사진을 삭제할까요?')) return;
+    captureTeacherDrafts(renderedTeacherCenterId);
     var updateRes = await client.from(mediaTable()).update({ photo_url: '' }).eq('id', mediaId);
     if (updateRes.error){
       alertAdminError('deleteTeacherPhoto', updateRes.error, '사진 삭제 실패');
@@ -2176,6 +2259,8 @@
 
   async function deleteTeacher(mediaId, photoUrl){
     if (!confirm('이 선생님 카드를 삭제할까요?')) return;
+    var centerId = currentCenter ? String(currentCenter.id) : '';
+    captureTeacherDrafts(renderedTeacherCenterId);
     if (photoUrl) {
       var removeRes = await client.storage.from(storageBucket()).remove([photoUrl]);
       if (removeRes.error) {
@@ -2188,11 +2273,13 @@
       alertAdminError('deleteTeacher', deleteRes.error, '선생님 카드 삭제 실패');
       return;
     }
+    clearTeacherDraft(centerId, String(mediaId));
     loadTeacherTab();
   }
 
   addTeacherBtn.addEventListener('click', async function(){
     if (!currentCenter) return;
+    captureTeacherDrafts(renderedTeacherCenterId);
     var countRes = await client.from(mediaTable()).select('id', { count:'exact', head:true })
       .eq(ownerKey(), currentCenter.id).eq('media_type', 'teacher');
     if (countRes.error) {
@@ -2227,6 +2314,8 @@
     teacherSaveStatus.textContent = '저장 중...';
     teacherSaveStatus.className = 'msg';
 
+    var centerId = currentCenter ? String(currentCenter.id) : '';
+    captureTeacherDrafts(renderedTeacherCenterId);
     var cards = teacherList.querySelectorAll('.teacher-card');
     var hadError = false;
     for (var i = 0; i < cards.length; i++){
@@ -2241,6 +2330,8 @@
       if (res.error) {
         hadError = true;
         logAdminError('teacherSaveLoop', res.error);
+      } else {
+        clearTeacherDraft(centerId, id);
       }
     }
 
@@ -2248,10 +2339,19 @@
       teacherSaveStatus.textContent = '일부 항목 저장에 실패했어요.';
       teacherSaveStatus.className = 'msg error';
     } else {
+      clearTeacherDrafts(centerId);
       teacherSaveStatus.textContent = '저장됐어요.';
       teacherSaveStatus.className = 'msg ok';
       markSaved();
     }
+  });
+
+  teacherList.addEventListener('input', function(e){
+    if (!e.target.matches('.tc-name, .tc-role, .tc-message')) return;
+    var card = e.target.closest('.teacher-card');
+    var centerId = currentCenter ? String(currentCenter.id) : '';
+    if (!centerId || centerId !== renderedTeacherCenterId) return;
+    if (setTeacherDraftFromCard(centerId, card)) hasUnsavedChanges = true;
   });
 
   // ── 입학안내 탭 ──
@@ -4037,6 +4137,7 @@
     var btn = document.querySelector('.tab-btn[data-tab="' + tab + '"]');
     var panel = document.querySelector('.tab-panel[data-panel="' + tab + '"]');
     if (!btn || btn.hidden || !panel || panel.hidden) return;
+    if (activeTab() === 'teacher' && tab !== 'teacher') captureTeacherDrafts(renderedTeacherCenterId);
     tabBar.querySelectorAll('.tab-btn').forEach(function(b){ b.classList.remove('active'); });
     document.querySelectorAll('.tab-panel').forEach(function(p){ p.classList.remove('active'); });
     btn.classList.add('active');
@@ -4287,15 +4388,22 @@
   if (editTargetSelect) {
     editTargetSelect.addEventListener('change', async function(){
       var value = editTargetSelect.value;
+      var previousCenterId = currentCenter ? String(currentCenter.id) : '';
       var previousValue = currentEditTarget
         ? (currentEditTarget.type === 'template' ? 'template:' + currentEditTarget.templateId : 'center:' + currentEditTarget.id)
         : '';
+      captureTeacherDrafts(renderedTeacherCenterId);
       if (hasUnsavedChanges && !confirm('저장하지 않은 변경사항이 있어요. 편집 대상을 전환할까요?')) {
         editTargetSelect.value = previousValue;
         return;
       }
       var option = editTargetOptions.find(function(item){ return item.value === value; });
       if (!option) return;
+      if (previousValue && previousValue !== value) {
+        clearTeacherDrafts(previousCenterId);
+        clearTeacherDrafts(String(option.id));
+        markSaved();
+      }
       await loadEditableTarget(option.type === 'template'
         ? { type:'template', id:option.id, templateId:option.templateId }
         : { type:'center', id:option.id });
