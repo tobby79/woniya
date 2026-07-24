@@ -1148,9 +1148,17 @@
     options = options || {};
     var loadContext = currentEditableTargetLoadContext();
     if (!loadContext || !currentCenter || !currentEditTarget) return null;
-    var kind = options.kind === 'programs' ? 'programs' : 'facilities';
-    var folder = kind === 'programs' ? 'program' : 'facility';
-    var section = currentCenter[kind] || {};
+    var requestedKind = String(options.kind || '');
+    var kind = requestedKind === 'programs'
+      ? 'programs'
+      : (requestedKind === 'hero' || requestedKind === 'director' ? requestedKind : 'facilities');
+    var folder = String(options.folder || (kind === 'programs' ? 'program' : kind === 'facilities' ? 'facility' : kind));
+    var section = Object.prototype.hasOwnProperty.call(options, 'sectionSnapshot')
+      ? options.sectionSnapshot
+      : (currentCenter[kind] || {});
+    var existingRowSnapshot = Object.prototype.hasOwnProperty.call(options, 'existingRowSnapshot')
+      ? options.existingRowSnapshot
+      : null;
     var context = {
       operationId: 'photo-write-' + (++editableTargetWriteSequence),
       loadRequestId: loadContext.requestId,
@@ -1164,13 +1172,18 @@
       mediaTable: loadContext.mediaTable,
       ownerKey: loadContext.ownerKey,
       ownerId: currentCenter.owner_id ? String(currentCenter.owner_id) : '',
+      mediaOwnerId: loadContext.editableCenterId,
       bucket: loadContext.templateMode ? TEMPLATE_BUCKET : CENTER_BUCKET,
       pathPrefix: loadContext.templateMode ? loadContext.templateId : ('centers/' + loadContext.editableCenterId),
       templateMode: loadContext.templateMode,
       kind: kind,
       folder: folder,
+      mediaType: String(options.mediaType || ''),
       itemKey: String(options.itemKey || ''),
+      existingRowId: String(options.existingRowId || ''),
+      existingPhotoPath: String(options.existingPhotoPath || ''),
       sectionSnapshotJson: JSON.stringify(section),
+      existingRowSnapshotJson: JSON.stringify(existingRowSnapshot),
       startedAt: Date.now()
     };
     return Object.freeze(context);
@@ -1235,6 +1248,78 @@
       logAdminError('signedUrlForWrite', err);
       return null;
     }
+  }
+
+  function resetEditablePhotoZonesForTargetLoad(targetKey){
+    var nextTargetKey = String(targetKey || '');
+    [uploadZone, directorUploadZone].forEach(function(zone){
+      if (!zone) return;
+      var targetChanged = zone.dataset.renderTargetKey !== nextTargetKey;
+      delete zone.dataset.photoWriteOperationId;
+      if (nextTargetKey) zone.dataset.renderTargetKey = nextTargetKey;
+      else delete zone.dataset.renderTargetKey;
+      if (targetChanged) setUploadZonePhoto(zone, null);
+    });
+  }
+
+  function isCurrentEditablePhotoZoneLoad(context, zone, operationId){
+    return Boolean(
+      isCurrentEditableTargetLoad(context) &&
+      zone &&
+      zone.isConnected &&
+      zone.dataset.renderTargetKey === context.targetKey &&
+      (zone.dataset.photoWriteOperationId || '') === String(operationId || '')
+    );
+  }
+
+  function createEditablePhotoZoneWriteContext(zone, options){
+    if (!zone || !zone.isConnected) return null;
+    var context = createEditableTargetWriteContext(options);
+    if (!context || zone.dataset.renderTargetKey !== context.targetKey) return null;
+    zone.dataset.photoWriteOperationId = context.operationId;
+    return context;
+  }
+
+  function isCurrentEditablePhotoZoneWrite(context, zone){
+    return Boolean(
+      isCurrentEditableTargetWrite(context) &&
+      zone &&
+      zone.isConnected &&
+      zone.dataset.renderTargetKey === context.targetKey &&
+      zone.dataset.photoWriteOperationId === context.operationId
+    );
+  }
+
+  function clearEditablePhotoZoneWriteOperation(context, zone){
+    if (!context || !zone || !zone.isConnected) return false;
+    if (zone.dataset.renderTargetKey !== context.targetKey) return false;
+    if (zone.dataset.photoWriteOperationId !== context.operationId) return false;
+    delete zone.dataset.photoWriteOperationId;
+    return true;
+  }
+
+  function parseEditableWriteSnapshot(json, fallback){
+    try {
+      return JSON.parse(json || '');
+    } catch (err) {
+      return fallback;
+    }
+  }
+
+  function editableCenterRowQuery(context, query){
+    query = query.eq('id', context.targetRecordId);
+    if (context.templateMode) query = query.eq('template_id', context.targetId);
+    else if (context.ownerId) query = query.eq('owner_id', context.ownerId);
+    return query;
+  }
+
+  function exactEditableWriteRow(res, expectedId, missingMessage){
+    if (res.error) return { ok:false, error:res.error };
+    var rows = Array.isArray(res.data) ? res.data : [];
+    if (rows.length !== 1 || String(rows[0].id) !== String(expectedId)) {
+      return { ok:false, error:new Error(missingMessage) };
+    }
+    return { ok:true, row:rows[0] };
   }
 
   function enqueueEditablePhotoSectionWrite(context, task){
@@ -1444,7 +1529,8 @@
   // ── 사진 목록 로드 ──
   async function loadPhotos(targetContext){
     var context = targetContext || currentEditableTargetLoadContext();
-    if (!isCurrentEditableTargetLoad(context)) return;
+    var zoneOperationId = uploadZone.dataset.photoWriteOperationId || '';
+    if (!isCurrentEditablePhotoZoneLoad(context, uploadZone, zoneOperationId)) return;
     var requestedMediaTable = context.mediaTable;
     var requestedOwnerKey = context.ownerKey;
     var requestedCenterId = context.editableCenterId;
@@ -1453,7 +1539,7 @@
       .eq(requestedOwnerKey, requestedCenterId)
       .eq('media_type', 'hero')
       .order('sort_order', { ascending: true });
-    if (!isCurrentEditableTargetLoad(context)) return;
+    if (!isCurrentEditablePhotoZoneLoad(context, uploadZone, zoneOperationId)) return;
     if (res.error) {
       logAdminError('loadPhotos', res.error);
       uploadError.textContent = '사진 목록을 불러오지 못했어요: ' + res.error.message;
@@ -1469,75 +1555,208 @@
       return;
     }
 
-    var url = await signedUrl(nextHeroPhoto.photo_url, context);
-    if (!isCurrentEditableTargetLoad(context)) return;
     currentHeroPhoto = nextHeroPhoto;
+    var url = await signedUrl(nextHeroPhoto.photo_url, context);
+    if (!isCurrentEditablePhotoZoneLoad(context, uploadZone, zoneOperationId)) return;
     setUploadZonePhoto(uploadZone, url, function(){
-      if (!isCurrentEditableTargetLoad(context)) return;
-      deletePhoto(nextHeroPhoto.id, nextHeroPhoto.photo_url);
+      if (!isCurrentEditablePhotoZoneLoad(context, uploadZone, zoneOperationId)) return;
+      deletePhoto(nextHeroPhoto.id, nextHeroPhoto.photo_url, nextHeroPhoto);
     });
   }
 
+  function createHeroPhotoWriteContext(existingPhoto){
+    var photo = existingPhoto || null;
+    return createEditablePhotoZoneWriteContext(uploadZone, {
+      kind:'hero',
+      folder:'hero',
+      mediaType:'hero',
+      existingRowId:photo && photo.id,
+      existingPhotoPath:photo && photo.photo_url,
+      existingRowSnapshot:photo
+    });
+  }
+
+  async function resolveHeroPhotoRowForWrite(context){
+    var query = client.from(context.mediaTable)
+      .select('*')
+      .eq(context.ownerKey, context.mediaOwnerId)
+      .eq('media_type', context.mediaType);
+    if (context.existingRowId) query = query.eq('id', context.existingRowId);
+    else query = query.order('sort_order', { ascending:true }).limit(1);
+    var res = await query;
+    if (res.error) return { ok:false, error:res.error };
+    var rows = Array.isArray(res.data) ? res.data : [];
+    if (context.existingRowId && (rows.length !== 1 || String(rows[0].id) !== context.existingRowId)) {
+      return { ok:false, error:new Error('기존 Hero 사진 행을 확인하지 못했습니다.') };
+    }
+    return { ok:true, row:rows[0] || null };
+  }
+
   // ── 사진 삭제 ──
-  async function deletePhoto(mediaId, storagePath){
+  async function deletePhoto(mediaId, storagePath, photoSnapshot){
     if (!confirm('이 사진을 삭제할까요?')) return;
-    // Storage에서 제거
-    var removeRes = await client.storage.from(storageBucket()).remove([storagePath]);
-    if (removeRes.error) {
-      alertAdminError('deletePhoto', removeRes.error, '사진 삭제 실패');
-      return;
-    }
-    // DB에서 제거
-    var deleteRes = await client.from(mediaTable()).delete().eq('id', mediaId);
-    if (deleteRes.error) {
-      alertAdminError('deletePhoto', deleteRes.error, '사진 삭제 실패');
-      return;
-    }
-    currentHeroPhoto = null;
-    setUploadZonePhoto(uploadZone, null);
-    loadPhotos();
+    var snapshot = photoSnapshot || { id:mediaId, photo_url:storagePath };
+    var context = createHeroPhotoWriteContext(snapshot);
+    if (!context || !context.existingRowId) return;
+
+    return enqueueEditablePhotoSectionWrite(context, async function(){
+      if (!isCurrentEditablePhotoZoneWrite(context, uploadZone)) return { ok:false, stale:true };
+      var deleteRes = await client.from(context.mediaTable)
+        .delete()
+        .eq('id', context.existingRowId)
+        .eq(context.ownerKey, context.mediaOwnerId)
+        .select('id');
+      var deleteResult = exactEditableWriteRow(deleteRes, context.existingRowId, '삭제할 Hero 사진 행을 확인하지 못했습니다.');
+      if (!deleteResult.ok) {
+        if (isCurrentEditablePhotoZoneWrite(context, uploadZone)) {
+          alertAdminError('deletePhoto', deleteResult.error, '사진 삭제 실패');
+        }
+        return deleteResult;
+      }
+
+      var removeResult = await removeStoragePathForWrite(context, context.existingPhotoPath, 'deletePhoto');
+      if (isCurrentEditablePhotoZoneWrite(context, uploadZone)) {
+        currentHeroPhoto = null;
+        setUploadZonePhoto(uploadZone, null);
+        if (!removeResult.ok) {
+          alertAdminError('deletePhoto', removeResult.error, 'Hero 사진 정보는 삭제됐지만 파일 정리에 실패했어요.');
+        }
+      }
+      return { ok:true, stale:!isCurrentEditablePhotoZoneWrite(context, uploadZone), orphaned:!removeResult.ok };
+    }).catch(function(err){
+      logAdminError('deletePhoto', err);
+      if (isCurrentEditablePhotoZoneWrite(context, uploadZone)) {
+        alertAdminError('deletePhoto', err, '사진 삭제 실패');
+      }
+      return { ok:false, error:err };
+    }).finally(function(){
+      clearEditablePhotoZoneWriteOperation(context, uploadZone);
+    });
   }
 
   async function handleHeroFile(file){
-    if (!file || !currentCenter) return;
-    uploadError.textContent = '';
-    uploadProgress.style.display = 'block';
-    progressBar.style.width = '0%';
-    progressLabel.textContent = '압축 중... ' + file.name;
+    if (!file) return;
+    var existingPhoto = currentHeroPhoto
+      ? parseEditableWriteSnapshot(JSON.stringify(currentHeroPhoto), null)
+      : null;
+    var context = createHeroPhotoWriteContext(existingPhoto);
+    if (!context) return;
+    var path = '';
+    var dbSaved = false;
+
+    if (isCurrentEditablePhotoZoneWrite(context, uploadZone)) {
+      uploadError.textContent = '';
+      uploadProgress.style.display = 'block';
+      progressBar.style.width = '0%';
+      progressLabel.textContent = '압축 중... ' + file.name;
+    }
 
     try {
       var compressed = await compressImage(file);
-      var path = storagePath('hero', Date.now() + '_' + compressed.name);
+      if (!isCurrentEditablePhotoZoneWrite(context, uploadZone)) return { ok:false, stale:true };
+      path = storagePathForWrite(context, context.folder, Date.now() + '_' + compressed.name);
       progressLabel.textContent = '업로드 중... ' + compressed.name;
       progressBar.style.width = '70%';
 
-      var upRes = await client.storage.from(storageBucket()).upload(path, compressed, {
+      var upRes = await client.storage.from(context.bucket).upload(path, compressed, {
         cacheControl: '3600', upsert: false
       });
       if (upRes.error) throw upRes.error;
-
-      if (currentHeroPhoto && currentHeroPhoto.id) {
-        var oldPath = currentHeroPhoto.photo_url;
-        var updateRes = await client.from(mediaTable()).update({ photo_url: path }).eq('id', currentHeroPhoto.id);
-        if (updateRes.error) throw updateRes.error;
-        if (oldPath) client.storage.from(storageBucket()).remove([oldPath]);
-      } else {
-        var insertRes = await client.from(mediaTable()).insert(withOwner({
-          media_type: 'hero',
-          photo_url: path,
-          caption: '',
-          sort_order: 0
-        }));
-        if (insertRes.error) throw insertRes.error;
+      if (!isCurrentEditablePhotoZoneWrite(context, uploadZone)) {
+        await removeStoragePathForWrite(context, path, 'handleHeroFile/staleCleanup');
+        return { ok:false, stale:true };
       }
 
-      progressBar.style.width = '100%';
-      progressLabel.textContent = '1장 중 1장 완료';
-      loadPhotos();
+      return await enqueueEditablePhotoSectionWrite(context, async function(){
+        if (!isCurrentEditablePhotoZoneWrite(context, uploadZone)) {
+          await removeStoragePathForWrite(context, path, 'handleHeroFile/queuedStaleCleanup');
+          return { ok:false, stale:true };
+        }
+
+        var resolved = await resolveHeroPhotoRowForWrite(context);
+        if (!resolved.ok) throw resolved.error;
+        if (!isCurrentEditablePhotoZoneWrite(context, uploadZone)) {
+          await removeStoragePathForWrite(context, path, 'handleHeroFile/resolvedStaleCleanup');
+          return { ok:false, stale:true };
+        }
+
+        var dbRes;
+        if (resolved.row && resolved.row.id) {
+          dbRes = await client.from(context.mediaTable)
+            .update({ photo_url:path })
+            .eq('id', resolved.row.id)
+            .eq(context.ownerKey, context.mediaOwnerId)
+            .select('*');
+        } else {
+          var insertPayload = {
+            media_type:context.mediaType,
+            photo_url:path,
+            caption:'',
+            sort_order:0
+          };
+          insertPayload[context.ownerKey] = context.mediaOwnerId;
+          dbRes = await client.from(context.mediaTable).insert(insertPayload).select('*');
+        }
+
+        if (dbRes.error) throw dbRes.error;
+        var rows = Array.isArray(dbRes.data) ? dbRes.data : [];
+        if (rows.length !== 1 || !rows[0] || !rows[0].id) {
+          throw new Error('Hero 사진 저장 대상 행을 확인하지 못했습니다.');
+        }
+        var savedPhoto = rows[0];
+        dbSaved = true;
+
+        var oldPath = resolved.row && resolved.row.photo_url
+          ? resolved.row.photo_url
+          : context.existingPhotoPath;
+        var removeResult = oldPath && oldPath !== path
+          ? await removeStoragePathForWrite(context, oldPath, 'handleHeroFile/oldPhotoCleanup')
+          : { ok:true, skipped:true };
+
+        if (isCurrentEditablePhotoZoneWrite(context, uploadZone)) {
+          currentHeroPhoto = savedPhoto;
+          var url = await signedUrlForWrite(context, path);
+          if (isCurrentEditablePhotoZoneWrite(context, uploadZone) && url) {
+            setUploadZonePhoto(uploadZone, url, function(){
+              if (
+                !isCurrentEditableTargetWrite(context) ||
+                !uploadZone ||
+                !uploadZone.isConnected ||
+                uploadZone.dataset.renderTargetKey !== context.targetKey ||
+                uploadZone.dataset.photoWriteOperationId
+              ) return;
+              deletePhoto(savedPhoto.id, savedPhoto.photo_url, savedPhoto);
+            });
+          }
+          if (isCurrentEditablePhotoZoneWrite(context, uploadZone)) {
+            progressBar.style.width = '100%';
+            progressLabel.textContent = '1장 중 1장 완료';
+            if (!removeResult.ok) {
+              alertAdminError('handleHeroFile', removeResult.error, 'Hero 사진은 저장됐지만 이전 파일 정리에 실패했어요.');
+            }
+          }
+        }
+        return { ok:true, stale:!isCurrentEditablePhotoZoneWrite(context, uploadZone), orphaned:!removeResult.ok };
+      });
     } catch(err) {
-      showUploadError('handleHeroFile', err, '업로드 실패');
+      if (path && !dbSaved) {
+        await removeStoragePathForWrite(context, path, 'handleHeroFile/errorCleanup');
+      }
+      if (isCurrentEditablePhotoZoneWrite(context, uploadZone)) {
+        showUploadError('handleHeroFile', err, '업로드 실패');
+      }
+      return { ok:false, error:err };
     } finally {
-      setTimeout(function(){ uploadProgress.style.display = 'none'; }, 2000);
+      if (clearEditablePhotoZoneWriteOperation(context, uploadZone)) {
+        setTimeout(function(){
+          if (
+            uploadZone &&
+            uploadZone.isConnected &&
+            uploadZone.dataset.renderTargetKey === context.targetKey &&
+            !uploadZone.dataset.photoWriteOperationId
+          ) uploadProgress.style.display = 'none';
+        }, 2000);
+      }
     }
   }
 
@@ -1688,7 +1907,8 @@
   // ── 원 소개 탭: 데이터 로드 ──
   function loadIntroTab(targetContext){
     var context = targetContext || currentEditableTargetLoadContext();
-    if (!isCurrentEditableTargetLoad(context)) return;
+    var zoneOperationId = directorUploadZone.dataset.photoWriteOperationId || '';
+    if (!isCurrentEditablePhotoZoneLoad(context, directorUploadZone, zoneOperationId)) return;
     if (!currentCenter) return;
     var d = currentCenter.director || {};
     var p = currentCenter.philosophy || {};
@@ -1702,7 +1922,7 @@
     setUploadZonePhoto(directorUploadZone, null);
     if (d.photo) {
       signedUrl(d.photo, context).then(function(url){
-        if (!isCurrentEditableTargetLoad(context)) return;
+        if (!isCurrentEditablePhotoZoneLoad(context, directorUploadZone, zoneOperationId)) return;
         if (url) setUploadZonePhoto(directorUploadZone, url, deleteDirectorPhoto);
       });
     }
@@ -1760,41 +1980,153 @@
     directorFileInput.value = '';
   });
 
+  function createDirectorPhotoWriteContext(){
+    if (!currentCenter) return null;
+    var directorSnapshot = parseEditableWriteSnapshot(JSON.stringify(currentCenter.director || {}), {});
+    return createEditablePhotoZoneWriteContext(directorUploadZone, {
+      kind:'director',
+      folder:'director',
+      sectionSnapshot:directorSnapshot,
+      existingPhotoPath:directorSnapshot.photo || ''
+    });
+  }
+
+  async function resolveDirectorRowForWrite(context){
+    var query = editableCenterRowQuery(
+      context,
+      client.from(context.centerTable).select('id,director')
+    );
+    var res = await query;
+    var result = exactEditableWriteRow(res, context.targetRecordId, '원장 사진 대상 행을 확인하지 못했습니다.');
+    if (!result.ok) return result;
+    return { ok:true, row:result.row, director:result.row.director || {} };
+  }
+
+  async function persistDirectorPhotoPayload(context, directorPayload){
+    var query = editableCenterRowQuery(
+      context,
+      client.from(context.centerTable).update({ director:directorPayload })
+    ).select('id,director');
+    return exactEditableWriteRow(
+      await query,
+      context.targetRecordId,
+      '원장 사진 저장 대상 행을 확인하지 못했습니다.'
+    );
+  }
+
   async function handleDirectorPhoto(file){
-    if (!file || !currentCenter) return;
-    var compressed = await compressImage(file);
-    var path = storagePath('director', Date.now() + '_' + compressed.name);
-    var upRes = await client.storage.from(storageBucket()).upload(path, compressed, { cacheControl:'3600', upsert:false });
-    if (upRes.error){ alertAdminError('handleDirectorPhoto', upRes.error, '사진 업로드 실패'); return; }
+    if (!file) return;
+    var context = createDirectorPhotoWriteContext();
+    if (!context) return;
+    var path = '';
+    var dbSaved = false;
 
-    var oldPath = currentCenter.director && currentCenter.director.photo ? currentCenter.director.photo : '';
-    var newDirector = Object.assign({}, currentCenter.director || {}, { photo: path });
-    var updateRes = await client.from(centerTable()).update({ director: newDirector }).eq('id', currentCenter.id);
-    if (updateRes.error){ alertAdminError('handleDirectorPhoto', updateRes.error, '원장 사진 저장 실패'); return; }
-    currentCenter.director = newDirector;
-    if (oldPath) client.storage.from(storageBucket()).remove([oldPath]);
+    try {
+      var compressed = await compressImage(file);
+      if (!isCurrentEditablePhotoZoneWrite(context, directorUploadZone)) return { ok:false, stale:true };
+      path = storagePathForWrite(context, context.folder, Date.now() + '_' + compressed.name);
+      var upRes = await client.storage.from(context.bucket).upload(path, compressed, { cacheControl:'3600', upsert:false });
+      if (upRes.error) throw upRes.error;
+      if (!isCurrentEditablePhotoZoneWrite(context, directorUploadZone)) {
+        await removeStoragePathForWrite(context, path, 'handleDirectorPhoto/staleCleanup');
+        return { ok:false, stale:true };
+      }
 
-    var url = await signedUrl(path);
-    if (url) setUploadZonePhoto(directorUploadZone, url, deleteDirectorPhoto);
+      return await enqueueEditablePhotoSectionWrite(context, async function(){
+        if (!isCurrentEditablePhotoZoneWrite(context, directorUploadZone)) {
+          await removeStoragePathForWrite(context, path, 'handleDirectorPhoto/queuedStaleCleanup');
+          return { ok:false, stale:true };
+        }
+
+        var resolved = await resolveDirectorRowForWrite(context);
+        if (!resolved.ok) throw resolved.error;
+        if (!isCurrentEditablePhotoZoneWrite(context, directorUploadZone)) {
+          await removeStoragePathForWrite(context, path, 'handleDirectorPhoto/resolvedStaleCleanup');
+          return { ok:false, stale:true };
+        }
+
+        var directorSnapshot = parseEditableWriteSnapshot(context.sectionSnapshotJson, {});
+        var newDirector = Object.assign({}, directorSnapshot, { photo:path });
+        var persistResult = await persistDirectorPhotoPayload(context, newDirector);
+        if (!persistResult.ok) throw persistResult.error;
+        dbSaved = true;
+
+        var oldPath = resolved.director.photo || context.existingPhotoPath;
+        var removeResult = oldPath && oldPath !== path
+          ? await removeStoragePathForWrite(context, oldPath, 'handleDirectorPhoto/oldPhotoCleanup')
+          : { ok:true, skipped:true };
+
+        if (isCurrentEditablePhotoZoneWrite(context, directorUploadZone)) {
+          currentCenter.director = persistResult.row.director || newDirector;
+          var url = await signedUrlForWrite(context, path);
+          if (isCurrentEditablePhotoZoneWrite(context, directorUploadZone) && url) {
+            setUploadZonePhoto(directorUploadZone, url, deleteDirectorPhoto);
+          }
+          if (isCurrentEditablePhotoZoneWrite(context, directorUploadZone) && !removeResult.ok) {
+            alertAdminError('handleDirectorPhoto', removeResult.error, '원장 사진은 저장됐지만 이전 파일 정리에 실패했어요.');
+          }
+        }
+        return { ok:true, stale:!isCurrentEditablePhotoZoneWrite(context, directorUploadZone), orphaned:!removeResult.ok };
+      });
+    } catch (err) {
+      if (path && !dbSaved) {
+        await removeStoragePathForWrite(context, path, 'handleDirectorPhoto/errorCleanup');
+      }
+      if (isCurrentEditablePhotoZoneWrite(context, directorUploadZone)) {
+        alertAdminError('handleDirectorPhoto', err, '원장 사진 저장 실패');
+      }
+      return { ok:false, error:err };
+    } finally {
+      clearEditablePhotoZoneWriteOperation(context, directorUploadZone);
+    }
   }
 
   async function deleteDirectorPhoto(){
     var photoUrl = currentCenter && currentCenter.director ? currentCenter.director.photo : '';
     if (!photoUrl || !confirm('이 사진을 삭제할까요?')) return;
+    var context = createDirectorPhotoWriteContext();
+    if (!context) return;
 
-    var newDirector = Object.assign({}, currentCenter.director || {}, { photo: '' });
-    var updateRes = await client.from(centerTable()).update({ director: newDirector }).eq('id', currentCenter.id);
-    if (updateRes.error){
-      alertAdminError('deleteDirectorPhoto', updateRes.error, '원장 사진 삭제 실패');
-      return;
-    }
+    return enqueueEditablePhotoSectionWrite(context, async function(){
+      if (!isCurrentEditablePhotoZoneWrite(context, directorUploadZone)) return { ok:false, stale:true };
+      var resolved = await resolveDirectorRowForWrite(context);
+      if (!resolved.ok) {
+        if (isCurrentEditablePhotoZoneWrite(context, directorUploadZone)) {
+          alertAdminError('deleteDirectorPhoto', resolved.error, '원장 사진 삭제 실패');
+        }
+        return resolved;
+      }
+      if (!isCurrentEditablePhotoZoneWrite(context, directorUploadZone)) return { ok:false, stale:true };
 
-    currentCenter.director = newDirector;
-    var removeRes = await client.storage.from(storageBucket()).remove([photoUrl]);
-    if (removeRes.error) {
-      alertAdminError('deleteDirectorPhoto', removeRes.error, '원장 사진 파일 삭제 실패');
-    }
-    setUploadZonePhoto(directorUploadZone, null);
+      var directorSnapshot = parseEditableWriteSnapshot(context.sectionSnapshotJson, {});
+      var newDirector = Object.assign({}, directorSnapshot, { photo:'' });
+      var persistResult = await persistDirectorPhotoPayload(context, newDirector);
+      if (!persistResult.ok) {
+        if (isCurrentEditablePhotoZoneWrite(context, directorUploadZone)) {
+          alertAdminError('deleteDirectorPhoto', persistResult.error, '원장 사진 삭제 실패');
+        }
+        return persistResult;
+      }
+
+      var oldPath = resolved.director.photo || context.existingPhotoPath;
+      var removeResult = await removeStoragePathForWrite(context, oldPath, 'deleteDirectorPhoto');
+      if (isCurrentEditablePhotoZoneWrite(context, directorUploadZone)) {
+        currentCenter.director = persistResult.row.director || newDirector;
+        setUploadZonePhoto(directorUploadZone, null);
+        if (!removeResult.ok) {
+          alertAdminError('deleteDirectorPhoto', removeResult.error, '원장 사진 정보는 삭제됐지만 파일 정리에 실패했어요.');
+        }
+      }
+      return { ok:true, stale:!isCurrentEditablePhotoZoneWrite(context, directorUploadZone), orphaned:!removeResult.ok };
+    }).catch(function(err){
+      logAdminError('deleteDirectorPhoto', err);
+      if (isCurrentEditablePhotoZoneWrite(context, directorUploadZone)) {
+        alertAdminError('deleteDirectorPhoto', err, '원장 사진 삭제 실패');
+      }
+      return { ok:false, error:err };
+    }).finally(function(){
+      clearEditablePhotoZoneWriteOperation(context, directorUploadZone);
+    });
   }
 
   // ── 하루 이야기 탭 ──
@@ -4607,6 +4939,7 @@
       progItemList.dataset.renderTargetKey === targetKey
     );
     var context = beginEditableTargetLoad(target);
+    resetEditablePhotoZonesForTargetLoad(targetKey);
     if (!panelsMatchTarget) resetFacilityProgramPanelsForTargetChange(targetKey);
     isLoadingTarget = true;
     saveStatus.textContent = '';
