@@ -2029,6 +2029,46 @@
     return 'photo-item-' + (++editablePhotoCardSequence);
   }
 
+  function isCurrentFacilityProgramPanel(context, list){
+    return Boolean(
+      context &&
+      list &&
+      context.committed &&
+      currentCenter &&
+      isCurrentEditableTargetLoad(context) &&
+      String(currentCenter.id) === context.targetRecordId &&
+      list.dataset.renderTargetKey === context.targetKey
+    );
+  }
+
+  function isCurrentFacilityProgramZone(context, list, zone){
+    return Boolean(
+      isCurrentFacilityProgramPanel(context, list) &&
+      zone &&
+      zone.isConnected &&
+      list.contains(zone)
+    );
+  }
+
+  function resetFacilityProgramPanelsForTargetChange(nextTargetKey){
+    var targetKey = String(nextTargetKey || '');
+    [facItemList, progItemList].forEach(function(list){
+      if (!list) return;
+      list.querySelectorAll('[data-photo-write-operation-id]').forEach(function(card){
+        delete card.dataset.photoWriteOperationId;
+      });
+      list.replaceChildren();
+      if (targetKey) list.dataset.renderTargetKey = targetKey;
+      else delete list.dataset.renderTargetKey;
+    });
+    document.getElementById('fac-intro').value = '';
+    document.getElementById('prog-intro').value = '';
+    facilitySaveStatus.textContent = '';
+    programSaveStatus.textContent = '';
+    facilityTabLoaded = false;
+    programTabLoaded = false;
+  }
+
   function renderNameDescCard(item, cardCls, kind){
     item = item || {};
     var photoUrl = item.photo_url || '';
@@ -2065,24 +2105,26 @@
 
   function loadFacilityTab(targetContext){
     var context = targetContext || currentEditableTargetLoadContext();
-    if (!isCurrentEditableTargetLoad(context)) return;
-    if (!currentCenter) return;
+    if (!isCurrentFacilityProgramPanel(context, facItemList)) return;
     var fac  = currentCenter.facilities || {};
+    var nextItemsHtml = (fac.items || []).map(function(it){ return renderNameDescCard(it, 'fac-item-card', 'facility'); }).join('');
+    if (!isCurrentFacilityProgramPanel(context, facItemList)) return;
     document.getElementById('fac-intro').value  = fac.intro || '';
-    facItemList.innerHTML  = (fac.items || []).map(function(it){ return renderNameDescCard(it, 'fac-item-card', 'facility'); }).join('');
+    facItemList.innerHTML = nextItemsHtml;
     facilityTabLoaded = true;
-    bindFacilityItemUploads(context);
+    bindFacilityItemUploads(context, facItemList);
   }
 
   function loadProgramTab(targetContext){
     var context = targetContext || currentEditableTargetLoadContext();
-    if (!isCurrentEditableTargetLoad(context)) return;
-    if (!currentCenter) return;
+    if (!isCurrentFacilityProgramPanel(context, progItemList)) return;
     var prog = currentCenter.programs || {};
+    var nextItemsHtml = (prog.items || []).map(function(it){ return renderNameDescCard(it, 'prog-item-card', 'program'); }).join('');
+    if (!isCurrentFacilityProgramPanel(context, progItemList)) return;
     document.getElementById('prog-intro').value = prog.intro || '';
-    progItemList.innerHTML = (prog.items || []).map(function(it){ return renderNameDescCard(it, 'prog-item-card', 'program'); }).join('');
+    progItemList.innerHTML = nextItemsHtml;
     programTabLoaded = true;
-    bindFacilityItemUploads(context);
+    bindFacilityItemUploads(context, progItemList);
   }
 
   addFacStatBtn.addEventListener('click', function(){
@@ -2090,11 +2132,11 @@
   });
   addFacItemBtn.addEventListener('click', function(){
     facItemList.insertAdjacentHTML('beforeend', renderNameDescCard({}, 'fac-item-card', 'facility'));
-    bindFacilityItemUploads();
+    bindFacilityItemUploads(null, facItemList);
   });
   addProgItemBtn.addEventListener('click', function(){
     progItemList.insertAdjacentHTML('beforeend', renderNameDescCard({}, 'prog-item-card', 'program'));
-    bindFacilityItemUploads();
+    bindFacilityItemUploads(null, progItemList);
   });
 
   facStatList.addEventListener('click', function(e){
@@ -2119,6 +2161,7 @@
     var expectedClass = context.kind === 'programs' ? 'prog-item-card' : 'fac-item-card';
     return Boolean(
       list && list.contains(card) &&
+      list.dataset.renderTargetKey === context.targetKey &&
       card.classList.contains(expectedClass) &&
       card.dataset.itemKey === context.itemKey &&
       card.dataset.photoWriteOperationId === context.operationId
@@ -2193,10 +2236,11 @@
     return true;
   }
 
-  function bindFacilityItemUploads(targetContext){
+  function bindFacilityItemUploads(targetContext, itemList){
     var context = targetContext || currentEditableTargetLoadContext();
-    if (!isCurrentEditableTargetLoad(context)) return;
-    document.querySelectorAll('.item-upload-zone').forEach(function(zone){
+    var list = itemList || (context && context.kind === 'programs' ? progItemList : facItemList);
+    if (!isCurrentFacilityProgramPanel(context, list)) return;
+    list.querySelectorAll('.item-upload-zone').forEach(function(zone){
       if (zone.dataset.bound === '1') return;
       zone.dataset.bound = '1';
 
@@ -2207,9 +2251,9 @@
 
       if (photoUrl) {
         signedUrl(photoUrl, context).then(function(url){
-          if (!isCurrentEditableTargetLoad(context)) return;
+          if (!isCurrentFacilityProgramZone(context, list, zone)) return;
           if (url) setUploadZonePhoto(zone, url, function(){
-            if (!isCurrentEditableTargetLoad(context)) return;
+            if (!isCurrentFacilityProgramZone(context, list, zone)) return;
             deleteFacilityItemPhoto(card);
           });
         });
@@ -2218,7 +2262,7 @@
       }
 
       zone.addEventListener('click', function(){
-        if (!isCurrentEditableTargetLoad(context)) return;
+        if (!isCurrentFacilityProgramZone(context, list, zone)) return;
         fileInput_.click();
       });
       zone.addEventListener('dragover', function(e){ e.preventDefault(); zone.classList.add('drag-over'); });
@@ -2226,11 +2270,11 @@
       zone.addEventListener('drop', function(e){
         e.preventDefault();
         zone.classList.remove('drag-over');
-        if (!isCurrentEditableTargetLoad(context)) return;
+        if (!isCurrentFacilityProgramZone(context, list, zone)) return;
         handleFacilityItemPhoto(card, e.dataTransfer.files[0]);
       });
       fileInput_.addEventListener('change', function(){
-        if (!isCurrentEditableTargetLoad(context)) { fileInput_.value = ''; return; }
+        if (!isCurrentFacilityProgramZone(context, list, zone)) { fileInput_.value = ''; return; }
         if (fileInput_.files[0]) handleFacilityItemPhoto(card, fileInput_.files[0]);
         fileInput_.value = '';
       });
@@ -4524,8 +4568,8 @@
     if (tab === 'basic') loadBasicStats();
     if (tab === 'intro') loadIntroTab(context);
     if (tab === 'day') loadDayStoryTab(context);
-    if (tab === 'facility') loadFacilityTab(context);
-    if (tab === 'program') loadProgramTab(context);
+    if (tab === 'facility' && (!facilityTabLoaded || facItemList.dataset.renderTargetKey !== context.targetKey)) loadFacilityTab(context);
+    if (tab === 'program' && (!programTabLoaded || progItemList.dataset.renderTargetKey !== context.targetKey)) loadProgramTab(context);
     if (tab === 'teacher') loadTeacherTab(context);
     if (tab === 'class' && !context.templateMode) loadClassManagerTab(context);
     if (tab === 'admission') loadAdmissionTab(context);
@@ -4558,7 +4602,12 @@
   async function loadEditableTarget(target){
     var targetKey = makeEditableTargetKey(target);
     if (!targetKey || !target || target.id === undefined || target.id === null || target.id === '') return;
+    var panelsMatchTarget = (
+      facItemList.dataset.renderTargetKey === targetKey &&
+      progItemList.dataset.renderTargetKey === targetKey
+    );
     var context = beginEditableTargetLoad(target);
+    if (!panelsMatchTarget) resetFacilityProgramPanelsForTargetChange(targetKey);
     isLoadingTarget = true;
     saveStatus.textContent = '';
     var targetType = context.targetType;
@@ -4665,6 +4714,8 @@
         loadConsultations(context);
       }
 
+      loadFacilityTab(context);
+      loadProgramTab(context);
       loadTab(activeTab(), context);
       if (isCurrentEditableTargetLoad(context)) markSaved();
     } catch (err) {
