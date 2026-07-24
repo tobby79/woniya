@@ -1062,6 +1062,9 @@
   var isLoadingTarget = false;
   var editableTargetLoadSequence = 0;
   var activeEditableTargetContext = null;
+  var editableTargetWriteSequence = 0;
+  var editablePhotoCardSequence = 0;
+  var editablePhotoSectionWriteQueues = Object.create(null);
   var hasUnsavedChanges = false;
   var teacherDraftsByCenter = Object.create(null);
   var renderedTeacherCenterId = null;
@@ -1139,6 +1142,111 @@
     return isCurrentEditableTargetLoad(activeEditableTargetContext) && activeEditableTargetContext.committed
       ? activeEditableTargetContext
       : null;
+  }
+
+  function createEditableTargetWriteContext(options){
+    options = options || {};
+    var loadContext = currentEditableTargetLoadContext();
+    if (!loadContext || !currentCenter || !currentEditTarget) return null;
+    var kind = options.kind === 'programs' ? 'programs' : 'facilities';
+    var folder = kind === 'programs' ? 'program' : 'facility';
+    var section = currentCenter[kind] || {};
+    var context = {
+      operationId: 'photo-write-' + (++editableTargetWriteSequence),
+      loadRequestId: loadContext.requestId,
+      targetKey: loadContext.targetKey,
+      targetType: loadContext.targetType,
+      targetId: loadContext.targetId,
+      targetRecordId: loadContext.targetRecordId,
+      editableCenterId: loadContext.editableCenterId,
+      authIdentityKey: loadContext.authIdentityKey,
+      centerTable: loadContext.centerTable,
+      mediaTable: loadContext.mediaTable,
+      ownerKey: loadContext.ownerKey,
+      ownerId: currentCenter.owner_id ? String(currentCenter.owner_id) : '',
+      bucket: loadContext.templateMode ? TEMPLATE_BUCKET : CENTER_BUCKET,
+      pathPrefix: loadContext.templateMode ? loadContext.templateId : ('centers/' + loadContext.editableCenterId),
+      templateMode: loadContext.templateMode,
+      kind: kind,
+      folder: folder,
+      itemKey: String(options.itemKey || ''),
+      sectionSnapshotJson: JSON.stringify(section),
+      startedAt: Date.now()
+    };
+    return Object.freeze(context);
+  }
+
+  function isCurrentEditableTargetWrite(context){
+    if (!context || !currentCenter || !currentEditTarget || !activeEditableTargetContext) return false;
+    var currentTargetKey = makeEditableTargetKey(currentEditTarget);
+    return Boolean(
+      context.authIdentityKey &&
+      context.authIdentityKey === (initializedAuthIdentityKey || '') &&
+      context.loadRequestId === editableTargetLoadSequence &&
+      context.loadRequestId === activeEditableTargetContext.requestId &&
+      activeEditableTargetContext.committed &&
+      context.targetKey === activeEditableTargetContext.targetKey &&
+      context.targetKey === currentTargetKey &&
+      context.targetType === activeEditableTargetContext.targetType &&
+      context.targetId === activeEditableTargetContext.targetId &&
+      context.targetRecordId === String(currentCenter.id)
+    );
+  }
+
+  function storagePathForWrite(context, folder, filename){
+    if (!context || !context.pathPrefix) return '';
+    return context.pathPrefix + '/' + String(folder || context.folder || '').replace(/^\/+|\/+$/g, '') + '/' + filename;
+  }
+
+  function isStorageRelativeWritePath(path){
+    var value = String(path || '').trim();
+    return Boolean(value && !/^(?:https?:\/\/|data:|blob:)/i.test(value));
+  }
+
+  async function removeStoragePathForWrite(context, path, source){
+    if (!context || !isStorageRelativeWritePath(path)) return { ok:true, skipped:true };
+    try {
+      var res = await client.storage.from(context.bucket).remove([String(path).trim()]);
+      if (res.error) {
+        logAdminError(source || 'removeStoragePathForWrite', res.error);
+        return { ok:false, error:res.error };
+      }
+      return { ok:true };
+    } catch (err) {
+      logAdminError(source || 'removeStoragePathForWrite', err);
+      return { ok:false, error:err };
+    }
+  }
+
+  async function signedUrlForWrite(context, path){
+    if (!context || !isStorageRelativeWritePath(path)) return String(path || '').trim() || null;
+    try {
+      if (context.templateMode) {
+        var publicRes = client.storage.from(context.bucket).getPublicUrl(path);
+        return publicRes.data ? publicRes.data.publicUrl : null;
+      }
+      var res = await client.storage.from(context.bucket).createSignedUrl(path, 3600);
+      if (res.error) {
+        logAdminError('signedUrlForWrite', res.error);
+        return null;
+      }
+      return res.data ? res.data.signedUrl : null;
+    } catch (err) {
+      logAdminError('signedUrlForWrite', err);
+      return null;
+    }
+  }
+
+  function enqueueEditablePhotoSectionWrite(context, task){
+    var queueKey = context.targetKey + '|' + context.kind;
+    var previous = editablePhotoSectionWriteQueues[queueKey] || Promise.resolve();
+    var next = previous.catch(function(){}).then(task);
+    editablePhotoSectionWriteQueues[queueKey] = next;
+    function release(){
+      if (editablePhotoSectionWriteQueues[queueKey] === next) delete editablePhotoSectionWriteQueues[queueKey];
+    }
+    next.then(release, release);
+    return next;
   }
 
   function invalidateEditableTargetLoads(){
@@ -1917,11 +2025,15 @@
     '</div>';
   }
 
+  function nextEditablePhotoItemKey(){
+    return 'photo-item-' + (++editablePhotoCardSequence);
+  }
+
   function renderNameDescCard(item, cardCls, kind){
     item = item || {};
     var photoUrl = item.photo_url || '';
     var label = kind === 'program' ? '프로그램 사진' : '시설 사진';
-    return '<div class="' + cardCls + '" data-photo-kind="' + esc(kind || '') + '">' +
+    return '<div class="' + cardCls + '" data-photo-kind="' + esc(kind || '') + '" data-item-key="' + nextEditablePhotoItemKey() + '">' +
       '<div class="field">' +
         '<label>이름</label>' +
         '<input type="text" class="nd-name" placeholder="예: 놀이실" value="' + esc(item.name) + '">' +
@@ -2001,45 +2113,84 @@
     btn.closest('.prog-item-card').remove();
   });
 
-  function collectFacilityPayload(){
-    var existingFacilities = currentCenter.facilities || {};
-    var existingPrograms = currentCenter.programs || {};
-    return {
-      facilities: {
-        intro: facilityTabLoaded ? document.getElementById('fac-intro').value : (existingFacilities.intro || ''),
-        stats: Array.prototype.map.call(facStatList.querySelectorAll('.fac-stat-card'), function(card){
-          return { label: card.querySelector('.fs-label').value, value: card.querySelector('.fs-value').value };
-        }),
-        items: facilityTabLoaded ? Array.prototype.map.call(facItemList.querySelectorAll('.fac-item-card'), function(card){
-          var item = { name: card.querySelector('.nd-name').value, desc: card.querySelector('.nd-desc').value };
-          var photo = card.querySelector('.nd-photo-url');
-          if (photo && photo.value) item.photo_url = photo.value;
-          return item;
-        }) : (existingFacilities.items || [])
-      },
-      programs: {
-        intro: programTabLoaded ? document.getElementById('prog-intro').value : (existingPrograms.intro || ''),
-        items: programTabLoaded ? Array.prototype.map.call(progItemList.querySelectorAll('.prog-item-card'), function(card){
-          var item = { name: card.querySelector('.nd-name').value, desc: card.querySelector('.nd-desc').value };
-          var photo = card.querySelector('.nd-photo-url');
-          if (photo && photo.value) item.photo_url = photo.value;
-          return item;
-        }) : (existingPrograms.items || [])
-      }
-    };
+  function isCurrentEditablePhotoCard(context, card){
+    if (!isCurrentEditableTargetWrite(context) || !card || !card.isConnected) return false;
+    var list = context.kind === 'programs' ? progItemList : facItemList;
+    var expectedClass = context.kind === 'programs' ? 'prog-item-card' : 'fac-item-card';
+    return Boolean(
+      list && list.contains(card) &&
+      card.classList.contains(expectedClass) &&
+      card.dataset.itemKey === context.itemKey &&
+      card.dataset.photoWriteOperationId === context.operationId
+    );
   }
 
-  async function persistFacilityPayload(){
-    var payload = collectFacilityPayload();
-    var res = await client.from(centerTable()).update({
-      facilities: payload.facilities,
-      programs: payload.programs
-    }).eq('id', currentCenter.id);
-    if (res.error) throw res.error;
-      currentCenter.facilities = payload.facilities;
-      currentCenter.programs = payload.programs;
-      markSaved();
-      return payload;
+  function createEditablePhotoCardWriteContext(card){
+    if (!card || !card.isConnected) return null;
+    var kind = card.dataset.photoKind === 'program' ? 'programs' : 'facilities';
+    var itemKey = card.dataset.itemKey || nextEditablePhotoItemKey();
+    card.dataset.itemKey = itemKey;
+    var context = createEditableTargetWriteContext({ kind:kind, itemKey:itemKey });
+    if (!context) return null;
+    card.dataset.photoWriteOperationId = context.operationId;
+    return context;
+  }
+
+  function collectFacilitySectionPayload(context, card){
+    if (!isCurrentEditableTargetWrite(context)) return null;
+    if (card && !isCurrentEditablePhotoCard(context, card)) return null;
+    var base;
+    try {
+      base = JSON.parse(context.sectionSnapshotJson || '{}');
+    } catch (err) {
+      base = {};
+    }
+    if (context.kind === 'programs') {
+      return Object.assign({}, base, {
+        intro: document.getElementById('prog-intro').value,
+        items: Array.prototype.map.call(progItemList.querySelectorAll('.prog-item-card'), function(itemCard){
+          var item = { name:itemCard.querySelector('.nd-name').value, desc:itemCard.querySelector('.nd-desc').value };
+          var photo = itemCard.querySelector('.nd-photo-url');
+          if (photo && photo.value) item.photo_url = photo.value;
+          return item;
+        })
+      });
+    }
+    return Object.assign({}, base, {
+      intro: document.getElementById('fac-intro').value,
+      stats: Array.prototype.map.call(facStatList.querySelectorAll('.fac-stat-card'), function(statCard){
+        return { label:statCard.querySelector('.fs-label').value, value:statCard.querySelector('.fs-value').value };
+      }),
+      items: Array.prototype.map.call(facItemList.querySelectorAll('.fac-item-card'), function(itemCard){
+        var item = { name:itemCard.querySelector('.nd-name').value, desc:itemCard.querySelector('.nd-desc').value };
+        var photo = itemCard.querySelector('.nd-photo-url');
+        if (photo && photo.value) item.photo_url = photo.value;
+        return item;
+      })
+    });
+  }
+
+  async function persistFacilityPayload(context, kind, payload){
+    if (!context || context.kind !== kind || !isCurrentEditableTargetWrite(context)) return { ok:false, stale:true };
+    var updatePayload = {};
+    updatePayload[kind] = payload;
+    var query = client.from(context.centerTable).update(updatePayload).eq('id', context.targetRecordId);
+    if (context.templateMode) query = query.eq('template_id', context.targetId);
+    else if (context.ownerId) query = query.eq('owner_id', context.ownerId);
+    var res = await query.select('id');
+    if (res.error) return { ok:false, error:res.error };
+    var rows = Array.isArray(res.data) ? res.data : [];
+    if (rows.length !== 1 || String(rows[0].id) !== context.targetRecordId) {
+      return { ok:false, error:new Error('시설·프로그램 저장 대상 행을 확인하지 못했습니다.') };
+    }
+    return { ok:true, stale:!isCurrentEditableTargetWrite(context), row:rows[0] };
+  }
+
+  function commitFacilityPayloadToCurrentState(context, payload){
+    if (!isCurrentEditableTargetWrite(context)) return false;
+    currentCenter[context.kind] = payload;
+    markSaved();
+    return true;
   }
 
   function bindFacilityItemUploads(targetContext){
@@ -2087,88 +2238,166 @@
   }
 
   async function handleFacilityItemPhoto(card, file){
-    if (!file || !currentCenter) return;
+    if (!file || !card) return { ok:false, stale:true };
+    var context = createEditablePhotoCardWriteContext(card);
+    if (!context) return { ok:false, stale:true };
     var zone = card.querySelector('.item-upload-zone');
     var errorEl = card.querySelector('.item-upload-error');
     var photoInput = card.querySelector('.nd-photo-url');
-    var kind = card.dataset.photoKind === 'program' ? 'program' : 'facility';
     var oldPath = photoInput.value;
     var path = '';
+    var dbSaved = false;
     if (errorEl) errorEl.textContent = '';
 
     try {
       var compressed = await compressImage(file);
+      if (!isCurrentEditablePhotoCard(context, card)) return { ok:false, stale:true };
       var index = Array.prototype.indexOf.call(card.parentNode.children, card);
-      path = storagePath(kind, Date.now() + '_item_' + index + '_' + compressed.name);
-      var upRes = await client.storage.from(storageBucket()).upload(path, compressed, {
+      path = storagePathForWrite(context, context.folder, Date.now() + '_item_' + index + '_' + compressed.name);
+      var upRes = await client.storage.from(context.bucket).upload(path, compressed, {
         cacheControl: '3600', upsert: false
       });
       if (upRes.error) throw upRes.error;
+      if (!isCurrentEditablePhotoCard(context, card)) {
+        await removeStoragePathForWrite(context, path, 'handleFacilityItemPhoto/staleCleanup');
+        return { ok:false, stale:true };
+      }
 
-      photoInput.value = path;
-      await persistFacilityPayload();
-      if (oldPath) client.storage.from(storageBucket()).remove([oldPath]);
+      return await enqueueEditablePhotoSectionWrite(context, async function(){
+        if (!isCurrentEditablePhotoCard(context, card)) {
+          await removeStoragePathForWrite(context, path, 'handleFacilityItemPhoto/queuedStaleCleanup');
+          return { ok:false, stale:true };
+        }
 
-      var url = await signedUrl(path);
-      if (url) setUploadZonePhoto(zone, url, function(){ deleteFacilityItemPhoto(card); });
+        photoInput.value = path;
+        var payload = collectFacilitySectionPayload(context, card);
+        if (!payload) {
+          await removeStoragePathForWrite(context, path, 'handleFacilityItemPhoto/payloadStaleCleanup');
+          return { ok:false, stale:true };
+        }
+
+        var persistResult = await persistFacilityPayload(context, context.kind, payload);
+        if (!persistResult.ok) {
+          if (isCurrentEditablePhotoCard(context, card)) photoInput.value = oldPath;
+          await removeStoragePathForWrite(context, path, 'handleFacilityItemPhoto/dbFailureCleanup');
+          if (!persistResult.stale) {
+            logAdminError('handleFacilityItemPhoto', persistResult.error);
+            if (isCurrentEditablePhotoCard(context, card) && errorEl) {
+              errorEl.textContent = '업로드 실패: ' + errorMessage(persistResult.error);
+            }
+          }
+          return persistResult;
+        }
+
+        dbSaved = true;
+        commitFacilityPayloadToCurrentState(context, payload);
+        var oldRemoveResult = await removeStoragePathForWrite(context, oldPath, 'handleFacilityItemPhoto/oldPhotoCleanup');
+        if (!oldRemoveResult.ok && isCurrentEditablePhotoCard(context, card) && errorEl) {
+          errorEl.textContent = '사진은 저장됐지만 이전 파일 정리에 실패했어요.';
+        }
+        if (!isCurrentEditablePhotoCard(context, card)) return { ok:true, stale:true };
+
+        var url = await signedUrlForWrite(context, path);
+        if (!isCurrentEditablePhotoCard(context, card)) return { ok:true, stale:true };
+        if (url) setUploadZonePhoto(zone, url, function(){
+          if (!isCurrentEditablePhotoCard(context, card)) return;
+          deleteFacilityItemPhoto(card);
+        });
+        return { ok:true };
+      });
     } catch(err) {
-      if (photoInput && path) photoInput.value = oldPath;
+      if (path && !dbSaved) await removeStoragePathForWrite(context, path, 'handleFacilityItemPhoto/errorCleanup');
       logAdminError('handleFacilityItemPhoto', err);
-      if (errorEl) errorEl.textContent = '업로드 실패: ' + errorMessage(err);
+      if (isCurrentEditablePhotoCard(context, card)) {
+        photoInput.value = oldPath;
+        if (errorEl) errorEl.textContent = '업로드 실패: ' + errorMessage(err);
+      }
+      return { ok:false, error:err };
     }
   }
 
-  async function deleteFacilityItemPhoto(card){
+  function deleteFacilityItemPhoto(card){
     var photoInput = card.querySelector('.nd-photo-url');
     var zone = card.querySelector('.item-upload-zone');
     var path = photoInput ? photoInput.value : '';
-    var persisted = false;
     if (!path || !confirm('이 사진을 삭제할까요?')) return;
+    var context = createEditablePhotoCardWriteContext(card);
+    if (!context) return;
 
-    try {
+    return enqueueEditablePhotoSectionWrite(context, async function(){
+      if (!isCurrentEditablePhotoCard(context, card)) return { ok:false, stale:true };
       photoInput.value = '';
-      await persistFacilityPayload();
-      persisted = true;
-      var removeRes = await client.storage.from(storageBucket()).remove([path]);
-      if (removeRes.error) throw removeRes.error;
-      setUploadZonePhoto(zone, null);
-    } catch(err) {
-      if (!persisted && photoInput && !photoInput.value) photoInput.value = path;
-      if (persisted) setUploadZonePhoto(zone, null);
-      alertAdminError('deleteFacilityItemPhoto', err, '사진 삭제 실패');
-    }
+      var payload = collectFacilitySectionPayload(context, card);
+      if (!payload) return { ok:false, stale:true };
+      var persistResult = await persistFacilityPayload(context, context.kind, payload);
+      if (!persistResult.ok) {
+        if (isCurrentEditablePhotoCard(context, card)) photoInput.value = path;
+        if (!persistResult.stale && isCurrentEditablePhotoCard(context, card)) {
+          alertAdminError('deleteFacilityItemPhoto', persistResult.error, '사진 삭제 실패');
+        }
+        return persistResult;
+      }
+
+      commitFacilityPayloadToCurrentState(context, payload);
+      var removeResult = await removeStoragePathForWrite(context, path, 'deleteFacilityItemPhoto');
+      if (!removeResult.ok && isCurrentEditablePhotoCard(context, card)) {
+        alertAdminError('deleteFacilityItemPhoto', removeResult.error, '사진 정보는 삭제됐지만 파일 정리에 실패했어요.');
+      }
+      if (isCurrentEditablePhotoCard(context, card)) setUploadZonePhoto(zone, null);
+      return { ok:true, stale:!isCurrentEditablePhotoCard(context, card), orphaned:!removeResult.ok };
+    }).catch(function(err){
+      logAdminError('deleteFacilityItemPhoto', err);
+      if (isCurrentEditablePhotoCard(context, card)) {
+        if (!photoInput.value) photoInput.value = path;
+        alertAdminError('deleteFacilityItemPhoto', err, '사진 삭제 실패');
+      }
+      return { ok:false, error:err };
+    });
+  }
+
+  async function saveFacilitySection(kind, statusEl){
+    var context = createEditableTargetWriteContext({ kind:kind });
+    if (!context) return { ok:false, stale:true };
+    return enqueueEditablePhotoSectionWrite(context, async function(){
+      if (!isCurrentEditableTargetWrite(context)) return { ok:false, stale:true };
+      var payload = collectFacilitySectionPayload(context);
+      if (!payload) return { ok:false, stale:true };
+      var result = await persistFacilityPayload(context, kind, payload);
+      if (!result.ok) {
+        if (!result.stale && isCurrentEditableTargetWrite(context)) {
+          logAdminError('saveFacilitySection', result.error);
+          statusEl.textContent = '저장 실패: ' + errorMessage(result.error);
+          statusEl.className = 'msg error';
+        }
+        return result;
+      }
+      if (commitFacilityPayloadToCurrentState(context, payload)) {
+        statusEl.textContent = '저장됐어요.';
+        statusEl.className = 'msg ok';
+      }
+      return { ok:true, stale:!isCurrentEditableTargetWrite(context) };
+    }).catch(function(err){
+      logAdminError('saveFacilitySection', err);
+      if (isCurrentEditableTargetWrite(context)) {
+        statusEl.textContent = '저장 실패: ' + errorMessage(err);
+        statusEl.className = 'msg error';
+      }
+      return { ok:false, error:err };
+    });
   }
 
   facilitySaveBtn.addEventListener('click', async function(){
-    if (!currentCenter) return;
+    if (!currentEditableTargetLoadContext()) return;
     facilitySaveStatus.textContent = '저장 중...';
     facilitySaveStatus.className = 'msg';
-
-    try {
-      await persistFacilityPayload();
-      facilitySaveStatus.textContent = '저장됐어요.';
-      facilitySaveStatus.className = 'msg ok';
-    } catch(err) {
-      logAdminError('saveFacility', err);
-      facilitySaveStatus.textContent = '저장 실패: ' + errorMessage(err);
-      facilitySaveStatus.className = 'msg error';
-    }
+    await saveFacilitySection('facilities', facilitySaveStatus);
   });
 
   programSaveBtn.addEventListener('click', async function(){
-    if (!currentCenter) return;
+    if (!currentEditableTargetLoadContext()) return;
     programSaveStatus.textContent = '저장 중...';
     programSaveStatus.className = 'msg';
-
-    try {
-      await persistFacilityPayload();
-      programSaveStatus.textContent = '저장됐어요.';
-      programSaveStatus.className = 'msg ok';
-    } catch(err) {
-      logAdminError('saveProgram', err);
-      programSaveStatus.textContent = '저장 실패: ' + errorMessage(err);
-      programSaveStatus.className = 'msg error';
-    }
+    await saveFacilitySection('programs', programSaveStatus);
   });
 
   // ── 선생님 탭 ──
@@ -4410,6 +4639,8 @@
       document.getElementById('adm-supplies').value = '';
       document.getElementById('adm-notes').value = '';
       admissionSaveStatus.textContent = '';
+      facilitySaveStatus.textContent = '';
+      programSaveStatus.textContent = '';
 
       noCenter.hidden = true;
       tabBar.hidden = false;
