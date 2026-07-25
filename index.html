@@ -519,6 +519,7 @@
   requestUserLocation();
 
   var introNavigationInProgress = false;
+  var introNavigationTimer = null;
 
   function isReducedMotion(){
     return window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -537,6 +538,18 @@
     } catch (e) {}
   }
 
+  function clearCenterIntroOverlay(){
+    if (introNavigationTimer !== null) {
+      window.clearTimeout(introNavigationTimer);
+      introNavigationTimer = null;
+    }
+    var overlays = document.querySelectorAll('.center-intro-overlay');
+    for (var i = 0; i < overlays.length; i++) {
+      overlays[i].remove();
+    }
+    introNavigationInProgress = false;
+  }
+
   function playCenterIntroThenNavigate(url, options){
     if (introNavigationInProgress) return;
     if (!url) return;
@@ -544,7 +557,7 @@
 
     var opts = options || {};
     var reduceMotion = isReducedMotion();
-    var duration = reduceMotion ? 80 : (opts.durationMs || 1400);
+    var duration = opts.durationMs || 2000;
     var overlay = document.createElement('div');
 
     overlay.className = 'center-intro-overlay';
@@ -556,7 +569,9 @@
       playIntroAudio(opts.audioSrc || 'audio/intro_work.mp3');
     }
 
-    window.setTimeout(function(){
+    introNavigationTimer = window.setTimeout(function(){
+      introNavigationTimer = null;
+      clearCenterIntroOverlay();
       try {
         window.location.assign(url);
       } catch (e) {
@@ -564,6 +579,16 @@
       }
     }, duration);
   }
+
+  window.addEventListener('pagehide', clearCenterIntroOverlay);
+  window.addEventListener('pageshow', function(e){
+    var navigation = window.performance && window.performance.getEntriesByType
+      ? window.performance.getEntriesByType('navigation')[0]
+      : null;
+    if (e.persisted || (navigation && navigation.type === 'back_forward')) {
+      clearCenterIntroOverlay();
+    }
+  });
 
   input.addEventListener('input', applyFilter);
   searchBtn.addEventListener('click', applyFilter);
@@ -581,7 +606,7 @@
 
     playCenterIntroThenNavigate(url, {
       imageSrc: 'assets/woniya-intro-sunshine.gif',
-      durationMs: 1400
+      durationMs: 2000
     });
   }, true);
   listEl.addEventListener('click', function(e){
@@ -591,7 +616,7 @@
     if (card.getAttribute('data-center-intro') === 'sunshine') {
       playCenterIntroThenNavigate(card.dataset.href, {
         imageSrc: 'assets/woniya-intro-sunshine.gif',
-        durationMs: 1400
+        durationMs: 2000
       });
       return;
     }
@@ -606,7 +631,7 @@
     if (card.getAttribute('data-center-intro') === 'sunshine') {
       playCenterIntroThenNavigate(card.dataset.href, {
         imageSrc: 'assets/woniya-intro-sunshine.gif',
-        durationMs: 1400
+        durationMs: 2000
       });
       return;
     }
