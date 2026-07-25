@@ -1151,7 +1151,11 @@
     var requestedKind = String(options.kind || '');
     var kind = requestedKind === 'programs'
       ? 'programs'
-      : (requestedKind === 'hero' || requestedKind === 'director' ? requestedKind : 'facilities');
+      : (
+        requestedKind === 'hero' || requestedKind === 'director' || requestedKind === 'day_story'
+          ? requestedKind
+          : 'facilities'
+      );
     var folder = String(options.folder || (kind === 'programs' ? 'program' : kind === 'facilities' ? 'facility' : kind));
     var section = Object.prototype.hasOwnProperty.call(options, 'sectionSnapshot')
       ? options.sectionSnapshot
@@ -1180,6 +1184,8 @@
       folder: folder,
       mediaType: String(options.mediaType || ''),
       itemKey: String(options.itemKey || ''),
+      cardKey: String(options.cardKey || options.itemKey || ''),
+      mediaRowId: String(options.mediaRowId || options.existingRowId || ''),
       existingRowId: String(options.existingRowId || ''),
       existingPhotoPath: String(options.existingPhotoPath || ''),
       sectionSnapshotJson: JSON.stringify(section),
@@ -1324,6 +1330,7 @@
 
   function enqueueEditablePhotoSectionWrite(context, task){
     var queueKey = context.targetKey + '|' + context.kind;
+    if (context.kind === 'day_story' && context.itemKey) queueKey += '|' + context.itemKey;
     var previous = editablePhotoSectionWriteQueues[queueKey] || Promise.resolve();
     var next = previous.catch(function(){}).then(task);
     editablePhotoSectionWriteQueues[queueKey] = next;
@@ -2130,8 +2137,153 @@
   }
 
   // ── 하루 이야기 탭 ──
-  function renderDayStoryCard(row){
-    return '<div class="day-story-card" data-id="' + row.id + '">' +
+  function resetDayStoryPanelForTargetChange(nextTargetKey){
+    var targetKey = String(nextTargetKey || '');
+    if (dayStoryList.dataset.renderTargetKey === targetKey) return;
+    dayStoryList.querySelectorAll('[data-photo-write-operation-id]').forEach(function(node){
+      delete node.dataset.photoWriteOperationId;
+    });
+    dayStoryList.replaceChildren();
+    if (targetKey) dayStoryList.dataset.renderTargetKey = targetKey;
+    else delete dayStoryList.dataset.renderTargetKey;
+    dayStorySaveStatus.textContent = '';
+    dayStorySaveStatus.className = 'msg';
+  }
+
+  function isCurrentDayStoryPanel(context){
+    return Boolean(
+      context &&
+      context.committed &&
+      currentCenter &&
+      isCurrentEditableTargetLoad(context) &&
+      String(currentCenter.id) === context.targetRecordId &&
+      dayStoryList.dataset.renderTargetKey === context.targetKey
+    );
+  }
+
+  function isCurrentDayStoryCard(context, card, zone){
+    var targetIsCurrent = context && context.operationId
+      ? isCurrentEditableTargetWrite(context)
+      : isCurrentEditableTargetLoad(context);
+    if (!targetIsCurrent || !card || !card.isConnected || !dayStoryList.contains(card)) return false;
+    if (context.committed === false || dayStoryList.dataset.renderTargetKey !== context.targetKey) return false;
+    if (card.dataset.renderTargetKey !== context.targetKey) return false;
+    if (zone) {
+      if (!zone.isConnected || !card.contains(zone)) return false;
+      if (zone.dataset.renderTargetKey !== context.targetKey) return false;
+      if (zone.dataset.itemKey !== card.dataset.itemKey) return false;
+    }
+    if (context.itemKey && card.dataset.itemKey !== context.itemKey) return false;
+    if (context.mediaRowId && card.dataset.id !== context.mediaRowId) return false;
+    return true;
+  }
+
+  function isCurrentDayStoryPhotoLoad(context, card, zone, operationId){
+    return Boolean(
+      isCurrentDayStoryCard(context, card, zone) &&
+      (card.dataset.photoWriteOperationId || '') === String(operationId || '') &&
+      (zone.dataset.photoWriteOperationId || '') === String(operationId || '')
+    );
+  }
+
+  function isCurrentDayStoryPhotoWrite(context, card, zone){
+    return Boolean(
+      isCurrentDayStoryCard(context, card, zone) &&
+      card.dataset.photoWriteOperationId === context.operationId &&
+      zone.dataset.photoWriteOperationId === context.operationId
+    );
+  }
+
+  function createDayStoryPhotoWriteContext(card, zone, row, photoPath){
+    var loadContext = currentEditableTargetLoadContext();
+    if (!isCurrentDayStoryCard(loadContext, card, zone)) return null;
+    var itemKey = card.dataset.itemKey || nextEditablePhotoItemKey();
+    card.dataset.itemKey = itemKey;
+    zone.dataset.itemKey = itemKey;
+    var rowSnapshot = parseEditableWriteSnapshot(JSON.stringify(row || {}), {});
+    var mediaRowId = String(rowSnapshot.id || card.dataset.id || '');
+    if (!mediaRowId || mediaRowId !== String(card.dataset.id || '')) return null;
+    var context = createEditablePhotoZoneWriteContext(zone, {
+      kind:'day_story',
+      folder:'day_story',
+      mediaType:'day_story',
+      itemKey:itemKey,
+      cardKey:itemKey,
+      mediaRowId:mediaRowId,
+      existingRowId:mediaRowId,
+      existingPhotoPath:String(photoPath || rowSnapshot.photo_url || ''),
+      existingRowSnapshot:rowSnapshot
+    });
+    if (!context) return null;
+    card.dataset.photoWriteOperationId = context.operationId;
+    return context;
+  }
+
+  function clearDayStoryPhotoWriteOperation(context, card, zone){
+    var cleared = clearEditablePhotoZoneWriteOperation(context, zone);
+    if (
+      !cleared &&
+      context &&
+      zone &&
+      zone.dataset.renderTargetKey === context.targetKey &&
+      zone.dataset.itemKey === context.itemKey &&
+      zone.dataset.photoWriteOperationId === context.operationId
+    ) {
+      delete zone.dataset.photoWriteOperationId;
+      cleared = true;
+    }
+    if (
+      context &&
+      card &&
+      card.dataset.renderTargetKey === context.targetKey &&
+      card.dataset.itemKey === context.itemKey &&
+      card.dataset.photoWriteOperationId === context.operationId
+    ) {
+      delete card.dataset.photoWriteOperationId;
+    }
+    return cleared;
+  }
+
+  function exactDayStoryWriteRow(res, context, missingMessage){
+    var result = exactEditableWriteRow(res, context.mediaRowId, missingMessage);
+    if (!result.ok) return result;
+    if (
+      String(result.row[context.ownerKey] || '') !== context.mediaOwnerId ||
+      String(result.row.media_type || '') !== context.mediaType
+    ) {
+      return { ok:false, error:new Error(missingMessage) };
+    }
+    return result;
+  }
+
+  async function resolveDayStoryRowForWrite(context){
+    var res = await client.from(context.mediaTable).select('*')
+      .eq('id', context.mediaRowId)
+      .eq(context.ownerKey, context.mediaOwnerId)
+      .eq('media_type', context.mediaType);
+    return exactDayStoryWriteRow(res, context, '하루 이야기 사진 행을 확인하지 못했어요.');
+  }
+
+  async function persistDayStoryPhotoPath(context, photoPath){
+    var res = await client.from(context.mediaTable).update({ photo_url:photoPath })
+      .eq('id', context.mediaRowId)
+      .eq(context.ownerKey, context.mediaOwnerId)
+      .eq('media_type', context.mediaType)
+      .select('*');
+    return exactDayStoryWriteRow(res, context, '하루 이야기 사진 저장 행을 확인하지 못했어요.');
+  }
+
+  function showDayStoryCardError(context, card, zone, errorEl, scope, prefix, error){
+    logAdminError(scope, error);
+    if (isCurrentDayStoryPhotoWrite(context, card, zone) && errorEl) {
+      errorEl.textContent = (prefix || '사진 처리 실패') + ': ' + errorMessage(error);
+    }
+  }
+
+  function renderDayStoryCard(row, targetContext){
+    var itemKey = nextEditablePhotoItemKey();
+    var targetKey = targetContext ? targetContext.targetKey : '';
+    return '<div class="day-story-card" data-id="' + esc(row.id) + '" data-item-key="' + esc(itemKey) + '" data-render-target-key="' + esc(targetKey) + '">' +
       '<div class="field">' +
         '<label>시간 라벨</label>' +
         '<input type="text" class="ds-time" placeholder="예: 오전 9시" value="' + esc(row.time_label) + '">' +
@@ -2150,31 +2302,35 @@
       '</div>' +
       '<div class="field">' +
         '<label>사진</label>' +
-        '<div class="upload-zone ds-upload-zone">' +
+        '<div class="upload-zone ds-upload-zone" data-item-key="' + esc(itemKey) + '" data-render-target-key="' + esc(targetKey) + '">' +
           '<div class="upload-icon">+</div>' +
           '<div class="upload-hint"><strong>클릭하거나 사진을 여기에 드래그</strong><br>JPG · PNG · WebP · 최대 10MB</div>' +
           '<input type="file" class="ds-file-input" accept="image/jpeg,image/png,image/webp">' +
         '</div>' +
         '<div class="upload-caption">이미지는 업로드 즉시 반영됩니다. 수정하려면 사진을 클릭해서 바로 교체해주세요.</div>' +
+        '<div class="msg error ds-upload-error" style="margin-top:10px"></div>' +
       '</div>' +
       '<button type="button" class="btn danger ds-delete-btn" style="width:auto;margin-top:10px">삭제</button>' +
     '</div>';
   }
 
-  function bindDayStoryCard(row, targetContext){
-    var card = dayStoryList.querySelector('.day-story-card[data-id="' + row.id + '"]');
+  function bindDayStoryCard(row, targetContext, card){
     if (!card) return;
 
     var zone       = card.querySelector('.ds-upload-zone');
     var fileInput_ = card.querySelector('.ds-file-input');
     var delBtn     = card.querySelector('.ds-delete-btn');
+    var operationId = zone.dataset.photoWriteOperationId || '';
 
     if (row.photo_url) {
-      signedUrl(row.photo_url, targetContext).then(function(url){
-        if (!isCurrentEditableTargetLoad(targetContext)) return;
+      var initialPhotoPath = row.photo_url;
+      signedUrl(initialPhotoPath, targetContext).then(function(url){
+        if (row.photo_url !== initialPhotoPath) return;
+        if (!isCurrentDayStoryPhotoLoad(targetContext, card, zone, operationId)) return;
         if (url) setUploadZonePhoto(zone, url, function(){
-          if (!isCurrentEditableTargetLoad(targetContext)) return;
-          deleteDayStoryPhoto(row.id, row.photo_url, zone, row);
+          if (row.photo_url !== initialPhotoPath) return;
+          if (!isCurrentDayStoryPhotoLoad(targetContext, card, zone, '')) return;
+          deleteDayStoryPhoto(row.id, initialPhotoPath, zone, row, card);
         });
       });
     } else {
@@ -2182,7 +2338,7 @@
     }
 
     zone.addEventListener('click', function(){
-      if (!isCurrentEditableTargetLoad(targetContext)) return;
+      if (!isCurrentDayStoryCard(targetContext, card, zone)) return;
       fileInput_.click();
     });
     zone.addEventListener('dragover', function(e){ e.preventDefault(); zone.classList.add('drag-over'); });
@@ -2190,28 +2346,28 @@
     zone.addEventListener('drop', function(e){
       e.preventDefault();
       zone.classList.remove('drag-over');
-      if (!isCurrentEditableTargetLoad(targetContext)) return;
-      handleDayStoryPhoto(row.id, e.dataTransfer.files[0], zone, row);
+      if (!isCurrentDayStoryCard(targetContext, card, zone)) return;
+      handleDayStoryPhoto(row.id, e.dataTransfer.files[0], zone, row, card);
     });
     fileInput_.addEventListener('change', function(){
-      if (!isCurrentEditableTargetLoad(targetContext)) { fileInput_.value = ''; return; }
-      if (fileInput_.files[0]) handleDayStoryPhoto(row.id, fileInput_.files[0], zone, row);
+      if (!isCurrentDayStoryCard(targetContext, card, zone)) { fileInput_.value = ''; return; }
+      if (fileInput_.files[0]) handleDayStoryPhoto(row.id, fileInput_.files[0], zone, row, card);
       fileInput_.value = '';
     });
 
     delBtn.addEventListener('click', function(){
-      if (!isCurrentEditableTargetLoad(targetContext)) return;
-      deleteDayStory(row.id, row.photo_url);
+      if (!isCurrentDayStoryCard(targetContext, card, zone)) return;
+      deleteDayStory(row.id, row.photo_url, row, card);
     });
   }
 
   async function loadDayStoryTab(targetContext){
     var context = targetContext || currentEditableTargetLoadContext();
-    if (!isCurrentEditableTargetLoad(context)) return;
+    if (!isCurrentDayStoryPanel(context)) return;
     var res = await client.from(context.mediaTable).select('*')
       .eq(context.ownerKey, context.editableCenterId).eq('media_type', 'day_story')
       .order('sort_order', { ascending: true });
-    if (!isCurrentEditableTargetLoad(context)) return;
+    if (!isCurrentDayStoryPanel(context)) return;
     if (res.error) {
       logAdminError('loadDayStoryTab', res.error);
       dayStorySaveStatus.textContent = '하루 이야기 목록을 불러오지 못했어요: ' + res.error.message;
@@ -2219,60 +2375,174 @@
       return;
     }
     var rows = res.data || [];
-    dayStoryList.innerHTML = rows.map(renderDayStoryCard).join('');
-    rows.forEach(function(row){ bindDayStoryCard(row, context); });
+    var html = rows.map(function(row){ return renderDayStoryCard(row, context); }).join('');
+    if (!isCurrentDayStoryPanel(context)) return;
+    dayStoryList.innerHTML = html;
+    rows.forEach(function(row, index){ bindDayStoryCard(row, context, dayStoryList.children[index]); });
   }
 
-  async function handleDayStoryPhoto(mediaId, file, zone, row){
-    if (!file || !currentCenter) return;
-    var compressed = await compressImage(file);
-    var path = storagePath('day_story', Date.now() + '_' + compressed.name);
-    var upRes = await client.storage.from(storageBucket()).upload(path, compressed, { cacheControl:'3600', upsert:false });
-    if (upRes.error){ alertAdminError('handleDayStoryPhoto', upRes.error, '사진 업로드 실패'); return; }
+  async function handleDayStoryPhoto(mediaId, file, zone, row, card){
+    if (!file || !zone) return { ok:false, stale:true };
+    card = card || zone.closest('.day-story-card');
+    var errorEl = card ? card.querySelector('.ds-upload-error') : null;
+    var context = createDayStoryPhotoWriteContext(card, zone, row, row && row.photo_url);
+    if (!context || context.mediaRowId !== String(mediaId || '')) return { ok:false, stale:true };
+    var path = '';
+    var dbSaved = false;
+    if (errorEl) errorEl.textContent = '';
 
-    var updateRes = await client.from(mediaTable()).update({ photo_url: path }).eq('id', mediaId);
-    if (updateRes.error){ alertAdminError('handleDayStoryPhoto', updateRes.error, '사진 저장 실패'); return; }
-    var oldPath = row ? row.photo_url : '';
-    if (oldPath) client.storage.from(storageBucket()).remove([oldPath]);
-    if (row) row.photo_url = path;
+    try {
+      var compressed = await compressImage(file);
+      if (!isCurrentDayStoryPhotoWrite(context, card, zone)) return { ok:false, stale:true };
+      path = storagePathForWrite(context, context.folder, Date.now() + '_' + compressed.name);
+      var upRes = await client.storage.from(context.bucket).upload(path, compressed, {
+        cacheControl:'3600', upsert:false
+      });
+      if (upRes.error) throw upRes.error;
+      if (!isCurrentDayStoryPhotoWrite(context, card, zone)) {
+        await removeStoragePathForWrite(context, path, 'handleDayStoryPhoto/staleCleanup');
+        return { ok:false, stale:true };
+      }
 
-    var url = await signedUrl(path);
-    if (url) setUploadZonePhoto(zone, url, function(){
-      deleteDayStoryPhoto(mediaId, path, zone, row);
+      return await enqueueEditablePhotoSectionWrite(context, async function(){
+        if (!isCurrentDayStoryPhotoWrite(context, card, zone)) {
+          await removeStoragePathForWrite(context, path, 'handleDayStoryPhoto/queuedStaleCleanup');
+          return { ok:false, stale:true };
+        }
+        var resolved = await resolveDayStoryRowForWrite(context);
+        if (!resolved.ok) {
+          await removeStoragePathForWrite(context, path, 'handleDayStoryPhoto/resolveFailureCleanup');
+          showDayStoryCardError(context, card, zone, errorEl, 'handleDayStoryPhoto', '사진 저장 실패', resolved.error);
+          return resolved;
+        }
+        if (!isCurrentDayStoryPhotoWrite(context, card, zone)) {
+          await removeStoragePathForWrite(context, path, 'handleDayStoryPhoto/resolvedStaleCleanup');
+          return { ok:false, stale:true };
+        }
+
+        var persistResult = await persistDayStoryPhotoPath(context, path);
+        if (!persistResult.ok) {
+          await removeStoragePathForWrite(context, path, 'handleDayStoryPhoto/dbFailureCleanup');
+          showDayStoryCardError(context, card, zone, errorEl, 'handleDayStoryPhoto', '사진 저장 실패', persistResult.error);
+          return persistResult;
+        }
+        dbSaved = true;
+        var oldPath = resolved.row.photo_url || context.existingPhotoPath;
+        var removeResult = oldPath && oldPath !== path
+          ? await removeStoragePathForWrite(context, oldPath, 'handleDayStoryPhoto/oldPhotoCleanup')
+          : { ok:true, skipped:true };
+
+        if (!isCurrentDayStoryPhotoWrite(context, card, zone)) {
+          return { ok:true, stale:true, orphaned:!removeResult.ok };
+        }
+        if (row) Object.assign(row, persistResult.row);
+        var url = await signedUrlForWrite(context, path);
+        if (!isCurrentDayStoryPhotoWrite(context, card, zone)) {
+          return { ok:true, stale:true, orphaned:!removeResult.ok };
+        }
+        if (url) setUploadZonePhoto(zone, url, function(){
+          if (!isCurrentDayStoryCard(context, card, zone) || zone.dataset.photoWriteOperationId) return;
+          deleteDayStoryPhoto(context.mediaRowId, path, zone, row, card);
+        });
+        if (!removeResult.ok && errorEl) {
+          errorEl.textContent = '사진은 저장됐지만 이전 파일 정리에 실패했어요.';
+        }
+        return { ok:true, orphaned:!removeResult.ok };
+      });
+    } catch (err) {
+      if (path && !dbSaved) await removeStoragePathForWrite(context, path, 'handleDayStoryPhoto/errorCleanup');
+      showDayStoryCardError(context, card, zone, errorEl, 'handleDayStoryPhoto', '사진 업로드 실패', err);
+      return { ok:false, error:err };
+    } finally {
+      clearDayStoryPhotoWriteOperation(context, card, zone);
+    }
+  }
+
+  async function deleteDayStoryPhoto(mediaId, photoUrl, zone, row, card){
+    if (!photoUrl || !confirm('이 사진을 삭제할까요?')) return;
+    card = card || (zone && zone.closest('.day-story-card'));
+    var errorEl = card ? card.querySelector('.ds-upload-error') : null;
+    var context = createDayStoryPhotoWriteContext(card, zone, row, photoUrl);
+    if (!context || context.mediaRowId !== String(mediaId || '')) return;
+    if (errorEl) errorEl.textContent = '';
+
+    return enqueueEditablePhotoSectionWrite(context, async function(){
+      if (!isCurrentDayStoryPhotoWrite(context, card, zone)) return { ok:false, stale:true };
+      var resolved = await resolveDayStoryRowForWrite(context);
+      if (!resolved.ok) {
+        showDayStoryCardError(context, card, zone, errorEl, 'deleteDayStoryPhoto', '사진 삭제 실패', resolved.error);
+        return resolved;
+      }
+      if (!isCurrentDayStoryPhotoWrite(context, card, zone)) return { ok:false, stale:true };
+
+      var persistResult = await persistDayStoryPhotoPath(context, '');
+      if (!persistResult.ok) {
+        showDayStoryCardError(context, card, zone, errorEl, 'deleteDayStoryPhoto', '사진 삭제 실패', persistResult.error);
+        return persistResult;
+      }
+      var oldPath = resolved.row.photo_url || context.existingPhotoPath;
+      var removeResult = await removeStoragePathForWrite(context, oldPath, 'deleteDayStoryPhoto');
+      if (isCurrentDayStoryPhotoWrite(context, card, zone)) {
+        if (row) Object.assign(row, persistResult.row);
+        setUploadZonePhoto(zone, null);
+        if (!removeResult.ok && errorEl) {
+          errorEl.textContent = '사진 정보는 삭제됐지만 파일 정리에 실패했어요.';
+        }
+      }
+      return { ok:true, stale:!isCurrentDayStoryPhotoWrite(context, card, zone), orphaned:!removeResult.ok };
+    }).catch(function(err){
+      showDayStoryCardError(context, card, zone, errorEl, 'deleteDayStoryPhoto', '사진 삭제 실패', err);
+      return { ok:false, error:err };
+    }).finally(function(){
+      clearDayStoryPhotoWriteOperation(context, card, zone);
     });
   }
 
-  async function deleteDayStoryPhoto(mediaId, photoUrl, zone, row){
-    if (!photoUrl || !confirm('이 사진을 삭제할까요?')) return;
-    var removeRes = await client.storage.from(storageBucket()).remove([photoUrl]);
-    if (removeRes.error) {
-      alertAdminError('deleteDayStoryPhoto', removeRes.error, '사진 삭제 실패');
-      return;
-    }
-    var updateRes = await client.from(mediaTable()).update({ photo_url: '' }).eq('id', mediaId);
-    if (updateRes.error) {
-      alertAdminError('deleteDayStoryPhoto', updateRes.error, '사진 삭제 실패');
-      return;
-    }
-    if (row) row.photo_url = '';
-    setUploadZonePhoto(zone, null);
-  }
-
-  async function deleteDayStory(mediaId, photoUrl){
+  async function deleteDayStory(mediaId, photoUrl, row, card){
     if (!confirm('이 항목을 삭제할까요?')) return;
-    if (photoUrl) {
-      var removeRes = await client.storage.from(storageBucket()).remove([photoUrl]);
-      if (removeRes.error) {
-        alertAdminError('deleteDayStory', removeRes.error, '하루 이야기 삭제 실패');
-        return;
+    card = card || dayStoryList.querySelector('.day-story-card[data-id="' + String(mediaId || '') + '"]');
+    var zone = card ? card.querySelector('.ds-upload-zone') : null;
+    var errorEl = card ? card.querySelector('.ds-upload-error') : null;
+    var rowSnapshot = row || { id:mediaId, photo_url:photoUrl };
+    var context = createDayStoryPhotoWriteContext(card, zone, rowSnapshot, photoUrl);
+    if (!context || context.mediaRowId !== String(mediaId || '')) return;
+    if (errorEl) errorEl.textContent = '';
+
+    return enqueueEditablePhotoSectionWrite(context, async function(){
+      if (!isCurrentDayStoryPhotoWrite(context, card, zone)) return { ok:false, stale:true };
+      var deleteRes = await client.from(context.mediaTable).delete()
+        .eq('id', context.mediaRowId)
+        .eq(context.ownerKey, context.mediaOwnerId)
+        .eq('media_type', context.mediaType)
+        .select('*');
+      var deleteResult = exactDayStoryWriteRow(
+        deleteRes,
+        context,
+        '삭제한 하루 이야기 행을 확인하지 못했어요.'
+      );
+      if (!deleteResult.ok) {
+        showDayStoryCardError(context, card, zone, errorEl, 'deleteDayStory', '하루 이야기 삭제 실패', deleteResult.error);
+        return deleteResult;
       }
-    }
-    var deleteRes = await client.from(mediaTable()).delete().eq('id', mediaId);
-    if (deleteRes.error) {
-      alertAdminError('deleteDayStory', deleteRes.error, '하루 이야기 삭제 실패');
-      return;
-    }
-    loadDayStoryTab();
+
+      var oldPath = deleteResult.row.photo_url || context.existingPhotoPath;
+      var removeResult = await removeStoragePathForWrite(context, oldPath, 'deleteDayStory');
+      var isCurrentCard = isCurrentDayStoryPhotoWrite(context, card, zone);
+      if (isCurrentCard) {
+        if (!removeResult.ok) {
+          dayStorySaveStatus.textContent = '항목은 삭제됐지만 사진 파일 정리에 실패했어요.';
+          dayStorySaveStatus.className = 'msg error';
+        }
+        clearDayStoryPhotoWriteOperation(context, card, zone);
+        card.remove();
+      }
+      return { ok:true, stale:!isCurrentCard, orphaned:!removeResult.ok };
+    }).catch(function(err){
+      showDayStoryCardError(context, card, zone, errorEl, 'deleteDayStory', '하루 이야기 삭제 실패', err);
+      return { ok:false, error:err };
+    }).finally(function(){
+      clearDayStoryPhotoWriteOperation(context, card, zone);
+    });
   }
 
   addDayStoryBtn.addEventListener('click', async function(){
@@ -4940,6 +5210,7 @@
     );
     var context = beginEditableTargetLoad(target);
     resetEditablePhotoZonesForTargetLoad(targetKey);
+    resetDayStoryPanelForTargetChange(targetKey);
     if (!panelsMatchTarget) resetFacilityProgramPanelsForTargetChange(targetKey);
     isLoadingTarget = true;
     saveStatus.textContent = '';
