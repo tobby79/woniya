@@ -1152,7 +1152,7 @@
     var kind = requestedKind === 'programs'
       ? 'programs'
       : (
-        requestedKind === 'hero' || requestedKind === 'director' || requestedKind === 'day_story'
+        requestedKind === 'hero' || requestedKind === 'director' || requestedKind === 'day_story' || requestedKind === 'teacher'
           ? requestedKind
           : 'facilities'
       );
@@ -1330,7 +1330,7 @@
 
   function enqueueEditablePhotoSectionWrite(context, task){
     var queueKey = context.targetKey + '|' + context.kind;
-    if (context.kind === 'day_story' && context.itemKey) queueKey += '|' + context.itemKey;
+    if ((context.kind === 'day_story' || context.kind === 'teacher') && context.itemKey) queueKey += '|' + context.itemKey;
     var previous = editablePhotoSectionWriteQueues[queueKey] || Promise.resolve();
     var next = previous.catch(function(){}).then(task);
     editablePhotoSectionWriteQueues[queueKey] = next;
@@ -3116,8 +3116,125 @@
     if (centerId) delete teacherDraftsByCenter[String(centerId)];
   }
 
-  function renderTeacherCard(row){
-    return '<div class="teacher-card" data-id="' + row.id + '">' +
+  function teacherItemKey(row){
+    return 'teacher:' + String(row && row.id ? row.id : '');
+  }
+
+  function isCurrentTeacherCard(context, card, zone){
+    return Boolean(
+      context &&
+      card &&
+      card.isConnected &&
+      teacherList.contains(card) &&
+      card.dataset.id === context.mediaRowId &&
+      card.dataset.itemKey === context.itemKey &&
+      card.dataset.renderTargetKey === context.renderTargetKey &&
+      zone &&
+      zone.isConnected &&
+      card.contains(zone) &&
+      zone.dataset.itemKey === context.itemKey &&
+      zone.dataset.renderTargetKey === context.renderTargetKey
+    );
+  }
+
+  function isCurrentTeacherPhotoLoad(context, card, zone, operationId){
+    return Boolean(
+      isCurrentEditableTargetLoad(context) &&
+      isCurrentTeacherCard({
+        mediaRowId:String(card && card.dataset.id || ''),
+        itemKey:String(card && card.dataset.itemKey || ''),
+        renderTargetKey:context && context.targetKey
+      }, card, zone) &&
+      (card.dataset.photoWriteOperationId || '') === String(operationId || '') &&
+      (zone.dataset.photoWriteOperationId || '') === String(operationId || '')
+    );
+  }
+
+  function createTeacherPhotoWriteContext(card, zone, row, photoPath){
+    if (!card || !zone || !card.isConnected || !zone.isConnected || !card.contains(zone)) return null;
+    var itemKey = String(card.dataset.itemKey || teacherItemKey(row));
+    var renderTargetKey = String(card.dataset.renderTargetKey || '');
+    if (!itemKey || !renderTargetKey || zone.dataset.itemKey !== itemKey || zone.dataset.renderTargetKey !== renderTargetKey) return null;
+    var base = createEditableTargetWriteContext({
+      kind:'teacher',
+      folder:'teacher',
+      mediaType:'teacher',
+      itemKey:itemKey,
+      cardKey:itemKey,
+      mediaRowId:row && row.id,
+      existingRowId:row && row.id,
+      existingPhotoPath:photoPath,
+      existingRowSnapshot:row
+    });
+    if (!base || base.targetKey !== renderTargetKey || !base.mediaRowId) return null;
+    var context = Object.freeze(Object.assign({}, base, {
+      renderTargetKey:renderTargetKey
+    }));
+    card.dataset.photoWriteOperationId = context.operationId;
+    zone.dataset.photoWriteOperationId = context.operationId;
+    return context;
+  }
+
+  function isCurrentTeacherPhotoWrite(context, card, zone){
+    return Boolean(
+      isCurrentEditableTargetWrite(context) &&
+      isCurrentTeacherCard(context, card, zone) &&
+      card.dataset.photoWriteOperationId === context.operationId &&
+      zone.dataset.photoWriteOperationId === context.operationId
+    );
+  }
+
+  function clearTeacherPhotoWriteOperation(context, card, zone){
+    if (!context || !card || !zone || !card.isConnected || !zone.isConnected) return false;
+    if (!isCurrentTeacherCard(context, card, zone)) return false;
+    if (card.dataset.photoWriteOperationId !== context.operationId || zone.dataset.photoWriteOperationId !== context.operationId) return false;
+    delete card.dataset.photoWriteOperationId;
+    delete zone.dataset.photoWriteOperationId;
+    return true;
+  }
+
+  function exactTeacherWriteRow(res, context, missingMessage){
+    var exact = exactEditableWriteRow(res, context.mediaRowId, missingMessage);
+    if (!exact.ok) return exact;
+    if (
+      String(exact.row[context.ownerKey] || '') !== context.mediaOwnerId ||
+      exact.row.media_type !== context.mediaType
+    ) {
+      return { ok:false, error:new Error(missingMessage) };
+    }
+    return exact;
+  }
+
+  async function resolveTeacherRowForWrite(context){
+    var res = await client.from(context.mediaTable).select('*')
+      .eq('id', context.mediaRowId)
+      .eq(context.ownerKey, context.mediaOwnerId)
+      .eq('media_type', context.mediaType);
+    return exactTeacherWriteRow(res, context, '교사 사진 대상 행을 확인하지 못했습니다.');
+  }
+
+  async function persistTeacherPhotoPath(context, photoPath){
+    var res = await client.from(context.mediaTable).update({ photo_url:photoPath })
+      .eq('id', context.mediaRowId)
+      .eq(context.ownerKey, context.mediaOwnerId)
+      .eq('media_type', context.mediaType)
+      .select('*');
+    return exactTeacherWriteRow(res, context, '교사 사진 저장 대상 행을 확인하지 못했습니다.');
+  }
+
+  async function deleteTeacherRowForWrite(context){
+    var res = await client.from(context.mediaTable).delete()
+      .eq('id', context.mediaRowId)
+      .eq(context.ownerKey, context.mediaOwnerId)
+      .eq('media_type', context.mediaType)
+      .select('*');
+    return exactTeacherWriteRow(res, context, '삭제할 교사 카드 행을 확인하지 못했습니다.');
+  }
+
+  function renderTeacherCard(row, targetContext){
+    var itemKey = teacherItemKey(row);
+    var renderTargetKey = targetContext ? targetContext.targetKey : '';
+    return '<div class="teacher-card" data-id="' + esc(row.id) + '" data-item-key="' + esc(itemKey) + '" data-render-target-key="' + esc(renderTargetKey) + '" data-photo-write-operation-id="">' +
       '<div class="field">' +
         '<label>이름</label>' +
         '<input type="text" class="tc-name" placeholder="예: 김햇살 선생님" value="' + esc(row.title) + '">' +
@@ -3132,7 +3249,7 @@
       '</div>' +
       '<div class="field">' +
         '<label>사진</label>' +
-        '<div class="upload-zone profile-upload tc-upload-zone">' +
+        '<div class="upload-zone profile-upload tc-upload-zone" data-item-key="' + esc(itemKey) + '" data-render-target-key="' + esc(renderTargetKey) + '" data-photo-write-operation-id="">' +
           '<div class="upload-icon">+</div>' +
           '<div class="upload-hint"><strong>클릭하거나 사진을 여기에 드래그</strong><br>JPG · PNG · WebP</div>' +
           '<input type="file" class="tc-file-input" accept="image/jpeg,image/png,image/webp">' +
@@ -3143,20 +3260,20 @@
     '</div>';
   }
 
-  function bindTeacherCard(row, targetContext){
-    var card = teacherList.querySelector('.teacher-card[data-id="' + row.id + '"]');
+  function bindTeacherCard(row, targetContext, card){
     if (!card) return;
 
     var zone       = card.querySelector('.tc-upload-zone');
     var fileInput_ = card.querySelector('.tc-file-input');
     var delBtn     = card.querySelector('.tc-delete-btn');
+    var loadOperationId = zone.dataset.photoWriteOperationId || '';
 
     if (row.photo_url) {
       signedUrl(row.photo_url, targetContext).then(function(url){
-        if (!isCurrentEditableTargetLoad(targetContext)) return;
+        if (!isCurrentTeacherPhotoLoad(targetContext, card, zone, loadOperationId)) return;
         if (url) setUploadZonePhoto(zone, url, function(){
-          if (!isCurrentEditableTargetLoad(targetContext)) return;
-          deleteTeacherPhoto(row.id, row.photo_url, zone, row);
+          if (!isCurrentTeacherPhotoLoad(targetContext, card, zone, loadOperationId)) return;
+          deleteTeacherPhoto(row.id, row.photo_url, zone, row, card);
         });
       });
     } else {
@@ -3164,7 +3281,7 @@
     }
 
     zone.addEventListener('click', function(){
-      if (!isCurrentEditableTargetLoad(targetContext)) return;
+      if (!isCurrentTeacherPhotoLoad(targetContext, card, zone, zone.dataset.photoWriteOperationId || '')) return;
       fileInput_.click();
     });
     zone.addEventListener('dragover', function(e){ e.preventDefault(); zone.classList.add('drag-over'); });
@@ -3172,18 +3289,18 @@
     zone.addEventListener('drop', function(e){
       e.preventDefault();
       zone.classList.remove('drag-over');
-      if (!isCurrentEditableTargetLoad(targetContext)) return;
-      handleTeacherPhoto(row.id, e.dataTransfer.files[0], zone, row);
+      if (!isCurrentTeacherPhotoLoad(targetContext, card, zone, zone.dataset.photoWriteOperationId || '')) return;
+      handleTeacherPhoto(row.id, e.dataTransfer.files[0], zone, row, card);
     });
     fileInput_.addEventListener('change', function(){
-      if (!isCurrentEditableTargetLoad(targetContext)) { fileInput_.value = ''; return; }
-      if (fileInput_.files[0]) handleTeacherPhoto(row.id, fileInput_.files[0], zone, row);
+      if (!isCurrentTeacherPhotoLoad(targetContext, card, zone, zone.dataset.photoWriteOperationId || '')) { fileInput_.value = ''; return; }
+      if (fileInput_.files[0]) handleTeacherPhoto(row.id, fileInput_.files[0], zone, row, card);
       fileInput_.value = '';
     });
 
     delBtn.addEventListener('click', function(){
-      if (!isCurrentEditableTargetLoad(targetContext)) return;
-      deleteTeacher(row.id, row.photo_url);
+      if (!isCurrentTeacherPhotoLoad(targetContext, card, zone, zone.dataset.photoWriteOperationId || '')) return;
+      deleteTeacher(row.id, row.photo_url, row, card, zone);
     });
   }
 
@@ -3198,7 +3315,7 @@
     var res = await client.from(requestedMediaTable).select('*')
       .eq(requestedOwnerKey, requestedCenterId).eq('media_type', 'teacher')
       .order('sort_order', { ascending: true });
-    if (requestId !== teacherLoadSequence || !isCurrentEditableTargetLoad(context) || !currentCenter || String(currentCenter.id) !== requestedCenterId || mediaTable() !== requestedMediaTable) return;
+    if (requestId !== teacherLoadSequence || !isCurrentEditableTargetLoad(context)) return;
     if (res.error) {
       logAdminError('loadTeacherTab', res.error);
       teacherSaveStatus.textContent = '선생님 목록을 불러오지 못했어요: ' + res.error.message;
@@ -3207,66 +3324,153 @@
     }
     var rows = res.data || [];
     captureTeacherDrafts(renderedTeacherCenterId);
-    teacherList.innerHTML = rows.map(renderTeacherCard).join('');
+    teacherList.innerHTML = rows.map(function(row){ return renderTeacherCard(row, context); }).join('');
     renderedTeacherCenterId = requestedCenterId;
-    rows.forEach(function(row){ bindTeacherCard(row, context); });
+    rows.forEach(function(row, index){ bindTeacherCard(row, context, teacherList.children[index]); });
     restoreTeacherDrafts(requestedCenterId);
   }
 
-  async function handleTeacherPhoto(mediaId, file, zone, row){
-    if (!file || !currentCenter) return;
+  async function handleTeacherPhoto(mediaId, file, zone, row, card){
+    if (!file || !card || !zone || String(mediaId) !== String(row && row.id || '')) return;
     captureTeacherDrafts(renderedTeacherCenterId);
-    var compressed = await compressImage(file);
-    var path = storagePath('teacher', Date.now() + '_' + compressed.name);
-    var upRes = await client.storage.from(storageBucket()).upload(path, compressed, { cacheControl:'3600', upsert:false });
-    if (upRes.error){ alertAdminError('handleTeacherPhoto', upRes.error, '사진 업로드 실패'); return; }
+    var context = createTeacherPhotoWriteContext(card, zone, row, row.photo_url);
+    if (!context) return;
+    var path = '';
+    var dbSaved = false;
 
-    var updateRes = await client.from(mediaTable()).update({ photo_url: path }).eq('id', mediaId);
-    if (updateRes.error){ alertAdminError('handleTeacherPhoto', updateRes.error, '사진 저장 실패'); return; }
-    var oldPath = row ? row.photo_url : '';
-    if (oldPath) client.storage.from(storageBucket()).remove([oldPath]);
-    if (row) row.photo_url = path;
+    return enqueueEditablePhotoSectionWrite(context, async function(){
+      try {
+        if (!isCurrentTeacherPhotoWrite(context, card, zone)) return { ok:false, stale:true };
+        var compressed = await compressImage(file);
+        if (!isCurrentTeacherPhotoWrite(context, card, zone)) return { ok:false, stale:true };
+        path = storagePathForWrite(context, context.folder, Date.now() + '_' + compressed.name);
+        var upRes = await client.storage.from(context.bucket).upload(path, compressed, { cacheControl:'3600', upsert:false });
+        if (upRes.error) throw upRes.error;
+        if (!isCurrentTeacherPhotoWrite(context, card, zone)) {
+          await removeStoragePathForWrite(context, path, 'handleTeacherPhoto/staleCleanup');
+          return { ok:false, stale:true };
+        }
 
-    var url = await signedUrl(path);
-    if (url) setUploadZonePhoto(zone, url, function(){
-      deleteTeacherPhoto(mediaId, path, zone, row);
+        var resolved = await resolveTeacherRowForWrite(context);
+        if (!resolved.ok) throw resolved.error;
+        if (!isCurrentTeacherPhotoWrite(context, card, zone)) {
+          await removeStoragePathForWrite(context, path, 'handleTeacherPhoto/resolvedStaleCleanup');
+          return { ok:false, stale:true };
+        }
+
+        var saved = await persistTeacherPhotoPath(context, path);
+        if (!saved.ok) throw saved.error;
+        dbSaved = true;
+        var oldPath = resolved.row.photo_url || context.existingPhotoPath;
+        var removeResult = oldPath && oldPath !== path
+          ? await removeStoragePathForWrite(context, oldPath, 'handleTeacherPhoto/oldPhotoCleanup')
+          : { ok:true, skipped:true };
+
+        if (isCurrentTeacherPhotoWrite(context, card, zone)) {
+          row.photo_url = path;
+          var url = await signedUrlForWrite(context, path);
+          if (url && isCurrentTeacherPhotoWrite(context, card, zone)) {
+            setUploadZonePhoto(zone, url, function(){
+              if (!isCurrentTeacherCard(context, card, zone) || card.dataset.photoWriteOperationId || zone.dataset.photoWriteOperationId) return;
+              deleteTeacherPhoto(context.mediaRowId, path, zone, row, card);
+            });
+          }
+          if (!removeResult.ok && isCurrentTeacherPhotoWrite(context, card, zone)) {
+            alertAdminError('handleTeacherPhoto', removeResult.error, '사진은 저장됐지만 이전 파일 정리에 실패했어요.');
+          }
+        }
+        return { ok:true, stale:!isCurrentTeacherPhotoWrite(context, card, zone), orphaned:!removeResult.ok };
+      } catch (err) {
+        if (path && !dbSaved) {
+          await removeStoragePathForWrite(context, path, 'handleTeacherPhoto/errorCleanup');
+        }
+        if (isCurrentTeacherPhotoWrite(context, card, zone)) {
+          alertAdminError('handleTeacherPhoto', err, '사진 저장 실패');
+        }
+        return { ok:false, error:err };
+      } finally {
+        clearTeacherPhotoWriteOperation(context, card, zone);
+      }
     });
   }
 
-  async function deleteTeacherPhoto(mediaId, photoUrl, zone, row){
-    if (!photoUrl || !confirm('이 사진을 삭제할까요?')) return;
+  async function deleteTeacherPhoto(mediaId, photoUrl, zone, row, card){
+    if (!photoUrl || !card || !zone || !confirm('이 사진을 삭제할까요?')) return;
     captureTeacherDrafts(renderedTeacherCenterId);
-    var updateRes = await client.from(mediaTable()).update({ photo_url: '' }).eq('id', mediaId);
-    if (updateRes.error){
-      alertAdminError('deleteTeacherPhoto', updateRes.error, '사진 삭제 실패');
-      return;
-    }
-    if (row) row.photo_url = '';
-    var removeRes = await client.storage.from(storageBucket()).remove([photoUrl]);
-    if (removeRes.error) {
-      alertAdminError('deleteTeacherPhoto', removeRes.error, '사진 파일 삭제 실패');
-    }
-    setUploadZonePhoto(zone, null);
+    var context = createTeacherPhotoWriteContext(card, zone, row, photoUrl);
+    if (!context || context.mediaRowId !== String(mediaId)) return;
+
+    return enqueueEditablePhotoSectionWrite(context, async function(){
+      try {
+        if (!isCurrentTeacherPhotoWrite(context, card, zone)) return { ok:false, stale:true };
+        var resolved = await resolveTeacherRowForWrite(context);
+        if (!resolved.ok) throw resolved.error;
+        if (!isCurrentTeacherPhotoWrite(context, card, zone)) return { ok:false, stale:true };
+
+        var saved = await persistTeacherPhotoPath(context, '');
+        if (!saved.ok) throw saved.error;
+        var oldPath = resolved.row.photo_url || context.existingPhotoPath;
+        var removeResult = oldPath
+          ? await removeStoragePathForWrite(context, oldPath, 'deleteTeacherPhoto')
+          : { ok:true, skipped:true };
+
+        if (isCurrentTeacherPhotoWrite(context, card, zone)) {
+          row.photo_url = '';
+          setUploadZonePhoto(zone, null);
+          if (!removeResult.ok) {
+            alertAdminError('deleteTeacherPhoto', removeResult.error, '사진 정보는 삭제됐지만 파일 정리에 실패했어요.');
+          }
+        }
+        return { ok:true, stale:!isCurrentTeacherPhotoWrite(context, card, zone), orphaned:!removeResult.ok };
+      } catch (err) {
+        if (isCurrentTeacherPhotoWrite(context, card, zone)) {
+          alertAdminError('deleteTeacherPhoto', err, '사진 삭제 실패');
+        }
+        return { ok:false, error:err };
+      } finally {
+        clearTeacherPhotoWriteOperation(context, card, zone);
+      }
+    });
   }
 
-  async function deleteTeacher(mediaId, photoUrl){
-    if (!confirm('이 선생님 카드를 삭제할까요?')) return;
-    var centerId = currentCenter ? String(currentCenter.id) : '';
+  async function deleteTeacher(mediaId, photoUrl, row, card, zone){
+    if (!card || !zone || !confirm('이 선생님 카드를 삭제할까요?')) return;
     captureTeacherDrafts(renderedTeacherCenterId);
-    if (photoUrl) {
-      var removeRes = await client.storage.from(storageBucket()).remove([photoUrl]);
-      if (removeRes.error) {
-        alertAdminError('deleteTeacher', removeRes.error, '선생님 카드 삭제 실패');
-        return;
+    var context = createTeacherPhotoWriteContext(card, zone, row, photoUrl);
+    if (!context || context.mediaRowId !== String(mediaId)) return;
+
+    return enqueueEditablePhotoSectionWrite(context, async function(){
+      try {
+        if (!isCurrentTeacherPhotoWrite(context, card, zone)) return { ok:false, stale:true };
+        var resolved = await resolveTeacherRowForWrite(context);
+        if (!resolved.ok) throw resolved.error;
+        if (!isCurrentTeacherPhotoWrite(context, card, zone)) return { ok:false, stale:true };
+
+        var deleted = await deleteTeacherRowForWrite(context);
+        if (!deleted.ok) throw deleted.error;
+        clearTeacherDraft(context.editableCenterId, context.mediaRowId);
+        var oldPath = resolved.row.photo_url || context.existingPhotoPath;
+        var removeResult = oldPath
+          ? await removeStoragePathForWrite(context, oldPath, 'deleteTeacher')
+          : { ok:true, skipped:true };
+
+        if (isCurrentTeacherPhotoWrite(context, card, zone)) {
+          if (!removeResult.ok) {
+            alertAdminError('deleteTeacher', removeResult.error, '선생님 카드는 삭제됐지만 사진 파일 정리에 실패했어요.');
+          }
+          clearTeacherPhotoWriteOperation(context, card, zone);
+          card.remove();
+        }
+        return { ok:true, stale:!isCurrentEditableTargetWrite(context), orphaned:!removeResult.ok };
+      } catch (err) {
+        if (isCurrentTeacherPhotoWrite(context, card, zone)) {
+          alertAdminError('deleteTeacher', err, '선생님 카드 삭제 실패');
+        }
+        return { ok:false, error:err };
+      } finally {
+        clearTeacherPhotoWriteOperation(context, card, zone);
       }
-    }
-    var deleteRes = await client.from(mediaTable()).delete().eq('id', mediaId);
-    if (deleteRes.error) {
-      alertAdminError('deleteTeacher', deleteRes.error, '선생님 카드 삭제 실패');
-      return;
-    }
-    clearTeacherDraft(centerId, String(mediaId));
-    loadTeacherTab();
+    });
   }
 
   addTeacherBtn.addEventListener('click', async function(){
@@ -3299,7 +3503,7 @@
       alertAdminError('addTeacher', insertRes.error, '선생님 추가 실패');
       return;
     }
-    loadTeacherTab();
+    loadTeacherTab(currentEditableTargetLoadContext());
   });
 
   teacherSaveBtn.addEventListener('click', async function(){
