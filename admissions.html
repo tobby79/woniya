@@ -43,16 +43,28 @@
   }
 
   body.theme-forest{
-    --ad-bg:#FBF6EE;
-    --ad-ink:#4A3F35;
-    --ad-muted:#8B7C6A;
-    --ad-hairline:#E8DCC8;
-    --ad-accent:#C97B5F;
-    --ad-accent-deep:#A76048;
-    --ad-card:#FFFDF8;
-    --ad-card-soft:#FFF9F1;
-    --ad-label:#B59768;
-    --ad-shadow:0 20px 50px -34px rgba(74,63,53,.42);
+    --ad-bg:#F5F4E9;
+    --ad-ink:#2F3D2A;
+    --ad-muted:#66705F;
+    --ad-hairline:#D5D8C3;
+    --ad-accent:#56734A;
+    --ad-accent-deep:#314F3C;
+    --ad-card:#FBF9EF;
+    --ad-card-soft:#E9EAD8;
+    --ad-label:#7A684F;
+    --ad-shadow:0 28px 60px -44px rgba(32,56,44,.58);
+    --cream:var(--ad-bg);
+    --ink:var(--ad-ink);
+    --ink-soft:var(--ad-muted);
+    --coral:var(--ad-accent);
+    --coral-deep:var(--ad-accent-deep);
+    --paper:var(--ad-card);
+    --line:var(--ad-hairline);
+    --display:var(--ad-serif);
+    --body:var(--ad-sans);
+    --card-radius:20px;
+    --card-shadow:var(--ad-shadow);
+    --card-shadow-hover:0 24px 48px -28px rgba(32,56,44,.56);
   }
 
   body.theme-carnival{
@@ -507,6 +519,241 @@
     outline-offset:4px;
   }
 
+  body:not([data-template-theme]){background:#F5F4E9}
+  body:not([data-template-theme]) #content,
+  body:not([data-template-theme]) #ctaSec{visibility:hidden}
+
+  body.theme-forest{
+    background:
+      radial-gradient(ellipse at 14% 8%,rgba(181,199,160,.22),transparent 34%),
+      linear-gradient(180deg,#F8F7ED,#EEEEDF);
+    overflow-x:hidden;
+  }
+  body.theme-forest #topbar > .wrap{
+    width:100%;
+    max-width:540px;
+    padding-inline:20px;
+  }
+  body.theme-forest .menu-panel{
+    right:max(20px,calc((100vw - 500px)/2));
+    width:min(86vw,320px);
+    max-width:calc(100vw - 40px);
+  }
+  body.theme-forest .invitation{
+    width:min(calc(100% - 24px),500px);
+    max-width:500px;
+    margin:24px auto 0;
+    padding:48px clamp(16px,4vw,24px) 62px;
+    display:flex;
+    flex-direction:column;
+    gap:clamp(34px,8vw,44px);
+    background:
+      radial-gradient(ellipse at 12% 6%,rgba(181,199,160,.13),transparent 30%),
+      linear-gradient(155deg,rgba(253,251,242,.94),rgba(244,242,226,.9));
+    border:1px solid rgba(49,82,62,.08);
+    border-radius:42px 58px 38px 52px / 52px 40px 60px 46px;
+    box-shadow:0 28px 64px -50px rgba(32,56,44,.55);
+    box-sizing:border-box;
+    overflow:visible;
+  }
+  body.theme-forest .invitation::before{display:none}
+  body.theme-forest .invitation > .section{width:100%;margin:0}
+  body.theme-forest .forest-admission-hero{
+    position:relative;isolation:isolate;
+    display:flex;flex-direction:column;align-items:stretch;
+    gap:26px;
+    width:100%;height:auto;min-height:0;
+    padding:68px clamp(24px,7vw,34px) 86px;
+    box-sizing:border-box;
+    overflow:visible;
+  }
+  body.theme-forest .forest-admission-hero::before{
+    content:"";position:absolute;inset:0;z-index:-1;
+    background:linear-gradient(145deg,rgba(251,249,239,.98),rgba(226,231,207,.94));
+    border-radius:47% 53% 41% 59% / 59% 39% 61% 41%;
+    transform:rotate(-.22deg);
+    box-shadow:0 24px 48px -42px rgba(32,56,44,.56),inset 0 0 0 1px rgba(49,82,62,.1);
+  }
+  body.theme-forest .forest-admission-copy{width:100%;min-width:0;text-align:center}
+  body.theme-forest .forest-admission-copy .section-label{
+    margin-bottom:12px;color:#56734A;text-align:center;
+    letter-spacing:.18em;
+  }
+  body.theme-forest .forest-admission-title{
+    margin:0;color:#314F3C;
+    font:700 clamp(1.9rem,8.4vw,2.35rem)/1.34 var(--ad-serif);
+    letter-spacing:-.04em;word-break:keep-all;overflow-wrap:anywhere;
+  }
+  body.theme-forest .forest-admission-name{
+    margin:19px 0 0;color:#425C3D;
+    font-size:.9rem;font-weight:800;line-height:1.7;word-break:keep-all;
+  }
+  body.theme-forest .forest-admission-intro{
+    max-width:330px;margin:15px auto 0;color:#66705F;
+    font-size:.94rem;line-height:1.85;word-break:keep-all;overflow-wrap:anywhere;
+  }
+  body.theme-forest .forest-hero-photo{
+    width:100%;max-width:360px;margin:0 auto;overflow:hidden;aspect-ratio:4/3;
+    border-radius:42% 58% 48% 52% / 58% 39% 61% 42%;
+    box-shadow:0 20px 42px -30px rgba(32,56,44,.7);
+  }
+  body.theme-forest .forest-hero-photo img{display:block;width:100%;height:100%;object-fit:cover}
+  body.theme-forest .forest-core{
+    width:100%;padding:7px clamp(5px,2vw,10px);
+    box-sizing:border-box;
+  }
+  body.theme-forest .forest-core .section-label{
+    margin-bottom:20px;color:#56734A;
+  }
+  body.theme-forest .forest-core .section-label::after,
+  body.theme-forest .forest-detail .section-label::after{
+    content:"";display:block;width:7px;height:12px;margin:10px auto 0;
+    background:#769365;border-radius:0 80% 0 80%;transform:rotate(38deg);
+    opacity:.72;
+  }
+  body.theme-forest .adm-preview{
+    display:flex;flex-direction:column;gap:17px;
+    width:100%;margin:0;padding:0;background:transparent;border:0;box-shadow:none;
+  }
+  body.theme-forest .adm-preview-row{
+    position:relative;isolation:isolate;
+    display:grid;grid-template-columns:28px minmax(0,1fr);
+    align-items:center;gap:14px;
+    width:100%;height:auto;min-height:0;
+    margin:0;padding:23px clamp(23px,7vw,30px);
+    border:0;box-sizing:border-box;overflow:visible;
+  }
+  body.theme-forest .adm-preview-row::before{
+    content:"";position:absolute;inset:0;z-index:-1;background:rgba(251,249,239,.92);
+    border-radius:43% 57% 48% 52% / 58% 40% 60% 42%;
+    box-shadow:0 16px 34px -32px rgba(32,56,44,.52),inset 0 0 0 1px rgba(49,82,62,.09);
+  }
+  body.theme-forest .adm-preview-row:nth-child(2)::before{border-radius:58% 42% 60% 40% / 42% 59% 41% 58%}
+  body.theme-forest .adm-preview-row:nth-child(3)::before{border-radius:48% 52% 39% 61% / 62% 43% 57% 38%}
+  body.theme-forest .adm-preview-row .adm-icon{width:26px;height:26px;margin:0;color:#56734A}
+  body.theme-forest .adm-preview-row .adm-icon svg{display:block;width:100%;height:100%}
+  body.theme-forest .adm-preview-copy{min-width:0;padding:1px 0;text-align:left}
+  body.theme-forest .adm-preview-label{margin-bottom:6px;color:#7A684F;font-size:.78rem;font-weight:800;letter-spacing:.06em}
+  body.theme-forest .adm-preview-value{color:#314F3C;font-size:1rem;line-height:1.7;white-space:pre-line;word-break:keep-all;overflow-wrap:anywhere}
+  body.theme-forest .forest-detail{
+    position:relative;isolation:isolate;
+    width:100%;height:auto;min-height:0;padding:0;
+    box-sizing:border-box;overflow:visible;
+  }
+  body.theme-forest .forest-detail::before{
+    content:"";position:absolute;inset:0;z-index:-1;background:rgba(247,244,231,.9);
+    border-radius:55% 45% 51% 49% / 44% 60% 40% 56%;
+    box-shadow:0 18px 38px -36px rgba(32,56,44,.5),inset 0 0 0 1px rgba(49,82,62,.08);
+  }
+  body.theme-forest .forest-process::before{border-radius:55% 45% 51% 49% / 44% 60% 40% 56%}
+  body.theme-forest .forest-supplies{
+    width:min(92%,390px);
+    align-self:center;
+  }
+  body.theme-forest .forest-supplies::before{border-radius:43% 57% 60% 40% / 59% 42% 58% 41%}
+  body.theme-forest .forest-detail-content{
+    width:100%;height:auto;min-height:0;
+    margin:0;padding:38px clamp(25px,7vw,34px) 42px;
+    box-sizing:border-box;overflow:visible;
+  }
+  body.theme-forest .forest-supplies .forest-detail-content{padding:30px 24px 34px}
+  body.theme-forest .forest-detail .section-label{margin-bottom:20px;color:#56734A;text-align:center}
+  body.theme-forest .timeline,
+  body.theme-forest .plain-card,
+  body.theme-forest .check-list{background:transparent;border:0;box-sizing:border-box}
+  body.theme-forest .timeline{
+    --forest-timeline-shift:clamp(14px,4.4vw,22px);
+    width:calc(100% - var(--forest-timeline-shift));height:auto;margin:0 auto 0 0;
+    padding:8px 0;overflow:visible;border-radius:0;
+    transform:translateX(var(--forest-timeline-shift));
+  }
+  body.theme-forest .timeline::before{
+    left:10px;top:27px;bottom:28px;width:2px;
+    background:repeating-linear-gradient(180deg,#8AA37A 0 7px,transparent 7px 13px);
+    opacity:.58;
+  }
+  body.theme-forest .step{
+    min-width:0;padding:14px 5px 19px 38px;
+    border:0;overflow-wrap:anywhere;
+  }
+  body.theme-forest .step::before{
+    left:4px;top:22px;width:12px;height:12px;
+    background:#F8F5E8;border-color:#769365;
+    box-shadow:0 0 0 4px rgba(248,245,232,.9);
+  }
+  body.theme-forest .step:last-child{
+    margin-top:3px;
+    background:rgba(118,147,101,.1);
+    border-radius:5px 18px 5px 18px;
+  }
+  body.theme-forest .step:last-child::before{background:#56734A;border-color:#56734A}
+  body.theme-forest .step-title{
+    font-size:1.03rem;line-height:1.7;
+  }
+  body.theme-forest .plain-card{
+    width:100%;height:auto;margin:0 auto;padding:8px 4px;
+    font-family:var(--ad-serif);font-size:1.02rem;line-height:1.85;text-align:center;
+    white-space:pre-line;word-break:keep-all;overflow-wrap:anywhere;
+  }
+  body.theme-forest .check-list{
+    width:100%;height:auto;margin:0 auto;
+    gap:7px;overflow:visible;border-radius:0;
+  }
+  body.theme-forest .check-item{
+    grid-template-columns:18px minmax(0,1fr);
+    gap:11px;padding:9px 6px;
+    border:0;text-align:left;
+  }
+  body.theme-forest .check-icon{border-color:#769365;color:#425C3D}
+  body.theme-forest .check-text{font-size:.98rem;line-height:1.72;overflow-wrap:anywhere}
+  body.theme-forest .forest-notes{
+    width:min(92%,390px);
+    align-self:center;
+  }
+  body.theme-forest .forest-notes .notes-card{
+    position:relative;isolation:isolate;
+    width:100%;margin:0 auto;padding:30px 25px 34px;
+    background:transparent;border:0;
+  }
+  body.theme-forest .forest-notes .notes-card::before{
+    content:"";position:absolute;inset:0;z-index:-1;background:rgba(229,232,211,.74);
+    border-radius:61% 39% 55% 45% / 43% 62% 38% 57%;
+  }
+  body.theme-forest .forest-back{
+    position:relative;
+    width:100%;margin-top:0;text-align:center;
+  }
+  body.theme-forest .forest-back::before{
+    content:"";display:block;width:1px;height:24px;margin:0 auto 12px;
+    background:linear-gradient(#9DAF8F,transparent);
+  }
+  body.theme-forest .forest-back a{
+    display:inline-flex;align-items:center;min-height:44px;padding:9px 18px;
+    color:#425C3D;font-size:.9rem;font-weight:800;text-decoration:none;
+    border-bottom:1px solid rgba(86,115,74,.32);
+  }
+  body.theme-forest .forest-back a::before{
+    content:"";width:8px;height:12px;margin-right:9px;
+    background:#769365;border-radius:0 80% 0 80%;transform:rotate(-38deg);
+    opacity:.76;
+  }
+  body.theme-forest .cta{
+    width:min(calc(100% - 24px),500px);
+    max-width:500px;margin:0 auto;
+    padding:34px 24px 72px;
+  }
+  body.theme-forest .cta-line{width:1px;height:28px;margin-bottom:22px;background:linear-gradient(#769365,transparent)}
+  body.theme-forest .cta h2{font-size:1.18rem;line-height:1.75}
+  body.theme-forest .btn-big{
+    min-height:50px;border-radius:6px 20px 6px 20px;
+    background:#56734A;box-shadow:0 18px 34px -22px #314F3C;
+  }
+  body.theme-forest .btn-big:hover{background:#314F3C}
+  body.theme-forest .csl-overlay{background:rgba(20,39,29,.62)}
+  body.theme-forest .csl-panel{background:#FBF9EF;border-radius:32px 48px 28px 42px / 40px 30px 50px 34px}
+  body.theme-forest a:focus-visible,
+  body.theme-forest .btn-big:focus-visible{outline-color:rgba(86,115,74,.42)}
+
   @media (min-width:720px){
     .wrap{padding-left:0;padding-right:0}
     .invitation{padding-top:70px}
@@ -516,6 +763,24 @@
   @media (max-width:420px){
     .wrap{padding-inline:18px}
     .info-row{padding:17px 18px}
+    body.theme-forest #topbar > .wrap{padding-inline:16px}
+    body.theme-forest .invitation{
+      width:min(calc(100% - 16px),500px);
+      margin-top:16px;
+      padding:40px 16px 56px;
+      border-radius:32px 42px 30px 38px / 40px 30px 46px 34px;
+    }
+    body.theme-forest .forest-admission-hero{
+      padding:60px 24px 76px;
+      gap:24px;
+    }
+    body.theme-forest .forest-detail-content{padding:34px 25px 38px}
+    body.theme-forest .forest-supplies .forest-detail-content{padding:28px 22px 32px}
+    body.theme-forest .adm-preview-row{padding:22px 23px}
+    body.theme-forest .cta{
+      width:min(calc(100% - 16px),500px);
+      padding-inline:20px;
+    }
   }
 
   @media (prefers-reduced-motion:reduce){
@@ -687,13 +952,13 @@ var TEMPLATE_FILES = { sunshine:'template-sunshine.html', forest:'template-fores
       });
   }
 
-  function representativePhoto(center){
+  function representativePhoto(center, allowAlbumFallback){
     var media = [];
     if (Array.isArray(center.center_media)) media = center.center_media;
     if (!media.length && Array.isArray(center.template_center_media)) media = center.template_center_media;
     var hero = byMediaType(media, 'hero')[0];
     var album = byMediaType(media, 'album')[0];
-    return (hero || album || {}).photo_url || '';
+    return (hero || (allowAlbumFallback ? album : null) || {}).photo_url || '';
   }
 
   var cfg = window.__SUPABASE_CONFIG__;
@@ -778,8 +1043,8 @@ var TEMPLATE_FILES = { sunshine:'template-sunshine.html', forest:'template-fores
     form.addEventListener('submit', async function(e){
       e.preventDefault();
       errorEl.textContent = '';
-      if (isPreviewMode){
-        errorEl.textContent = '템플릿 미리보기에서는 실제 신청이 접수되지 않아요.';
+      if (isReadOnlyMode){
+        errorEl.textContent = '미리보기 화면에서는 실제 신청이 접수되지 않아요.';
         return;
       }
       if (!centerId){
@@ -819,20 +1084,28 @@ var TEMPLATE_FILES = { sunshine:'template-sunshine.html', forest:'template-fores
     });
   }
 
-  var params = new URLSearchParams(location.search);
-  var slug = params.get('slug') || 'haetsal';
-  // ?preview=<id>: 템플릿 미리보기(template_centers/template_admissions 샘플 데이터).
-  // slug가 명시되면 실제 원 조회가 우선. preview는 slug가 없을 때만 인식.
   var PREVIEW_IDS = ['sunshine', 'carnival', 'forest', 'gallery'];
-  var previewId = params.get('slug') ? '' : ((params.get('preview') || '').trim().toLowerCase());
-  if (previewId && PREVIEW_IDS.indexOf(previewId) < 0) previewId = '';
+  var target = WoniyaTopbar.readTarget(location.search, PREVIEW_IDS);
+  var slug = target.mode === 'slug' ? (target.value || 'haetsal') : '';
+  var previewId = target.mode === 'preview' ? target.value : '';
   var isPreviewMode = !!previewId;
+  var isReviewMode = target.mode === 'review_token';
+  var isAdminPreviewMode = target.mode === 'preview_center';
+  var isReadOnlyMode = isPreviewMode || isReviewMode || isAdminPreviewMode;
 
   var center;
   try {
-    if (isPreviewMode) {
+    if (isReviewMode) {
+      var reviewRes = await client.rpc('get_center_by_review_token', { p_token: target.value });
+      if (reviewRes.error || !reviewRes.data) throw reviewRes.error || new Error('검수 링크가 유효하지 않습니다.');
+      center = reviewRes.data;
+    } else if (isAdminPreviewMode) {
+      var previewRes = await client.rpc('get_center_preview', { p_slug: target.value });
+      if (previewRes.error || !previewRes.data) throw previewRes.error || new Error('관리자 미리보기를 불러오지 못했습니다.');
+      center = previewRes.data;
+    } else if (isPreviewMode) {
       // ── 미리보기: template_centers + template_admissions에서 조회 (실제 centers 경로와 분리) ──
-      var tcRes = await client.from('template_centers').select('name, slug, directions_text, theme, template, id, template_center_media(*)').eq('template_id', previewId).single();
+      var tcRes = await client.from('template_centers').select('name, slug, address, directions_text, theme, template, id, template_center_media(*)').eq('template_id', previewId).single();
       if (tcRes.error) throw tcRes.error;
       center = tcRes.data;
       var taRes = await client.from('template_admissions').select('*').eq('template_center_id', center.id).maybeSingle();
@@ -840,13 +1113,14 @@ var TEMPLATE_FILES = { sunshine:'template-sunshine.html', forest:'template-fores
       center.admissions = taRes.data ? [taRes.data] : [];
     } else {
       // ── 기존: 실제 centers/admissions 조회 (변경 없음) ──
-      var res = await client.from('centers').select('id, name, slug, directions_text, theme, template, center_media(*), admissions(*)').eq('slug', slug).single();
+      var res = await client.from('centers').select('id, name, slug, address, directions_text, theme, template, center_media(*), admissions(*)').eq('slug', slug).single();
       if (res.error) throw res.error;
       center = res.data;
     }
   } catch (e) {
     console.error(e);
     WoniyaTopbar.init({ centerName: '원이야' });
+    document.body.setAttribute('data-template-theme', 'sunshine');
     content.innerHTML = '<p class="state">입학안내를 불러오지 못했어요.</p>';
     return;
   }
@@ -862,46 +1136,32 @@ var TEMPLATE_FILES = { sunshine:'template-sunshine.html', forest:'template-fores
   }
 
   var templateId = applyThemeClass(center);
+  document.body.setAttribute('data-template-theme', templateId);
 
-  // 메인 페이지 경로 (홈으로 / 상담 신청). 미리보기 모드에서는 ?preview=로 이어간다.
   var mainFile = TEMPLATE_FILES[center.template] || 'template-sunshine.html';
-  var mainUrl = isPreviewMode
-    ? (mainFile + '?preview=' + encodeURIComponent(previewId))
-    : (mainFile + '?slug=' + encodeURIComponent(center.slug));
-  WoniyaTopbar.init({ centerName: cleanCenterName(center.name) });
-  var brandLinkEl = document.getElementById('brandLink');
-  if (brandLinkEl) brandLinkEl.href = mainUrl;
-  var topbarHomeEl = document.querySelector('.topbar-home');
-  if (topbarHomeEl) topbarHomeEl.href = mainUrl;
-  var qs = isPreviewMode
-    ? ('?preview=' + encodeURIComponent(previewId))
-    : ('?slug=' + encodeURIComponent(center.slug));
-  var menuItems = [
-    { href: mainUrl + '#top', label: '시설 소개' },
-    { href: mainUrl + '#programSec', label: '교육프로그램' }
-  ];
-  if ((center.directions_text || '').trim()) menuItems.push({ href: 'directions.html' + qs, label: '오시는 길' });
+  var mainUrl = WoniyaTopbar.buildUrl(mainFile, target, center.slug);
+  var qs = WoniyaTopbar.buildUrl('', target, center.slug);
+  var previewLabel = isPreviewMode ? '템플릿 미리보기' : (isReviewMode ? '공개 전 검수' : (isAdminPreviewMode ? '관리자 미리보기' : ''));
+  WoniyaTopbar.init({
+    centerName: cleanCenterName(center.name),
+    theme: templateId === 'forest' ? 'forest' : '',
+    homeHref: mainUrl,
+    brandHref: mainUrl,
+    previewLabel: templateId === 'forest' ? previewLabel : ''
+  });
+  var menuItems = templateId === 'forest'
+    ? [{ href: mainUrl, label: '홈페이지' }]
+    : [
+      { href: mainUrl + '#top', label: '시설 소개' },
+      { href: mainUrl + '#programSec', label: '교육프로그램' }
+    ];
+  if ((center.address || '').trim() || (center.directions_text || '').trim()) menuItems.push({ href: 'directions.html' + qs, label: '오시는 길' });
   menuItems.push({ href: 'parent.html', label: '우리 반 미니홈피' });
   document.getElementById('menuPanel').innerHTML = menuItems.map(function(m){
     return '<a href="' + esc(m.href) + '">' + esc(m.label) + '</a>';
   }).join('');
-  var menuBtn = document.getElementById('menuBtn');
-  var menuPanel = document.getElementById('menuPanel');
-  function closeMenu(){
-    menuBtn.classList.remove('open');
-    menuPanel.classList.remove('open');
-    menuBtn.setAttribute('aria-expanded','false');
-  }
-  menuBtn.addEventListener('click',function(){
-    var open = menuPanel.classList.toggle('open');
-    menuBtn.classList.toggle('open',open);
-    menuBtn.setAttribute('aria-expanded',open?'true':'false');
-  });
-  menuPanel.querySelectorAll('a').forEach(function(a){ a.addEventListener('click',closeMenu); });
-  document.addEventListener('click',function(e){
-    if(!menuPanel.contains(e.target) && !menuBtn.contains(e.target)) closeMenu();
-  });
-  initConsultationForm(isPreviewMode ? null : center.id);
+  WoniyaTopbar.bindMenu();
+  initConsultationForm(isReadOnlyMode ? null : center.id);
 
   // SEO 메타 동적 생성
   document.title = (center.name || '원') + ' - 입학안내 | 원이야';
@@ -916,7 +1176,7 @@ var TEMPLATE_FILES = { sunshine:'template-sunshine.html', forest:'template-fores
 
   var year = new Date().getFullYear();
   var centerName = center.name || '우리 원';
-  var photo = representativePhoto(center);
+  var photo = representativePhoto(center, templateId !== 'forest');
   var processItems = splitByDelimiter(adm.process, /→/).map(stripStepNumber).filter(Boolean);
   var supplyItems = splitByDelimiter(adm.supplies, /\//).map(stripStepNumber).filter(Boolean);
   var hasCountdown = adm.deadline_date && isFutureDate(adm.deadline_date);
@@ -925,35 +1185,47 @@ var TEMPLATE_FILES = { sunshine:'template-sunshine.html', forest:'template-fores
   var ADM_ICON_CAPACITY = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8.2 11.5a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"/><path d="M15.8 11.5a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"/><path d="M3.5 20c.3-3.2 2.7-5.3 5.5-5.3 1.2 0 2.3.4 3.1 1.1"/><path d="M12 15.8c.9-.7 1.9-1.1 3.1-1.1 2.9 0 5.2 2.1 5.5 5.3"/></svg>';
 
   var html = '';
-  html += '<section class="cover section">'
-    + '<p class="section-label">INVITATION</p>'
-    + '<h1 class="cover-title">소중한 첫걸음에<br>당신의 아이를 초대합니다</h1>'
-    + '<p class="cover-sub">' + esc(centerName) + ' · ' + year + '학년도 신입 원아 모집</p>'
-    + '</section>';
+  if (templateId === 'forest') {
+    html += '<section class="forest-admission-hero section">'
+      + '<div class="forest-admission-copy">'
+      + '<p class="section-label">새로운 숲길의 시작</p>'
+      + '<h1 class="forest-admission-title">소중한 첫걸음에<br>아이를 초대합니다</h1>'
+      + '<p class="forest-admission-name">' + esc(centerName) + ' · ' + year + '학년도 신입 원아 모집</p>'
+      + '<p class="forest-admission-intro">아이의 첫 사회가 되는 곳, 따뜻한 숲길의 시작을 함께합니다.</p>'
+      + '</div>'
+      + (photo ? '<figure class="forest-hero-photo"><img src="' + esc(photo) + '" alt="' + esc(centerName) + ' 대표 사진"></figure>' : '')
+      + '</section>';
+  } else {
+    html += '<section class="cover section">'
+      + '<p class="section-label">INVITATION</p>'
+      + '<h1 class="cover-title">소중한 첫걸음에<br>당신의 아이를 초대합니다</h1>'
+      + '<p class="cover-sub">' + esc(centerName) + ' · ' + year + '학년도 신입 원아 모집</p>'
+      + '</section>';
 
-  html += '<section class="section" aria-label="원 사진">'
-    + '<figure class="photo-frame">'
-    + (photo ? '<img src="' + esc(photo) + '" alt="' + esc(centerName) + ' 대표 사진">' : '<div class="photo-placeholder">대표 사진을 준비 중입니다</div>')
-    + '<figcaption class="photo-caption">따뜻한 하루가 시작되는 곳</figcaption>'
-    + '</figure>'
-    + '</section>';
+    html += '<section class="section" aria-label="원 사진">'
+      + '<figure class="photo-frame">'
+      + (photo ? '<img src="' + esc(photo) + '" alt="' + esc(centerName) + ' 대표 사진">' : '<div class="photo-placeholder">대표 사진을 준비 중입니다</div>')
+      + '<figcaption class="photo-caption">따뜻한 하루가 시작되는 곳</figcaption>'
+      + '</figure>'
+      + '</section>';
 
-  html += '<section class="greeting section">'
-    + '<p class="section-label">모시는 글</p>'
-    + '<p class="greeting-text">아이의 첫 사회가 되는 곳,<br>그 시작을 함께하고 싶습니다.<br>' + esc(centerName) + '의 문은<br>언제나 따뜻하게 열려 있습니다.</p>'
-    + '<div class="short-line" aria-hidden="true"></div>'
-    + '</section>';
+    html += '<section class="greeting section">'
+      + '<p class="section-label">모시는 글</p>'
+      + '<p class="greeting-text">아이의 첫 사회가 되는 곳,<br>그 시작을 함께하고 싶습니다.<br>' + esc(centerName) + '의 문은<br>언제나 따뜻하게 열려 있습니다.</p>'
+      + '<div class="short-line" aria-hidden="true"></div>'
+      + '</section>';
+  }
 
   var rows = [];
   if (adm.target) rows.push(['모집 대상', adm.target, ADM_ICON_PERSON]);
   if (adm.period) rows.push(['모집 기간', adm.period, ADM_ICON_CALENDAR]);
   if (adm.capacity_info) rows.push(['정원 안내', adm.capacity_info, ADM_ICON_CAPACITY]);
   if (rows.length){
-    html += '<section class="section">'
+    html += '<section class="section forest-core">'
       + '<p class="section-label">모집 정보</p>'
       + '<div class="adm-preview">'
       + rows.map(function(row){
-        return '<div class="adm-preview-row"><span class="adm-icon">' + row[2] + '</span><div><div class="adm-preview-label">' + esc(row[0]) + '</div><div class="adm-preview-value">' + esc(row[1]) + '</div></div></div>';
+        return '<div class="adm-preview-row"><span class="adm-icon">' + row[2] + '</span><div class="adm-preview-copy"><div class="adm-preview-label">' + esc(row[0]) + '</div><div class="adm-preview-value">' + esc(row[1]) + '</div></div></div>';
       }).join('')
       + '</div></section>';
   }
@@ -969,8 +1241,8 @@ var TEMPLATE_FILES = { sunshine:'template-sunshine.html', forest:'template-fores
   }
 
   if (adm.process){
-    html += '<section class="section">'
-      + '<p class="section-label">입소 절차</p>';
+    html += '<section class="section forest-detail forest-process">'
+      + '<div class="forest-detail-content"><p class="section-label">입소 절차</p>';
     if (processItems.length > 1){
       html += '<div class="timeline">'
         + processItems.map(function(item){ return '<article class="step"><p class="step-title">' + esc(item) + '</p></article>'; }).join('')
@@ -978,12 +1250,12 @@ var TEMPLATE_FILES = { sunshine:'template-sunshine.html', forest:'template-fores
     } else {
       html += '<div class="plain-card">' + escWithBr(processItems[0] || adm.process) + '</div>';
     }
-    html += '</section>';
+    html += '</div></section>';
   }
 
   if (adm.supplies){
-    html += '<section class="section">'
-      + '<p class="section-label">준비물</p>';
+    html += '<section class="section forest-detail forest-supplies">'
+      + '<div class="forest-detail-content"><p class="section-label">준비물</p>';
     if (supplyItems.length > 1){
       html += '<div class="check-list">'
         + supplyItems.map(function(item){ return '<div class="check-item"><span class="check-icon" aria-hidden="true">✓</span><span class="check-text">' + esc(item) + '</span></div>'; }).join('')
@@ -991,17 +1263,21 @@ var TEMPLATE_FILES = { sunshine:'template-sunshine.html', forest:'template-fores
     } else {
       html += '<div class="plain-card">' + escWithBr(supplyItems[0] || adm.supplies) + '</div>';
     }
-    html += '</section>';
+    html += '</div></section>';
   }
 
   if (adm.notes){
-    html += '<section class="section">'
+    html += '<section class="section forest-notes">'
       + '<div class="notes-card">'
       + '<div class="notes-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M7 5.5h10v13l-5-3-5 3v-13Z"/><path d="M8.5 5.5c0-1.4 1.2-2.5 2.6-2.5h1.8c1.4 0 2.6 1.1 2.6 2.5"/></svg></div>'
       + '<h3 class="notes-title">기타 안내</h3>'
       + '<p class="notes-text">' + escWithBr(adm.notes) + '</p>'
       + '</div>'
       + '</section>';
+  }
+
+  if (templateId === 'forest') {
+    html += '<section class="section forest-back"><a href="' + esc(mainUrl) + '">숲 홈페이지로 돌아가기</a></section>';
   }
 
   content.innerHTML = html;
