@@ -2410,25 +2410,34 @@
         }).map(function(path){ return String(path).trim(); })));
         const signedMap = new Map();
         if (unique.length){
-          const res = await fetch(cfg.url + '/storage/v1/object/sign/center-images', {
-            method: 'POST',
-            headers: {
-              apikey: cfg.anonKey,
-              Authorization: 'Bearer ' + cfg.anonKey,
-              'content-type': 'application/json'
-            },
-            body: JSON.stringify({ paths: unique, expiresIn: 3600 })
-          });
-          if (!res.ok) throw new Error('Failed to sign center images');
-          const signed = await res.json();
-          (signed || []).forEach(function(item, index){
-            const signedUrl = item.signedURL ? cfg.url + '/storage/v1' + item.signedURL : (item.signedUrl || unique[index]);
-            signedMap.set(item.path || unique[index], signedUrl);
-          });
+          try {
+            const res = await fetch(cfg.url + '/storage/v1/object/sign/center-images', {
+              method: 'POST',
+              headers: {
+                apikey: cfg.anonKey,
+                Authorization: 'Bearer ' + cfg.anonKey,
+                'content-type': 'application/json'
+              },
+              body: JSON.stringify({ paths: unique, expiresIn: 3600 })
+            });
+            if (res.ok) {
+              const signed = await res.json();
+              (signed || []).forEach(function(item, index){
+                const path = item && (item.path || unique[index]);
+                const rawSignedUrl = item && (item.signedURL || item.signedUrl);
+                if (!path || !rawSignedUrl) return;
+                const signedUrl = rawSignedUrl.charAt(0) === '/'
+                  ? cfg.url + (rawSignedUrl.indexOf('/storage/v1/') === 0 ? '' : '/storage/v1') + rawSignedUrl
+                  : rawSignedUrl;
+                signedMap.set(path, signedUrl);
+              });
+            }
+          } catch (e) {}
         }
         return function(path){
           const value = String(path || '').trim();
-          return signedMap.get(value) || value;
+          if (!value || /^(?:https?:\/\/|data:|blob:)/i.test(value)) return value;
+          return signedMap.get(value) || '';
         };
       }
 
@@ -2629,7 +2638,7 @@
         ${leafMenu ? `<nav class="leaf-menu reveal" aria-label="주요 메뉴 바로가기">${leafMenu}</nav>` : ''}
         <div class="enter-cue reveal"><span>안내 지도를 따라 천천히 둘러보세요</span><span class="path"></span></div>
       </div>
-      ${heroPhoto ? `<div class="hero-photo reveal"><div class="pond-img"><img alt="${esc(centerName)} 전경" src="${esc(heroPhoto)}" fetchpriority="high"></div></div>` : ''}
+      ${heroPhoto ? `<div class="hero-photo reveal"><div class="pond-img"><img alt="${esc(centerName)} 전경" src="${esc(heroPhoto)}" loading="eager" decoding="async" fetchpriority="high" width="960" height="960"></div></div>` : ''}
     </div>`;
 
       const d = c.director || {};
@@ -2647,7 +2656,7 @@
       <h2>아이를 바라보는 마음</h2>
     </div>
     <article class="signpost${directorPhoto ? '' : ' no-photo'} reveal">
-      ${directorPhoto ? `<div class="director-photo"><img alt="${esc(cleanText(d.photo_alt) || cleanText(d.sign_name) || '원장 사진')}" src="${esc(directorPhoto)}"></div>` : ''}
+      ${directorPhoto ? `<div class="director-photo"><img alt="${esc(cleanText(d.photo_alt) || cleanText(d.sign_name) || '원장 사진')}" loading="lazy" decoding="async" width="640" height="800" data-src="${esc(directorPhoto)}"></div>` : ''}
       <div class="director-copy">
         ${hasVisibleText(d.badge) ? `<div class="badge">${esc(d.badge)}</div>` : ''}
         ${hasDirectorMessage ? `<p class="msg director-message is-collapsed" id="directorMessage">${escWithBr(directorMessage)}</p>` : ''}
@@ -2667,7 +2676,7 @@
         <div class="director-greeting-scroll">
           <div class="director-greeting-kicker">FOREST LETTER</div>
           <h2 class="director-greeting-title" id="directorGreetingTitle">원장 인사말</h2>
-          ${directorPhoto ? `<div class="director-greeting-photo"><img src="${esc(directorPhoto)}" alt="${esc(cleanText(d.photo_alt) || cleanText(d.sign_name) || '원장 사진')}"></div>` : ''}
+          ${directorPhoto ? `<div class="director-greeting-photo"><img loading="lazy" decoding="async" width="640" height="800" data-src="${esc(directorPhoto)}" alt="${esc(cleanText(d.photo_alt) || cleanText(d.sign_name) || '원장 사진')}"></div>` : ''}
           <div class="director-greeting-full" id="directorGreetingFull">${escWithBr(directorMessage)}</div>
           ${signParts.length ? `<div class="director-greeting-sign">${signParts.map(esc).join(' ')}</div>` : ''}
           ${hasVisibleText(philosophy.motto) ? `<div class="director-greeting-motto">${escWithBr(philosophy.motto)}</div>` : ''}
@@ -2743,7 +2752,7 @@
         const hasCopy = !!(name || role || hasMessage);
         return `
       <article class="teacher-card-view${photo ? '' : ' no-photo'} reveal">
-        ${photo ? `<div class="teacher-photo"><img loading="lazy" alt="${esc(name || '교사 사진')}" data-src="${esc(photo)}"></div>` : ''}
+        ${photo ? `<div class="teacher-photo"><img loading="lazy" decoding="async" alt="${esc(name || '교사 사진')}" data-src="${esc(photo)}"></div>` : ''}
         ${hasCopy ? `<div class="teacher-copy">
           ${name ? `<h3 class="teacher-name">${esc(name)}</h3>` : ''}
           ${role ? `<p class="teacher-role">${esc(role)}</p>` : ''}
@@ -2764,7 +2773,7 @@
       <div class="facility-grid${facilityItems.length > 3 ? ' is-collapsed' : ''}" id="facilityGrid">${facilityItems.map(function(item){
         const photo = cleanText(item.photo_url);
         return `<article class="facility-card${photo ? '' : ' no-photo'} reveal">
-          ${photo ? `<button type="button" class="facility-media facility-lightbox" data-lightbox-src="${esc(photo)}" data-lightbox-alt="${esc(cleanText(item.name) || '시설 사진')}" aria-label="${esc((cleanText(item.name) || '시설 사진') + ' 크게 보기')}"><img loading="lazy" alt="${esc(cleanText(item.name) || '시설 사진')}" data-src="${esc(photo)}"></button>` : ''}
+          ${photo ? `<button type="button" class="facility-media facility-lightbox" data-lightbox-src="${esc(photo)}" data-lightbox-alt="${esc(cleanText(item.name) || '시설 사진')}" aria-label="${esc((cleanText(item.name) || '시설 사진') + ' 크게 보기')}"><img loading="lazy" decoding="async" alt="${esc(cleanText(item.name) || '시설 사진')}" data-src="${esc(photo)}"></button>` : ''}
           ${(hasVisibleText(item.name) || hasVisibleText(item.desc)) ? `<div class="facility-body">
             ${hasVisibleText(item.name) ? `<h3 class="facility-name">${esc(item.name)}</h3>` : ''}
             ${hasVisibleText(item.desc) ? `<p class="facility-desc">${escWithBr(item.desc)}</p>` : ''}
@@ -2801,7 +2810,7 @@
         ${programItems.map(function(item){
           const photo = cleanText(item.photo_url);
           return `<article class="prog-card${photo ? '' : ' no-photo'} reveal">
-            ${photo ? `<div class="prog-img"><img loading="lazy" alt="${esc(cleanText(item.name) || '프로그램 사진')}" data-src="${esc(photo)}"></div>` : ''}
+            ${photo ? `<div class="prog-img"><img loading="lazy" decoding="async" alt="${esc(cleanText(item.name) || '프로그램 사진')}" data-src="${esc(photo)}"></div>` : ''}
             ${(hasVisibleText(item.name) || hasVisibleText(item.desc)) ? `<div class="prog-body">
               ${hasVisibleText(item.name) ? `<h3 class="prog-name">${esc(item.name)}</h3>` : ''}
               ${hasVisibleText(item.desc) ? `<p class="prog-desc">${escWithBr(item.desc)}</p>` : ''}
@@ -2931,6 +2940,7 @@
           modal.classList.add('open');
           modal.setAttribute('aria-hidden','false');
           moreBtn.setAttribute('aria-expanded','true');
+          initDeferredImages();
           closeBtn.focus();
         }
 
@@ -3224,7 +3234,13 @@
     }
 
     function initDeferredImages(){
-      var imgs = document.querySelectorAll('img[data-src]');
+      var imgs = Array.prototype.filter.call(document.querySelectorAll('img[data-src]'), function(img){
+        return !img.closest(
+          '.day-story-list.is-collapsed .day-story-extra,' +
+          '.facility-grid.is-collapsed .facility-card:nth-child(n+4),' +
+          '.program-grid.is-collapsed .prog-card:nth-child(n+4)'
+        );
+      });
       if (!imgs.length) return;
       function load(img){
         if (!img.dataset.src) return;
