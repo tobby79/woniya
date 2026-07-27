@@ -158,13 +158,17 @@
 
     .menu-panel {
       position: fixed;
-      top: 64px;
-      right: 16px;
-      left: 16px;
+      top: 78px;
+      right: max(clamp(24px, 4vw, 72px), calc((100vw - 1320px) / 2 + clamp(24px, 4vw, 72px)));
+      left: auto;
+      width: clamp(240px, 25vw, 340px);
+      max-width: calc(100vw - 40px);
+      max-height: calc(100vh - 98px);
+      overflow-y: auto;
       z-index: 41;
-      background: var(--paper);
-      border-radius: 22px;
-      box-shadow: 0 24px 54px -18px rgba(47, 61, 42, .42);
+      background: linear-gradient(145deg, rgba(251, 249, 239, .98), rgba(232, 234, 215, .98));
+      border-radius: 28px 16px 30px 18px / 20px 30px 18px 28px;
+      box-shadow: 0 24px 54px -28px rgba(32, 56, 44, .58);
       padding: 12px;
       display: flex;
       flex-direction: column;
@@ -182,16 +186,16 @@
     }
 
     .menu-panel a {
-      padding: 14px 18px;
+      padding: 13px 16px;
       text-decoration: none;
       color: var(--ink);
       font-weight: 600;
-      border-radius: 14px;
+      border-radius: 6px 17px 6px 17px;
       font-size: 1rem
     }
 
     .menu-panel a:hover {
-      background: var(--paper-warm)
+      background: rgba(118, 147, 101, .14)
     }
 
     .menu-panel a.menu-cta {
@@ -440,7 +444,8 @@
     .timeline {
       position: relative;
       padding-top: 50px;
-      padding-bottom: 40px
+      padding-bottom: 40px;
+      scroll-margin-top: 90px
     }
 
     .timeline-head {
@@ -478,6 +483,19 @@
       background: repeating-linear-gradient(180deg, var(--leaf) 0 10px, transparent 10px 22px);
       opacity: .4;
       z-index: 0
+    }
+
+    .day-story-list {
+      position: relative
+    }
+
+    .day-story-list .trail-line {
+      top: 18px;
+      bottom: 18px
+    }
+
+    .day-story-list.is-collapsed .day-story-extra {
+      display: none
     }
 
     .stop {
@@ -1341,7 +1359,7 @@
   </style>
 </head>
 
-<body>
+<body class="theme-forest">
 
   <!-- topbar.js가 nav(brand+홈아이콘+이 메뉴버튼)를 만들어 body 최상단에 삽입 -->
   <button class="menu-btn" id="menuBtn" aria-label="메뉴 열기" aria-expanded="false">
@@ -1845,7 +1863,7 @@
     .overview-address::before{content:"";position:absolute;inset:0 -5px;z-index:-1;background:rgba(238,231,214,.72);border-radius:58% 42% 52% 48% / 43% 61% 39% 57%;transform:rotate(-.25deg)}
 
     .timeline{max-width:var(--forest-focus-max);overflow:visible}
-    .trail-line{top:190px;bottom:108px;width:2px}
+    .trail-line{width:2px}
     .stop{margin-bottom:48px}
     .stop .node{width:44px;height:44px;top:18px;background:var(--cream);border-width:2px}
     .stop .card{
@@ -1879,6 +1897,7 @@
     .trail-end .glade{border-radius:6px 18px 6px 18px}
 
     .facility-grid,.teacher-grid,.program-grid{display:grid;gap:22px}
+    .facilities{scroll-margin-top:90px}
     .facility-grid,.program-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
     .teacher-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
     .facility-card,.teacher-card-view,.prog-card{
@@ -1921,7 +1940,8 @@
     .teacher-name{font-family:var(--display);font-size:1.18rem;font-weight:700;color:var(--pine);line-height:1.4}
     .teacher-role{margin-top:5px;color:var(--moss);font-size:.84rem;font-weight:700;line-height:1.55}
     .teacher-message{margin:14px auto 0;padding-top:14px;border-top:1px solid var(--line);color:var(--ink-soft);font-size:.9rem;line-height:1.75;width:88%;overflow-wrap:anywhere}
-    .program-grid.is-collapsed .prog-card:nth-child(n+4){display:none}
+    .program-grid.is-collapsed .prog-card:nth-child(n+4),
+    .facility-grid.is-collapsed .facility-card:nth-child(n+4){display:none}
     .section-toggle{
       display:block;
       min-width:190px;
@@ -1934,6 +1954,7 @@
       font:700 .94rem var(--body);
       cursor:pointer;
     }
+    .section-toggle:hover{background:rgba(86,115,74,.1);color:var(--pine)}
 
     #faq .faq-wrap{
       position:relative;isolation:isolate;display:grid;gap:10px;
@@ -2098,10 +2119,12 @@
       .wrap{padding-left:20px;padding-right:20px}
       #topbar > .wrap{padding-left:20px;padding-right:20px}
       .section-head,.explore-head,.timeline-head{grid-template-columns:1fr;gap:7px;padding-bottom:16px}
-      .trail-start .signpost{grid-template-columns:1fr;gap:0;padding:24px 18px}
+      .trail-start .signpost{grid-template-columns:1fr;gap:0;min-height:0;height:auto;padding:30px 22px 42px;margin-bottom:20px}
+      .trail-start .signpost::before{inset:0 -2px -8px}
       .director-photo{width:min(58%,160px);justify-self:center;min-height:0;aspect-ratio:4/5;margin:6px 0 14px;border-radius:43% 57% 47% 53% / 58% 39% 61% 42%}
-      .director-copy{max-width:620px;margin:0 auto;padding:10px 4px 18px}
-      .trail-start .signpost.no-photo .director-copy{padding:16px 6px}
+      .director-copy{max-width:620px;margin:0 auto;padding:10px 4px 28px}
+      .trail-start .signpost.no-photo .director-copy{padding:16px 6px 28px}
+      .director-expand{margin-bottom:4px}
       .info-shell{grid-template-columns:1fr;gap:20px;padding:52px 40px}
       .info-shell > div:first-child{display:block}
       .info-shell::before{inset:-10px -8px -14px}
@@ -2109,7 +2132,7 @@
       .adm-preview{grid-template-columns:1fr}
       .direction-list{grid-template-columns:1fr;gap:12px}
       .bus-route-list{grid-template-columns:1fr}
-      .trail-line{left:22px;top:154px}
+      .day-story-list .trail-line{left:22px;top:18px;bottom:18px}
       .stop .node{left:22px;transform:none;width:40px;height:40px;top:10px}
       .stop .card{width:calc(100% - 62px)!important;margin-left:auto!important;margin-right:0!important}
       .stop.left .card::before,.stop.right .card::before{left:-22px!important;right:auto!important;width:22px}
@@ -2138,6 +2161,7 @@
       .overview-grid{grid-template-columns:1fr 1fr}
       .overview-item{padding:18px 10px}
       .trail-start .msg{font-size:1.04rem}
+      .trail-start .signpost{padding:28px 18px 44px}
       .stop{margin-bottom:34px}
       .stop .card .body,.stop.right .card .body{margin:0;padding:16px 4px 20px}
       .section-intro,.fac-intro,.prog-intro{font-size:.94rem;margin-bottom:24px}
@@ -2436,13 +2460,13 @@
         if (data.center.director){ data.center.director.photo = resolveSignedPath(data.center.director.photo); }
       }
 
-      try {
-        const params = new URLSearchParams(location.search);
-        const reviewToken = (params.get('review_token') || '').trim();
-        const slugParam = reviewToken ? '' : params.get('slug');
-        const previewCenterSlug = (!reviewToken && !slugParam) ? (params.get('preview_center') || '').trim() : '';
-        const previewId = (reviewToken || slugParam || previewCenterSlug) ? '' : normalizePreviewId(params.get('preview'));
+      const params = new URLSearchParams(location.search);
+      const reviewToken = (params.get('review_token') || '').trim();
+      const slugParam = reviewToken ? '' : params.get('slug');
+      const previewCenterSlug = (!reviewToken && !slugParam) ? (params.get('preview_center') || '').trim() : '';
+      const previewId = (reviewToken || slugParam || previewCenterSlug) ? '' : normalizePreviewId(params.get('preview'));
 
+      try {
         if (reviewToken){
           const reviewRes = await client.rpc('get_center_by_review_token', { p_token: reviewToken });
           if (reviewRes.error){
@@ -2525,12 +2549,19 @@
       });
       const routeItems = directionItems(c.directions_text);
       const busRoutes = await loadBusRouteData(client, c.id, isPreviewMode);
+      const detailQuery = reviewToken
+        ? ('?review_token=' + encodeURIComponent(reviewToken))
+        : (slugParam
+          ? ('?slug=' + encodeURIComponent(slugParam))
+          : (previewCenterSlug
+            ? ('?preview_center=' + encodeURIComponent(previewCenterSlug))
+            : ((isPreviewMode && previewTemplateId)
+              ? ('?preview=' + encodeURIComponent(previewTemplateId))
+              : (c.slug ? ('?slug=' + encodeURIComponent(c.slug)) : ''))));
       // sunshine 기준 구조 통일: 공지·행사일정 제거 → 메뉴 필터. 하루(#day)·FAQ(#faq) 섹션 유지.
       // 시설 소개/교육프로그램(인페이지 섹션) + 입학안내/오시는 길(새 페이지) 런타임 주입
       (function(){
-        var qs = (isPreviewMode && previewTemplateId)
-          ? ('?preview=' + encodeURIComponent(previewTemplateId))
-          : (c.slug ? ('?slug=' + encodeURIComponent(c.slug)) : '');
+        var qs = detailQuery;
         c.menu = (c.menu || []).filter(function(m){
           if (m.href === '#notice' || m.href === '#schedule') return false;
           if (!canConsult && (m.cta || m.href === '#finale')) return false;
@@ -2546,11 +2577,6 @@
         if (hasAdmissionData) extra.push({ href: 'admissions.html' + qs, label: '입학안내' });
         if (cleanText(c.address) || routeItems.length || busRoutes.length) extra.push({ href: 'directions.html' + qs, label: '오시는 길' });
         extra.push({ href: 'parent.html', label: '우리 반 미니홈피' });
-        if (isReviewMode){
-          extra = extra.filter(function(x){
-            return x.href.indexOf('admissions.html') !== 0 && x.href.indexOf('directions.html') !== 0;
-          });
-        }
         if (extra.length){
           var m = c.menu.slice();
           function menuHrefKey(href){
@@ -2581,7 +2607,7 @@
       })();
 
       const centerName = cleanText(c.name) || '원이야';
-      const topbarEl = WoniyaTopbar.init({ centerName: centerName.replace(/\s*어린이집$/, '') || centerName });
+      const topbarEl = WoniyaTopbar.init({ centerName: centerName.replace(/\s*어린이집$/, '') || centerName, theme: 'forest' });
       const previewBannerEl = $('previewBanner');
       const topbarActionsEl = topbarEl && topbarEl.querySelector('.topbar-actions');
       const topbarHomeEl = topbarActionsEl && topbarActionsEl.querySelector('.topbar-home');
@@ -2684,7 +2710,7 @@
         const side = i % 2 === 0 ? 'left' : 'right';
         const photo = cleanText(m.photo);
         return `
-      <div class="stop ${side} reveal">
+      <div class="stop ${side}${i >= 2 ? ' day-story-extra' : ''} reveal">
         <div class="node" aria-hidden="true">${i + 1}</div>
         <article class="card${photo ? '' : ' no-photo'}">
           ${photo ? `<div class="pic media-frame">
@@ -2701,12 +2727,15 @@
       }).join('');
       if (dayItems.length) {
         $('day').innerHTML = `
-    <div class="trail-line"></div>
     <div class="timeline-head reveal">
       <div class="eyebrow">산책 코스 · 아이의 하루</div>
       <h2>숲길 따라 만나는 하루</h2>
     </div>
-    ${stops}
+    <div class="day-story-list${dayItems.length > 2 ? ' is-collapsed' : ''}" id="dayStoryList">
+      <div class="trail-line" aria-hidden="true"></div>
+      ${stops}
+    </div>
+    ${dayItems.length > 2 ? `<button type="button" class="section-toggle reveal" id="dayStoryToggle" aria-expanded="false" aria-controls="dayStoryList">하루 이야기 더 보기</button>` : ''}
     <div class="trail-end reveal"><span class="glade">햇살 비치는 빈터에 도착했어요</span></div>`;
       } else {
         $('day').hidden = true;
@@ -2738,7 +2767,7 @@
         <h2>안전하고 따뜻한 공간</h2>
       </div>
       ${hasVisibleText(fac.intro) ? `<p class="fac-intro reveal">${escWithBr(fac.intro)}</p>` : ''}
-      <div class="facility-grid">${facilityItems.map(function(item){
+      <div class="facility-grid${facilityItems.length > 3 ? ' is-collapsed' : ''}" id="facilityGrid">${facilityItems.map(function(item){
         const photo = cleanText(item.photo_url);
         return `<article class="facility-card${photo ? '' : ' no-photo'} reveal">
           ${photo ? `<button type="button" class="facility-media facility-lightbox" data-lightbox-src="${esc(photo)}" data-lightbox-alt="${esc(cleanText(item.name) || '시설 사진')}" aria-label="${esc((cleanText(item.name) || '시설 사진') + ' 크게 보기')}"><img loading="lazy" alt="${esc(cleanText(item.name) || '시설 사진')}" data-src="${esc(photo)}"></button>` : ''}
@@ -2747,7 +2776,8 @@
             ${hasVisibleText(item.desc) ? `<p class="facility-desc">${escWithBr(item.desc)}</p>` : ''}
           </div>` : ''}
         </article>`;
-      }).join('')}</div>`;
+      }).join('')}</div>
+      ${facilityItems.length > 3 ? `<button type="button" class="section-toggle reveal" id="facilityToggle" aria-expanded="false" aria-controls="facilityGrid">공간 더 보기</button>` : ''}`;
       } else {
         $('facilitiesSec').hidden = true;
       }
@@ -2831,8 +2861,7 @@
       document.title = `원이야 - ${centerName}`;
 
       initInteractions();
-      renderInfoSections(data, c, esc, isPreviewMode, previewTemplateId, isReviewMode, routeItems, busRoutes);
-      if (isReviewMode) disableReviewDetailLinks();
+      renderInfoSections(data, c, esc, detailQuery, routeItems, busRoutes);
       setupAskPanel({ items: faqItems }, canConsult);
       initConsultationForm(client, c.id, canConsult);
     })();
@@ -2963,6 +2992,27 @@
         });
       }
 
+      function bindSectionToggle(buttonId, targetId, moreText, lessText, scrollTargetId){
+        var button = document.getElementById(buttonId);
+        var target = document.getElementById(targetId);
+        if (!button || !target) return;
+        button.addEventListener('click', function(){
+          var expanded = button.getAttribute('aria-expanded') === 'true';
+          button.setAttribute('aria-expanded', expanded ? 'false' : 'true');
+          target.classList.toggle('is-collapsed', expanded);
+          button.textContent = expanded ? moreText : lessText;
+          if (!expanded) {
+            initDeferredImages();
+            return;
+          }
+          var scrollTarget = document.getElementById(scrollTargetId) || button;
+          var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+          scrollTarget.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'start' });
+        });
+      }
+      bindSectionToggle('dayStoryToggle', 'dayStoryList', '하루 이야기 더 보기', '하루 이야기 접기', 'day');
+      bindSectionToggle('facilityToggle', 'facilityGrid', '공간 더 보기', '공간 접기', 'facilitiesSec');
+
       var io = new IntersectionObserver(function (entries) {
         entries.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
       }, { threshold: 0.12 });
@@ -3050,16 +3100,10 @@
         fio.observe(hero); fio.observe(finale);
       }
 
-      var menuBtn = document.getElementById('menuBtn');
-      var menuPanel = document.getElementById('menuPanel');
-      function closeMenu() { menuBtn.classList.remove('open'); menuPanel.classList.remove('open'); menuBtn.setAttribute('aria-expanded', 'false'); }
-      menuBtn.addEventListener('click', function () {
-        var open = menuPanel.classList.toggle('open');
-        menuBtn.classList.toggle('open', open);
-        menuBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+      WoniyaTopbar.bindMenu({
+        button: document.getElementById('menuBtn'),
+        panel: document.getElementById('menuPanel')
       });
-      menuPanel.querySelectorAll('a').forEach(function (a) { a.addEventListener('click', closeMenu); });
-      document.addEventListener('click', function (e) { if (!menuPanel.contains(e.target) && !menuBtn.contains(e.target)) closeMenu(); });
 
       document.querySelectorAll('.faq-item').forEach(function (item) {
         var q = item.querySelector('.faq-q');
@@ -3201,20 +3245,9 @@
     }
 
     // ── 입학안내(admissions) + 오시는 길(directions) 렌더 (M1) ──
-    function disableReviewDetailLinks(){
-      document.querySelectorAll('a[href^="admissions.html"], a[href^="directions.html"]').forEach(function(link){
-        var note = document.createElement('span');
-        note.className = link.className || 'info-link-btn';
-        note.textContent = '검수 모드에서는 별도 페이지 이동이 제한됩니다';
-        link.replaceWith(note);
-      });
-    }
-
-    function renderInfoSections(data, c, esc, isPreviewMode, previewTemplateId, isReviewMode, routeItems, busRoutes){
+    function renderInfoSections(data, c, esc, detailQuery, routeItems, busRoutes){
       // M2: 입학안내·오시는 길은 공개형 새 페이지로 분리. 메인에는 요약+이동 버튼만 남긴다.
-      var qs = (isPreviewMode && previewTemplateId)
-        ? ('?preview=' + encodeURIComponent(previewTemplateId))
-        : (c.slug ? ('?slug=' + encodeURIComponent(c.slug)) : '');
+      var qs = detailQuery || '';
       var admSec = document.getElementById('admissionsSec');
       if (admSec){
         var adm = data.admission || {};
