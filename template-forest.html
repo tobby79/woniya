@@ -1842,10 +1842,6 @@
     .director-greeting-values{display:flex;justify-content:center;flex-wrap:wrap;gap:8px;margin-top:12px}
     .director-greeting-value{padding:6px 11px;background:rgba(118,147,101,.14);border-radius:5px 14px 5px 14px;color:var(--pine-soft);font-size:.8rem;font-weight:700}
     .trail-start .sign{margin-top:18px}
-    .philosophy-note{margin-top:18px;padding-top:0;border-top:0}
-    .philosophy-motto{font-family:var(--display);font-size:1.05rem;line-height:1.7;color:var(--pine)}
-    .philosophy-values{display:flex;gap:8px;flex-wrap:wrap;margin-top:13px}
-    .philosophy-value{padding:7px 12px;border-radius:5px 14px 5px 14px;background:var(--cream-deep);color:var(--pine-soft);font-size:.82rem;font-weight:700}
     #greeting .section-head,#teachersSec .section-head{border-bottom:0;padding-bottom:0;margin-bottom:clamp(28px,3vw,36px)}
 
     .overview-card{position:relative;isolation:isolate;padding:clamp(34px,5vw,54px);border:0;border-radius:0;box-shadow:none;background:transparent}
@@ -2125,8 +2121,6 @@
       .trail-start .signpost.no-photo .director-copy{padding:16px 6px 28px}
       .director-details{display:flex;flex-direction:column;align-items:center;width:min(100%,520px);margin-inline:auto;text-align:center}
       .director-details .sign{align-self:center;text-align:center}
-      .director-details .philosophy-note{width:100%;text-align:center}
-      .director-details .philosophy-values{justify-content:center}
       .director-details .director-expand{align-self:center;margin:18px auto 4px}
       .info-shell{grid-template-columns:1fr;gap:20px;padding:52px 40px}
       .info-shell > div:first-child{display:block}
@@ -2643,7 +2637,7 @@
       const directorPhoto = cleanText(d.photo);
       const directorMessage = cleanText(d.message).replace(/<br\s*\/?>/gi,'\n');
       const directorValues = (Array.isArray(philosophy.values) ? philosophy.values : []).filter(hasVisibleText);
-      const hasDirector = [d.badge,d.message,d.sign_label,d.sign_name,philosophy.motto].some(hasVisibleText) || directorValues.length;
+      const hasDirector = [d.badge,d.message,d.sign_label,d.sign_name].some(hasVisibleText);
       if (hasDirector) {
         const hasDirectorMessage = !!directorMessage;
         const signParts = [cleanText(d.sign_label), cleanText(d.sign_name)].filter(Boolean);
@@ -2657,12 +2651,8 @@
       <div class="director-copy">
         ${hasVisibleText(d.badge) ? `<div class="badge">${esc(d.badge)}</div>` : ''}
         ${hasDirectorMessage ? `<p class="msg director-message is-collapsed" id="directorMessage">${escWithBr(directorMessage)}</p>` : ''}
-        ${(signParts.length || hasVisibleText(philosophy.motto) || directorValues.length || hasDirectorMessage) ? `<div class="director-details">
+        ${(signParts.length || hasDirectorMessage) ? `<div class="director-details">
           ${signParts.length ? `<div class="sign">${signParts.map(function(part,index){ return index ? `<strong>${esc(part)}</strong>` : esc(part); }).join(' ')}</div>` : ''}
-          ${(hasVisibleText(philosophy.motto) || directorValues.length) ? `<div class="philosophy-note">
-            ${hasVisibleText(philosophy.motto) ? `<p class="philosophy-motto">${escWithBr(philosophy.motto)}</p>` : ''}
-            ${directorValues.length ? `<div class="philosophy-values">${directorValues.map(function(value){ return `<span class="philosophy-value">${esc(value)}</span>`; }).join('')}</div>` : ''}
-          </div>` : ''}
           ${hasDirectorMessage ? `<button type="button" class="director-expand" id="directorGreetingMore" aria-haspopup="dialog" aria-controls="directorGreetingModal" aria-expanded="false">인사말 더보기</button>` : ''}
         </div>` : ''}
       </div>
