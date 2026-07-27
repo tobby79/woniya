@@ -1217,6 +1217,21 @@
     return context.pathPrefix + '/' + String(folder || context.folder || '').replace(/^\/+|\/+$/g, '') + '/' + filename;
   }
 
+  function facilityProgramPhotoObjectKey(context, itemIndex){
+    var safeIndex = Math.max(0, parseInt(itemIndex, 10) || 0);
+    var operationToken = String(context && context.operationId || '')
+      .toLowerCase()
+      .replace(/[^a-z0-9_-]/g, '');
+    var filename = Date.now() + '_item_' + safeIndex
+      + (operationToken ? '_' + operationToken : '')
+      + '.webp';
+    var path = storagePathForWrite(context, context && context.folder, filename);
+    if (!/^[a-z0-9/_-]+\.webp$/.test(path) || path.indexOf('//') !== -1) {
+      throw new Error('시설·프로그램 사진 저장 경로를 만들지 못했습니다.');
+    }
+    return path;
+  }
+
   function isStorageRelativeWritePath(path){
     var value = String(path || '').trim();
     return Boolean(value && !/^(?:https?:\/\/|data:|blob:)/i.test(value));
@@ -2892,6 +2907,7 @@
     var photoInput = card.querySelector('.nd-photo-url');
     var oldPath = photoInput.value;
     var path = '';
+    var storageUploaded = false;
     var dbSaved = false;
     if (errorEl) errorEl.textContent = '';
 
@@ -2899,11 +2915,12 @@
       var compressed = await compressImage(file);
       if (!isCurrentEditablePhotoCard(context, card)) return { ok:false, stale:true };
       var index = Array.prototype.indexOf.call(card.parentNode.children, card);
-      path = storagePathForWrite(context, context.folder, Date.now() + '_item_' + index + '_' + compressed.name);
+      path = facilityProgramPhotoObjectKey(context, index);
       var upRes = await client.storage.from(context.bucket).upload(path, compressed, {
         cacheControl: '3600', upsert: false
       });
       if (upRes.error) throw upRes.error;
+      storageUploaded = true;
       if (!isCurrentEditablePhotoCard(context, card)) {
         await removeStoragePathForWrite(context, path, 'handleFacilityItemPhoto/staleCleanup');
         return { ok:false, stale:true };
@@ -2929,7 +2946,7 @@
           if (!persistResult.stale) {
             logAdminError('handleFacilityItemPhoto', persistResult.error);
             if (isCurrentEditablePhotoCard(context, card) && errorEl) {
-              errorEl.textContent = '업로드 실패: ' + errorMessage(persistResult.error);
+              errorEl.textContent = '사진 업로드에 실패했어요. 파일을 다시 선택해주세요.';
             }
           }
           return persistResult;
@@ -2952,11 +2969,13 @@
         return { ok:true };
       });
     } catch(err) {
-      if (path && !dbSaved) await removeStoragePathForWrite(context, path, 'handleFacilityItemPhoto/errorCleanup');
+      if (path && storageUploaded && !dbSaved) {
+        await removeStoragePathForWrite(context, path, 'handleFacilityItemPhoto/errorCleanup');
+      }
       logAdminError('handleFacilityItemPhoto', err);
       if (isCurrentEditablePhotoCard(context, card)) {
         photoInput.value = oldPath;
-        if (errorEl) errorEl.textContent = '업로드 실패: ' + errorMessage(err);
+        if (errorEl) errorEl.textContent = '사진 업로드에 실패했어요. 파일을 다시 선택해주세요.';
       }
       return { ok:false, error:err };
     }
