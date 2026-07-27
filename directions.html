@@ -41,15 +41,27 @@
   }
 
   body.theme-forest{
-    --ad-bg:#FBF6EE;
-    --ad-ink:#4A3F35;
-    --ad-muted:#8B7C6A;
-    --ad-hairline:#E8DCC8;
-    --ad-accent:#C97B5F;
-    --ad-accent-deep:#A76048;
-    --ad-card:#FFFDF8;
-    --ad-card-soft:#FFF9F1;
-    --ad-label:#B59768;
+    --ad-bg:#F5F4E9;
+    --ad-ink:#2F3D2A;
+    --ad-muted:#66705F;
+    --ad-hairline:#D5D8C3;
+    --ad-accent:#56734A;
+    --ad-accent-deep:#314F3C;
+    --ad-card:#FBF9EF;
+    --ad-card-soft:#E9EAD8;
+    --ad-label:#7A684F;
+    --ad-shadow:0 28px 60px -44px rgba(32,56,44,.58);
+    --cream:var(--ad-bg);
+    --ink:var(--ad-ink);
+    --ink-soft:var(--ad-muted);
+    --coral:var(--ad-accent);
+    --coral-deep:var(--ad-accent-deep);
+    --paper:var(--ad-card);
+    --line:var(--ad-hairline);
+    --display:var(--ad-serif);
+    --body:var(--ad-sans);
+    --card-radius:20px;
+    --card-shadow-hover:0 24px 48px -28px rgba(32,56,44,.56);
   }
 
   body.theme-carnival{
@@ -91,6 +103,18 @@
   }
   a{color:inherit}
   button{font:inherit}
+  body:not([data-template-theme]){background:#F5F4E9}
+  body:not([data-template-theme]) .cover,
+  body:not([data-template-theme]) #content,
+  body:not([data-template-theme]) #ctaSec{visibility:hidden}
+  body.theme-forest{
+    background:
+      radial-gradient(ellipse at 14% 8%,rgba(181,199,160,.22),transparent 34%),
+      linear-gradient(180deg,#F8F7ED,#F1F0E3);
+  }
+  body.theme-forest .cover{padding-top:58px}
+  body.theme-forest .cover-title{color:#314F3C}
+  body.theme-forest .section-label{color:#56734A}
 
   .topbar{
     position:sticky;top:0;z-index:20;
@@ -502,6 +526,7 @@ function loadKakaoMap(address, containerId){
   var esc = function(s){ return String(s==null?'':s).replace(/[&<>"']/g, function(ch){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]; }); };
   var client;
   var isPreviewMode = false;
+  var isReadOnlyMode = false;
 
   function normalizeTemplate(value){
     var templateId = String(value || '').trim().toLowerCase();
@@ -652,8 +677,8 @@ function loadKakaoMap(address, containerId){
     form.addEventListener('submit', async function(e){
       e.preventDefault();
       errorEl.textContent = '';
-      if (isPreviewMode) {
-        errorEl.textContent = '템플릿 미리보기에서는 실제 신청이 접수되지 않아요.';
+      if (isReadOnlyMode) {
+        errorEl.textContent = '미리보기 화면에서는 실제 신청이 접수되지 않아요.';
         return;
       }
       if (!centerId) {
@@ -691,16 +716,26 @@ function loadKakaoMap(address, containerId){
 
   var cfg = window.__SUPABASE_CONFIG__;
   client = supabase.createClient(cfg.url, cfg.anonKey);
-  var params = new URLSearchParams(location.search);
-  var slug = params.get('slug') || 'haetsal';
   var PREVIEW_IDS = ['sunshine', 'carnival', 'forest', 'gallery'];
-  var previewId = params.get('slug') ? '' : ((params.get('preview') || '').trim().toLowerCase());
-  if (previewId && PREVIEW_IDS.indexOf(previewId) < 0) previewId = '';
+  var target = WoniyaTopbar.readTarget(location.search, PREVIEW_IDS);
+  var slug = target.mode === 'slug' ? (target.value || 'haetsal') : '';
+  var previewId = target.mode === 'preview' ? target.value : '';
   isPreviewMode = !!previewId;
+  var isReviewMode = target.mode === 'review_token';
+  var isAdminPreviewMode = target.mode === 'preview_center';
+  isReadOnlyMode = isPreviewMode || isReviewMode || isAdminPreviewMode;
 
   var center;
   try {
-    if (isPreviewMode) {
+    if (isReviewMode) {
+      var reviewRes = await client.rpc('get_center_by_review_token', { p_token: target.value });
+      if (reviewRes.error || !reviewRes.data) throw reviewRes.error || new Error('검수 링크가 유효하지 않습니다.');
+      center = reviewRes.data;
+    } else if (isAdminPreviewMode) {
+      var previewRes = await client.rpc('get_center_preview', { p_slug: target.value });
+      if (previewRes.error || !previewRes.data) throw previewRes.error || new Error('관리자 미리보기를 불러오지 못했습니다.');
+      center = previewRes.data;
+    } else if (isPreviewMode) {
       var tcRes = await client.from('template_centers').select('id, name, address, directions_text, theme, template, slug').eq('template_id', previewId).single();
       if (tcRes.error) throw tcRes.error;
       center = tcRes.data;
@@ -715,52 +750,40 @@ function loadKakaoMap(address, containerId){
   } catch (e) {
     console.error(e);
     WoniyaTopbar.init({ centerName: '원이야' });
+    document.body.setAttribute('data-template-theme', 'sunshine');
     content.innerHTML = '<p class="state">오시는 길을 불러오지 못했어요.</p>';
     setupReveal();
     return;
   }
 
-  applyThemeClass(center);
+  var templateId = applyThemeClass(center);
+  document.body.setAttribute('data-template-theme', templateId);
 
   var mainFile = TEMPLATE_FILES[center.template] || 'template-sunshine.html';
-  var mainUrl = isPreviewMode
-    ? (mainFile + '?preview=' + encodeURIComponent(previewId))
-    : (mainFile + '?slug=' + encodeURIComponent(center.slug));
-  WoniyaTopbar.init({ centerName: (center.name || '원이야').replace(/\s*어린이집$/,'') || center.name });
-  var brandLinkEl = document.getElementById('brandLink');
-  if (brandLinkEl) brandLinkEl.href = mainUrl;
-  var topbarHomeEl = document.querySelector('.topbar-home');
-  if (topbarHomeEl) topbarHomeEl.href = mainUrl;
-  var qs = isPreviewMode
-    ? ('?preview=' + encodeURIComponent(previewId))
-    : ('?slug=' + encodeURIComponent(center.slug));
-  var menuItems = [
-    { href: mainUrl + '#top', label: '시설 소개' },
-    { href: mainUrl + '#programSec', label: '교육프로그램' }
-  ];
+  var mainUrl = WoniyaTopbar.buildUrl(mainFile, target, center.slug);
+  var qs = WoniyaTopbar.buildUrl('', target, center.slug);
+  var previewLabel = isPreviewMode ? '템플릿 미리보기' : (isReviewMode ? '공개 전 검수' : (isAdminPreviewMode ? '관리자 미리보기' : ''));
+  WoniyaTopbar.init({
+    centerName: (center.name || '원이야').replace(/\s*어린이집$/,'') || center.name,
+    theme: templateId === 'forest' ? 'forest' : '',
+    homeHref: mainUrl,
+    brandHref: mainUrl,
+    previewLabel: templateId === 'forest' ? previewLabel : ''
+  });
+  var menuItems = templateId === 'forest'
+    ? [{ href: mainUrl, label: '홈페이지' }]
+    : [
+      { href: mainUrl + '#top', label: '시설 소개' },
+      { href: mainUrl + '#programSec', label: '교육프로그램' }
+    ];
   if ((center.admissions || [])[0]) menuItems.push({ href: 'admissions.html' + qs, label: '입학안내' });
   menuItems.push({ href: 'parent.html', label: '우리 반 미니홈피' });
   document.getElementById('menuPanel').innerHTML = menuItems.map(function(m){
     return '<a href="' + esc(m.href) + '">' + esc(m.label) + '</a>';
   }).join('');
-  var menuBtn = document.getElementById('menuBtn');
-  var menuPanel = document.getElementById('menuPanel');
-  function closeMenu(){
-    menuBtn.classList.remove('open');
-    menuPanel.classList.remove('open');
-    menuBtn.setAttribute('aria-expanded','false');
-  }
-  menuBtn.addEventListener('click',function(){
-    var open = menuPanel.classList.toggle('open');
-    menuBtn.classList.toggle('open',open);
-    menuBtn.setAttribute('aria-expanded',open?'true':'false');
-  });
-  menuPanel.querySelectorAll('a').forEach(function(a){ a.addEventListener('click',closeMenu); });
-  document.addEventListener('click',function(e){
-    if(!menuPanel.contains(e.target) && !menuBtn.contains(e.target)) closeMenu();
-  });
+  WoniyaTopbar.bindMenu();
   document.getElementById('coverSub').textContent = (center.name || '원') + ' 오시는 길';
-  initConsultationForm(isPreviewMode ? null : center.id);
+  initConsultationForm(isReadOnlyMode ? null : center.id);
 
   document.title = (center.name || '원') + ' - 오시는 길 | 원이야';
   var metaDesc = document.querySelector('meta[name="description"]');
@@ -792,7 +815,7 @@ function loadKakaoMap(address, containerId){
         return '<div class="dir-line" data-icon="' + esc(iconType) + '"><span class="ic">' + iconSvg(iconType) + '</span><span>' + esc(cleanDirectionText(l)) + '</span></div>';
       }).join('') + '</div></section>';
   }
-  html += await loadBusScheduleSection(center, isPreviewMode);
+  html += await loadBusScheduleSection(center, isReadOnlyMode);
   content.innerHTML = html;
 
   if (center.address) loadKakaoMap(center.address, mapId);
