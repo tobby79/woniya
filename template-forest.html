@@ -1361,7 +1361,6 @@
   <section class="explore wrap" id="teachersSec"></section>
   <section class="facilities wrap" id="facilitiesSec"></section>
   <section class="programs wrap" id="programSec"></section>
-  <section class="album-section wrap" id="albumSec"></section>
   <section class="info-block wrap" id="admissionsSec" hidden></section>
   <section class="info-block wrap" id="directionsSec" hidden></section>
   <section class="explore wrap" id="faq"></section>
@@ -1438,7 +1437,7 @@
   </div>
 
   <!-- 라이트박스 -->
-  <div class="lightbox-overlay" id="lightbox" role="dialog" aria-modal="true" aria-hidden="true" aria-label="앨범 사진 크게 보기">
+  <div class="lightbox-overlay" id="lightbox" role="dialog" aria-modal="true" aria-hidden="true" aria-label="사진 크게 보기">
     <div class="lightbox-stage">
       <button type="button" class="lightbox-close" id="lightboxClose" aria-label="사진 크게 보기 닫기">×</button>
       <img class="lightbox-img" id="lightboxImg" alt="">
@@ -1568,7 +1567,6 @@
       --earth:#81684f;
       --line:rgba(49,82,62,.15);
       --shadow:0 22px 55px -36px rgba(32,56,44,.45);
-      --album-frame-shadow:drop-shadow(0 14px 14px rgba(70,79,58,.18)) drop-shadow(0 3px 5px rgba(129,104,79,.12));
       --forest-content-max:1320px;
       --forest-focus-max:1060px;
       --forest-page-gutter:clamp(20px,2.6vw,36px);
@@ -1675,7 +1673,7 @@
     .hero-no-photo .enter-cue{align-items:center}
     .hero .enter-cue .path{height:34px}
 
-    .trail-start,.overview,.timeline,.facilities,.explore,.programs,.album-section,.info-block{
+    .trail-start,.overview,.timeline,.facilities,.explore,.programs,.info-block{
       padding-top:clamp(52px,6.6vw,82px);
       padding-bottom:clamp(34px,5vw,64px);
     }
@@ -1829,7 +1827,7 @@
     .philosophy-motto{font-family:var(--display);font-size:1.05rem;line-height:1.7;color:var(--pine)}
     .philosophy-values{display:flex;gap:8px;flex-wrap:wrap;margin-top:13px}
     .philosophy-value{padding:7px 12px;border-radius:5px 14px 5px 14px;background:var(--cream-deep);color:var(--pine-soft);font-size:.82rem;font-weight:700}
-    #greeting .section-head,#teachersSec .section-head,#albumSec .section-head{border-bottom:0;padding-bottom:0;margin-bottom:clamp(28px,3vw,36px)}
+    #greeting .section-head,#teachersSec .section-head{border-bottom:0;padding-bottom:0;margin-bottom:clamp(28px,3vw,36px)}
 
     .overview-card{position:relative;isolation:isolate;padding:clamp(34px,5vw,54px);border:0;border-radius:0;box-shadow:none;background:transparent}
     .overview-card::before{
@@ -1880,10 +1878,10 @@
     .day-caption{margin-top:8px;color:var(--earth);font-size:.91rem;line-height:1.65;overflow-wrap:anywhere}
     .trail-end .glade{border-radius:6px 18px 6px 18px}
 
-    .facility-grid,.teacher-grid,.program-grid,.album-grid{display:grid;gap:22px}
+    .facility-grid,.teacher-grid,.program-grid{display:grid;gap:22px}
     .facility-grid,.program-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
     .teacher-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
-    .facility-card,.teacher-card-view,.prog-card,.album-card{
+    .facility-card,.teacher-card-view,.prog-card{
       min-width:0;background:transparent;border:0;border-radius:0;overflow:visible;box-shadow:none
     }
     .facility-card,.prog-card{display:flex;flex-direction:column;margin:0;position:relative;isolation:isolate}
@@ -1936,17 +1934,6 @@
       font:700 .94rem var(--body);
       cursor:pointer;
     }
-
-    .album-grid{grid-template-columns:repeat(3,minmax(0,1fr));grid-auto-flow:dense;gap:18px}
-    .album-card{margin:0;display:flex;min-width:0;flex-direction:column;align-items:stretch}
-    .album-card:nth-child(5n+1){grid-row:span 2}
-    .album-button{position:relative;width:100%;height:auto;flex:1 1 auto;min-height:250px;padding:0;border:0;background:var(--cream-deep);cursor:zoom-in;display:block;overflow:hidden;border-radius:43% 57% 47% 53% / 56% 41% 59% 44%;box-shadow:none;filter:var(--album-frame-shadow)}
-    .album-card:nth-child(3n+2) .album-button{border-radius:59% 41% 53% 47% / 42% 61% 39% 58%}
-    .album-card:nth-child(3n) .album-button{border-radius:48% 52% 38% 62% / 62% 45% 55% 38%}
-    .album-card:nth-child(5n+1) .album-button{min-height:520px}
-    .album-button img{width:100%;height:100%;position:absolute;inset:0;object-fit:cover;display:block}
-    .album-label{position:static;padding:10px 12px 2px;background:transparent;color:var(--pine-soft);text-align:center;font-size:.92rem;font-weight:700;line-height:1.55;overflow-wrap:anywhere;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}
-    .album-card.image-missing{display:none}
 
     #faq .faq-wrap{
       position:relative;isolation:isolate;display:grid;gap:10px;
@@ -2055,7 +2042,7 @@
     footer{max-width:1120px;margin:0 auto;padding:32px 24px 52px;border-top:1px solid var(--line)}
     .ask-fab{right:max(18px,calc((100vw - var(--forest-content-max))/2 + 28px))}
 
-    button:focus-visible,a:focus-visible,.album-button:focus-visible,.facility-media:focus-visible,.director-expand:focus-visible,.section-toggle:focus-visible,.faq-q:focus-visible{
+    button:focus-visible,a:focus-visible,.facility-media:focus-visible,.director-expand:focus-visible,.section-toggle:focus-visible,.faq-q:focus-visible{
       outline:3px solid var(--sun-warm);
       outline-offset:3px;
     }
@@ -2105,9 +2092,6 @@
       .hero .enter-cue{display:none}
       .facility-grid,.program-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
       .teacher-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
-      .album-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
-      .album-card:nth-child(5n+1){grid-row:auto}
-      .album-card:nth-child(5n+1) .album-button,.album-button{min-height:280px}
       .overview-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
     }
     @media (max-width:700px){
@@ -2145,12 +2129,8 @@
       .hero-photo{aspect-ratio:1.08/1}
       .leaf-menu{margin-top:26px;gap:8px}
       .leaf-btn{font-size:.84rem;padding:10px 13px}
-      .trail-start,.overview,.timeline,.facilities,.explore,.programs,.album-section,.info-block{padding-top:54px;padding-bottom:34px}
+      .trail-start,.overview,.timeline,.facilities,.explore,.programs,.info-block{padding-top:54px;padding-bottom:34px}
       .facility-grid,.program-grid,.teacher-grid{grid-template-columns:1fr}
-      .album-grid{gap:9px}
-      .album-button,.album-card:nth-child(5n+1) .album-button{min-height:190px}
-      .album-button{filter:drop-shadow(0 9px 9px rgba(70,79,58,.13)) drop-shadow(0 2px 3px rgba(129,104,79,.09))}
-      .album-label{padding:8px 6px 0;font-size:.78rem}
       .teacher-card-view{display:grid;grid-template-columns:auto minmax(0,1fr);column-gap:8px;align-items:center;padding:24px 18px}
       .teacher-photo{grid-row:1;margin:0 12px 0 0;width:88px}
       .teacher-copy{padding:6px 0 8px;text-align:left}
@@ -2331,7 +2311,6 @@
           facilities: row.facilities || null
         },
         day_story: byType('day_story').map(m => ({ slot: m.slot, time: m.time_label, title: m.title, photo: m.photo_url, photo_alt: m.photo_alt, caption: m.caption, note: m.note })),
-        album: { items: byType('album').map(m => ({ label: m.title, photo: m.photo_url })) },
         teachers: { items: teacherItems },
         notices: row.notices || { eyebrow:'', title:'', items:[], more:'' },
         schedule: row.schedule || { eyebrow:'', title:'', month_label:'', days_in_month:30, event_days:[], trailing_muted:0, events:[] },
@@ -2437,7 +2416,6 @@
         const programs = data.center.programs;
         const resolveSignedPath = await signPaths([]
           .concat((data.day_story || []).map(m => m.photo))
-          .concat((data.album?.items || []).map(it => it.photo))
           .concat((data.teachers?.items || []).map(tc => tc.photo))
           .concat((facilities?.items || []).map(it => it && it.photo_url))
           .concat((programs?.items || []).map(it => it && it.photo_url))
@@ -2445,7 +2423,6 @@
           .concat(data.heroPhoto ? [data.heroPhoto] : []));
         if (data.heroPhoto){ data.heroPhoto = resolveSignedPath(data.heroPhoto); }
         for (const m of data.day_story){ m.photo = resolveSignedPath(m.photo); }
-        for (const it of data.album.items){ it.photo = resolveSignedPath(it.photo); }
         for (const tc of data.teachers.items){ tc.photo = resolveSignedPath(tc.photo); }
         ['facilities', 'programs'].forEach(function(key){
           const section = data.center[key];
@@ -2539,9 +2516,6 @@
       const facilityItems = cleanItems(c.facilities && c.facilities.items, ['name','desc','photo_url']);
       const programItems = cleanItems(c.programs && c.programs.items, ['name','desc','photo_url']);
       const teacherItems = cleanItems(data.teachers && data.teachers.items, ['name','role','message','photo']);
-      const albumItems = cleanItems(data.album && data.album.items, ['photo']).filter(function(item){
-        return hasVisibleText(item.photo);
-      });
       const faqItems = cleanItems(data.faqs && data.faqs.items, ['q','a']).filter(function(item){
         return hasVisibleText(item.q) && hasVisibleText(item.a);
       });
@@ -2562,14 +2536,13 @@
           if (!canConsult && (m.cta || m.href === '#finale')) return false;
           if (m.href === '#facilitiesSec' && !facilityItems.length) return false;
           if (m.href === '#programSec' && !programItems.length) return false;
-          if (m.href === '#albumSec' && !albumItems.length) return false;
           if (m.href === '#faq' && !faqItems.length) return false;
+          if (m.href && m.href.charAt(0) === '#' && !document.getElementById(m.href.slice(1))) return false;
           return true;
         });
         var extra = [];
         if (facilityItems.length) extra.push({ href:'#facilitiesSec', label:'시설 소개' });
         if (programItems.length) extra.push({ href:'#programSec', label:'교육프로그램' });
-        if (albumItems.length) extra.push({ href:'#albumSec', label:'하루 앨범' });
         if (hasAdmissionData) extra.push({ href: 'admissions.html' + qs, label: '입학안내' });
         if (cleanText(c.address) || routeItems.length || busRoutes.length) extra.push({ href: 'directions.html' + qs, label: '오시는 길' });
         extra.push({ href: 'parent.html', label: '우리 반 미니홈피' });
@@ -2817,27 +2790,6 @@
         $('programSec').hidden = true;
       }
 
-      // 앨범은 시설·프로그램과 분리해 album media만 사용
-      if (albumItems.length) {
-        $('albumSec').innerHTML = `
-      <div class="section-head reveal">
-        <div class="eyebrow">다섯 번째 표지판 · 숲의 기록</div>
-        <h2>숲에서 보낸 하루</h2>
-      </div>
-      <div class="album-grid">${albumItems.map(function(item){
-        const label = cleanText(item.label);
-        const photo = cleanText(item.photo);
-        return `<figure class="album-card reveal">
-          <button type="button" class="album-button" data-lightbox-src="${esc(photo)}" data-lightbox-alt="${esc(label || '어린이집 앨범 사진')}" aria-label="${esc((label || '앨범 사진') + ' 크게 보기')}">
-            <img loading="lazy" alt="${esc(label || '어린이집 앨범 사진')}" data-src="${esc(photo)}">
-          </button>
-          ${label ? `<figcaption class="album-label">${esc(label)}</figcaption>` : ''}
-        </figure>`;
-      }).join('')}</div>`;
-      } else {
-        $('albumSec').hidden = true;
-      }
-
       // FAQ
       if (faqItems.length) {
         $('faq').innerHTML = `
@@ -2929,14 +2881,6 @@
         location.href = 'ourclass.html';
       });
 
-      // ── 앨범 이미지 라이트박스 연결 ──
-      document.querySelectorAll('.album-button').forEach(function(button){
-        button.addEventListener('click', function(){
-          if (window.__openLightbox__) {
-            window.__openLightbox__(button.dataset.lightboxSrc, button.dataset.lightboxAlt);
-          }
-        });
-      });
       document.querySelectorAll('.facility-lightbox').forEach(function(button){
         button.addEventListener('click', function(){
           if (window.__openLightbox__) {
@@ -3197,13 +3141,6 @@
           var directorGreetingPhoto = img.closest('.director-greeting-photo');
           if (directorGreetingPhoto){
             directorGreetingPhoto.remove();
-            return;
-          }
-          var albumCard = img.closest('.album-card');
-          if (albumCard){
-            albumCard.classList.add('image-missing');
-            var albumSection = albumCard.closest('.album-section');
-            if (albumSection && !albumSection.querySelector('.album-card:not(.image-missing)')) albumSection.hidden = true;
             return;
           }
           var media = img.closest('.facility-media,.prog-img,.teacher-photo');
