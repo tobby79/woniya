@@ -617,29 +617,6 @@
       line-height: 1.55
     }
 
-    .trail-end {
-      text-align: center;
-      padding: 10px 0 20px;
-      position: relative;
-      z-index: 1
-    }
-
-    .trail-end .glade {
-      display: inline-block;
-      font-family: var(--hand);
-      font-weight: 700;
-      color: var(--sun-warm);
-      font-size: 1.15rem;
-      background: var(--paper);
-      padding: 12px 24px;
-      border-radius: 30px;
-      box-shadow: 0 12px 28px -14px rgba(232, 184, 100, .5)
-    }
-
-    .trail-end .glade::before {
-      content: "☀️ "
-    }
-
     /* ── 더 둘러보기: 탭 ── */
     .explore {
       padding-top: 60px;
@@ -1387,7 +1364,13 @@
 
   <div class="float" id="float" hidden><a href="#finale"><span class="pulse"></span>입소 상담</a></div>
 
-  <button type="button" class="ask-fab" id="askFab" aria-label="무엇이든 물어보세요" title="무엇이든 물어보세요" hidden>?</button>
+  <button type="button" class="ask-fab" id="askFab" aria-label="자주 묻는 질문 열기" title="무엇이든 물어보세요" hidden>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M5.7 17.7c1.7 1.2 3.8 1.8 6.1 1.8 4.7 0 8.5-3.1 8.5-7s-3.8-7-8.5-7-8.5 3.1-8.5 7c0 1.7.7 3.3 2 4.5l-.7 3 2.1-2.3z"/>
+      <path d="M9.2 10.4a2.8 2.8 0 0 1 5.4 1.1c0 1.9-2.6 2.1-2.6 3.7"/>
+      <path d="M12 17.4h.01"/>
+    </svg>
+  </button>
 
   <div class="ask-modal-overlay" id="askModal" aria-hidden="true">
     <div class="ask-modal-panel" role="dialog" aria-modal="true" aria-labelledby="askModalTitle">
@@ -1398,7 +1381,9 @@
       <div class="ask-modal-body">
         <div class="ask-faq-list" id="askFaqList"></div>
         <p class="ask-empty" id="askFaqEmpty" hidden>궁금한 점은 상담으로 편하게 물어보세요.</p>
-        <button type="button" class="ask-consult-btn" id="askConsultBtn">입소 상담</button>
+        <div class="ask-modal-actions">
+          <button type="button" class="ask-consult-btn" id="askConsultBtn">입소상담 신청하기</button>
+        </div>
       </div>
     </div>
   </div>
@@ -1465,16 +1450,18 @@
 
   <style>
     /* ── FAQ + 상담 플로팅 진입점 ── */
-    .ask-fab{position:fixed;right:max(18px,calc((100vw - 600px)/2 + 24px));bottom:24px;z-index:45;width:54px;height:54px;border:none;border-radius:50%;background:var(--paper);color:var(--ink);font-family:var(--body);font-weight:700;font-size:1.35rem;padding:0;box-shadow:0 18px 42px -18px rgba(0,0,0,.38);cursor:pointer;border:1.5px solid rgba(120,80,60,.14);display:flex;align-items:center;justify-content:center}
+    .ask-fab{position:fixed;right:max(18px,calc((100vw - 600px)/2 + 24px));bottom:24px;z-index:45;width:56px;height:56px;border:1.5px solid rgba(86,115,74,.22);border-radius:20px 27px 18px 25px / 25px 19px 28px 21px;background:linear-gradient(145deg,rgba(251,249,239,.98),rgba(222,229,207,.96));color:var(--pine);padding:0;box-shadow:0 20px 42px -22px rgba(32,56,44,.58),0 5px 14px -10px rgba(86,115,74,.58);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:transform .2s ease,box-shadow .2s ease,background .2s ease}
     .ask-fab[hidden]{display:none}
-    .ask-fab:hover{transform:translateY(-2px)}
+    .ask-fab svg{width:27px;height:27px;display:block}
+    .ask-fab:hover{transform:translateY(-2px) rotate(-1deg);background:linear-gradient(145deg,#fffdf5,#d8e2c8);box-shadow:0 24px 46px -22px rgba(32,56,44,.64),0 7px 17px -10px rgba(86,115,74,.62)}
+    .ask-fab:focus-visible{outline:3px solid var(--sun-warm);outline-offset:4px}
     .ask-modal-overlay{position:fixed;inset:0;z-index:70;background:rgba(0,0,0,.45);display:none;align-items:center;justify-content:center;padding:20px}
     .ask-modal-overlay.open{display:flex}
     .ask-modal-panel{width:92vw;max-width:520px;max-height:88vh;overflow-y:auto;background:var(--paper);border-radius:24px;box-shadow:0 30px 60px -20px rgba(0,0,0,.45)}
     .ask-modal-header{position:sticky;top:0;z-index:2;background:var(--paper);padding:26px 32px 18px;border-radius:24px 24px 0 0}
     .ask-modal-title{font-family:var(--display);font-size:1.35rem;color:var(--ink);letter-spacing:-.4px;margin:0}
     .ask-modal-close{position:absolute;top:22px;right:24px;width:38px;height:38px;border:none;background:var(--cream,var(--paper-warm,var(--bg-warm,#f3eee8)));border-radius:50%;font-size:1.4rem;color:var(--ink-soft);cursor:pointer;display:flex;align-items:center;justify-content:center}
-    .ask-modal-body{padding:8px 32px 34px}
+    .ask-modal-body{padding:8px 32px 32px}
     .ask-faq-item{background:var(--cream,var(--paper-warm,var(--bg-warm,#f3eee8)));border-radius:16px;margin-bottom:10px;overflow:hidden}
     .ask-faq-q{width:100%;border:none;background:transparent;text-align:left;padding:16px 18px;font-family:var(--body);font-size:.98rem;font-weight:700;color:var(--ink);cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:12px}
     .ask-faq-q::after{content:"+";flex:none;color:var(--coral,var(--leaf,var(--red,var(--char,var(--ink)))));font-weight:700}
@@ -1482,7 +1469,20 @@
     .ask-faq-a{max-height:0;overflow:hidden;transition:max-height .3s ease}
     .ask-faq-a p{padding:0 18px 16px;color:var(--ink-soft);font-size:.94rem;line-height:1.7}
     .ask-empty{color:var(--ink-soft);font-size:.94rem;line-height:1.65;margin-bottom:16px}
-    .ask-consult-btn{width:100%;border:none;border-radius:999px;background:var(--coral,var(--leaf,var(--red,var(--char,var(--ink)))));color:#fff;font-family:var(--body);font-weight:700;font-size:1rem;padding:15px 18px;cursor:pointer;box-shadow:0 14px 28px -14px rgba(0,0,0,.5)}
+    .ask-modal-actions{margin-top:24px;padding-top:4px}
+    .ask-consult-btn{width:100%;min-height:52px;border:1px solid rgba(255,255,255,.16);border-radius:8px 22px 8px 22px;background:linear-gradient(145deg,var(--moss),var(--pine));color:#fff;font-family:var(--body);font-weight:800;font-size:1rem;padding:14px 18px;cursor:pointer;box-shadow:0 18px 34px -20px rgba(32,56,44,.72);transition:transform .2s ease,box-shadow .2s ease,background .2s ease}
+    .ask-consult-btn:hover:not(:disabled){transform:translateY(-1px);background:linear-gradient(145deg,var(--pine),#274535);box-shadow:0 22px 38px -20px rgba(32,56,44,.78)}
+    .ask-consult-btn:focus-visible{outline:3px solid var(--sun-warm);outline-offset:3px}
+    .ask-consult-btn:disabled{cursor:not-allowed;opacity:.55;box-shadow:none}
+    @media (max-width:600px){
+      .ask-modal-overlay{padding:14px}
+      .ask-modal-panel{width:100%;max-height:90vh}
+      .ask-modal-header{padding:23px 22px 16px}
+      .ask-modal-close{top:17px;right:17px}
+      .ask-modal-body{padding:7px 20px calc(24px + env(safe-area-inset-bottom))}
+      .ask-modal-actions{margin-top:20px}
+      .ask-consult-btn{min-height:50px;padding-inline:16px}
+    }
 
     /* ── 입학안내 / 오시는 길 (M1 추가) — 각 템플릿 공통 변수(--paper/--ink/--ink-soft/--display) 기반 ── */
     #admissionsSec[hidden],#directionsSec[hidden]{display:none}
@@ -1800,6 +1800,7 @@
     .trail-start .msg{margin-top:16px;font-size:clamp(1.08rem,1.8vw,1.3rem);line-height:1.9}
     .director-message.is-collapsed{display:-webkit-box;max-height:none;overflow:hidden;position:relative;-webkit-box-orient:vertical;-webkit-line-clamp:4}
     .director-message.is-collapsed::after{display:none}
+    .director-details{display:contents}
     .director-expand{
       align-self:flex-start;
       min-height:44px;
@@ -1894,8 +1895,6 @@
     .stop .card .note{font-size:.92rem;line-height:1.7}
     .stop .card .pic .cap{display:none;background:none}
     .day-caption{margin-top:8px;color:var(--earth);font-size:.91rem;line-height:1.65;overflow-wrap:anywhere}
-    .trail-end .glade{border-radius:6px 18px 6px 18px}
-
     .facility-grid,.teacher-grid,.program-grid{display:grid;gap:22px}
     .facilities{scroll-margin-top:90px}
     .facility-grid,.program-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
@@ -2124,7 +2123,11 @@
       .director-photo{width:min(58%,160px);justify-self:center;min-height:0;aspect-ratio:4/5;margin:6px 0 14px;border-radius:43% 57% 47% 53% / 58% 39% 61% 42%}
       .director-copy{max-width:620px;margin:0 auto;padding:10px 4px 28px}
       .trail-start .signpost.no-photo .director-copy{padding:16px 6px 28px}
-      .director-expand{margin-bottom:4px}
+      .director-details{display:flex;flex-direction:column;align-items:center;width:min(100%,520px);margin-inline:auto;text-align:center}
+      .director-details .sign{align-self:center;text-align:center}
+      .director-details .philosophy-note{width:100%;text-align:center}
+      .director-details .philosophy-values{justify-content:center}
+      .director-details .director-expand{align-self:center;margin:18px auto 4px}
       .info-shell{grid-template-columns:1fr;gap:20px;padding:52px 40px}
       .info-shell > div:first-child{display:block}
       .info-shell::before{inset:-10px -8px -14px}
@@ -2654,12 +2657,14 @@
       <div class="director-copy">
         ${hasVisibleText(d.badge) ? `<div class="badge">${esc(d.badge)}</div>` : ''}
         ${hasDirectorMessage ? `<p class="msg director-message is-collapsed" id="directorMessage">${escWithBr(directorMessage)}</p>` : ''}
-        ${signParts.length ? `<div class="sign">${signParts.map(function(part,index){ return index ? `<strong>${esc(part)}</strong>` : esc(part); }).join(' ')}</div>` : ''}
-        ${(hasVisibleText(philosophy.motto) || directorValues.length) ? `<div class="philosophy-note">
-          ${hasVisibleText(philosophy.motto) ? `<p class="philosophy-motto">${escWithBr(philosophy.motto)}</p>` : ''}
-          ${directorValues.length ? `<div class="philosophy-values">${directorValues.map(function(value){ return `<span class="philosophy-value">${esc(value)}</span>`; }).join('')}</div>` : ''}
+        ${(signParts.length || hasVisibleText(philosophy.motto) || directorValues.length || hasDirectorMessage) ? `<div class="director-details">
+          ${signParts.length ? `<div class="sign">${signParts.map(function(part,index){ return index ? `<strong>${esc(part)}</strong>` : esc(part); }).join(' ')}</div>` : ''}
+          ${(hasVisibleText(philosophy.motto) || directorValues.length) ? `<div class="philosophy-note">
+            ${hasVisibleText(philosophy.motto) ? `<p class="philosophy-motto">${escWithBr(philosophy.motto)}</p>` : ''}
+            ${directorValues.length ? `<div class="philosophy-values">${directorValues.map(function(value){ return `<span class="philosophy-value">${esc(value)}</span>`; }).join('')}</div>` : ''}
+          </div>` : ''}
+          ${hasDirectorMessage ? `<button type="button" class="director-expand" id="directorGreetingMore" aria-haspopup="dialog" aria-controls="directorGreetingModal" aria-expanded="false">인사말 더보기</button>` : ''}
         </div>` : ''}
-        ${hasDirectorMessage ? `<button type="button" class="director-expand" id="directorGreetingMore" aria-haspopup="dialog" aria-controls="directorGreetingModal" aria-expanded="false">인사말 더보기</button>` : ''}
       </div>
     </article>`;
         if (hasDirectorMessage) {
@@ -2735,8 +2740,7 @@
       <div class="trail-line" aria-hidden="true"></div>
       ${stops}
     </div>
-    ${dayItems.length > 2 ? `<button type="button" class="section-toggle reveal" id="dayStoryToggle" aria-expanded="false" aria-controls="dayStoryList">하루 이야기 더 보기</button>` : ''}
-    <div class="trail-end reveal"><span class="glade">햇살 비치는 빈터에 도착했어요</span></div>`;
+    ${dayItems.length > 2 ? `<button type="button" class="section-toggle reveal" id="dayStoryToggle" aria-expanded="false" aria-controls="dayStoryList">하루 이야기 더 보기</button>` : ''}`;
       } else {
         $('day').hidden = true;
       }
@@ -3132,7 +3136,11 @@
         return;
       }
       fab.hidden = false;
-      consultBtn.hidden = !canConsult;
+      consultBtn.hidden = false;
+      consultBtn.disabled = !canConsult;
+      consultBtn.setAttribute('aria-disabled', canConsult ? 'false' : 'true');
+      if (canConsult) consultBtn.removeAttribute('title');
+      else consultBtn.setAttribute('title', '미리보기에서는 상담 신청을 받을 수 없습니다');
       list.innerHTML = items.map(function(it){
         return '<div class="ask-faq-item">'
           + '<button type="button" class="ask-faq-q" aria-expanded="false">' + askEsc(it.q) + '</button>'
@@ -3159,7 +3167,10 @@
         if (!canConsult) return;
         close();
         var target = document.getElementById('cslOpenBtn');
-        if (target) target.click();
+        if (target) {
+          target.focus();
+          target.click();
+        }
       });
     }
 
