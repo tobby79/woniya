@@ -94,6 +94,8 @@
   .card-hero.hero-forest{background:radial-gradient(circle at 74% 18%,#eef8dd 0 16%,transparent 17%),linear-gradient(135deg,#DDEED7,#A9CFA3 50%,#6F9D89)}
   .card-hero.hero-carnival{background:radial-gradient(circle at 24% 24%,#fff1a9 0 15%,transparent 16%),linear-gradient(135deg,#FFDDA3,#FF9CB6 48%,#8FA7F1)}
   .card-hero.hero-gallery{background:radial-gradient(circle at 78% 24%,#ffffff 0 14%,transparent 15%),linear-gradient(135deg,#E8E5DF,#BDB7AE 48%,#777E89)}
+  .card-hero.hero-carnival.coming-soon{background:linear-gradient(135deg,#FFDDA3,#FF9CB6 48%,#8FA7F1)}
+  .card-hero.hero-gallery.coming-soon{background:linear-gradient(135deg,#E8E5DF,#BDB7AE 48%,#777E89)}
   .card-hero .hero-name{
     position:absolute;left:50%;bottom:18px;z-index:2;transform:translateX(-50%);
     font-family:var(--display);font-size:1.18rem;color:#fff;white-space:nowrap;
@@ -130,6 +132,13 @@
     content:"";position:absolute;inset:18px;border:5px solid rgba(255,255,255,.78);
     box-shadow:24px 18px 0 -10px rgba(64,55,51,.18);
   }
+  .hero-coming-soon{
+    position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;
+    justify-content:center;gap:8px;padding:28px;text-align:center;color:#fff;
+    text-shadow:0 2px 14px rgba(64,55,51,.22);
+  }
+  .hero-coming-soon strong{font-family:var(--display);font-size:1.55rem;letter-spacing:-.3px}
+  .hero-coming-soon span{font-size:.9rem;font-weight:700}
 
   .card-body{flex:0 0 auto;display:flex;flex-direction:column;padding:16px 18px 18px}
   .tpl-card .name{font-family:var(--display);font-size:1.24rem;letter-spacing:-.3px;line-height:1.22}
@@ -154,6 +163,11 @@
   .btn:focus-visible{outline:3px solid rgba(255,138,107,.26);outline-offset:2px}
   .btn.ghost{background:#fff;color:var(--ink);box-shadow:none;border:1.5px solid #e7dccf}
   .btn.ghost:hover{background:#fff8f5;border-color:rgba(255,138,107,.38);color:var(--coral-deep)}
+  .btn:disabled{
+    cursor:not-allowed;transform:none;box-shadow:none;
+    background:#ddd7d0;color:#847c74;border-color:#ddd7d0;
+  }
+  .btn.ghost:disabled{background:#f5f2ee;color:#928a82;border-color:#ddd7d0}
 
   .msg{margin-top:14px;font-size:.88rem;text-align:center}
   .msg.error{color:#D9534F}
@@ -271,8 +285,8 @@
   var TEMPLATES = [
     { key:'sunshine', number:1, name:'햇살',     desc:'따뜻한 핑크톤, 하루의 빛 흐름',       file:'template-sunshine.html', tags:['따뜻함','부드러움','대표 추천'] },
     { key:'forest',   number:2, name:'숲',       desc:'초록 자연, 세로 타임라인',           file:'template-forest.html', tags:['자연','차분함'] },
-    { key:'carnival', number:3, name:'놀이동산', desc:'알록달록, 책 넘기기 애니메이션',     file:'template-carnival.html', tags:['활동적','선명함'] },
-    { key:'gallery',  number:4, name:'갤러리',   desc:'차콜 그레이, 가로 슬라이드',         file:'template-gallery.html', tags:['정돈감','사진 중심'] }
+    { key:'gallery',  number:3, name:'갤러리',   desc:'차콜 그레이, 가로 슬라이드',         file:'template-gallery.html', tags:['정돈감','사진 중심'], comingSoon:true },
+    { key:'carnival', number:4, name:'놀이동산', desc:'알록달록, 책 넘기기 애니메이션',     file:'template-carnival.html', tags:['활동적','선명함'], comingSoon:true }
   ];
   var PUBLIC_SAMPLE_SLUGS = {
     sunshine: 'sample-sunshine',
@@ -353,27 +367,31 @@
   tplList.innerHTML = TEMPLATES.map(function(t){
     return '' +
       '<div class="tpl-card" data-key="' + t.key + '">' +
-        '<div class="card-hero hero-' + t.key + '">' +
-          '<div class="hero-preview" aria-hidden="true">' +
-            '<div class="hero-preview-main">' +
-              '<div class="hero-preview-visual"></div>' +
-              '<div class="hero-preview-copy">' +
-                '<span class="hero-preview-line mid"></span>' +
-                '<span class="hero-preview-line"></span>' +
-                '<span class="hero-preview-line short"></span>' +
-                '<span class="hero-preview-pill"></span>' +
-              '</div>' +
-            '</div>' +
-          '</div>' +
-          '<span class="hero-name">' + t.name + '</span>' +
+        '<div class="card-hero hero-' + t.key + (t.comingSoon ? ' coming-soon' : '') + '">' +
+          (t.comingSoon
+            ? '<div class="hero-coming-soon"><strong>준비중</strong><span>샘플을 준비하고 있어요</span></div>'
+            : '<div class="hero-preview" aria-hidden="true">' +
+                '<div class="hero-preview-main">' +
+                  '<div class="hero-preview-visual"></div>' +
+                  '<div class="hero-preview-copy">' +
+                    '<span class="hero-preview-line mid"></span>' +
+                    '<span class="hero-preview-line"></span>' +
+                    '<span class="hero-preview-line short"></span>' +
+                    '<span class="hero-preview-pill"></span>' +
+                  '</div>' +
+                '</div>' +
+              '</div>') +
+          (t.comingSoon ? '' : '<span class="hero-name">' + t.name + '</span>') +
         '</div>' +
         '<div class="card-body">' +
           '<div class="name">' + t.name + '</div>' +
           '<div class="desc">' + t.desc + '</div>' +
           '<div class="tags">' + t.tags.map(function(tag){ return '<span class="tag">' + tag + '</span>'; }).join('') + '</div>' +
           '<div class="actions">' +
-            '<button type="button" class="btn ghost" data-action="preview" data-key="' + t.key + '">미리보기</button>' +
-            '<button type="button" class="btn" data-action="decide" data-key="' + t.key + '">이 템플릿으로 결정</button>' +
+            '<button type="button" class="btn ghost" data-action="preview" data-key="' + t.key + '"' +
+              (t.comingSoon ? ' disabled aria-disabled="true"' : '') + '>미리보기</button>' +
+            '<button type="button" class="btn" data-action="decide" data-key="' + t.key + '"' +
+              (t.comingSoon ? ' disabled aria-disabled="true"' : '') + '>이 템플릿으로 결정</button>' +
           '</div>' +
         '</div>' +
       '</div>';
@@ -381,7 +399,7 @@
 
   tplList.addEventListener('click', function(e){
     var btn = e.target.closest('button[data-action]');
-    if (!btn) return;
+    if (!btn || btn.disabled) return;
     var t = TEMPLATES.find(function(x){ return x.key === btn.getAttribute('data-key'); });
     if (!t) return;
 
