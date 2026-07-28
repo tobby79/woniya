@@ -321,7 +321,7 @@
   .hero .eyebrow{font-family:var(--hand);font-size:1.35rem;color:var(--coral-deep);letter-spacing:.5px;margin-bottom:10px;font-weight:700}
   .hero h1{font-family:var(--display);font-size:var(--fs-hero);font-weight:400;line-height:1.18;letter-spacing:-1px}
   .hero h1 .glow{color:var(--coral-deep)}
-  .hero p{margin-top:20px;font-size:var(--fs-body);color:var(--ink-soft);max-width:340px}
+  .hero p{margin-top:20px;font-size:var(--fs-body);color:var(--ink-soft);width:min(100%,440px);max-width:440px;line-height:1.7;word-break:keep-all;overflow-wrap:anywhere;text-wrap:balance}
   /* 사진 위 텍스트 가독성 — 반투명 카드 대신 다중 text-shadow + 얇은 text-stroke로 대비 확보.
      배경 사진을 가리지 않으면서 텍스트 자체의 윤곽을 또렷하게 만든다. */
   .hero.has-photo .eyebrow,
@@ -550,14 +550,6 @@
   .sb-finale .fin-title{
     font-family:var(--display);font-size:clamp(1.6rem,5vw,2.2rem);line-height:1.3;
     letter-spacing:-.5px;margin-bottom:14px;
-  }
-  .sb-finale .fin-text{font-family:var(--body);font-size:var(--fs-body);color:var(--ink-soft);line-height:1.8;max-width:360px}
-  /* 통신문 연동 CTA 자리 — 이번엔 링크 없이 시각적 여백만 */
-  .sb-finale .fin-cta-slot{
-    margin-top:30px;min-height:52px;width:min(280px,80%);
-    border:1.5px dashed var(--page-line);border-radius:16px;
-    display:flex;align-items:center;justify-content:center;
-    font-family:var(--hand);font-size:var(--fs-caption);color:var(--ink-soft);opacity:.7;
   }
 
   /* 원장 인사말 페이지: 원형 사진 + 이름/직함 + 인사말 + 더보기.
@@ -1093,7 +1085,7 @@
   <div class="lightbox-cap" id="lightboxCap"></div>
 </div>
 
-<!-- 시설 사진 전용 라이트박스: 이전/다음(순환) 탐색이 필요해 위 공용 라이트박스와 분리된 별도 오버레이 -->
+<!-- 시설·프로그램 사진 라이트박스: 이전/다음(순환) 탐색이 필요해 위 공용 라이트박스와 분리된 별도 오버레이 -->
 <div class="fac-lightbox-overlay" id="facLightbox">
   <figure class="fac-lightbox-fig">
     <div class="fac-lightbox-imgwrap">
@@ -1108,11 +1100,14 @@
 
 <style>
   /* ── FAQ + 상담 플로팅 진입점 ── */
-  .ask-fab{position:fixed;right:max(22px,calc((100vw - 560px)/2 + 24px));bottom:max(34px,env(safe-area-inset-bottom));z-index:45;width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,.84);color:var(--coral-deep);font-family:var(--body);font-weight:700;font-size:1.35rem;padding:0;box-shadow:0 18px 34px -18px rgba(120,80,60,.55),0 4px 12px -8px rgba(224,120,90,.5);cursor:pointer;border:1.5px solid rgba(235,194,172,.86);display:flex;align-items:center;justify-content:center;backdrop-filter:blur(10px);transition:transform .2s ease,background .2s ease,box-shadow .2s ease}
+  .ask-fab{position:fixed;right:22px;bottom:max(28px,calc(env(safe-area-inset-bottom) + 20px));z-index:45;width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,.84);color:var(--coral-deep);font-family:var(--body);font-weight:700;font-size:1.35rem;padding:0;box-shadow:0 18px 34px -18px rgba(120,80,60,.55),0 4px 12px -8px rgba(224,120,90,.5);cursor:pointer;border:1.5px solid rgba(235,194,172,.86);display:flex;align-items:center;justify-content:center;backdrop-filter:blur(10px);transition:transform .2s ease,background .2s ease,box-shadow .2s ease}
   .ask-fab:hover{transform:translateY(-2px);background:#fff;box-shadow:0 22px 40px -18px rgba(120,80,60,.58),0 6px 16px -9px rgba(224,120,90,.56)}
   .ask-fab svg{width:25px;height:25px;display:block}
+  @media (min-width:760px){
+    .ask-fab{right:max(24px,calc((100vw - 560px)/2 - 76px));bottom:28px}
+  }
   @media (max-width:719px){
-    .ask-fab{right:22px;bottom:max(36px,calc(env(safe-area-inset-bottom) + 28px));width:54px;height:54px}
+    .ask-fab{right:18px;bottom:max(20px,calc(env(safe-area-inset-bottom) + 16px));width:54px;height:54px}
   }
   .ask-modal-overlay{position:fixed;inset:0;z-index:70;background:rgba(0,0,0,.45);display:none;align-items:center;justify-content:center;padding:20px}
   .ask-modal-overlay.open{display:flex}
@@ -1332,9 +1327,9 @@
     background:none;border:none;padding:0;cursor:pointer;
   }
 
-  /* ── 시설 사진 전용 라이트박스(프로그램 섹션에는 적용하지 않음) ──
+  /* ── 시설·프로그램 사진 라이트박스 ──
      기존 공용 #lightbox(단일 이미지, prev/next 없음)와는 별개의 독립 오버레이.
-     시설 사진(숨겨진 펼치기 항목 포함 전체 목록)을 순환 탐색할 수 있어야 하기 때문. */
+     전달받은 사진 목록(숨겨진 펼치기 항목 포함)을 서로 섞지 않고 순환 탐색한다. */
   .fac-lightbox-overlay{
     position:fixed;inset:0;z-index:75;background:rgba(38,28,20,.88);
     display:none;align-items:center;justify-content:center;padding:20px;
@@ -1414,9 +1409,14 @@
     border:2px dashed var(--badge-border);
     padding:8px;
   }
+  .prog-circle-pic-button{
+    display:block;box-sizing:border-box;margin:0;
+    font:inherit;color:inherit;appearance:none;-webkit-appearance:none;cursor:pointer;
+  }
+  .prog-circle-pic-button:focus-visible{outline:3px solid var(--coral);outline-offset:4px}
   .prog-circle-pic img{width:100%;height:100%;object-fit:cover;display:block;border-radius:50%}
-  .prog-circle-name{font-family:var(--hand);font-weight:700;font-size:1.15rem;color:var(--ink);margin-top:12px}
-  .prog-circle-desc{font-size:var(--fs-caption);color:var(--ink-soft);line-height:1.5;margin-top:4px}
+  .prog-circle-name{font-family:var(--hand);font-weight:700;font-size:1.15rem;color:var(--ink);margin-top:12px;word-break:keep-all;overflow-wrap:anywhere;text-wrap:balance}
+  .prog-circle-desc{font-size:var(--fs-caption);color:var(--ink-soft);max-width:220px;min-height:3.1em;margin-top:4px;margin-left:auto;margin-right:auto;line-height:1.55;word-break:keep-all;overflow-wrap:anywhere;text-wrap:balance}
 
   /* 펼치기 대상(초기 노출 이후) 항목을 담는 래퍼 — fac-collage-more와 동일한 원리, program 전용 클래스 */
   .prog-circle-more{
@@ -1437,6 +1437,7 @@
     .prog-circle-more.is-expanded{margin-top:26px}
     .prog-circle-card:nth-child(2n){transform:translateY(-8px)}
     .prog-circle-pic{max-width:168px}
+    .prog-circle-desc{max-width:260px}
   }
   @media (prefers-reduced-motion:reduce){
     .prog-circle-card:nth-child(2n){transform:none}
@@ -2034,8 +2035,6 @@ function mapRowToData(row, options = {}){
           <div class="fin-eyebrow">마지막 이야기</div>
           <div class="fin-mascot" aria-hidden="true">🐻</div>
           <h3 class="fin-title">오늘 하루도<br>잘 보냈어요</h3>
-          <p class="fin-text">내일 이야기도 기대해주세요.<br>${esc(centerName)}에서 아이의 반짝이는 순간을 계속 담아둘게요.</p>
-          <div class="fin-cta-slot" aria-hidden="true">알림장으로 이어가기</div>
         </div>
       </article>`;
 
@@ -2251,11 +2250,17 @@ function mapRowToData(row, options = {}){
   // 반응형 슬라이스 판단(렌더 시점 뷰포트 폭 기준).
   const prog = data.center.programs;
   const PROG_INITIAL_COUNT = (window.matchMedia && window.matchMedia('(max-width:719px)').matches) ? 3 : 4;
+  const progLightboxItems = [];
   function progCircleHtml(it, i, isOddLast){
     const img = albumImgs[i + 4] || albumImgs[i % Math.max(albumImgs.length,1)] || null;
     const resolvedPhoto = String(it.photo_url || '').trim() || String((img && img.photo) || '').trim();
+    const lbIndex = resolvedPhoto ? progLightboxItems.length : -1;
+    if (resolvedPhoto) progLightboxItems.push({ photo: resolvedPhoto, caption: it.name });
+    const picHtml = resolvedPhoto
+      ? `<button type="button" class="prog-circle-pic prog-circle-pic-button" data-prog-lb-index="${lbIndex}" aria-label="${esc(it.name)} 사진 크게 보기"><img data-src="${esc(resolvedPhoto)}" alt="${esc(it.name)}"></button>`
+      : '<div class="prog-circle-pic"></div>';
     return `<div class="prog-circle-card reveal${isOddLast ? ' prog-odd-last' : ''}">
-      <div class="prog-circle-pic">${resolvedPhoto ? `<img data-src="${esc(resolvedPhoto)}" alt="${esc(it.name)}">` : ''}</div>
+      ${picHtml}
       <div class="prog-circle-name">${esc(it.name)}</div>
       <div class="prog-circle-desc">${escWithBr(it.desc)}</div>
     </div>`;
@@ -2296,6 +2301,13 @@ function mapRowToData(row, options = {}){
         }
       });
     }
+
+    document.querySelectorAll('#programSec .prog-circle-pic-button[data-prog-lb-index]').forEach(function(pic){
+      pic.addEventListener('click', function(){
+        const idx = Number(pic.getAttribute('data-prog-lb-index'));
+        if (window.__openFacLightbox__) window.__openFacLightbox__(idx, progLightboxItems);
+      });
+    });
   } else {
     document.getElementById('programSec').hidden = true;
   }
@@ -2429,8 +2441,8 @@ function initInteractions(){
     document.addEventListener('keydown', function(e){ if(e.key==='Escape') close(); });
   })();
 
-  // ── 시설 사진 전용 라이트박스 (이전/다음 순환 탐색) ──
-  // 위 공용 #lightbox와 완전히 분리된 독립 오버레이 — facilitiesSec 전용이며 programSec에는 연결하지 않는다.
+  // ── 시설·프로그램 사진 라이트박스 (이전/다음 순환 탐색) ──
+  // 위 공용 #lightbox와 완전히 분리된 독립 오버레이 — 호출 시 전달받은 목록 안에서만 이동한다.
   (function(){
     var overlay = document.getElementById('facLightbox');
     var closeBtn = document.getElementById('facLightboxClose');
