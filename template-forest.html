@@ -1595,6 +1595,8 @@
     .wrap{width:min(100%,var(--forest-content-max));max-width:var(--forest-content-max);padding-left:var(--forest-page-gutter);padding-right:var(--forest-page-gutter)}
     #topbar > .wrap{width:min(100%,var(--forest-content-max));max-width:var(--forest-content-max);padding-left:var(--forest-page-gutter);padding-right:var(--forest-page-gutter)}
     [hidden]{display:none!important}
+    img[data-photo-path]{opacity:0}
+    img[data-photo-path].is-photo-ready{opacity:1;transition:opacity .24s ease}
     .load-error{max-width:680px;margin:120px auto 40px;padding:28px 30px;border:1px solid var(--line);border-radius:10px;background:var(--paper);font-family:var(--body);color:var(--pine);text-align:center}
     .reveal{transform:translateY(16px);transition:opacity .55s ease,transform .55s ease}
 
@@ -2402,69 +2404,231 @@
 
       let isAdminPreviewMode = false;
 
-      // Storage 경로를 한 번의 batch 서명 요청으로 변환
-      async function signPaths(paths){
-        const unique = Array.from(new Set(paths.filter(function(path){
-          const value = String(path || '').trim();
-          return value && !/^(?:https?:\/\/|data:|blob:)/i.test(value);
-        }).map(function(path){ return String(path).trim(); })));
-        const signedMap = new Map();
-        if (unique.length){
-          try {
-            const res = await fetch(cfg.url + '/storage/v1/object/sign/center-images', {
-              method: 'POST',
-              headers: {
-                apikey: cfg.anonKey,
-                Authorization: 'Bearer ' + cfg.anonKey,
-                'content-type': 'application/json'
-              },
-              body: JSON.stringify({ paths: unique, expiresIn: 3600 })
-            });
-            if (res.ok) {
-              const signed = await res.json();
-              (signed || []).forEach(function(item, index){
-                const path = item && (item.path || unique[index]);
-                const rawSignedUrl = item && (item.signedURL || item.signedUrl);
-                if (!path || !rawSignedUrl) return;
-                const signedUrl = rawSignedUrl.charAt(0) === '/'
-                  ? cfg.url + (rawSignedUrl.indexOf('/storage/v1/') === 0 ? '' : '/storage/v1') + rawSignedUrl
-                  : rawSignedUrl;
-                signedMap.set(path, signedUrl);
-              });
-            }
-          } catch (e) {}
-        }
-        return function(path){
-          const value = String(path || '').trim();
-          if (!value || /^(?:https?:\/\/|data:|blob:)/i.test(value)) return value;
-          return signedMap.get(value) || '';
-        };
+      // 페이지 수명 동안 path별 pending Promise/최종 URL/실패('')를 하나의 캐시에 보관한다.
+      const photoUrlCache = new Map();
+      const photoRequestContext = location.pathname + location.search;
+
+      function normalizePhotoPath(path){
+        return String(path || '').trim();
       }
 
-      async function signCenterPhotos(data){
-        const facilities = data.center.facilities;
-        const programs = data.center.programs;
-        const resolveSignedPath = await signPaths([]
-          .concat((data.day_story || []).map(m => m.photo))
-          .concat((data.teachers?.items || []).map(tc => tc.photo))
-          .concat((facilities?.items || []).map(it => it && it.photo_url))
-          .concat((programs?.items || []).map(it => it && it.photo_url))
-          .concat(data.center.director ? [data.center.director.photo] : [])
-          .concat(data.heroPhoto ? [data.heroPhoto] : []));
-        if (data.heroPhoto){ data.heroPhoto = resolveSignedPath(data.heroPhoto); }
-        for (const m of data.day_story){ m.photo = resolveSignedPath(m.photo); }
-        for (const tc of data.teachers.items){ tc.photo = resolveSignedPath(tc.photo); }
-        ['facilities', 'programs'].forEach(function(key){
-          const section = data.center[key];
-          if (!section || !Array.isArray(section.items)) return;
-          data.center[key] = Object.assign({}, section, {
-            items: section.items.map(function(item){
-              return item ? Object.assign({}, item, { photo_url: resolveSignedPath(item.photo_url) }) : item;
-            })
-          });
-        });
-        if (data.center.director){ data.center.director.photo = resolveSignedPath(data.center.director.photo); }
+      function isDirectPhotoUrl(path){
+        return /^(?:https?:\/\/|data:|blob:)/i.test(path);
       }
+
+      const SIGNED_CACHE_STORAGE_KEY = 'woniya_signed_cache_v1';
+      const SIGNED_CACHE_VERSION = 1;
+      const SIGNED_CACHE_BUCKET = 'center-images';
+      const SIGNED_URL_TTL_MS = 3600 * 1000;
+      const SIGNED_URL_REUSE_BUFFER_MS = 5 * 60 * 1000;
+      const SIGNED_CACHE_MAX_ENTRIES = 120;
+      const signedCacheNamespace = (function(){
+        try {
+          return new URL(cfg.url).host.toLowerCase();
+        } catch (e) {
+          return String(cfg.url || '').trim().toLowerCase()
+            .replace(/^https?:\/\//, '').split('/')[0] || 'unknown-project';
+        }
+      })();
+      let signedSessionCacheSnapshot = null;
+
+      function emptySignedSessionCache(){
+        return { version:SIGNED_CACHE_VERSION, entries:Object.create(null) };
+      }
+
+      function signedSessionEntryKey(path){
+        return signedCacheNamespace + ':' + SIGNED_CACHE_BUCKET + ':' + path;
+      }
+
+      function cleanSignedSessionEntries(entries, now){
+        const cleaned = Object.create(null);
+        if (!entries || typeof entries !== 'object' || Array.isArray(entries)) return cleaned;
+        const bucketMarker = ':' + SIGNED_CACHE_BUCKET + ':';
+        Object.keys(entries).forEach(function(key){
+          const entry = entries[key];
+          if (
+            key.indexOf(bucketMarker) < 0 ||
+            !entry ||
+            typeof entry !== 'object' ||
+            typeof entry.url !== 'string' ||
+            !entry.url.trim() ||
+            typeof entry.expiresAt !== 'number' ||
+            !Number.isFinite(entry.expiresAt) ||
+            !(now < entry.expiresAt - SIGNED_URL_REUSE_BUFFER_MS)
+          ) return;
+          cleaned[key] = { url:entry.url, expiresAt:entry.expiresAt };
+        });
+        const keys = Object.keys(cleaned).sort(function(a, b){
+          return cleaned[a].expiresAt - cleaned[b].expiresAt;
+        });
+        while (keys.length > SIGNED_CACHE_MAX_ENTRIES) {
+          delete cleaned[keys.shift()];
+        }
+        return cleaned;
+      }
+
+      function writeSignedSessionCache(cache){
+        signedSessionCacheSnapshot = cache;
+        try {
+          sessionStorage.setItem(SIGNED_CACHE_STORAGE_KEY, JSON.stringify(cache));
+        } catch (e) {}
+      }
+
+      function readSignedSessionCache(){
+        if (signedSessionCacheSnapshot) return signedSessionCacheSnapshot;
+        const empty = emptySignedSessionCache();
+        try {
+          const raw = sessionStorage.getItem(SIGNED_CACHE_STORAGE_KEY);
+          if (!raw) {
+            signedSessionCacheSnapshot = empty;
+            return empty;
+          }
+          const parsed = JSON.parse(raw);
+          if (
+            !parsed ||
+            typeof parsed !== 'object' ||
+            parsed.version !== SIGNED_CACHE_VERSION ||
+            !parsed.entries ||
+            typeof parsed.entries !== 'object' ||
+            Array.isArray(parsed.entries)
+          ) {
+            writeSignedSessionCache(empty);
+            return empty;
+          }
+          const cleaned = {
+            version:SIGNED_CACHE_VERSION,
+            entries:cleanSignedSessionEntries(parsed.entries, Date.now())
+          };
+          writeSignedSessionCache(cleaned);
+          return cleaned;
+        } catch (e) {
+          signedSessionCacheSnapshot = empty;
+          return empty;
+        }
+      }
+
+      async function preparePhotoPaths(paths){
+        if (isPreviewMode) return;
+        const unique = Array.from(new Set((paths || []).map(normalizePhotoPath).filter(function(path){
+          return path && !isDirectPhotoUrl(path) && !photoUrlCache.has(path);
+        })));
+        if (!unique.length) return;
+
+        const pending = new Map();
+        unique.forEach(function(path){
+          let settle;
+          const promise = new Promise(function(resolve){ settle = resolve; });
+          photoUrlCache.set(path, promise);
+          pending.set(path, settle);
+        });
+
+        const signedMap = new Map();
+        try {
+          const res = await fetch(cfg.url + '/storage/v1/object/sign/center-images', {
+            method: 'POST',
+            headers: {
+              apikey: cfg.anonKey,
+              Authorization: 'Bearer ' + cfg.anonKey,
+              'content-type': 'application/json'
+            },
+            body: JSON.stringify({ paths: unique, expiresIn: 3600 })
+          });
+          if (res.ok) {
+            const signed = await res.json();
+            (Array.isArray(signed) ? signed : []).forEach(function(item, index){
+              const path = normalizePhotoPath(item && (item.path || unique[index]));
+              const rawSignedUrl = normalizePhotoPath(item && (item.signedURL || item.signedUrl));
+              if (!path || !rawSignedUrl || !pending.has(path)) return;
+              const signedUrl = rawSignedUrl.charAt(0) === '/'
+                ? cfg.url + (rawSignedUrl.indexOf('/storage/v1/') === 0 ? '' : '/storage/v1') + rawSignedUrl
+                : rawSignedUrl;
+              signedMap.set(path, signedUrl);
+            });
+          }
+        } catch (e) {}
+
+        unique.forEach(function(path){
+          const signedUrl = signedMap.get(path) || '';
+          photoUrlCache.set(path, signedUrl);
+          pending.get(path)(signedUrl);
+        });
+      }
+
+      async function getCachedSignedUrls(paths){
+        const unique = Array.from(new Set((paths || []).map(normalizePhotoPath).filter(Boolean)));
+        const results = new Map();
+        const sessionCandidates = [];
+
+        unique.forEach(function(path){
+          if (isDirectPhotoUrl(path)) {
+            results.set(path, path);
+          } else if (photoUrlCache.has(path)) {
+            return;
+          } else {
+            sessionCandidates.push(path);
+          }
+        });
+
+        let sessionCache = null;
+        const cacheMisses = [];
+        if (sessionCandidates.length) {
+          sessionCache = readSignedSessionCache();
+          sessionCandidates.forEach(function(path){
+            const entry = sessionCache.entries[signedSessionEntryKey(path)];
+            if (entry) {
+              photoUrlCache.set(path, entry.url);
+              results.set(path, entry.url);
+            } else {
+              cacheMisses.push(path);
+            }
+          });
+        }
+
+        if (cacheMisses.length) {
+          await preparePhotoPaths(cacheMisses);
+          const expiresAt = Date.now() + SIGNED_URL_TTL_MS;
+          let hasNewSessionEntry = false;
+          await Promise.all(cacheMisses.map(async function(path){
+            const signedUrl = photoUrlCache.has(path) ? await photoUrlCache.get(path) : '';
+            results.set(path, signedUrl || '');
+            if (!signedUrl) return;
+            sessionCache.entries[signedSessionEntryKey(path)] = {
+              url:signedUrl,
+              expiresAt:expiresAt
+            };
+            hasNewSessionEntry = true;
+          }));
+          if (hasNewSessionEntry) {
+            sessionCache.entries = cleanSignedSessionEntries(sessionCache.entries, Date.now());
+            writeSignedSessionCache(sessionCache);
+          }
+        }
+
+        await Promise.all(unique.map(async function(path){
+          if (results.has(path)) return;
+          const cached = photoUrlCache.has(path) ? await photoUrlCache.get(path) : '';
+          results.set(path, cached || '');
+        }));
+        return results;
+      }
+
+      async function getPhotoUrl(path){
+        const value = normalizePhotoPath(path);
+        if (!value || isDirectPhotoUrl(value) || isPreviewMode) return value;
+        if (!photoUrlCache.has(value)) await getCachedSignedUrls([value]);
+        return await photoUrlCache.get(value);
+      }
+
+      const photoLoader = {
+        context: photoRequestContext,
+        prepare: function(paths){
+          const signingPaths = (paths || []).map(normalizePhotoPath).filter(function(path){
+            return path && !isDirectPhotoUrl(path);
+          });
+          return signingPaths.length ? getCachedSignedUrls(signingPaths) : Promise.resolve(new Map());
+        },
+        get: getPhotoUrl
+      };
 
       const params = new URLSearchParams(location.search);
       const reviewToken = (params.get('review_token') || '').trim();
@@ -2486,7 +2650,6 @@
           }
           isReviewMode = true;
           data = mapRowToData(reviewRes.data);
-          await signCenterPhotos(data);
         } else if (previewId){
           // ── 기존: 템플릿 샘플 미리보기 (?preview=forest 등) — 절대 변경 금지 ──
           isPreviewMode = true;
@@ -2509,14 +2672,12 @@
           }
           isAdminPreviewMode = true;
           data = mapRowToData(previewRes.data);
-          await signCenterPhotos(data);
         } else {
           // ── 기존: 공개 원 조회 (?slug=slug) — 절대 변경 금지 ──
           const slug = slugParam || 'haetsal';
           const { data: row, error } = await client.from('centers').select('*, center_media(*), admissions(*), philosophy, programs, facilities').eq('slug', slug).single();
           if (error) throw error;
           data = mapRowToData(row);
-          await signCenterPhotos(data);
         }
 
         const previewBanner = document.getElementById('previewBanner');
@@ -2638,7 +2799,7 @@
         ${leafMenu ? `<nav class="leaf-menu reveal" aria-label="주요 메뉴 바로가기">${leafMenu}</nav>` : ''}
         <div class="enter-cue reveal"><span>안내 지도를 따라 천천히 둘러보세요</span><span class="path"></span></div>
       </div>
-      ${heroPhoto ? `<div class="hero-photo reveal"><div class="pond-img"><img alt="${esc(centerName)} 전경" src="${esc(heroPhoto)}" loading="eager" decoding="async" fetchpriority="high" width="960" height="960"></div></div>` : ''}
+      ${heroPhoto ? `<div class="hero-photo reveal"><div class="pond-img"><img alt="${esc(centerName)} 전경" data-photo-path="${esc(heroPhoto)}" data-photo-role="hero" loading="eager" decoding="async" fetchpriority="high" width="960" height="960"></div></div>` : ''}
     </div>`;
 
       const d = c.director || {};
@@ -2656,7 +2817,7 @@
       <h2>아이를 바라보는 마음</h2>
     </div>
     <article class="signpost${directorPhoto ? '' : ' no-photo'} reveal">
-      ${directorPhoto ? `<div class="director-photo"><img alt="${esc(cleanText(d.photo_alt) || cleanText(d.sign_name) || '원장 사진')}" loading="lazy" decoding="async" width="640" height="800" data-src="${esc(directorPhoto)}"></div>` : ''}
+      ${directorPhoto ? `<div class="director-photo"><img alt="${esc(cleanText(d.photo_alt) || cleanText(d.sign_name) || '원장 사진')}" loading="lazy" decoding="async" width="640" height="800" data-photo-path="${esc(directorPhoto)}" data-photo-group="director-primary"></div>` : ''}
       <div class="director-copy">
         ${hasVisibleText(d.badge) ? `<div class="badge">${esc(d.badge)}</div>` : ''}
         ${hasDirectorMessage ? `<p class="msg director-message is-collapsed" id="directorMessage">${escWithBr(directorMessage)}</p>` : ''}
@@ -2676,7 +2837,7 @@
         <div class="director-greeting-scroll">
           <div class="director-greeting-kicker">FOREST LETTER</div>
           <h2 class="director-greeting-title" id="directorGreetingTitle">원장 인사말</h2>
-          ${directorPhoto ? `<div class="director-greeting-photo"><img loading="lazy" decoding="async" width="640" height="800" data-src="${esc(directorPhoto)}" alt="${esc(cleanText(d.photo_alt) || cleanText(d.sign_name) || '원장 사진')}"></div>` : ''}
+          ${directorPhoto ? `<div class="director-greeting-photo"><img loading="lazy" decoding="async" width="640" height="800" data-photo-path="${esc(directorPhoto)}" data-photo-modal="director" alt="${esc(cleanText(d.photo_alt) || cleanText(d.sign_name) || '원장 사진')}"></div>` : ''}
           <div class="director-greeting-full" id="directorGreetingFull">${escWithBr(directorMessage)}</div>
           ${signParts.length ? `<div class="director-greeting-sign">${signParts.map(esc).join(' ')}</div>` : ''}
           ${hasVisibleText(philosophy.motto) ? `<div class="director-greeting-motto">${escWithBr(philosophy.motto)}</div>` : ''}
@@ -2718,7 +2879,7 @@
         <div class="node" aria-hidden="true">${i + 1}</div>
         <article class="card${photo ? '' : ' no-photo'}">
           ${photo ? `<div class="pic media-frame">
-            <img decoding="async" loading="lazy" alt="${esc(cleanText(m.photo_alt) || cleanText(m.title) || '하루 이야기 사진')}" data-src="${esc(photo)}">
+            <img decoding="async" loading="lazy" alt="${esc(cleanText(m.photo_alt) || cleanText(m.title) || '하루 이야기 사진')}" data-photo-path="${esc(photo)}" data-photo-group="${i < 2 ? 'day-primary' : 'day-extra'}">
           </div>` : ''}
           <div class="body">
             ${hasVisibleText(m.time) ? `<div class="time">${esc(m.time)}</div>` : ''}
@@ -2752,7 +2913,7 @@
         const hasCopy = !!(name || role || hasMessage);
         return `
       <article class="teacher-card-view${photo ? '' : ' no-photo'} reveal">
-        ${photo ? `<div class="teacher-photo"><img loading="lazy" decoding="async" alt="${esc(name || '교사 사진')}" data-src="${esc(photo)}"></div>` : ''}
+        ${photo ? `<div class="teacher-photo"><img loading="lazy" decoding="async" alt="${esc(name || '교사 사진')}" data-photo-path="${esc(photo)}" data-photo-group="teacher-primary"></div>` : ''}
         ${hasCopy ? `<div class="teacher-copy">
           ${name ? `<h3 class="teacher-name">${esc(name)}</h3>` : ''}
           ${role ? `<p class="teacher-role">${esc(role)}</p>` : ''}
@@ -2770,10 +2931,10 @@
         <h2>안전하고 따뜻한 공간</h2>
       </div>
       ${hasVisibleText(fac.intro) ? `<p class="fac-intro reveal">${escWithBr(fac.intro)}</p>` : ''}
-      <div class="facility-grid${facilityItems.length > 3 ? ' is-collapsed' : ''}" id="facilityGrid">${facilityItems.map(function(item){
+      <div class="facility-grid${facilityItems.length > 3 ? ' is-collapsed' : ''}" id="facilityGrid">${facilityItems.map(function(item, index){
         const photo = cleanText(item.photo_url);
         return `<article class="facility-card${photo ? '' : ' no-photo'} reveal">
-          ${photo ? `<button type="button" class="facility-media facility-lightbox" data-lightbox-src="${esc(photo)}" data-lightbox-alt="${esc(cleanText(item.name) || '시설 사진')}" aria-label="${esc((cleanText(item.name) || '시설 사진') + ' 크게 보기')}"><img loading="lazy" decoding="async" alt="${esc(cleanText(item.name) || '시설 사진')}" data-src="${esc(photo)}"></button>` : ''}
+          ${photo ? `<button type="button" class="facility-media facility-lightbox" data-lightbox-path="${esc(photo)}" data-lightbox-alt="${esc(cleanText(item.name) || '시설 사진')}" aria-label="${esc((cleanText(item.name) || '시설 사진') + ' 크게 보기')}"><img loading="lazy" decoding="async" alt="${esc(cleanText(item.name) || '시설 사진')}" data-photo-path="${esc(photo)}" data-photo-group="${index < 3 ? 'facility-primary' : 'facility-extra'}"></button>` : ''}
           ${(hasVisibleText(item.name) || hasVisibleText(item.desc)) ? `<div class="facility-body">
             ${hasVisibleText(item.name) ? `<h3 class="facility-name">${esc(item.name)}</h3>` : ''}
             ${hasVisibleText(item.desc) ? `<p class="facility-desc">${escWithBr(item.desc)}</p>` : ''}
@@ -2807,10 +2968,10 @@
       </div>
       ${hasVisibleText(prog.intro) ? `<p class="prog-intro reveal">${escWithBr(prog.intro)}</p>` : ''}
       <div class="program-grid${programItems.length > 3 ? ' is-collapsed' : ''}" id="programGrid">
-        ${programItems.map(function(item){
+        ${programItems.map(function(item, index){
           const photo = cleanText(item.photo_url);
           return `<article class="prog-card${photo ? '' : ' no-photo'} reveal">
-            ${photo ? `<div class="prog-img"><img loading="lazy" decoding="async" alt="${esc(cleanText(item.name) || '프로그램 사진')}" data-src="${esc(photo)}"></div>` : ''}
+            ${photo ? `<div class="prog-img"><img loading="lazy" decoding="async" alt="${esc(cleanText(item.name) || '프로그램 사진')}" data-photo-path="${esc(photo)}" data-photo-group="${index < 3 ? 'program-primary' : 'program-extra'}"></div>` : ''}
             ${(hasVisibleText(item.name) || hasVisibleText(item.desc)) ? `<div class="prog-body">
               ${hasVisibleText(item.name) ? `<h3 class="prog-name">${esc(item.name)}</h3>` : ''}
               ${hasVisibleText(item.desc) ? `<p class="prog-desc">${escWithBr(item.desc)}</p>` : ''}
@@ -2863,16 +3024,16 @@
       }
       document.title = `원이야 - ${centerName}`;
 
-      initInteractions();
       renderInfoSections(data, c, esc, detailQuery, routeItems, busRoutes);
       setupAskPanel({ items: faqItems }, canConsult);
       initConsultationForm(client, c.id, canConsult);
+      initInteractions(photoLoader);
     })();
 
-    function initInteractions() {
+    function initInteractions(photoLoader) {
       var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
       initImageFallbacks();
-      initDeferredImages();
+      var deferredImages = initDeferredImages(photoLoader);
 
       // ── 라이트박스 ──
       (function(){
@@ -2914,9 +3075,13 @@
       });
 
       document.querySelectorAll('.facility-lightbox').forEach(function(button){
-        button.addEventListener('click', function(){
+        button.addEventListener('click', async function(){
+          var path = button.dataset.lightboxPath || '';
+          var requestContext = photoLoader.context;
+          var src = await photoLoader.get(path);
+          if (!src || (location.pathname + location.search) !== requestContext || !button.isConnected || button.dataset.lightboxPath !== path) return;
           if (window.__openLightbox__) {
-            window.__openLightbox__(button.dataset.lightboxSrc, button.dataset.lightboxAlt);
+            window.__openLightbox__(src, button.dataset.lightboxAlt);
           }
         });
       });
@@ -2940,7 +3105,10 @@
           modal.classList.add('open');
           modal.setAttribute('aria-hidden','false');
           moreBtn.setAttribute('aria-expanded','true');
-          initDeferredImages();
+          deferredImages.load(
+            modal.querySelectorAll('img[data-photo-modal="director"]'),
+            function(){ return modal.classList.contains('open'); }
+          );
           closeBtn.focus();
         }
 
@@ -2992,7 +3160,7 @@
           programToggle.setAttribute('aria-expanded', expanded ? 'false' : 'true');
           programGrid.classList.toggle('is-collapsed', expanded);
           programToggle.textContent = expanded ? '프로그램 더 보기' : '프로그램 접기';
-          if (!expanded) initDeferredImages();
+          if (!expanded) deferredImages.load(programGrid.querySelectorAll('img[data-photo-group="program-extra"]'));
         });
       }
 
@@ -3006,7 +3174,7 @@
           target.classList.toggle('is-collapsed', expanded);
           button.textContent = expanded ? moreText : lessText;
           if (!expanded) {
-            initDeferredImages();
+            deferredImages.load(target.querySelectorAll('img[data-photo-group$="-extra"]'));
             return;
           }
           var scrollTarget = document.getElementById(scrollTargetId) || button;
@@ -3233,32 +3401,113 @@
       });
     }
 
-    function initDeferredImages(){
-      var imgs = Array.prototype.filter.call(document.querySelectorAll('img[data-src]'), function(img){
-        return !img.closest(
+    function initDeferredImages(photoLoader){
+      var requestContext = photoLoader.context;
+      var observer = null;
+
+      function isCollapsed(img){
+        return !!img.closest(
           '.day-story-list.is-collapsed .day-story-extra,' +
           '.facility-grid.is-collapsed .facility-card:nth-child(n+4),' +
           '.program-grid.is-collapsed .prog-card:nth-child(n+4)'
         );
-      });
-      if (!imgs.length) return;
-      function load(img){
-        if (!img.dataset.src) return;
-        img.src = img.dataset.src;
-        img.removeAttribute('data-src');
       }
-      if (!('IntersectionObserver' in window)){
-        imgs.forEach(load);
-        return;
+
+      function failImage(img){
+        if (img.dataset.photoFailed === 'true') return;
+        img.dataset.photoFailed = 'true';
+        img.dispatchEvent(new Event('error'));
       }
-      var observer = new IntersectionObserver(function(entries){
-        entries.forEach(function(entry){
-          if (!entry.isIntersecting) return;
-          load(entry.target);
-          observer.unobserve(entry.target);
+
+      function setImageSource(img, path, src, isCurrent){
+        if (
+          !img.isConnected ||
+          (location.pathname + location.search) !== requestContext ||
+          img.dataset.photoPath !== path ||
+          (isCurrent && !isCurrent(img)) ||
+          (!isCurrent && isCollapsed(img))
+        ) return;
+        if (!src) {
+          failImage(img);
+          return;
+        }
+        img.addEventListener('load', function(){
+          if (img.isConnected && img.dataset.photoPath === path) img.classList.add('is-photo-ready');
+        }, { once:true });
+        img.src = src;
+        if (img.complete && img.naturalWidth > 0) img.classList.add('is-photo-ready');
+      }
+
+      async function load(elements, isCurrent){
+        var entries = Array.prototype.map.call(elements || [], function(img){
+          return { img:img, path:String(img.dataset.photoPath || '').trim() };
+        }).filter(function(entry){
+          return entry.path &&
+            !entry.img.src &&
+            entry.img.dataset.photoFailed !== 'true' &&
+            entry.img.dataset.photoLoading !== 'true';
         });
-      }, { rootMargin: '200px' });
-      imgs.forEach(function(img){ observer.observe(img); });
+        if (!entries.length) return;
+        entries.forEach(function(entry){ entry.img.dataset.photoLoading = 'true'; });
+        await photoLoader.prepare(entries.map(function(entry){ return entry.path; }));
+        await Promise.all(entries.map(async function(entry){
+          var src = await photoLoader.get(entry.path);
+          setImageSource(entry.img, entry.path, src, isCurrent);
+          if (entry.img.isConnected) entry.img.removeAttribute('data-photo-loading');
+        }));
+      }
+
+      function eligibleImages(){
+        return Array.prototype.filter.call(document.querySelectorAll('img[data-photo-path]'), function(img){
+          return img.dataset.photoRole !== 'hero' &&
+            !img.dataset.photoModal &&
+            !img.src &&
+            img.dataset.photoFailed !== 'true' &&
+            img.dataset.photoLoading !== 'true' &&
+            !isCollapsed(img);
+        });
+      }
+
+      function groupImages(group){
+        return eligibleImages().filter(function(img){
+          return (img.dataset.photoGroup || '') === group;
+        });
+      }
+
+      function observeDeferred(){
+        var imgs = eligibleImages();
+        if (!imgs.length) return;
+        if (!('IntersectionObserver' in window)){
+          load(imgs);
+          return;
+        }
+        observer = new IntersectionObserver(function(entries){
+          entries.forEach(function(entry){
+            if (!entry.isIntersecting) return;
+            var group = entry.target.dataset.photoGroup || '';
+            var targets = group ? groupImages(group) : [entry.target];
+            targets.forEach(function(img){
+              observer.unobserve(img);
+              img.removeAttribute('data-photo-observed');
+            });
+            load(targets);
+          });
+        }, { rootMargin: '260px 0px' });
+        imgs.forEach(function(img){
+          img.dataset.photoObserved = 'true';
+          observer.observe(img);
+        });
+      }
+
+      async function start(){
+        var hero = document.querySelector('img[data-photo-role="hero"]');
+        if (hero) await load([hero], function(){ return true; });
+        if ((location.pathname + location.search) !== requestContext) return;
+        observeDeferred();
+      }
+
+      start();
+      return { load:load };
     }
 
     // ── 입학안내(admissions) + 오시는 길(directions) 렌더 (M1) ──
