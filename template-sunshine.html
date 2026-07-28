@@ -863,8 +863,52 @@
   .csl-msg.error{margin-top:12px;font-size:.85rem;color:var(--status-danger);text-align:center}
   .csl-done{text-align:center;font-family:var(--hand);font-size:1.25rem;font-weight:700;color:var(--ink);padding:30px 0;line-height:1.6}
 
-  footer{text-align:center;padding:30px var(--mobile-side-padding) 40px;color:var(--ink-soft);font-size:.82rem}
-  footer .demo-tag{display:inline-block;background:#fff;border:1px solid var(--line-warm);border-radius:30px;padding:6px 16px;margin-bottom:14px;font-family:var(--hand);font-weight:700;color:var(--coral-deep)}
+  footer{padding:46px var(--mobile-side-padding) 52px;color:var(--ink-soft);font-size:.86rem}
+  .sunshine-footer-card{
+    position:relative;isolation:isolate;overflow:hidden;
+    width:min(100%,720px);margin:0 auto;padding:38px clamp(24px,6vw,52px) 30px;
+    text-align:center;background:linear-gradient(180deg,rgba(255,255,255,.94),rgba(255,248,232,.96));
+    border:1px solid rgba(235,194,172,.72);border-radius:38px;
+    box-shadow:0 20px 46px -38px rgba(120,80,60,.52),0 4px 14px -12px rgba(224,120,90,.32);
+  }
+  .sunshine-footer-card::before{
+    content:"";position:absolute;z-index:-1;width:190px;height:190px;top:-112px;right:-62px;
+    border-radius:50%;background:radial-gradient(circle,rgba(255,214,126,.36),rgba(255,233,186,.08) 64%,transparent 65%);
+  }
+  .sunshine-footer-tag{
+    display:inline-block;margin:0 0 14px;padding:7px 17px;
+    background:#fff;border:1px solid var(--line-warm);border-radius:30px;
+    font-family:var(--hand);font-weight:700;color:var(--coral-deep);
+  }
+  .sunshine-footer-copy{max-width:540px;margin:0 auto;color:var(--ink-soft);font-size:.94rem;line-height:1.75;word-break:keep-all;overflow-wrap:anywhere}
+  .sunshine-footer-name{margin:22px 0 0;font-family:var(--display);font-size:clamp(1.12rem,3vw,1.34rem);font-weight:700;line-height:1.45;color:var(--ink);word-break:keep-all;overflow-wrap:anywhere}
+  .sunshine-footer-address{max-width:560px;margin:10px auto 0;font-style:normal;color:var(--ink-soft);line-height:1.7;word-break:keep-all;overflow-wrap:anywhere}
+  .sunshine-footer-contact{margin-top:18px}
+  .sunshine-footer-phone{
+    display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:46px;padding:11px 18px;
+    color:var(--ink);font-weight:700;text-decoration:none;background:rgba(255,255,255,.86);
+    border:1px solid var(--line-warm);border-radius:999px;box-shadow:0 9px 20px -18px rgba(120,80,60,.55);
+  }
+  .sunshine-footer-phone:hover{color:var(--coral-deep);border-color:rgba(224,120,90,.5)}
+  .sunshine-footer-phone svg{flex:none;width:17px;height:17px;color:var(--coral-deep)}
+  .sunshine-footer-contact-note{max-width:540px;margin:9px auto 0;color:var(--ink-soft);font-size:.82rem;line-height:1.7;word-break:keep-all;overflow-wrap:anywhere}
+  .sunshine-footer-links{display:flex;justify-content:center;flex-wrap:wrap;gap:10px;margin-top:20px}
+  .sunshine-footer-links a{
+    display:inline-flex;align-items:center;justify-content:center;min-height:42px;padding:9px 17px;
+    color:var(--coral-deep);font-weight:700;text-decoration:none;background:rgba(255,241,224,.7);
+    border:1px solid rgba(224,120,90,.24);border-radius:999px;
+  }
+  .sunshine-footer-links a:hover{background:#fff1e0;border-color:rgba(224,120,90,.42)}
+  .sunshine-footer-powered{margin:24px 0 0;color:rgba(120,90,72,.58);font-size:.74rem;letter-spacing:.02em}
+  .sunshine-footer-powered a{color:inherit;text-decoration:none}
+  .sunshine-footer-powered a:hover{color:var(--coral-deep);text-decoration:underline;text-underline-offset:3px}
+  @media (max-width:479px){
+    footer{padding:38px 16px 44px}
+    .sunshine-footer-card{padding:32px 20px 26px;border-radius:28px}
+    .sunshine-footer-links{flex-direction:column;align-items:stretch}
+    .sunshine-footer-links a{width:100%}
+    .sunshine-footer-phone{width:100%;max-width:320px}
+  }
 
   a:focus-visible,.flip-inner:focus-visible{outline:3px solid var(--coral);outline-offset:3px;border-radius:8px}
 
@@ -1428,6 +1472,72 @@ function hasVisibleText(value){
   return String(value ?? '').trim().length > 0;
 }
 
+function cleanDisplayText(value){
+  if (typeof value !== 'string') return '';
+  var cleaned = value.trim();
+  if (!cleaned || !cleaned.replace(/<br\s*\/?>/gi, '').trim()) return '';
+  return cleaned;
+}
+
+function hasAdmissionDisplayData(admission){
+  if (!admission || typeof admission !== 'object' || Array.isArray(admission)) return false;
+  return ['target','capacity_info','period','process','supplies','notes','deadline_date']
+    .some(function(field){ return Boolean(cleanDisplayText(admission[field])); });
+}
+
+function buildTelHref(value){
+  var phone = cleanDisplayText(value);
+  if (!phone) return '';
+  var digits = phone.replace(/\D/g, '');
+  if (digits.length < 7) return '';
+  return 'tel:' + (phone.charAt(0) === '+' ? '+' : '') + digits;
+}
+
+function sunshinePhoneIcon(){
+  return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M6.7 3.7l2.4-.6 2.1 5-1.7 1.6a15.2 15.2 0 0 0 4.8 4.8l1.6-1.7 5 2.1-.6 2.4a3 3 0 0 1-3 2.3A13 13 0 0 1 4.4 6.7a3 3 0 0 1 2.3-3z"></path></svg>';
+}
+
+function renderSunshineFooter(element, options){
+  if (!element) return;
+  var footerData = options.footer && typeof options.footer === 'object' && !Array.isArray(options.footer)
+    ? options.footer
+    : {};
+  var tag = cleanDisplayText(footerData.tag);
+  var copy = cleanDisplayText(footerData.text);
+  var centerName = cleanDisplayText(options.centerName);
+  var address = cleanDisplayText(options.address);
+  var contactPhone = cleanDisplayText(options.contactPhone);
+  var contactPhoneHref = buildTelHref(contactPhone);
+  var contactNote = contactPhoneHref ? cleanDisplayText(options.contactNote) : '';
+  var blocks = [];
+
+  if (tag) blocks.push('<p class="sunshine-footer-tag">' + esc(tag) + '</p>');
+  if (copy) blocks.push('<p class="sunshine-footer-copy">' + escWithBr(copy) + '</p>');
+  if (centerName) blocks.push('<p class="sunshine-footer-name">' + esc(centerName) + '</p>');
+  if (address) blocks.push('<address class="sunshine-footer-address">' + escWithBr(address) + '</address>');
+  if (contactPhoneHref) {
+    blocks.push('<div class="sunshine-footer-contact">'
+      + '<a class="sunshine-footer-phone" href="' + esc(contactPhoneHref) + '" aria-label="' + esc(contactPhone + '로 전화하기') + '">'
+      + sunshinePhoneIcon() + '<span>' + esc(contactPhone) + '</span></a>'
+      + (contactNote ? '<p class="sunshine-footer-contact-note">' + escWithBr(contactNote) + '</p>' : '')
+      + '</div>');
+  }
+
+  var links = [];
+  if (options.detailQuery && options.hasAdmissionData) {
+    links.push('<a href="' + esc('admissions.html' + options.detailQuery) + '">입학안내</a>');
+  }
+  if (options.detailQuery && options.hasDirectionsData) {
+    links.push('<a href="' + esc('directions.html' + options.detailQuery) + '">오시는 길</a>');
+  }
+  if (links.length) {
+    blocks.push('<nav class="sunshine-footer-links" aria-label="원 안내">' + links.join('') + '</nav>');
+  }
+
+  blocks.push('<p class="sunshine-footer-powered"><a href="index.html">Powered by 원이야</a></p>');
+  element.innerHTML = '<div class="sunshine-footer-card">' + blocks.join('') + '</div>';
+}
+
 function heroTitleHtml(title, accent, accentClass){
   var titleHtml = escWithBr(title);
   var accentHtml = escWithBr(accent);
@@ -1477,6 +1587,8 @@ function mapRowToData(row, options = {}){
       name: row.name,
       theme: row.theme,
       address: row.address,
+      contactPhone: cleanDisplayText(row.contact_phone),
+      contactNote: cleanDisplayText(row.contact_note),
       directions_text: row.directions_text,
       menu: row.menu || [],
       hero: row.hero || { eyebrow:'', title:'', title_accent:'', subtitle:'' },
@@ -1523,7 +1635,6 @@ function mapRowToData(row, options = {}){
   const client = supabase.createClient(cfg.url, cfg.anonKey);
   let isPreviewMode = false;
   let isReviewMode = false;
-  let previewTemplateId = ''; // ?preview=<id> 미리보기일 때 상세 페이지 링크(admissions/directions)에 넘길 id
   const PREVIEW_TEMPLATE_IDS = ['sunshine', 'carnival', 'forest', 'gallery'];
   const PREVIEW_MESSAGE = '이것은 템플릿 미리보기입니다. 실제 신청은 접수되지 않습니다.';
 
@@ -1531,6 +1642,20 @@ function mapRowToData(row, options = {}){
 
   function normalizePreviewId(value){
     return PREVIEW_TEMPLATE_IDS.includes(value) ? value : '';
+  }
+
+  function buildDetailQuery(search, fallbackSlug){
+    const params = new URLSearchParams(search || '');
+    const reviewToken = cleanDisplayText(params.get('review_token'));
+    const slug = reviewToken ? '' : cleanDisplayText(params.get('slug'));
+    const previewCenter = (reviewToken || slug) ? '' : cleanDisplayText(params.get('preview_center'));
+    const preview = (reviewToken || slug || previewCenter) ? '' : normalizePreviewId(cleanDisplayText(params.get('preview')).toLowerCase());
+    if (reviewToken) return '?review_token=' + encodeURIComponent(reviewToken);
+    if (slug) return '?slug=' + encodeURIComponent(slug);
+    if (previewCenter) return '?preview_center=' + encodeURIComponent(previewCenter);
+    if (preview) return '?preview=' + encodeURIComponent(preview);
+    const safeFallbackSlug = cleanDisplayText(fallbackSlug);
+    return safeFallbackSlug ? ('?slug=' + encodeURIComponent(safeFallbackSlug)) : '';
   }
 
   function publicTemplateUrl(path){
@@ -1658,7 +1783,6 @@ function mapRowToData(row, options = {}){
     } else if (previewId){
       // ── 기존: 템플릿 샘플 미리보기 (?preview=sunshine 등) — 절대 변경 금지 ──
       isPreviewMode = true;
-      previewTemplateId = previewId; // 상세 페이지 링크에서 ?preview= 로 이어가기 위해 보관
       data = await loadTemplatePreview(previewId);
     } else if (previewCenterSlug){
       // ── 신규: 관리자 draft 원 미리보기 (?preview_center=slug) ──
@@ -1717,29 +1841,25 @@ function mapRowToData(row, options = {}){
 
   // ── 상단바 / 메뉴 ──
   const c = data.center;
+  const detailQuery = buildDetailQuery(location.search, c.slug);
+  const hasAdmissionData = hasAdmissionDisplayData(data.admission);
+  const hasDirectionsData = Boolean(cleanDisplayText(c.address) || cleanDisplayText(c.directions_text));
   // 공지·행사일정 섹션은 제거됨 → 메뉴에서 필터. 하루 스토리(#day)는 복원되어 유지.
   // 시설 소개/교육프로그램(인페이지 섹션) + 입학안내/오시는 길(새 페이지) 런타임 주입
   (function(){
-    // 미리보기 모드에서는 admissions.html/directions.html도 ?preview=<id>로 이어가야
-    // template_centers 샘플 데이터를 찾는다(?slug=로 가면 실제 centers에 없는 슬러그라 에러).
-    // 실제 서비스(비-미리보기)에서는 기존처럼 ?slug=<slug>를 그대로 사용.
-    var qs = (isPreviewMode && previewTemplateId)
-      ? ('?preview=' + encodeURIComponent(previewTemplateId))
-      : (c.slug ? ('?slug=' + encodeURIComponent(c.slug)) : '');
     c.menu = (c.menu || []).filter(function(m){
-      return m.href !== '#notice' && m.href !== '#schedule';
+      var href = cleanDisplayText(m && m.href);
+      return href !== '#notice'
+        && href !== '#schedule'
+        && !/^admissions\.html(?:[?#]|$)/.test(href)
+        && !/^directions\.html(?:[?#]|$)/.test(href);
     });
     var extra = [];
     extra.push({ href:'#facilitiesSec', label:'시설 소개' });
     extra.push({ href:'#programSec', label:'교육프로그램' });
-    if (data.admission) extra.push({ href: 'admissions.html' + qs, label: '입학안내' });
-    if ((c.directions_text || '').trim()) extra.push({ href: 'directions.html' + qs, label: '오시는 길' });
+    if (detailQuery && hasAdmissionData) extra.push({ href: 'admissions.html' + detailQuery, label: '입학안내' });
+    if (detailQuery && hasDirectionsData) extra.push({ href: 'directions.html' + detailQuery, label: '오시는 길' });
     extra.push({ href: 'parent.html', label: '우리 반 미니홈피' });
-    if (isReviewMode){
-      extra = extra.filter(function(x){
-        return x.href.indexOf('admissions.html') !== 0 && x.href.indexOf('directions.html') !== 0;
-      });
-    }
     if (extra.length){
       var m = c.menu.slice();
       m = m.filter(function(x){ return x.href !== 'parent.html'; });
@@ -2211,9 +2331,16 @@ function mapRowToData(row, options = {}){
     <button type="button" id="cslOpenBtn" class="btn-big btn-big-cta reveal">${esc(finCta)}</button>`;
 
   // ── 푸터 ──
-  $('footerEl').innerHTML = `
-    <div class="demo-tag">${esc(data.footer?.tag)}</div>
-    <div>${escWithBr(data.footer?.text)}</div>`;
+  renderSunshineFooter($('footerEl'), {
+    footer: data.footer,
+    centerName: c.name,
+    address: c.address,
+    contactPhone: c.contactPhone,
+    contactNote: c.contactNote,
+    detailQuery: detailQuery,
+    hasAdmissionData: hasAdmissionData,
+    hasDirectionsData: hasDirectionsData
+  });
 
   document.title = `원이야 - ${esc(c.name) || '원이야'}`;
 
@@ -2236,8 +2363,7 @@ function mapRowToData(row, options = {}){
     }, true);
   }
   initInteractions();
-  renderInfoSections(data, c, esc, isPreviewMode, previewTemplateId, isReviewMode);
-  if (isReviewMode) disableReviewDetailLinks();
+  renderInfoSections(data, c, esc, detailQuery, hasAdmissionData, hasDirectionsData);
   setupAskPanel(data.faqs, isPreviewMode, isReviewMode, PREVIEW_MESSAGE, REVIEW_MESSAGE);
   initConsultationForm(client, c.id, isPreviewMode, isReviewMode, PREVIEW_MESSAGE, REVIEW_MESSAGE);
 })();
@@ -2746,49 +2872,34 @@ function initDeferredImages(){
 // 모집 대상(나이/사람) · 모집 기간(달력) 아이콘 — sunshine 톤에 맞춘 라인 아이콘, currentColor로 --coral-deep 상속
 var ADM_ICON_PERSON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="3.4"/><path d="M5 20c0-3.6 3.1-6.2 7-6.2s7 2.6 7 6.2"/></svg>';
 var ADM_ICON_CALENDAR = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="2.4"/><path d="M3.5 9.5h17"/><path d="M8 3v3.6M16 3v3.6"/></svg>';
-function disableReviewDetailLinks(){
-  document.querySelectorAll('a[href^="admissions.html"], a[href^="directions.html"]').forEach(function(link){
-    var note = document.createElement('span');
-    note.className = link.className || 'info-link-btn';
-    note.textContent = '검수 모드에서는 별도 페이지 이동이 제한됩니다';
-    link.replaceWith(note);
-  });
-}
-
-function renderInfoSections(data, c, esc, isPreviewMode, previewTemplateId, isReviewMode){
+function renderInfoSections(data, c, esc, detailQuery, hasAdmissionData, hasDirectionsData){
   // M2: 입학안내·오시는 길은 공개형 새 페이지로 분리. 메인에는 요약+이동 버튼만 남긴다.
-  // 미리보기 모드에서는 상세 페이지도 ?preview=<id>로 이어가고(샘플 데이터 조회),
-  // 실제 원(공개/관리자 미리보기)에서는 기존처럼 ?slug=<slug>로 연결한다.
-  var qs = (isPreviewMode && previewTemplateId)
-    ? ('?preview=' + encodeURIComponent(previewTemplateId))
-    : (c.slug ? ('?slug=' + encodeURIComponent(c.slug)) : '');
   var admSec = document.getElementById('admissionsSec');
   if (admSec){
-    if (!data.admission){ admSec.hidden = true; }
+    if (!detailQuery || !hasAdmissionData){ admSec.hidden = true; }
     else {
       admSec.hidden = false;
       var adm = data.admission;
-      var admLinkHtml = isReviewMode
-        ? '<span class="info-link-btn cloud-link">검수 모드에서는 별도 페이지 이동이 제한됩니다</span>'
-        : '<a class="info-link-btn cloud-link" href="admissions.html' + qs + '">자세히 보기 →</a>';
+      var target = cleanDisplayText(adm.target);
+      var period = cleanDisplayText(adm.period);
+      var previewRows = ''
+        + (target ? '<div class="adm-preview-row"><span class="adm-icon">'+ADM_ICON_PERSON+'</span><div><div class="adm-preview-label">모집 대상</div><div class="adm-preview-value">'+esc(target)+'</div></div></div>' : '')
+        + (period ? '<div class="adm-preview-row"><span class="adm-icon">'+ADM_ICON_CALENDAR+'</span><div><div class="adm-preview-label">모집 기간</div><div class="adm-preview-value">'+esc(period)+'</div></div></div>' : '');
       admSec.innerHTML = '<div class="section-eyebrow">함께해요</div>'
         + '<h2 class="info-title">입학안내</h2>'
-        + '<div class="adm-preview">'
-        + (adm.target ? '<div class="adm-preview-row"><span class="adm-icon">'+ADM_ICON_PERSON+'</span><div><div class="adm-preview-label">모집 대상</div><div class="adm-preview-value">'+esc(adm.target)+'</div></div></div>' : '')
-        + (adm.period ? '<div class="adm-preview-row"><span class="adm-icon">'+ADM_ICON_CALENDAR+'</span><div><div class="adm-preview-label">모집 기간</div><div class="adm-preview-value">'+esc(adm.period)+'</div></div></div>' : '')
-        + '</div>'
-        + admLinkHtml;
+        + (previewRows ? '<div class="adm-preview">' + previewRows + '</div>' : '')
+        + '<a class="info-link-btn cloud-link" href="admissions.html' + detailQuery + '">자세히 보기 →</a>';
     }
   }
   var dirSec = document.getElementById('directionsSec');
   if (dirSec){
-    if (!(c.directions_text || '').trim()){ dirSec.hidden = true; }
+    if (!detailQuery || !hasDirectionsData){ dirSec.hidden = true; }
     else {
       dirSec.hidden = false;
       dirSec.innerHTML = '<div class="section-eyebrow">오시는 길을 알려드려요</div>'
         + '<h2 class="info-title">오시는 길</h2>'
         + '<div class="dir-preview"><p class="info-lead" style="margin:0">지도와 교통편·주차 안내를 확인하세요.</p></div>'
-        + '<a class="info-link-btn cloud-link" href="directions.html' + qs + '">통학 안내 →</a>';
+        + '<a class="info-link-btn cloud-link" href="directions.html' + detailQuery + '">통학 안내 →</a>';
     }
   }
 }
