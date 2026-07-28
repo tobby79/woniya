@@ -82,7 +82,7 @@
 
   label{display:block;font-size:.86rem;font-weight:700;color:var(--ink-soft);margin-bottom:6px}
   .field{margin-bottom:18px}
-  input[type=email],input[type=password],input[type=text],input[type=number],input[type=time],input[type=color],textarea{
+  input[type=email],input[type=password],input[type=text],input[type=tel],input[type=number],input[type=time],input[type=color],textarea{
     width:100%;border:1.5px solid var(--line);border-radius:14px;padding:13px 16px;
     font-family:var(--body);font-size:.98rem;color:var(--ink);background:var(--cream);
     outline:none;transition:border-color .2s ease;
@@ -591,6 +591,10 @@
             <div class="field" id="contactPhoneField">
               <label for="f-contact-phone">대표전화</label>
               <input type="tel" id="f-contact-phone" placeholder="예: 02-000-0000">
+            </div>
+            <div class="field">
+              <label for="f-contact-note">전화 상담 안내</label>
+              <textarea id="f-contact-note" rows="3" maxlength="300" placeholder="상담 문의 전화는 16:00~19:00까지 가능합니다. 부재중일 경우 상담 문의를 남겨주시면 연락드리겠습니다."></textarea>
             </div>
             <div class="field">
               <label for="f-hours">운영시간</label>
@@ -5351,8 +5355,6 @@
 
   function setTemplateTabVisibility(targetContext){
     var templateMode = isTemplateMode();
-    var contactPhoneField = document.getElementById('contactPhoneField');
-    if (contactPhoneField) contactPhoneField.hidden = templateMode;
     ['class', 'bus', 'consult'].forEach(function(tab){
       var btn = document.querySelector('.tab-btn[data-tab="' + tab + '"]');
       var panel = document.querySelector('.tab-panel[data-panel="' + tab + '"]');
@@ -5529,7 +5531,8 @@
       document.getElementById('f-name').value    = nextCenter.name || '';
       document.getElementById('f-intro').value   = nextCenter.intro || '';
       document.getElementById('f-address').value = nextCenter.address || '';
-      document.getElementById('f-contact-phone').value = context.templateMode ? '' : (nextCenter.contact_phone || '');
+      document.getElementById('f-contact-phone').value = typeof nextCenter.contact_phone === 'string' ? nextCenter.contact_phone : '';
+      document.getElementById('f-contact-note').value = typeof nextCenter.contact_note === 'string' ? nextCenter.contact_note : '';
       document.getElementById('f-hours').value   = nextCenter.operating_hours || '';
       loadBasicStats();
       loadPhotos(context);
@@ -5782,12 +5785,11 @@
       name:             document.getElementById('f-name').value,
       intro:            document.getElementById('f-intro').value,
       address:          document.getElementById('f-address').value,
+      contact_phone:    document.getElementById('f-contact-phone').value.trim() || null,
+      contact_note:     document.getElementById('f-contact-note').value.trim().slice(0, 300) || null,
       operating_hours:  document.getElementById('f-hours').value,
       facilities:       updatedFacilities
     };
-    if (!isTemplateMode()) {
-      basicPayload.contact_phone = document.getElementById('f-contact-phone').value.trim() || null;
-    }
     var res = await client.from(centerTable()).update(basicPayload).eq('id', currentCenter.id);
     saveStatus.className = res.error ? 'msg error' : 'msg ok';
     if (res.error) logAdminError('saveBasicInfo', res.error);
@@ -5795,8 +5797,9 @@
       currentCenter.name = document.getElementById('f-name').value;
       currentCenter.intro = document.getElementById('f-intro').value;
       currentCenter.address = document.getElementById('f-address').value;
+      currentCenter.contact_phone = basicPayload.contact_phone;
+      currentCenter.contact_note = basicPayload.contact_note;
       currentCenter.operating_hours = document.getElementById('f-hours').value;
-      if (!isTemplateMode()) currentCenter.contact_phone = basicPayload.contact_phone;
       currentCenter.facilities = updatedFacilities;
       markSaved();
     }

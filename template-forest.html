@@ -1262,23 +1262,142 @@
       line-height: 1.7
     }
 
-    footer {
+    .forest-footer {
       text-align: center;
       padding: 34px 22px 44px;
       color: var(--ink-soft);
       font-size: .82rem
     }
 
-    footer .demo-tag {
+    .forest-footer-inner {
+      position: relative;
+      max-width: 720px;
+      margin: 0 auto;
+      padding-top: 24px
+    }
+
+    .forest-footer-inner::before {
+      content: "";
+      display: block;
+      width: 22px;
+      height: 12px;
+      margin: 0 auto 18px;
+      border-radius: 2px 100% 2px 100%;
+      background: var(--leaf);
+      box-shadow: 11px 5px 0 -2px rgba(123, 160, 91, .42);
+      transform: rotate(-14deg)
+    }
+
+    .forest-footer-tag {
       display: inline-block;
       background: var(--paper);
       border: 1px solid rgba(123, 160, 91, .2);
       border-radius: 30px;
       padding: 6px 16px;
-      margin-bottom: 14px;
+      margin: 0 0 12px;
       font-family: var(--hand);
       font-weight: 700;
       color: var(--moss)
+    }
+
+    .forest-footer-name {
+      margin: 0;
+      color: var(--pine);
+      font-family: var(--display);
+      font-size: clamp(1.08rem, 2vw, 1.3rem);
+      font-weight: 700;
+      line-height: 1.45;
+      overflow-wrap: anywhere;
+      word-break: keep-all
+    }
+
+    .forest-footer-copy {
+      max-width: 540px;
+      margin: 10px auto 0;
+      color: var(--ink-soft);
+      font-size: .9rem;
+      line-height: 1.75;
+      overflow-wrap: anywhere;
+      word-break: keep-all
+    }
+
+    .forest-footer-meta {
+      display: flex;
+      justify-content: center;
+      align-items: baseline;
+      flex-wrap: wrap;
+      gap: 5px 8px;
+      margin: 15px auto 0;
+      color: var(--earth);
+      font-style: normal;
+      font-size: .84rem;
+      line-height: 1.65
+    }
+
+    .forest-footer-meta span {
+      min-width: 0;
+      overflow-wrap: anywhere;
+      word-break: keep-all
+    }
+
+    .forest-footer-contact-note {
+      max-width: 560px;
+      margin: 8px auto 0;
+      color: var(--ink-soft);
+      font-size: .8rem;
+      line-height: 1.75;
+      overflow-wrap: anywhere;
+      word-break: keep-all
+    }
+
+    .forest-footer-phone {
+      display: inline-flex;
+      align-items: baseline;
+      gap: 8px;
+      min-width: 0
+    }
+
+    .forest-footer-separator {
+      flex: none;
+      color: rgba(110, 82, 54, .48)
+    }
+
+    .forest-footer-links {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 8px 18px;
+      margin-top: 16px
+    }
+
+    .forest-footer-links a {
+      color: var(--pine-soft);
+      font-size: .84rem;
+      font-weight: 700;
+      text-decoration: none;
+      text-underline-offset: 4px
+    }
+
+    .forest-footer-links a:hover {
+      text-decoration: underline
+    }
+
+    .forest-footer-powered {
+      margin-top: 20px;
+      color: rgba(66, 92, 61, .58);
+      font-size: .72rem;
+      letter-spacing: .02em
+    }
+
+    .forest-footer-powered a {
+      color: inherit;
+      text-decoration: none
+    }
+
+    .forest-footer-powered a:hover {
+      color: var(--pine-soft);
+      text-decoration: underline;
+      text-underline-offset: 3px
     }
 
     a:focus-visible,
@@ -1360,7 +1479,7 @@
   <section class="info-block wrap" id="directionsSec" hidden></section>
   <section class="explore wrap" id="faq"></section>
   <section class="finale wrap" id="finale"></section>
-  <footer id="footerEl"></footer>
+  <footer id="footerEl" class="forest-footer"></footer>
 
   <div class="float" id="float" hidden><a href="#finale"><span class="pulse"></span>입소 상담</a></div>
 
@@ -2057,7 +2176,7 @@
     .finale h2{color:#fff}
     .finale p{color:rgba(255,255,255,.74)}
     .finale .btn-big{background:var(--cream);color:var(--pine);box-shadow:none}
-    footer{max-width:1120px;margin:0 auto;padding:32px 24px 52px;border-top:1px solid var(--line)}
+    .forest-footer{max-width:1120px;margin:0 auto;padding:32px 24px 52px;border-top:1px solid var(--line)}
     .ask-fab{right:max(18px,calc((100vw - var(--forest-content-max))/2 + 28px))}
 
     button:focus-visible,a:focus-visible,.facility-media:focus-visible,.director-expand:focus-visible,.section-toggle:focus-visible,.faq-q:focus-visible{
@@ -2176,6 +2295,14 @@
       .director-greeting-scroll{max-height:88vh;padding:36px 22px 30px}
       .director-greeting-close{top:12px;right:13px;width:38px;height:38px}
       .director-greeting-title{margin-left:34px;margin-right:34px}
+      .forest-footer{padding:28px 20px 38px}
+      .forest-footer-inner{padding-top:18px}
+      .forest-footer-meta{flex-direction:column;align-items:center;gap:4px}
+      .forest-footer-contact-note{max-width:100%;margin-top:8px}
+      .forest-footer-phone{justify-content:center}
+      .forest-footer-separator{display:none}
+      .forest-footer-links{gap:8px 16px;margin-top:14px}
+      .forest-footer-powered{margin-top:18px}
     }
     @media (prefers-reduced-motion:reduce){
       .reveal{opacity:1;transform:none}
@@ -2211,6 +2338,81 @@
 
     function cleanText(value){
       return String(value ?? '').trim();
+    }
+
+    function cleanFooterText(value){
+      if (typeof value !== 'string') return '';
+      const cleaned = value.trim();
+      if (!cleaned || cleaned.toLowerCase() === '[object object]') return '';
+      return cleaned.replace(/<br\s*\/?>/gi, '').trim() ? cleaned : '';
+    }
+
+    function normalizedFooterText(value){
+      return cleanFooterText(value).replace(/<br\s*\/?>/gi, ' ').replace(/\s+/g, ' ').toLowerCase();
+    }
+
+    function isFooterBrandOnly(value){
+      const normalized = normalizedFooterText(value);
+      return normalized === '원이야'
+        || normalized === 'powered by 원이야'
+        || normalized === '원이야로 만든';
+    }
+
+    function renderForestFooter(element, options){
+      if (!element) return;
+      const footerData = options.footer || {};
+      const centerName = cleanFooterText(options.centerName);
+      const address = cleanFooterText(options.address);
+      const contactPhone = cleanFooterText(options.contactPhone);
+      const rawContactNote = cleanFooterText(options.contactNote);
+      const centerNameKey = normalizedFooterText(centerName);
+      const rawTag = cleanFooterText(footerData.tag);
+      const rawText = cleanFooterText(footerData.text);
+      const contactNote = rawContactNote
+        && normalizedFooterText(rawContactNote) !== centerNameKey
+        && !isFooterBrandOnly(rawContactNote)
+        ? rawContactNote
+        : '';
+      const contactNoteKey = normalizedFooterText(contactNote);
+      const tag = rawTag
+        && normalizedFooterText(rawTag) !== centerNameKey
+        && !isFooterBrandOnly(rawTag)
+        ? rawTag
+        : '';
+      const copy = rawText
+        && normalizedFooterText(rawText) !== centerNameKey
+        && !isFooterBrandOnly(rawText)
+        && normalizedFooterText(rawText) !== contactNoteKey
+        ? rawText
+        : '';
+      const blocks = [];
+
+      if (tag) blocks.push(`<p class="forest-footer-tag">${esc(tag)}</p>`);
+      if (centerName) blocks.push(`<p class="forest-footer-name">${esc(centerName)}</p>`);
+      if (copy) blocks.push(`<p class="forest-footer-copy">${escWithBr(copy)}</p>`);
+
+      const contactParts = [];
+      if (address) contactParts.push(`<span>${esc(address)}</span>`);
+      if (contactPhone) {
+        contactParts.push(`<span class="forest-footer-phone">${address ? '<span class="forest-footer-separator" aria-hidden="true">·</span>' : ''}<span>${esc(contactPhone)}</span></span>`);
+      }
+      if (contactParts.length) blocks.push(`<address class="forest-footer-meta">${contactParts.join('')}</address>`);
+      if (contactNote) blocks.push(`<p class="forest-footer-contact-note">${escWithBr(contactNote)}</p>`);
+
+      const links = [];
+      if (options.hasAdmissionData) {
+        links.push(`<a href="${esc('admissions.html' + options.detailQuery)}">입학안내</a>`);
+      }
+      if (options.hasDirectionsData) {
+        links.push(`<a href="${esc('directions.html' + options.detailQuery)}">오시는 길</a>`);
+      }
+      if (links.length) {
+        blocks.push(`<nav class="forest-footer-links" aria-label="원 안내">${links.join('')}</nav>`);
+      }
+
+      blocks.push('<div class="forest-footer-powered"><a href="index.html">Powered by 원이야</a></div>');
+      element.hidden = false;
+      element.innerHTML = `<div class="forest-footer-inner">${blocks.join('')}</div>`;
     }
 
     function cleanItems(items, fields){
@@ -2325,7 +2527,7 @@
         heroPhoto: (byType('hero')[0] || {}).photo_url || null,
         center: {
           id: row.id, slug: row.slug, name: row.name, theme: row.theme, status: row.status,
-          address: row.address, directions_text: row.directions_text,
+          address: row.address, contactPhone: row.contact_phone, contactNote: row.contact_note, directions_text: row.directions_text,
           menu: row.menu || [],
           hero: row.hero || { eyebrow:'', title:'', title_accent:'', subtitle:'' },
           director: row.director || { badge:'', photo:'', photo_alt:'', message:'', sign_label:'', sign_name:'', scroll_cue:'' },
@@ -2716,6 +2918,7 @@
       });
       const routeItems = directionItems(c.directions_text);
       const busRoutes = await loadBusRouteData(client, c.id, isPreviewMode);
+      const hasDirectionsData = Boolean(cleanText(c.address) || routeItems.length || busRoutes.length);
       const detailQuery = reviewToken
         ? ('?review_token=' + encodeURIComponent(reviewToken))
         : (slugParam
@@ -2742,7 +2945,7 @@
         if (facilityItems.length) extra.push({ href:'#facilitiesSec', label:'시설 소개' });
         if (programItems.length) extra.push({ href:'#programSec', label:'교육프로그램' });
         if (hasAdmissionData) extra.push({ href: 'admissions.html' + qs, label: '입학안내' });
-        if (cleanText(c.address) || routeItems.length || busRoutes.length) extra.push({ href: 'directions.html' + qs, label: '오시는 길' });
+        if (hasDirectionsData) extra.push({ href: 'directions.html' + qs, label: '오시는 길' });
         extra.push({ href: 'parent.html', label: '우리 반 미니홈피' });
         if (extra.length){
           var m = c.menu.slice();
@@ -3016,12 +3219,16 @@
         $('float').hidden = true;
       }
 
-      const footer = data.footer || {};
-      if (hasVisibleText(footer.tag) || hasVisibleText(footer.text)) {
-        $('footerEl').innerHTML = `${hasVisibleText(footer.tag) ? `<div class="demo-tag">${esc(footer.tag)}</div>` : ''}${hasVisibleText(footer.text) ? `<div>${escWithBr(footer.text)}</div>` : ''}`;
-      } else {
-        $('footerEl').hidden = true;
-      }
+      renderForestFooter($('footerEl'), {
+        centerName: c.name,
+        address: c.address,
+        contactPhone: c.contactPhone,
+        contactNote: c.contactNote,
+        footer: data.footer,
+        hasAdmissionData: hasAdmissionData,
+        hasDirectionsData: hasDirectionsData,
+        detailQuery: detailQuery
+      });
       document.title = `원이야 - ${centerName}`;
 
       renderInfoSections(data, c, esc, detailQuery, routeItems, busRoutes);
