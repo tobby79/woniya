@@ -96,42 +96,7 @@
   .card-hero.hero-gallery{background:radial-gradient(circle at 78% 24%,#ffffff 0 14%,transparent 15%),linear-gradient(135deg,#E8E5DF,#BDB7AE 48%,#777E89)}
   .card-hero.hero-carnival.coming-soon{background:linear-gradient(135deg,#FFDDA3,#FF9CB6 48%,#8FA7F1)}
   .card-hero.hero-gallery.coming-soon{background:linear-gradient(135deg,#E8E5DF,#BDB7AE 48%,#777E89)}
-  .card-hero .hero-name{
-    position:absolute;left:50%;bottom:18px;z-index:2;transform:translateX(-50%);
-    font-family:var(--display);font-size:1.18rem;color:#fff;white-space:nowrap;
-    text-shadow:0 3px 18px rgba(64,55,51,.32);letter-spacing:-.3px;
-    padding:6px 14px;border-radius:999px;background:rgba(64,55,51,.18);
-    border:1px solid rgba(255,255,255,.34);backdrop-filter:blur(8px);
-  }
-  .hero-preview{
-    position:relative;z-index:1;width:min(78%,260px);aspect-ratio:3/4;
-    border-radius:18px;background:rgba(255,255,255,.86);
-    box-shadow:0 22px 46px -24px rgba(64,55,51,.5);
-    overflow:hidden;border:1px solid rgba(255,255,255,.62);
-  }
-  .hero-preview:before{
-    content:"";position:absolute;left:0;right:0;top:0;height:24px;
-    background:rgba(255,255,255,.72);border-bottom:1px solid rgba(64,55,51,.08);
-  }
-  .hero-preview:after{
-    content:"";position:absolute;left:14px;top:9px;width:7px;height:7px;border-radius:50%;
-    background:#ff8a6b;box-shadow:13px 0 0 #f6c66e,26px 0 0 #9cb89a;
-  }
-  .hero-preview-main{position:absolute;left:14px;right:14px;top:38px;bottom:14px;display:grid;grid-template-rows:1.1fr .9fr;gap:12px}
-  .hero-preview-visual{border-radius:14px;background:rgba(255,255,255,.55);position:relative;overflow:hidden}
-  .hero-preview-copy{display:flex;flex-direction:column;justify-content:center;gap:8px}
-  .hero-preview-line{display:block;height:8px;border-radius:99px;background:rgba(64,55,51,.16)}
-  .hero-preview-line.short{width:62%}
-  .hero-preview-line.mid{width:82%}
-  .hero-preview-pill{width:56px;height:18px;border-radius:99px;margin-top:2px;background:var(--coral)}
-  .hero-sunshine .hero-preview-visual{background:radial-gradient(circle at 32% 34%,#fff8c9 0 22%,transparent 23%),linear-gradient(135deg,#ffe6dc,#ffb49b)}
-  .hero-forest .hero-preview-visual{background:radial-gradient(circle at 36% 36%,#dff1d5 0 18%,transparent 19%),linear-gradient(135deg,#b9d9ad,#638f78)}
-  .hero-carnival .hero-preview-visual{background:radial-gradient(circle at 34% 34%,#fff0a8 0 16%,transparent 17%),linear-gradient(135deg,#ffb3c6,#8fa7f1)}
-  .hero-gallery .hero-preview-visual{background:linear-gradient(135deg,#f3f1ec,#a9a39a)}
-  .hero-gallery .hero-preview-visual:before{
-    content:"";position:absolute;inset:18px;border:5px solid rgba(255,255,255,.78);
-    box-shadow:24px 18px 0 -10px rgba(64,55,51,.18);
-  }
+  .card-preview-image{position:relative;z-index:1;width:100%;height:100%;object-fit:cover;display:block}
   .hero-coming-soon{
     position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;
     justify-content:center;gap:8px;padding:28px;text-align:center;color:#fff;
@@ -213,9 +178,6 @@
     .tpl-card{border-radius:22px}
     .card-hero{min-height:0;max-height:460px}
     .card-hero:after{inset:14px;border-radius:16px}
-    .card-hero .hero-name{bottom:16px;font-size:1.08rem}
-    .hero-preview{width:min(74%,250px);height:auto;border-radius:16px}
-    .hero-preview-main{top:34px;bottom:12px;left:12px;right:12px;gap:9px}
     .card-body{padding:15px 16px 17px}
     .tpl-card .actions{flex-direction:column;padding-top:13px}
     .btn{width:100%;min-height:42px}
@@ -283,8 +245,8 @@
 <script>
 (function(){
   var TEMPLATES = [
-    { key:'sunshine', number:1, name:'햇살',     desc:'따뜻한 핑크톤, 하루의 빛 흐름',       file:'template-sunshine.html', tags:['따뜻함','부드러움','대표 추천'] },
-    { key:'forest',   number:2, name:'숲',       desc:'초록 자연, 세로 타임라인',           file:'template-forest.html', tags:['자연','차분함'] },
+    { key:'sunshine', number:1, name:'햇살',     desc:'따뜻한 핑크톤, 하루의 빛 흐름',       file:'template-sunshine.html', tags:['따뜻함','부드러움','대표 추천'], previewImage:'assets/template-preview-sunshine.jpg', previewAlt:'햇살가득 어린이집 샘플 화면' },
+    { key:'forest',   number:2, name:'숲',       desc:'초록 자연, 세로 타임라인',           file:'template-forest.html', tags:['자연','차분함'], previewImage:'assets/template-preview-forest.jpg', previewAlt:'초록숲 유치원 샘플 화면' },
     { key:'gallery',  number:3, name:'갤러리',   desc:'차콜 그레이, 가로 슬라이드',         file:'template-gallery.html', tags:['정돈감','사진 중심'], comingSoon:true },
     { key:'carnival', number:4, name:'놀이동산', desc:'알록달록, 책 넘기기 애니메이션',     file:'template-carnival.html', tags:['활동적','선명함'], comingSoon:true }
   ];
@@ -370,18 +332,7 @@
         '<div class="card-hero hero-' + t.key + (t.comingSoon ? ' coming-soon' : '') + '">' +
           (t.comingSoon
             ? '<div class="hero-coming-soon"><strong>준비중</strong><span>샘플을 준비하고 있어요</span></div>'
-            : '<div class="hero-preview" aria-hidden="true">' +
-                '<div class="hero-preview-main">' +
-                  '<div class="hero-preview-visual"></div>' +
-                  '<div class="hero-preview-copy">' +
-                    '<span class="hero-preview-line mid"></span>' +
-                    '<span class="hero-preview-line"></span>' +
-                    '<span class="hero-preview-line short"></span>' +
-                    '<span class="hero-preview-pill"></span>' +
-                  '</div>' +
-                '</div>' +
-              '</div>') +
-          (t.comingSoon ? '' : '<span class="hero-name">' + t.name + '</span>') +
+            : '<img class="card-preview-image" src="' + t.previewImage + '" alt="' + t.previewAlt + '">') +
         '</div>' +
         '<div class="card-body">' +
           '<div class="name">' + t.name + '</div>' +
