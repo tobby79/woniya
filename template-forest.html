@@ -1357,6 +1357,33 @@
       min-width: 0
     }
 
+    .forest-footer-phone a {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      color: inherit;
+      text-decoration: underline;
+      text-decoration-color: rgba(110, 82, 54, .32);
+      text-underline-offset: 3px
+    }
+
+    .phone-link-icon {
+      flex: none;
+      width: 1em;
+      height: 1em;
+      color: currentColor
+    }
+
+    .forest-footer-phone .phone-link-icon {
+      width: 14px;
+      height: 14px
+    }
+
+    .forest-footer-phone a:hover {
+      color: var(--pine-soft);
+      text-decoration-color: currentColor
+    }
+
     .forest-footer-separator {
       flex: none;
       color: rgba(110, 82, 54, .48)
@@ -1500,6 +1527,7 @@
       <div class="ask-modal-body">
         <div class="ask-faq-list" id="askFaqList"></div>
         <p class="ask-empty" id="askFaqEmpty" hidden>궁금한 점은 상담으로 편하게 물어보세요.</p>
+        <div class="ask-contact" id="askContact" hidden></div>
         <div class="ask-modal-actions">
           <button type="button" class="ask-consult-btn" id="askConsultBtn">입소상담 신청하기</button>
         </div>
@@ -1588,6 +1616,13 @@
     .ask-faq-a{max-height:0;overflow:hidden;transition:max-height .3s ease}
     .ask-faq-a p{padding:0 18px 16px;color:var(--ink-soft);font-size:.94rem;line-height:1.7}
     .ask-empty{color:var(--ink-soft);font-size:.94rem;line-height:1.65;margin-bottom:16px}
+    .ask-contact{margin-top:18px;padding:14px 16px;background:rgba(222,229,207,.42);border:1px solid rgba(86,115,74,.16);border-radius:14px;text-align:left}
+    .ask-contact-label{margin:0 0 3px;color:var(--ink-soft);font-size:.76rem;font-weight:700}
+    .ask-contact-phone{display:inline-flex;align-items:center;gap:7px;min-height:32px;color:var(--pine);font-size:.98rem;font-weight:800;text-decoration:underline;text-decoration-color:rgba(49,79,60,.28);text-underline-offset:3px;overflow-wrap:anywhere}
+    .ask-contact-phone .phone-link-icon{width:18px;height:18px}
+    .ask-contact-phone:hover{color:var(--moss);text-decoration-color:currentColor}
+    .ask-contact-phone:focus-visible{outline:3px solid var(--sun-warm);outline-offset:3px;border-radius:5px}
+    .ask-contact-note{margin:5px 0 0;color:var(--ink-soft);font-size:.82rem;line-height:1.65;overflow-wrap:anywhere;word-break:keep-all}
     .ask-modal-actions{margin-top:24px;padding-top:4px}
     .ask-consult-btn{width:100%;min-height:52px;border:1px solid rgba(255,255,255,.16);border-radius:8px 22px 8px 22px;background:linear-gradient(145deg,var(--moss),var(--pine));color:#fff;font-family:var(--body);font-weight:800;font-size:1rem;padding:14px 18px;cursor:pointer;box-shadow:0 18px 34px -20px rgba(32,56,44,.72);transition:transform .2s ease,box-shadow .2s ease,background .2s ease}
     .ask-consult-btn:hover:not(:disabled){transform:translateY(-1px);background:linear-gradient(145deg,var(--pine),#274535);box-shadow:0 22px 38px -20px rgba(32,56,44,.78)}
@@ -1599,6 +1634,7 @@
       .ask-modal-header{padding:23px 22px 16px}
       .ask-modal-close{top:17px;right:17px}
       .ask-modal-body{padding:7px 20px calc(24px + env(safe-area-inset-bottom))}
+      .ask-contact{text-align:center;padding:13px 14px}
       .ask-modal-actions{margin-top:20px}
       .ask-consult-btn{min-height:50px;padding-inline:16px}
     }
@@ -2358,21 +2394,37 @@
         || normalized === '원이야로 만든';
     }
 
+    function cleanContactNote(value, centerName){
+      const note = cleanFooterText(value);
+      return note
+        && normalizedFooterText(note) !== normalizedFooterText(centerName)
+        && !isFooterBrandOnly(note)
+        ? note
+        : '';
+    }
+
+    function buildTelHref(value){
+      const phone = cleanFooterText(value);
+      const digits = phone.replace(/\D/g, '');
+      if (!digits) return '';
+      return 'tel:' + (phone.charAt(0) === '+' ? '+' : '') + digits;
+    }
+
+    function phoneLinkIcon(){
+      return '<svg class="phone-link-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M6.7 3.7l2.4-.6 2.1 5-1.7 1.6a15.2 15.2 0 0 0 4.8 4.8l1.6-1.7 5 2.1-.6 2.4a3 3 0 0 1-3 2.3A13 13 0 0 1 4.4 6.7a3 3 0 0 1 2.3-3z"></path></svg>';
+    }
+
     function renderForestFooter(element, options){
       if (!element) return;
       const footerData = options.footer || {};
       const centerName = cleanFooterText(options.centerName);
       const address = cleanFooterText(options.address);
       const contactPhone = cleanFooterText(options.contactPhone);
-      const rawContactNote = cleanFooterText(options.contactNote);
+      const contactPhoneHref = buildTelHref(contactPhone);
       const centerNameKey = normalizedFooterText(centerName);
       const rawTag = cleanFooterText(footerData.tag);
       const rawText = cleanFooterText(footerData.text);
-      const contactNote = rawContactNote
-        && normalizedFooterText(rawContactNote) !== centerNameKey
-        && !isFooterBrandOnly(rawContactNote)
-        ? rawContactNote
-        : '';
+      const contactNote = cleanContactNote(options.contactNote, centerName);
       const contactNoteKey = normalizedFooterText(contactNote);
       const tag = rawTag
         && normalizedFooterText(rawTag) !== centerNameKey
@@ -2394,7 +2446,10 @@
       const contactParts = [];
       if (address) contactParts.push(`<span>${esc(address)}</span>`);
       if (contactPhone) {
-        contactParts.push(`<span class="forest-footer-phone">${address ? '<span class="forest-footer-separator" aria-hidden="true">·</span>' : ''}<span>${esc(contactPhone)}</span></span>`);
+        const phoneContent = contactPhoneHref
+          ? `<a href="${esc(contactPhoneHref)}" aria-label="${esc(contactPhone + '로 전화하기')}">${phoneLinkIcon()}<span>${esc(contactPhone)}</span></a>`
+          : `<span>${esc(contactPhone)}</span>`;
+        contactParts.push(`<span class="forest-footer-phone">${address ? '<span class="forest-footer-separator" aria-hidden="true">·</span>' : ''}${phoneContent}</span>`);
       }
       if (contactParts.length) blocks.push(`<address class="forest-footer-meta">${contactParts.join('')}</address>`);
       if (contactNote) blocks.push(`<p class="forest-footer-contact-note">${escWithBr(contactNote)}</p>`);
@@ -3232,7 +3287,11 @@
       document.title = `원이야 - ${centerName}`;
 
       renderInfoSections(data, c, esc, detailQuery, routeItems, busRoutes);
-      setupAskPanel({ items: faqItems }, canConsult);
+      setupAskPanel({ items: faqItems }, canConsult, {
+        centerName: c.name,
+        contactPhone: c.contactPhone,
+        contactNote: c.contactNote
+      });
       initConsultationForm(client, c.id, canConsult);
       initInteractions(photoLoader);
     })();
@@ -3495,18 +3554,29 @@
       });
     }
 
-    function setupAskPanel(faqs, canConsult){
+    function setupAskPanel(faqs, canConsult, contactDetails){
       var fab = document.getElementById('askFab');
       var overlay = document.getElementById('askModal');
       var closeBtn = document.getElementById('askModalClose');
       var list = document.getElementById('askFaqList');
       var empty = document.getElementById('askFaqEmpty');
+      var contact = document.getElementById('askContact');
       var consultBtn = document.getElementById('askConsultBtn');
-      if (!fab || !overlay || !list || !consultBtn) return;
+      if (!fab || !overlay || !list || !contact || !consultBtn) return;
       function askEsc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(ch){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]; }); }
       function askWithBr(s){ return askEsc(s).replace(/\n/g,'<br>'); }
       var items = (faqs && faqs.items) || [];
-      if (!items.length && !canConsult){
+      var centerName = cleanFooterText(contactDetails && contactDetails.centerName);
+      var contactPhone = cleanFooterText(contactDetails && contactDetails.contactPhone);
+      var contactPhoneHref = buildTelHref(contactPhone);
+      var contactNote = cleanContactNote(contactDetails && contactDetails.contactNote, centerName);
+      var hasContact = Boolean(contactPhoneHref);
+      if (hasContact) {
+        var contactLabel = items.length ? '자주 묻는 질문과 전화 문의' : '전화 문의';
+        fab.setAttribute('aria-label', contactLabel + ' 열기');
+        fab.setAttribute('title', contactLabel);
+      }
+      if (!items.length && !canConsult && !hasContact){
         fab.hidden = true;
         return;
       }
@@ -3522,7 +3592,21 @@
           + '<div class="ask-faq-a"><p>' + askWithBr(it.a) + '</p></div>'
           + '</div>';
       }).join('');
-      if (empty) empty.hidden = items.length > 0;
+      if (empty) empty.hidden = items.length > 0 || hasContact;
+      if (hasContact) {
+        var contactParts = ['<p class="ask-contact-label">전화 문의</p>'];
+        if (contactPhone) {
+          contactParts.push(contactPhoneHref
+            ? '<a class="ask-contact-phone" href="' + askEsc(contactPhoneHref) + '" aria-label="' + askEsc(contactPhone + '로 전화하기') + '">' + phoneLinkIcon() + '<span>' + askEsc(contactPhone) + '</span></a>'
+            : '<span class="ask-contact-phone">' + askEsc(contactPhone) + '</span>');
+        }
+        if (contactNote) contactParts.push('<p class="ask-contact-note">' + askWithBr(contactNote) + '</p>');
+        contact.innerHTML = contactParts.join('');
+        contact.hidden = false;
+      } else {
+        contact.innerHTML = '';
+        contact.hidden = true;
+      }
       function open(){ overlay.classList.add('open'); overlay.setAttribute('aria-hidden','false'); }
       function close(){ overlay.classList.remove('open'); overlay.setAttribute('aria-hidden','true'); }
       fab.addEventListener('click', open);
