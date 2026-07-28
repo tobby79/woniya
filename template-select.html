@@ -274,6 +274,10 @@
     { key:'carnival', number:3, name:'놀이동산', desc:'알록달록, 책 넘기기 애니메이션',     file:'template-carnival.html', tags:['활동적','선명함'] },
     { key:'gallery',  number:4, name:'갤러리',   desc:'차콜 그레이, 가로 슬라이드',         file:'template-gallery.html', tags:['정돈감','사진 중심'] }
   ];
+  var PUBLIC_SAMPLE_SLUGS = {
+    sunshine: 'sample-sunshine',
+    forest: 'sample-forest'
+  };
 
   var params   = new URLSearchParams(window.location.search);
   var slug     = params.get('slug');
@@ -300,7 +304,11 @@
 
   function previewUrl(t){
     if (authMode && !slug) return '';
-    return slug ? t.file + '?slug=' + encodeURIComponent(slug) : t.file + '?preview=' + encodeURIComponent(t.key);
+    if (slug) return t.file + '?slug=' + encodeURIComponent(slug);
+    var sampleSlug = PUBLIC_SAMPLE_SLUGS[t.key];
+    return sampleSlug
+      ? t.file + '?slug=' + encodeURIComponent(sampleSlug)
+      : t.file + '?preview=' + encodeURIComponent(t.key);
   }
 
   function publicUrl(t){
