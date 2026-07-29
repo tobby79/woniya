@@ -585,6 +585,15 @@
               <textarea id="f-intro" placeholder="우리 원을 한 줄로 소개해주세요"></textarea>
             </div>
             <div class="field">
+              <label for="f-intro-video-url">소개영상 링크</label>
+              <input type="text" id="f-intro-video-url" inputmode="url" autocomplete="url" spellcheck="false" placeholder="YouTube 또는 Vimeo 영상 링크">
+              <div class="upload-caption">YouTube 일반·공유·Shorts 주소와 Vimeo 일반 주소를 지원합니다.</div>
+            </div>
+            <div class="field">
+              <label for="f-intro-video-title">소개영상 제목</label>
+              <input type="text" id="f-intro-video-title" maxlength="100" placeholder="예: 우리 원을 소개합니다">
+            </div>
+            <div class="field">
               <label for="f-address">주소</label>
               <input type="text" id="f-address">
             </div>
@@ -943,6 +952,73 @@
   function alertAdminError(scope, error, prefix){
     logAdminError(scope, error);
     alert((prefix || '오류') + ': ' + errorMessage(error));
+  }
+
+  function normalizeIntroVideoUrl(rawValue){
+    var raw = typeof rawValue === 'string' ? rawValue.trim() : '';
+    var emptyResult = { valid:true, empty:true, provider:'', videoId:'', canonicalUrl:null };
+    var invalidResult = { valid:false, empty:false, provider:'', videoId:'', canonicalUrl:null };
+    if (!raw) return emptyResult;
+
+    var candidate = /^[a-z][a-z0-9+.-]*:\/\//i.test(raw) ? raw : 'https://' + raw;
+    var parsed;
+    try {
+      parsed = new URL(candidate);
+    } catch (err) {
+      return invalidResult;
+    }
+
+    if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') return invalidResult;
+
+    var host = parsed.hostname.toLowerCase();
+    var parts = parsed.pathname.split('/').filter(function(part){ return part; });
+    var videoId = '';
+    var youtubeHosts = ['youtube.com', 'www.youtube.com', 'm.youtube.com'];
+    var noCookieHosts = ['youtube-nocookie.com', 'www.youtube-nocookie.com'];
+
+    if (host === 'youtu.be') {
+      videoId = parts[0] || '';
+    } else if (youtubeHosts.indexOf(host) !== -1) {
+      if (parts[0] === 'watch') {
+        videoId = parsed.searchParams.get('v') || '';
+      } else if (parts[0] === 'shorts' || parts[0] === 'embed') {
+        videoId = parts[1] || '';
+      }
+    } else if (noCookieHosts.indexOf(host) !== -1 && parts[0] === 'embed') {
+      videoId = parts[1] || '';
+    }
+
+    if (/^[A-Za-z0-9_-]{11}$/.test(videoId)) {
+      return {
+        valid: true,
+        empty: false,
+        provider: 'youtube',
+        videoId: videoId,
+        canonicalUrl: 'https://www.youtube.com/watch?v=' + videoId
+      };
+    }
+
+    videoId = '';
+    if ((host === 'vimeo.com' || host === 'www.vimeo.com') && parts.length === 1) {
+      videoId = parts[0] || '';
+    } else if (host === 'player.vimeo.com'
+      && parts.length === 2
+      && parts[0] === 'video'
+      && !parsed.searchParams.has('h')) {
+      videoId = parts[1] || '';
+    }
+
+    if (/^\d+$/.test(videoId)) {
+      return {
+        valid: true,
+        empty: false,
+        provider: 'vimeo',
+        videoId: videoId,
+        canonicalUrl: 'https://vimeo.com/' + videoId
+      };
+    }
+
+    return invalidResult;
   }
 
   function showUploadError(scope, error, prefix){
@@ -5530,6 +5606,8 @@
 
       document.getElementById('f-name').value    = nextCenter.name || '';
       document.getElementById('f-intro').value   = nextCenter.intro || '';
+      document.getElementById('f-intro-video-url').value = typeof nextCenter.intro_video_url === 'string' ? nextCenter.intro_video_url : '';
+      document.getElementById('f-intro-video-title').value = typeof nextCenter.intro_video_title === 'string' ? nextCenter.intro_video_title : '';
       document.getElementById('f-address').value = nextCenter.address || '';
       document.getElementById('f-contact-phone').value = typeof nextCenter.contact_phone === 'string' ? nextCenter.contact_phone : '';
       document.getElementById('f-contact-note').value = typeof nextCenter.contact_note === 'string' ? nextCenter.contact_note : '';
@@ -5774,6 +5852,17 @@
   saveForm.addEventListener('submit', async function(e){
     e.preventDefault();
     if (!currentCenter) return;
+    var introVideoUrlInput = document.getElementById('f-intro-video-url');
+    var introVideoTitleInput = document.getElementById('f-intro-video-title');
+    var introVideo = normalizeIntroVideoUrl(introVideoUrlInput.value);
+    if (!introVideo.valid) {
+      saveStatus.className = 'msg error';
+      saveStatus.textContent = '올바른 YouTube 또는 Vimeo 영상 링크를 입력해주세요.';
+      introVideoUrlInput.focus();
+      return;
+    }
+    var introVideoUrl = introVideo.empty ? null : introVideo.canonicalUrl;
+    var introVideoTitle = introVideo.empty ? null : (introVideoTitleInput.value.trim().slice(0, 100) || null);
     saveStatus.textContent = '저장 중...';
     var existingFacilities = currentCenter.facilities || {};
     var updatedFacilities = Object.assign({}, existingFacilities, {
@@ -5784,6 +5873,8 @@
     var basicPayload = {
       name:             document.getElementById('f-name').value,
       intro:            document.getElementById('f-intro').value,
+      intro_video_url:  introVideoUrl,
+      intro_video_title:introVideoTitle,
       address:          document.getElementById('f-address').value,
       contact_phone:    document.getElementById('f-contact-phone').value.trim() || null,
       contact_note:     document.getElementById('f-contact-note').value.trim().slice(0, 300) || null,
@@ -5796,6 +5887,8 @@
     if (!res.error) {
       currentCenter.name = document.getElementById('f-name').value;
       currentCenter.intro = document.getElementById('f-intro').value;
+      currentCenter.intro_video_url = basicPayload.intro_video_url;
+      currentCenter.intro_video_title = basicPayload.intro_video_title;
       currentCenter.address = document.getElementById('f-address').value;
       currentCenter.contact_phone = basicPayload.contact_phone;
       currentCenter.contact_note = basicPayload.contact_note;
