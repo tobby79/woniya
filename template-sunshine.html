@@ -1710,33 +1710,200 @@ function mapRowToData(row, options = {}){
 
   let isAdminPreviewMode = false;
 
+  const signedUrlCache = new Map();
+  const signedUrlPending = new Map();
+  const SIGNED_CACHE_STORAGE_KEY = 'woniya_signed_cache_v1';
+  const SIGNED_CACHE_VERSION = 1;
+  const SIGNED_CACHE_BUCKET = 'center-images';
+  const SIGNED_URL_TTL_MS = 3600 * 1000;
+  const SIGNED_URL_REUSE_BUFFER_MS = 5 * 60 * 1000;
+  const SIGNED_CACHE_MAX_ENTRIES = 120;
+  const signedCacheNamespace = (function(){
+    try {
+      return new URL(cfg.url).host.toLowerCase();
+    } catch (e) {
+      return String(cfg.url || '').trim().toLowerCase()
+        .replace(/^https?:\/\//, '').split('/')[0] || 'unknown-project';
+    }
+  })();
+  let signedSessionCacheSnapshot = null;
+
+  function normalizePhotoPath(path){
+    return String(path || '').trim();
+  }
+
+  function isDirectPhotoUrl(path){
+    return /^(?:https?:\/\/|data:|blob:)/i.test(path);
+  }
+
+  function emptySignedSessionCache(){
+    return { version:SIGNED_CACHE_VERSION, entries:Object.create(null) };
+  }
+
+  function signedSessionEntryKey(path){
+    return signedCacheNamespace + ':' + SIGNED_CACHE_BUCKET + ':' + path;
+  }
+
+  function cleanSignedSessionEntries(entries, now){
+    const cleaned = Object.create(null);
+    if (!entries || typeof entries !== 'object' || Array.isArray(entries)) return cleaned;
+    const bucketMarker = ':' + SIGNED_CACHE_BUCKET + ':';
+    Object.keys(entries).forEach(function(key){
+      const entry = entries[key];
+      if (
+        key.indexOf(bucketMarker) < 0 ||
+        !entry ||
+        typeof entry !== 'object' ||
+        typeof entry.url !== 'string' ||
+        !entry.url.trim() ||
+        typeof entry.expiresAt !== 'number' ||
+        !Number.isFinite(entry.expiresAt) ||
+        !(now < entry.expiresAt - SIGNED_URL_REUSE_BUFFER_MS)
+      ) return;
+      cleaned[key] = { url:entry.url, expiresAt:entry.expiresAt };
+    });
+    const keys = Object.keys(cleaned).sort(function(a, b){
+      return cleaned[a].expiresAt - cleaned[b].expiresAt;
+    });
+    while (keys.length > SIGNED_CACHE_MAX_ENTRIES) {
+      delete cleaned[keys.shift()];
+    }
+    return cleaned;
+  }
+
+  function writeSignedSessionCache(cache){
+    signedSessionCacheSnapshot = cache;
+    try {
+      sessionStorage.setItem(SIGNED_CACHE_STORAGE_KEY, JSON.stringify(cache));
+    } catch (e) {}
+  }
+
+  function readSignedSessionCache(){
+    if (signedSessionCacheSnapshot) return signedSessionCacheSnapshot;
+    const empty = emptySignedSessionCache();
+    try {
+      const raw = sessionStorage.getItem(SIGNED_CACHE_STORAGE_KEY);
+      if (!raw) {
+        signedSessionCacheSnapshot = empty;
+        return empty;
+      }
+      const parsed = JSON.parse(raw);
+      if (
+        !parsed ||
+        typeof parsed !== 'object' ||
+        parsed.version !== SIGNED_CACHE_VERSION ||
+        !parsed.entries ||
+        typeof parsed.entries !== 'object' ||
+        Array.isArray(parsed.entries)
+      ) {
+        writeSignedSessionCache(empty);
+        return empty;
+      }
+      const cleaned = {
+        version:SIGNED_CACHE_VERSION,
+        entries:cleanSignedSessionEntries(parsed.entries, Date.now())
+      };
+      writeSignedSessionCache(cleaned);
+      return cleaned;
+    } catch (e) {
+      signedSessionCacheSnapshot = empty;
+      return empty;
+    }
+  }
+
   // Storage 경로를 한 번의 batch 서명 요청으로 변환
   async function signPaths(paths){
-    const unique = Array.from(new Set(paths.filter(function(path){
-      const value = String(path || '').trim();
-      return value && !/^(?:https?:\/\/|data:|blob:)/i.test(value);
-    }).map(function(path){ return String(path).trim(); })));
-    const signedMap = new Map();
-    if (unique.length){
-      const res = await fetch(cfg.url + '/storage/v1/object/sign/center-images', {
-        method: 'POST',
-        headers: {
-          apikey: cfg.anonKey,
-          Authorization: 'Bearer ' + cfg.anonKey,
-          'content-type': 'application/json'
-        },
-        body: JSON.stringify({ paths: unique, expiresIn: 3600 })
+    const unique = Array.from(new Set((paths || []).map(normalizePhotoPath).filter(function(path){
+      return path && !isDirectPhotoUrl(path);
+    })));
+    const resolvedMap = new Map();
+    const cacheMisses = [];
+    const sessionCache = readSignedSessionCache();
+
+    unique.forEach(function(path){
+      if (signedUrlCache.has(path)) {
+        resolvedMap.set(path, signedUrlCache.get(path));
+        return;
+      }
+      if (signedUrlPending.has(path)) return;
+      const sessionEntry = sessionCache.entries[signedSessionEntryKey(path)];
+      if (sessionEntry) {
+        signedUrlCache.set(path, sessionEntry.url);
+        resolvedMap.set(path, sessionEntry.url);
+        return;
+      }
+      cacheMisses.push(path);
+    });
+
+    const pendingResolvers = new Map();
+    cacheMisses.forEach(function(path){
+      let settle;
+      const pending = new Promise(function(resolve){ settle = resolve; });
+      signedUrlPending.set(path, pending);
+      pendingResolvers.set(path, settle);
+    });
+
+    if (cacheMisses.length){
+      const signedMap = new Map();
+      try {
+        const res = await fetch(cfg.url + '/storage/v1/object/sign/center-images', {
+          method: 'POST',
+          headers: {
+            apikey: cfg.anonKey,
+            Authorization: 'Bearer ' + cfg.anonKey,
+            'content-type': 'application/json'
+          },
+          body: JSON.stringify({ paths: cacheMisses, expiresIn: 3600 })
+        });
+        if (res.ok) {
+          const signed = await res.json();
+          (Array.isArray(signed) ? signed : []).forEach(function(item, index){
+            const path = normalizePhotoPath(item && (item.path || cacheMisses[index]));
+            const rawSignedUrl = normalizePhotoPath(item && (item.signedURL || item.signedUrl));
+            if (!path || !rawSignedUrl || !pendingResolvers.has(path)) return;
+            const signedUrl = rawSignedUrl.charAt(0) === '/'
+              ? cfg.url + (rawSignedUrl.indexOf('/storage/v1/') === 0 ? '' : '/storage/v1') + rawSignedUrl
+              : rawSignedUrl;
+            signedMap.set(path, signedUrl);
+          });
+        }
+      } catch (e) {}
+
+      const expiresAt = Date.now() + SIGNED_URL_TTL_MS;
+      let hasNewSessionEntry = false;
+      cacheMisses.forEach(function(path){
+        const signedUrl = signedMap.get(path) || '';
+        signedUrlCache.set(path, signedUrl);
+        signedUrlPending.delete(path);
+        pendingResolvers.get(path)(signedUrl);
+        resolvedMap.set(path, signedUrl);
+        if (!signedUrl) return;
+        sessionCache.entries[signedSessionEntryKey(path)] = {
+          url:signedUrl,
+          expiresAt:expiresAt
+        };
+        hasNewSessionEntry = true;
       });
-      if (!res.ok) throw new Error('Failed to sign center images');
-      const signed = await res.json();
-      (signed || []).forEach(function(item, index){
-        const signedUrl = item.signedURL ? cfg.url + '/storage/v1' + item.signedURL : (item.signedUrl || unique[index]);
-        signedMap.set(item.path || unique[index], signedUrl);
-      });
+      if (hasNewSessionEntry) {
+        sessionCache.entries = cleanSignedSessionEntries(sessionCache.entries, Date.now());
+        writeSignedSessionCache(sessionCache);
+      }
     }
+
+    await Promise.all(unique.map(async function(path){
+      if (resolvedMap.has(path)) return;
+      if (signedUrlCache.has(path)) {
+        resolvedMap.set(path, signedUrlCache.get(path));
+        return;
+      }
+      const pending = signedUrlPending.get(path);
+      resolvedMap.set(path, pending ? await pending : '');
+    }));
+
     return function(path){
-      const value = String(path || '').trim();
-      return signedMap.get(value) || value;
+      const value = normalizePhotoPath(path);
+      if (!value || isDirectPhotoUrl(value)) return value;
+      return resolvedMap.get(value) || '';
     };
   }
 
