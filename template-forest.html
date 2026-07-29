@@ -1586,6 +1586,22 @@
   </div>
 
   <!-- 라이트박스 -->
+  <div class="director-greeting-overlay class-mini-preview-modal" id="classMiniPreviewModal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="classMiniPreviewTitle" aria-describedby="classMiniPreviewDescription">
+    <div class="director-greeting-panel class-mini-preview-panel" role="document" tabindex="-1">
+      <button type="button" class="director-greeting-close" id="classMiniPreviewClose" aria-label="우리 반 미니홈피 소개 닫기">×</button>
+      <div class="director-greeting-scroll class-mini-preview-scroll">
+        <h2 class="director-greeting-title" id="classMiniPreviewTitle">우리 반 미니홈피</h2>
+        <div class="class-mini-preview-copy" id="classMiniPreviewDescription">
+          <p>선생님이 사진과 알림을 전하고,<br>초대받은 학부모가 우리 반 소식을<br>안전하게 확인하는 공간이에요.</p>
+          <p>실제 원에서는 미니홈피 서비스를 신청한 뒤 <span class="class-mini-preview-nowrap">이용할 수 있습니다.</span></p>
+        </div>
+        <div class="class-mini-preview-actions">
+          <button type="button" class="class-mini-preview-confirm" id="classMiniPreviewConfirm">확인</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div class="lightbox-overlay" id="lightbox" role="dialog" aria-modal="true" aria-hidden="true" aria-label="사진 크게 보기">
     <div class="lightbox-stage">
       <button type="button" class="lightbox-close" id="lightboxClose" aria-label="사진 크게 보기 닫기">×</button>
@@ -2190,6 +2206,16 @@
     .director-greeting-motto{margin-top:20px;text-align:center;color:var(--pine-soft);font:700 1.05rem/1.7 var(--display)}
     .director-greeting-values{display:flex;justify-content:center;flex-wrap:wrap;gap:8px;margin-top:12px}
     .director-greeting-value{padding:6px 11px;background:rgba(118,147,101,.14);border-radius:5px 14px 5px 14px;color:var(--pine-soft);font-size:.8rem;font-weight:700}
+    .class-mini-preview-panel{width:min(100%,560px)}
+    .class-mini-preview-scroll{padding:clamp(38px,7vw,58px)}
+    .class-mini-preview-copy{display:grid;gap:16px;color:var(--ink-soft);font-size:1rem;line-height:1.85;text-align:center;word-break:keep-all;overflow-wrap:normal}
+    .class-mini-preview-nowrap{white-space:nowrap}
+    .class-mini-preview-actions{display:flex;justify-content:center;margin-top:30px}
+    .class-mini-preview-confirm{
+      min-width:132px;padding:12px 28px;border:0;border-radius:5px 18px 5px 18px;
+      background:var(--moss);color:#fff;font:700 .96rem/1.4 var(--body);cursor:pointer;
+      box-shadow:0 14px 26px -18px rgba(32,56,44,.72)
+    }
     .trail-start .sign{margin-top:18px}
     #greeting .section-head,#teachersSec .section-head{border-bottom:0;padding-bottom:0;margin-bottom:clamp(28px,3vw,36px)}
 
@@ -3225,6 +3251,7 @@
       const $ = (id) => document.getElementById(id);
       const c = data.center;
       const finaleData = data.finale;
+      const isForestTemplatePreview = isPreviewMode && previewTemplateId === 'forest';
       const canConsult = !isPreviewMode && !isReviewMode && !isAdminPreviewMode &&
         hasVisibleText(c.id) && cleanText(c.status) === 'published';
       const facilityItems = cleanItems(c.facilities && c.facilities.items, ['name','desc','photo_url']);
@@ -3267,7 +3294,11 @@
         if (programItems.length) extra.push({ href:'#programSec', label:'교육프로그램' });
         if (hasAdmissionData) extra.push({ href: 'admissions.html' + qs, label: '입학안내' });
         if (hasDirectionsData) extra.push({ href: 'directions.html' + qs, label: '오시는 길' });
-        extra.push({ href: 'parent.html', label: '우리 반 미니홈피' });
+        extra.push({
+          href: 'parent.html',
+          label: '우리 반 미니홈피',
+          action: isForestTemplatePreview ? 'open-class-mini-preview' : ''
+        });
         if (extra.length){
           var m = c.menu.slice();
           function menuHrefKey(href){
@@ -3305,12 +3336,12 @@
       if (previewBannerEl && topbarActionsEl && topbarHomeEl) {
         topbarActionsEl.insertBefore(previewBannerEl, topbarHomeEl);
       }
-      $('menuPanel').innerHTML = (c.menu || []).map(m => `<a href="${esc(m.href)}"${m.cta ? ' class="menu-cta"' : ''}${m.id ? ' id="'+m.id+'"' : ''}>${esc(m.label)}</a>`).join('');
+      $('menuPanel').innerHTML = (c.menu || []).map(m => `<a href="${esc(m.href)}"${m.cta ? ' class="menu-cta"' : ''}${m.id ? ' id="'+m.id+'"' : ''}${m.action ? ' data-menu-action="'+esc(m.action)+'"' : ''}>${esc(m.label)}</a>`).join('');
 
       const h = c.hero || {};
       const leafMenu = (c.menu || []).filter(m => !m.cta)
         .slice(0, 6)
-        .map(m => `<a class="leaf-btn" href="${esc(m.href)}">${esc(m.label)}</a>`).join('');
+        .map(m => `<a class="leaf-btn" href="${esc(m.href)}"${m.action ? ' data-menu-action="'+esc(m.action)+'"' : ''}>${esc(m.label)}</a>`).join('');
       const heroPhoto = cleanText(data.heroPhoto);
       $('hero').classList.toggle('hero-no-photo', !heroPhoto);
       $('hero').innerHTML = `
@@ -3607,10 +3638,10 @@
         contactNote: c.contactNote
       });
       initConsultationForm(client, c.id, canConsult);
-      initInteractions(photoLoader);
+      initInteractions(photoLoader, isForestTemplatePreview);
     })();
 
-    function initInteractions(photoLoader) {
+    function initInteractions(photoLoader, isForestTemplatePreview) {
       var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
       initImageFallbacks();
       var deferredImages = initDeferredImages(photoLoader);
@@ -3645,6 +3676,86 @@
         closeBtn.addEventListener('click', close);
         overlay.addEventListener('click', function(e){ if(e.target===overlay) close(); });
         document.addEventListener('keydown', function(e){ if(e.key==='Escape') close(); });
+      })();
+
+      (function(){
+        var modal = document.getElementById('classMiniPreviewModal');
+        var panel = modal && modal.querySelector('.class-mini-preview-panel');
+        var closeBtn = document.getElementById('classMiniPreviewClose');
+        var confirmBtn = document.getElementById('classMiniPreviewConfirm');
+        var triggers = document.querySelectorAll('[data-menu-action="open-class-mini-preview"]');
+        var returnFocus = null;
+        var returnFocusWasMenuItem = false;
+        var previousBodyOverflow = '';
+        if (!isForestTemplatePreview || !modal || !panel || !closeBtn || !confirmBtn || !triggers.length) return;
+
+        function openClassMiniPreview(trigger){
+          if (modal.classList.contains('open')) return;
+          var directorGreetingModal = document.getElementById('directorGreetingModal');
+          if (directorGreetingModal && directorGreetingModal.classList.contains('open')) return;
+          returnFocus = trigger;
+          var menuPanel = document.getElementById('menuPanel');
+          returnFocusWasMenuItem = !!(menuPanel && menuPanel.contains(trigger));
+          previousBodyOverflow = document.body.style.overflow;
+          document.body.style.overflow = 'hidden';
+          modal.classList.add('open');
+          modal.setAttribute('aria-hidden','false');
+          closeBtn.focus();
+        }
+
+        function closeClassMiniPreview(){
+          if (!modal.classList.contains('open')) return;
+          modal.classList.remove('open');
+          modal.setAttribute('aria-hidden','true');
+          document.body.style.overflow = previousBodyOverflow;
+          if (returnFocusWasMenuItem) {
+            var menuBtn = document.getElementById('menuBtn');
+            if (menuBtn && menuBtn.isConnected) menuBtn.focus();
+            return;
+          }
+          if (returnFocus && returnFocus.isConnected) returnFocus.focus();
+        }
+
+        triggers.forEach(function(trigger){
+          trigger.addEventListener('click', function(e){
+            e.preventDefault();
+            var menuPanel = document.getElementById('menuPanel');
+            if (menuPanel && menuPanel.contains(trigger)) {
+              window.setTimeout(function(){ openClassMiniPreview(trigger); }, 0);
+              return;
+            }
+            openClassMiniPreview(trigger);
+          });
+        });
+        closeBtn.addEventListener('click', closeClassMiniPreview);
+        confirmBtn.addEventListener('click', closeClassMiniPreview);
+        modal.addEventListener('click', function(e){
+          if (e.target === modal) closeClassMiniPreview();
+        });
+        document.addEventListener('keydown', function(e){
+          if (!modal.classList.contains('open')) return;
+          if (e.key === 'Escape') {
+            e.preventDefault();
+            closeClassMiniPreview();
+            return;
+          }
+          if (e.key !== 'Tab') return;
+          var focusable = panel.querySelectorAll('button:not([disabled]),a[href],[tabindex]:not([tabindex="-1"])');
+          if (!focusable.length) {
+            e.preventDefault();
+            panel.focus();
+            return;
+          }
+          var first = focusable[0];
+          var last = focusable[focusable.length - 1];
+          if (e.shiftKey && document.activeElement === first) {
+            e.preventDefault();
+            last.focus();
+          } else if (!e.shiftKey && document.activeElement === last) {
+            e.preventDefault();
+            first.focus();
+          }
+        });
       })();
 
       // ── '우리 반' 버튼 → ourclass.html ──
