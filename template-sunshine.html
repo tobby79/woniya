@@ -1123,6 +1123,13 @@
   .ask-faq-a{max-height:0;overflow:hidden;transition:max-height .3s ease}
   .ask-faq-a p{padding:0 18px 16px;color:var(--ink-soft);font-size:var(--fs-caption);line-height:1.7}
   .ask-empty{color:var(--ink-soft);font-size:var(--fs-caption);line-height:1.65;margin-bottom:16px}
+  .ask-contact-card{max-width:100%;margin:18px 0 14px;padding:15px 16px;background:rgba(255,241,224,.72);border:1px solid rgba(224,120,90,.24);border-radius:16px;text-align:left}
+  .ask-contact-label{margin:0 0 4px;color:var(--ink-soft);font-size:.76rem;font-weight:700}
+  .ask-contact-phone{display:inline-flex;align-items:center;gap:7px;min-height:36px;max-width:100%;color:var(--coral-deep);font-size:1.02rem;font-weight:800;text-decoration:underline;text-decoration-color:rgba(224,120,90,.35);text-underline-offset:3px;white-space:nowrap}
+  .ask-contact-phone:hover{color:var(--ink);text-decoration-color:currentColor}
+  .ask-contact-phone:focus-visible{outline:3px solid var(--coral);outline-offset:3px;border-radius:6px}
+  .ask-contact-phone svg{flex:none;width:18px;height:18px;color:currentColor}
+  .ask-contact-note{margin:5px 0 0;color:var(--ink-soft);font-size:.82rem;line-height:1.65;word-break:keep-all;overflow-wrap:anywhere}
   .ask-consult-btn{width:100%;border:none;border-radius:999px;background:var(--coral,var(--leaf,var(--red,var(--char,var(--ink)))));color:#fff;font-family:var(--body);font-weight:700;font-size:1rem;padding:15px 18px;cursor:pointer;box-shadow:0 14px 28px -14px rgba(0,0,0,.5)}
 
   /* ── 입학안내 / 오시는 길 (M1 추가, sunshine 톤 재정비) —
@@ -2376,7 +2383,7 @@ function mapRowToData(row, options = {}){
   }
   initInteractions();
   renderInfoSections(data, c, esc, detailQuery, hasAdmissionData, hasDirectionsData);
-  setupAskPanel(data.faqs, isPreviewMode, isReviewMode, PREVIEW_MESSAGE, REVIEW_MESSAGE);
+  setupAskPanel(data.faqs, c.contactPhone, c.contactNote, isPreviewMode, isReviewMode, PREVIEW_MESSAGE, REVIEW_MESSAGE);
   initConsultationForm(client, c.id, isPreviewMode, isReviewMode, PREVIEW_MESSAGE, REVIEW_MESSAGE);
 })();
 
@@ -2813,7 +2820,7 @@ function initInteractions(){
   });
 }
 
-function setupAskPanel(faqs, isPreviewMode, isReviewMode, PREVIEW_MESSAGE, REVIEW_MESSAGE){
+function setupAskPanel(faqs, contactPhone, contactNote, isPreviewMode, isReviewMode, PREVIEW_MESSAGE, REVIEW_MESSAGE){
   var fab = document.getElementById('askFab');
   var overlay = document.getElementById('askModal');
   var closeBtn = document.getElementById('askModalClose');
@@ -2831,6 +2838,18 @@ function setupAskPanel(faqs, isPreviewMode, isReviewMode, PREVIEW_MESSAGE, REVIE
       + '</div>';
   }).join('');
   if (empty) empty.hidden = items.length > 0;
+  var contactPhoneText = cleanDisplayText(contactPhone);
+  var contactPhoneHref = buildTelHref(contactPhoneText);
+  if (contactPhoneHref) {
+    var contactEl = document.createElement('div');
+    var contactNoteText = cleanDisplayText(contactNote);
+    contactEl.className = 'ask-contact-card';
+    contactEl.innerHTML = '<div class="ask-contact-label">전화 문의</div>'
+      + '<a class="ask-contact-phone" href="' + askEsc(contactPhoneHref) + '" aria-label="' + askEsc(contactPhoneText + '로 전화 연결') + '">'
+      + sunshinePhoneIcon() + '<span>' + askEsc(contactPhoneText) + '</span></a>'
+      + (contactNoteText ? '<p class="ask-contact-note">' + askWithBr(contactNoteText) + '</p>' : '');
+    consultBtn.parentNode.insertBefore(contactEl, consultBtn);
+  }
   function open(){ overlay.classList.add('open'); overlay.setAttribute('aria-hidden','false'); }
   function close(){ overlay.classList.remove('open'); overlay.setAttribute('aria-hidden','true'); }
   fab.addEventListener('click', open);
