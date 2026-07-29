@@ -374,7 +374,6 @@
     /* ── 나뭇잎 메뉴 버튼 (forest 고유) ── */
     .leaf-menu{display:flex;flex-wrap:wrap;justify-content:center;gap:12px;margin-top:34px;max-width:430px;margin-left:auto;margin-right:auto}
     .leaf-btn{font-family:var(--body);font-weight:700;font-size:.92rem;color:#fff;text-decoration:none;padding:13px 22px;background:var(--leaf);border-radius:2px 20px 2px 20px;box-shadow:0 8px 18px -8px rgba(74,107,58,.65);transition:transform .2s ease,background .2s ease}
-    .leaf-btn:hover{transform:translateY(-2px);background:var(--moss)}
 
     /* ── 타임라인 시작: 원장 표지판 ── */
     .trail-start {
@@ -1758,7 +1757,7 @@
     .hero{
       min-height:auto;
       padding-top:clamp(88px,7vw,108px);
-      padding-bottom:clamp(52px,5vw,72px);
+      padding-bottom:clamp(76px,7.35vw,106px);
       display:block;
       text-align:left;
       position:relative;
@@ -1837,20 +1836,78 @@
     .hero-no-photo .leaf-menu{justify-content:center;margin-left:auto;margin-right:auto}
     .leaf-btn{
       padding:12px 18px;
-      border:1px solid rgba(49,82,62,.2);
+      position:relative;
+      isolation:isolate;
+      border:1px solid rgba(74,107,58,.32);
       border-radius:6px 18px 6px 18px;
       color:var(--pine);
-      background:rgba(255,255,255,.66);
-      box-shadow:none;
+      background:linear-gradient(145deg,rgba(255,253,243,.96),rgba(239,235,214,.9));
+      box-shadow:0 10px 20px -16px rgba(49,82,62,.72),inset 0 1px 0 rgba(255,255,255,.82);
+      transform:translateY(0);
+      transition:transform .22s ease,border-color .22s ease,background .22s ease,box-shadow .22s ease,color .22s ease;
     }
-    .leaf-btn:hover{color:#fff}
+    .leaf-btn::before{
+      content:"";
+      position:absolute;
+      inset:1px;
+      z-index:-1;
+      border-radius:inherit;
+      background:linear-gradient(112deg,transparent 12%,rgba(255,255,255,.42) 42%,rgba(232,184,100,.13) 58%,transparent 80%);
+      opacity:.2;
+      transform:translateX(-12%);
+      transition:opacity .22s ease,transform .22s ease;
+      pointer-events:none;
+    }
+    .leaf-btn::after{
+      content:"";
+      position:absolute;
+      top:-7px;
+      right:7px;
+      width:14px;
+      height:8px;
+      z-index:1;
+      border-radius:100% 0 100% 0;
+      background:var(--leaf);
+      box-shadow:0 2px 5px rgba(49,82,62,.2);
+      transform:rotate(-22deg);
+      transform-origin:20% 80%;
+      transition:transform .22s ease,background .22s ease;
+      pointer-events:none;
+    }
+    @media (hover:hover) and (pointer:fine){
+      .leaf-btn:hover{
+        color:var(--pine);
+        border-color:rgba(74,107,58,.62);
+        background:linear-gradient(145deg,rgba(255,254,246,.98),rgba(234,232,205,.94));
+        box-shadow:0 16px 28px -18px rgba(49,82,62,.8),inset 0 1px 0 rgba(255,255,255,.9);
+        transform:translateY(-3px);
+      }
+      .leaf-btn:hover::before{
+        opacity:.58;
+        transform:translateX(10%);
+      }
+      .leaf-btn:hover::after{
+        background:var(--moss);
+        transform:translateY(-2px) rotate(-10deg);
+      }
+    }
+    .leaf-btn:focus-visible{
+      outline:3px solid var(--sun-warm);
+      outline-offset:4px;
+      border-color:var(--moss);
+      box-shadow:0 12px 24px -16px rgba(49,82,62,.78),inset 0 1px 0 rgba(255,255,255,.9);
+    }
+    .leaf-btn:active{
+      transform:translateY(1px);
+      box-shadow:0 5px 12px -10px rgba(49,82,62,.68),inset 0 1px 2px rgba(49,82,62,.08);
+    }
     .hero .enter-cue{align-items:flex-start;margin-top:28px;gap:8px}
     .hero-no-photo .enter-cue{align-items:center}
     .hero .enter-cue .path{height:34px}
 
     .trail-start,.overview,.timeline,.facilities,.explore,.programs,.info-block{
-      padding-top:clamp(52px,6.6vw,82px);
-      padding-bottom:clamp(34px,5vw,64px);
+      padding-top:clamp(76px,9.7vw,120px);
+      padding-bottom:clamp(50px,7.35vw,94px);
     }
     .section-head,.explore-head,.timeline-head{
       text-align:left;
@@ -1889,7 +1946,7 @@
 
     .forest-intro-video-section{
       padding-top:0;
-      padding-bottom:clamp(10px,2vw,24px);
+      padding-bottom:clamp(15px,3vw,35px);
     }
     .forest-intro-video-shell{
       position:relative;
@@ -2342,7 +2399,7 @@
     .lightbox-close{top:0;right:auto;left:calc(100% + 14px);width:42px;height:42px;background:rgba(25,45,33,.9);border:1px solid rgba(255,255,255,.32);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
     .lightbox-cap{position:static;transform:none;width:100%;min-height:48px;padding:13px 20px;background:rgba(25,45,33,.94);border-radius:0 0 22px 38px;color:#fff;line-height:1.55;text-align:center}
 
-    .finale{max-width:1120px;margin-top:70px;margin-bottom:70px;padding:clamp(54px,7vw,84px);position:relative;isolation:isolate;border-radius:0;background:transparent;color:#fff}
+    .finale{max-width:1120px;margin-top:103px;margin-bottom:103px;padding:clamp(54px,7vw,84px);position:relative;isolation:isolate;border-radius:0;background:transparent;color:#fff}
     .finale::before{content:"";position:absolute;inset:-10px -18px;z-index:-1;background:var(--pine);border-radius:46% 54% 39% 61% / 59% 41% 62% 38%;transform:rotate(-.35deg);box-shadow:0 30px 60px -46px rgba(20,39,29,.75)}
     .finale h2{color:#fff}
     .finale p{color:rgba(255,255,255,.74)}
@@ -2428,26 +2485,27 @@
       .stop .card .pic{min-height:0;aspect-ratio:16/10}
       .stop.left .card .body,.stop.right .card .body{text-align:left;align-items:flex-start}
       .stop.left .card.no-photo .body,.stop.right .card.no-photo .body{margin-left:0;margin-right:0}
-      .finale{width:auto;margin:48px 20px;padding:48px 24px}
+      .finale{width:auto;margin:62px 20px;padding:48px 24px}
     }
     @media (max-width:560px){
       #topbar .topbar-actions{gap:9px}
       #topbar .preview-banner{max-width:none;padding:4px 7px;font-size:0}
       #topbar .preview-banner::after{content:"미리보기";font-size:.66rem;line-height:1.2}
-      .hero{padding-top:90px;padding-bottom:58px}
+      .hero{padding-top:90px;padding-bottom:74px}
       .hero-shell{gap:30px}
       .hero h1{font-size:clamp(2.05rem,8.5vw,2.65rem);line-height:1.24;letter-spacing:-.03em}
       .hero p{font-size:.98rem;margin-top:18px}
       .hero-photo{aspect-ratio:1.08/1}
       .leaf-menu{margin-top:26px;gap:8px}
       .leaf-btn{font-size:.84rem;padding:10px 13px}
-      .forest-intro-video-section{padding-bottom:12px}
+      .leaf-btn::after{top:-5px;right:6px;width:12px;height:7px}
+      .forest-intro-video-section{padding-bottom:16px}
       .forest-intro-video-title{margin-bottom:16px;font-size:clamp(1.2rem,5.4vw,1.42rem)}
       .forest-intro-video-frame{padding:10px;border-radius:10px 25px 11px 23px}
       .forest-intro-video-screen{border-radius:7px 18px 8px 16px}
       .forest-intro-video-play{width:64px;height:64px}
       .forest-intro-video-play svg{width:26px;height:26px}
-      .trail-start,.overview,.timeline,.facilities,.explore,.programs,.info-block{padding-top:54px;padding-bottom:34px}
+      .trail-start,.overview,.timeline,.facilities,.explore,.programs,.info-block{padding-top:70px;padding-bottom:44px}
       .facility-grid,.program-grid,.teacher-grid{grid-template-columns:1fr}
       .teacher-card-view{display:grid;grid-template-columns:auto minmax(0,1fr);column-gap:8px;align-items:center;padding:24px 18px}
       .teacher-photo{grid-row:1;margin:0 12px 0 0;width:88px}
@@ -2484,6 +2542,10 @@
     @media (prefers-reduced-motion:reduce){
       .reveal{opacity:1;transform:none}
       .hero .enter-cue .path::after{display:none}
+      .leaf-btn,.leaf-btn::before,.leaf-btn::after{transition:none!important}
+      .leaf-btn:hover,.leaf-btn:active{transform:none}
+      .leaf-btn:hover::before{transform:translateX(-12%)}
+      .leaf-btn:hover::after{transform:rotate(-22deg)}
     }
   </style>
   <script src="supabase-config.js"></script>
