@@ -4489,16 +4489,11 @@
     return window.location.origin + '/teacher-onboarding.html?flow=existing';
   }
 
-  async function updateParentEnrollment(enrollmentId, status){
-    var session = await getCurrentSessionOrThrow();
-    var payload = {
-      status: status,
-      approved_at: new Date().toISOString(),
-      approved_by: session.user.id
-    };
-    var res = await client.from('class_enrollments')
-      .update(payload)
-      .eq('id', enrollmentId);
+  async function updateParentEnrollment(enrollmentId, newStatus){
+    var res = await client.rpc('review_parent_enrollment', {
+      p_enrollment_id: enrollmentId,
+      p_status: newStatus
+    });
     if (res.error) throw res.error;
     await loadClassManagerTab();
   }
