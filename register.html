@@ -99,14 +99,22 @@
   /* ── 페인포인트 카드 ── */
   .pain-cards{display:flex;flex-direction:column;gap:14px}
   .pain-card{background:var(--paper);border-radius:20px;padding:22px 20px;box-shadow:0 16px 36px -22px rgba(150,90,80,.4)}
-  .pain-card .pain-icon{font-size:1.6rem;margin-bottom:10px}
+  .pain-card .pain-label{
+    display:inline-flex;align-items:center;margin-bottom:12px;padding:5px 10px;
+    border:1px solid rgba(154,139,184,.2);border-radius:999px;
+    background:rgba(154,139,184,.12);color:var(--lilac);
+    font-size:.72rem;font-weight:700;letter-spacing:.04em;
+  }
   .pain-card .pain-title{font-family:var(--display);font-size:1.08rem;margin-bottom:6px}
   .pain-card .pain-desc{color:var(--ink-soft);font-size:.9rem;line-height:1.6}
 
   /* ── 가치 제안 카드 ── */
   .value-cards{display:flex;flex-direction:column;gap:14px}
-  .value-card{background:var(--paper);border-radius:20px;padding:22px 20px;box-shadow:0 16px 36px -22px rgba(150,90,80,.4);border-left:4px solid var(--coral-deep)}
-  .value-card .value-title{font-family:var(--display);font-size:1.1rem;margin-bottom:6px}
+  .value-card{
+    padding:24px 22px;border:1px solid rgba(154,139,184,.22);border-radius:20px;
+    background:rgba(255,255,255,.78);box-shadow:0 16px 36px -22px rgba(150,90,80,.4);
+  }
+  .value-card .value-title{font-family:var(--display);font-size:1.1rem;margin-bottom:9px}
   .value-card .value-desc{color:var(--ink-soft);font-size:.9rem;line-height:1.6}
 
   /* ── 제작 순서 카드 ── */
@@ -116,25 +124,17 @@
   .step-card .step-title{font-family:var(--display);font-size:1.1rem;margin-bottom:6px}
   .step-card .step-desc{color:var(--ink-soft);font-size:.9rem;line-height:1.6}
 
-  /* ── 데모 섹션 ── */
-  .demo-block{text-align:center}
-  .demo-block p{color:var(--ink-soft);font-size:.93rem;margin-bottom:22px;line-height:1.7}
-  .btn-outline{
-    display:inline-block;border:1.5px solid var(--coral-deep);color:var(--coral-deep);
-    font-weight:700;font-size:.95rem;padding:13px 30px;border-radius:50px;text-decoration:none;
-    background:rgba(255,255,255,.6);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
-    transition:background .2s ease,color .2s ease;
-  }
-  .btn-outline:hover{background:var(--coral-deep);color:#fff}
-
   /* ── 요금 ── */
   .price-cards{display:flex;flex-direction:column;gap:14px}
   .price-card{background:var(--paper);border-radius:20px;padding:24px 22px;box-shadow:0 16px 36px -22px rgba(150,90,80,.4);text-align:center}
   .price-card .price-label{font-family:var(--hand);font-weight:700;color:var(--coral-deep);font-size:1.05rem;margin-bottom:8px}
   .price-card .price-value{font-family:var(--display);font-size:1.3rem;letter-spacing:-.3px}
-  .price-note{text-align:center;margin-top:18px;color:var(--coral-deep);font-weight:700;font-size:.95rem}
+  .price-card .price-desc{margin-top:10px;color:var(--ink-soft);font-size:.88rem;line-height:1.65}
+  .price-note{text-align:center;margin-top:18px;color:var(--coral-deep);font-weight:700;font-size:.95rem;line-height:1.7}
 
   /* ── 신청 폼 ── */
+  .apply-section > .section-title{text-align:center}
+  .apply-desc{margin:-14px 0 24px;color:var(--ink-soft);font-size:.92rem;line-height:1.7;text-align:center;word-break:keep-all}
   .panel{background:var(--paper);border-radius:24px;padding:26px;box-shadow:0 18px 44px -22px rgba(150,90,80,.4)}
   .field{margin-bottom:16px}
   .field label{display:block;font-size:.86rem;font-weight:700;color:var(--ink-soft);margin-bottom:6px}
@@ -188,7 +188,6 @@
   .pain-section { margin-top: 80px; padding-top: 20px; }
   .value-section { margin-top: 80px; padding-top: 20px; }
   .steps-section { margin-top: 80px; padding-top: 20px; }
-  .demo-section { margin-top: 80px; padding-top: 20px; }
   .pricing-section { margin-top: 80px; padding-top: 20px; }
   .apply-section { margin-top: 80px; padding-top: 20px; }
 
@@ -245,9 +244,9 @@
 
 <section class="wrap hero">
   <div class="eyebrow">어린이집 원장님께</div>
-  <h1>제작비 0원,<br>월 5만 원으로<br>우리 원의 홈페이지</h1>
-  <p>흩어진 홍보를 한곳에,<br>감성 홈페이지와 운영 도구를 한 번에.</p>
-  <a class="cta" href="#applyForm">등록 신청하기</a>
+  <h1>우리 원의 이야기를 담은<br>따뜻한 홈페이지를 만들어보세요</h1>
+  <p>부담을 낮춘 제작 방식으로<br>우리 원에 꼭 맞는 홈페이지를 만들어드려요.</p>
+  <a class="cta" href="#applyForm">베타 서비스 신청하기</a>
 </section>
 
 <section class="wrap block pain-section">
@@ -255,42 +254,42 @@
   <h2 class="section-title">원장님들이 가장 많이 하는 고민</h2>
   <div class="pain-cards">
     <div class="pain-card">
-      <div class="pain-icon">💸</div>
-      <div class="pain-title">홈페이지 제작비 부담</div>
-      <div class="pain-desc">제작사에 맡기면 수백만 원, 직접 만들자니 시간도 기술도 부족해요.</div>
+      <div class="pain-label">고민 01</div>
+      <div class="pain-title">홈페이지 제작 부담</div>
+      <div class="pain-desc">일반 홈페이지 제작은 비용이 높거나, 직접 만들기에는 시간과 기술이 필요해요.</div>
     </div>
     <div class="pain-card">
-      <div class="pain-icon">📱</div>
+      <div class="pain-label">고민 02</div>
       <div class="pain-title">흩어진 홍보 채널</div>
       <div class="pain-desc">블로그, 인스타그램, 안내문이 따로 놀아서 한곳에 모아 보여줄 곳이 없어요.</div>
     </div>
     <div class="pain-card">
-      <div class="pain-icon">📋</div>
-      <div class="pain-title">악성 민원 대응</div>
-      <div class="pain-desc">안내했다는 증거가 없어 "못 들었다"는 민원에 매번 곤란해져요.</div>
+      <div class="pain-label">고민 03</div>
+      <div class="pain-title">최신 정보 관리 부담</div>
+      <div class="pain-desc">행사와 입학 안내가 자주 바뀌어도 홈페이지에 제때 반영하기가 쉽지 않아요.</div>
     </div>
   </div>
 </section>
 
 <section class="wrap block value-section">
-  <div class="section-eyebrow">원이야가 드리는 것</div>
-  <h2 class="section-title">홈페이지부터 민원 대응까지</h2>
+  <div class="section-eyebrow">원이야가 함께해요</div>
+  <h2 class="section-title">홈페이지부터 우리 반 이야기까지</h2>
   <div class="value-cards">
     <div class="value-card">
-      <div class="value-title">감성 인터랙티브 홈페이지</div>
-      <div class="value-desc">사진과 문구만 넣으면 완성. 디자인·개발 지식이 필요 없어요.</div>
+      <div class="value-title">감성 홈페이지 제작</div>
+      <div class="value-desc">우리 원의 분위기와 교육 이야기를 담아 원이야가 직접 구성하고 제작해드려요.</div>
     </div>
     <div class="value-card">
-      <div class="value-title">초대장형 통신문·동의서</div>
-      <div class="value-desc">학부모는 한 탭으로 응답하고, 열람·동의 시각이 자동으로 기록돼요.</div>
+      <div class="value-title">모바일·PC 지원</div>
+      <div class="value-desc">휴대전화와 컴퓨터 어디에서나 편하게 볼 수 있는 홈페이지를 제공해요.</div>
     </div>
     <div class="value-card">
-      <div class="value-title">신뢰 배지</div>
-      <div class="value-desc">점수나 줄세우기 없이, 인가·CCTV·급식 공개 같은 사실만 보여줘요.</div>
+      <div class="value-title">지속적인 홈페이지 운영</div>
+      <div class="value-desc">별도의 서버 관리 부담 없이 원이야 시스템에서 안정적으로 운영해요.</div>
     </div>
     <div class="value-card">
-      <div class="value-title">공식 문의 창구</div>
-      <div class="value-desc">접수번호와 접수 시각이 남아서 민원에도 명확하게 대응할 수 있어요.</div>
+      <div class="value-title">우리 반 미니 홈피</div>
+      <div class="value-desc">반별 사진과 이야기를 담을 수 있는 선택형 유료 서비스를 추가할 수 있어요.</div>
     </div>
   </div>
 </section>
@@ -302,45 +301,42 @@
     <div class="step-card">
       <div class="step-num">1</div>
       <div class="step-title">사진·문구 전달</div>
-      <div class="step-desc">원 소개 사진, 하루 일과 사진, 선생님 소개를 보내주세요. 준비된 것부터 시작해도 돼요.</div>
+      <div class="step-desc">원의 기본 정보와 사진, 소개 문구를 전달해주세요.</div>
     </div>
     <div class="step-card">
       <div class="step-num">2</div>
       <div class="step-title">원이야가 완성</div>
-      <div class="step-desc">템플릿에 맞게 홈페이지를 세팅해드려요. 별도 제작비나 개발 지식이 필요 없어요.</div>
+      <div class="step-desc">전달해주신 자료를 바탕으로 원이야가 홈페이지를 구성하고 제작해드려요.</div>
     </div>
     <div class="step-card">
       <div class="step-num">3</div>
-      <div class="step-title">바로 운영 시작</div>
-      <div class="step-desc">원장님이 직접 사진·공지·정원을 업데이트할 수 있어요. 언제든 수정 가능해요.</div>
+      <div class="step-title">홈페이지 운영 시작</div>
+      <div class="step-desc">완성된 홈페이지를 확인한 뒤 공개하고, 필요한 경우 우리 반 미니 홈피를 추가해요.</div>
     </div>
   </div>
-</section>
-
-<section class="wrap block demo-block demo-section">
-  <h2 class="section-title">실제 페이지를 둘러보세요</h2>
-  <p>말로만 설명하지 않고, 실제로 만들어진 원 홈페이지를<br>직접 눌러보면서 확인해보세요.</p>
-  <a class="btn-outline" href="template-sunshine.html?slug=sample-sunshine" target="_blank">데모 보기</a>
 </section>
 
 <section class="wrap block pricing-section">
-  <div class="section-eyebrow">합리적인 가격</div>
-  <h2 class="section-title">요금 안내</h2>
+  <div class="section-eyebrow">베타 서비스 안내</div>
+  <h2 class="section-title">이용 안내</h2>
   <div class="price-cards">
     <div class="price-card">
-      <div class="price-label">안심 기간 (6개월)</div>
-      <div class="price-value">30만 원 선납</div>
+      <div class="price-label">홈페이지 제작</div>
+      <div class="price-value">우리 원에 맞게 제작</div>
+      <div class="price-desc">원의 자료와 요청사항을 바탕으로 전용 홈페이지를 제작해드려요.</div>
     </div>
     <div class="price-card">
-      <div class="price-label">이후</div>
-      <div class="price-value">무약정 월 5만 원</div>
+      <div class="price-label">홈페이지 운영</div>
+      <div class="price-value">서버·시스템 제공</div>
+      <div class="price-desc">홈페이지 운영에 필요한 시스템을 원이야에서 함께 제공해요.</div>
     </div>
   </div>
-  <div class="price-note">제작비 0원 — 추가 비용 없이 바로 시작하세요.</div>
+  <div class="price-note">베타 기간의 제작비와 이용 조건은 상담을 통해 안내드립니다.<br>우리 반 미니 홈피는 필요한 원에 한해 선택형 유료 서비스로 추가할 수 있어요.</div>
 </section>
 
 <section class="wrap block apply-section">
-  <h2 class="section-title">등록 신청하기</h2>
+  <h2 class="section-title">원이야 베타 서비스 신청하기</h2>
+  <p class="apply-desc">신청 내용을 확인한 후 담당자가 연락드려<br>홈페이지 구성과 제작 과정, 이용 조건을 안내해드립니다.</p>
   <div class="panel">
     <form id="applyForm">
       <div class="field">
@@ -361,7 +357,7 @@
       </div>
       <div class="field">
         <label for="ap-message">문의 내용</label>
-        <textarea id="ap-message" placeholder="궁금한 점을 적어주세요"></textarea>
+        <textarea id="ap-message" placeholder="홈페이지에 담고 싶은 내용이나 궁금한 점을 적어주세요."></textarea>
       </div>
       <div class="field consent-field">
         <label><input type="checkbox" id="ap-consent" required> 개인정보 수집·이용에 동의합니다.</label>
@@ -379,7 +375,7 @@
           </dl>
         </details>
       </div>
-      <button type="submit" class="btn" id="applySubmitBtn">신청하기</button>
+      <button type="submit" class="btn" id="applySubmitBtn">베타 서비스 신청하기</button>
       <div class="msg error" id="applyError"></div>
     </form>
   </div>
