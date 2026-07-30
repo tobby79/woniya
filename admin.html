@@ -3781,6 +3781,16 @@
     return '<button type="button" class="btn ghost class-mini-create-btn" data-class-id="' + esc(classId) + '">미니홈피 만들기</button>';
   }
 
+  function isValidClassId(classId){
+    return typeof classId === 'string' &&
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(classId);
+  }
+
+  function renderClassMiniManageAction(classId){
+    if (!isValidClassId(classId)) return '';
+    return '<button type="button" class="btn ghost class-mini-btn class-mini-manage-btn" data-class-id="' + esc(classId) + '">미니홈피 관리</button>';
+  }
+
   function renderClassCard(row){
     var isSelected = selectedTeacherClassId === row.id;
     var pending = pendingTeacherInviteForClass(row.id);
@@ -3794,6 +3804,7 @@
       ? ''
       : '<button type="button" class="btn ghost class-invite-btn" data-class-id="' + esc(row.id) + '">' + esc(teacherInviteActionLabel(row.id)) + '</button>';
     var parentCodeAction = '<button type="button" class="btn ghost parent-code-btn" data-class-id="' + esc(row.id) + '">초대 코드 발급</button>';
+    var miniManageAction = renderClassMiniManageAction(row.id);
     var miniAction = renderClassMiniAction(row.id, row.has_mini_home === true || hasClassMini(row.id));
 
     return '<div class="class-card' + (isSelected ? ' active' : '') + '" data-class-id="' + esc(row.id) + '">' +
@@ -3802,7 +3813,7 @@
           '<div class="class-card-title">' + esc(classTitle(row)) + '</div>' +
           '<div class="class-card-meta">' + esc(classMeta(row) || '반 정보를 확인해 주세요') + '</div>' +
         '</div>' +
-        '<div class="class-card-actions">' + badge + miniAction + action + parentCodeAction + '</div>' +
+        '<div class="class-card-actions">' + badge + miniManageAction + miniAction + action + parentCodeAction + '</div>' +
       '</div>' +
     '</div>';
   }
@@ -3931,6 +3942,7 @@
         '</div>'
       : '';
     var parentAction = '<button type="button" class="btn ghost parent-code-btn" data-class-id="' + esc(row.id) + '">초대 코드 발급</button>';
+    var miniManageAction = renderClassMiniManageAction(row.id);
     var miniAction = renderClassMiniAction(row.id, row.has_mini_home === true || hasClassMini(row.id));
 
     classInviteDetail.hidden = false;
@@ -3944,7 +3956,7 @@
             '</div>' +
             '<div class="class-detail-meta">' + esc(classMeta(row) || '반 정보를 확인해 주세요') + '</div>' +
           '</div>' +
-          '<div class="class-detail-actions">' + action + miniAction + parentAction + '</div>' +
+          '<div class="class-detail-actions">' + action + miniManageAction + miniAction + parentAction + '</div>' +
         '</div>' +
         assignmentMeta +
         '<div class="class-subsection">' +
@@ -4506,6 +4518,15 @@
   }
 
   classManagerList.addEventListener('click', function(e){
+    var manageMiniBtn = e.target.closest('.class-mini-manage-btn');
+    if (manageMiniBtn) {
+      e.stopPropagation();
+      var manageClassId = manageMiniBtn.dataset.classId;
+      if (!isValidClassId(manageClassId)) return;
+      location.href = 'class-admin.html?class_id=' + encodeURIComponent(manageClassId);
+      return;
+    }
+
     var createMiniBtn = e.target.closest('.class-mini-create-btn');
     if (createMiniBtn && createMiniBtn.dataset.classId) {
       e.stopPropagation();
@@ -4550,6 +4571,14 @@
   });
 
   classInviteDetail.addEventListener('click', function(e){
+    var manageMiniBtn = e.target.closest('.class-mini-manage-btn');
+    if (manageMiniBtn) {
+      var manageClassId = manageMiniBtn.dataset.classId;
+      if (!isValidClassId(manageClassId)) return;
+      location.href = 'class-admin.html?class_id=' + encodeURIComponent(manageClassId);
+      return;
+    }
+
     var changeTeacherBtn = e.target.closest('.class-teacher-change-btn');
     if (changeTeacherBtn) {
       openTeacherLifecycleModal(changeTeacherBtn.dataset.classId, 'change');
