@@ -48,6 +48,8 @@ revoke execute on function public.can_read_legacy_class_image(text)
 grant execute on function public.can_read_legacy_class_image(text)
   to authenticated;
 
+drop policy if exists "public_read" on storage.objects;
+drop policy if exists "anon can read center-images" on storage.objects;
 drop policy if exists center_images_public_read on storage.objects;
 create policy center_images_public_read
   on storage.objects
