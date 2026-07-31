@@ -100,30 +100,45 @@
   .mini-top > div{min-width:0}
   .mini-title{font-family:var(--display);font-size:1.26rem;line-height:1.35;overflow-wrap:anywhere}
   .mini-top .btn{flex:0 0 auto}
-  .mini-cover{position:relative;min-height:230px;border-radius:30px;padding:18px;margin-bottom:18px;overflow:hidden;background:linear-gradient(135deg,#ffd8df,#d8c7ff);box-shadow:0 24px 60px -32px rgba(120,80,60,.55);border:2px solid rgba(255,255,255,.8)}
-  .mini-cover::after{content:"";position:absolute;inset:0;background:linear-gradient(to bottom,rgba(255,255,255,.18),rgba(255,255,255,.72));pointer-events:none}
+  .mini-cover{position:relative;min-height:210px;border-radius:30px;padding:18px;margin-bottom:18px;overflow:hidden;background:linear-gradient(135deg,#ffd8df,#d8c7ff);box-shadow:0 24px 60px -32px rgba(120,80,60,.55);border:2px solid rgba(255,255,255,.8)}
+  .mini-cover::after{content:"";position:absolute;inset:0;background:linear-gradient(to bottom,rgba(255,255,255,.08),rgba(255,255,255,.22) 46%,rgba(255,255,255,.78));pointer-events:none}
+  .mini-cover.has-photo::after{background:linear-gradient(to bottom,rgba(39,31,28,.05),rgba(39,31,28,.16) 42%,rgba(39,31,28,.76))}
   .mini-cover-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
-  .visit-pill{position:relative;z-index:1;display:inline-flex;border:2px dashed rgba(64,55,51,.42);border-radius:999px;padding:7px 12px;background:rgba(255,255,255,.82);font-size:.78rem;font-weight:800;color:var(--ink)}
-  .month-sticker{position:absolute;z-index:1;right:18px;top:18px;transform:rotate(7deg);background:#fff0a8;border:2px solid rgba(64,55,51,.08);border-radius:12px;padding:10px 14px;font-family:var(--hand);font-size:1.22rem;font-weight:700;box-shadow:0 12px 24px -16px rgba(64,55,51,.45)}
+  .enrollment-pill{position:absolute;z-index:1;left:18px;top:18px;display:inline-flex;max-width:calc(100% - 92px);border-radius:999px;padding:6px 10px;background:rgba(255,255,255,.88);font-size:.76rem;line-height:1.3;font-weight:900;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;box-shadow:0 8px 18px -14px rgba(64,55,51,.55);pointer-events:none}
+  .month-sticker{position:absolute;z-index:1;right:18px;top:18px;transform:rotate(4deg);background:#fff0a8;border:1px solid rgba(64,55,51,.08);border-radius:10px;padding:6px 10px;font-family:var(--hand);font-size:1.02rem;line-height:1.15;font-weight:700;box-shadow:0 10px 20px -16px rgba(64,55,51,.45);pointer-events:none}
   .cover-caption{position:absolute;z-index:1;left:20px;right:20px;bottom:18px}
-  .cover-caption p{font-family:var(--display);font-size:1.12rem;line-height:1.4;color:var(--ink-soft);font-weight:700}
+  .cover-caption-meta{display:flex;align-items:center;flex-wrap:wrap;gap:5px 7px;min-width:0;margin-bottom:6px}
+  .cover-class-label,.cover-activity-label{display:inline-flex;max-width:100%;border-radius:999px;padding:3px 8px;background:rgba(255,255,255,.8);color:var(--ink);font-size:.68rem;line-height:1.35;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .cover-activity-label{background:rgba(255,240,168,.9);color:var(--ink-soft)}
+  .cover-caption p{display:-webkit-box;overflow:hidden;-webkit-box-orient:vertical;-webkit-line-clamp:2;font-family:var(--display);font-size:1.12rem;line-height:1.4;color:var(--ink-soft);font-weight:700;overflow-wrap:anywhere;word-break:break-word}
+  .mini-cover.has-photo .cover-caption p{color:#fff;text-shadow:0 2px 12px rgba(30,23,20,.58)}
   .mini-summary-grid{display:grid;grid-template-columns:1fr;gap:14px;margin-bottom:14px}
   .teacher-note{display:grid;grid-template-columns:72px 1fr;gap:14px;align-items:start;background:var(--paper);border-radius:28px;padding:18px;margin-bottom:18px;border:1.5px solid var(--line)}
   .teacher-avatar{width:72px;height:72px;border-radius:50%;border:2px dashed var(--coral);background:#fff8f5;display:flex;align-items:center;justify-content:center;font-family:var(--hand);font-size:1.12rem;color:var(--coral-deep);transform:rotate(-4deg)}
   .speech{position:relative;background:#fffaf3;border:1.5px solid #f1e2d4;border-radius:22px;padding:14px 16px;color:var(--ink-soft);font-size:.94rem}
   .speech::before{content:"";position:absolute;left:-9px;top:24px;width:16px;height:16px;background:#fffaf3;border-left:1.5px solid #f1e2d4;border-bottom:1.5px solid #f1e2d4;transform:rotate(45deg)}
   .event-teaser{position:relative;width:100%;text-align:left;border:1.5px dashed #ead7e7;background:#fff7fb;border-radius:28px;padding:18px 18px 52px;cursor:pointer;box-shadow:0 16px 42px -30px rgba(120,80,60,.45);overflow:hidden;font-family:var(--body);color:var(--ink)}
-  .event-teaser::after{content:"";position:absolute;right:14px;top:12px;width:38px;height:38px;border-radius:50%;background:rgba(255,138,107,.18);border:2px dashed rgba(255,138,107,.42)}
   .event-badge{display:inline-flex;align-items:center;border-radius:999px;padding:6px 10px;background:#fff0a8;font-family:var(--hand);font-size:1rem;font-weight:700;transform:rotate(-3deg);margin-bottom:10px}
   .event-teaser-title{font-weight:700;font-size:1.04rem;line-height:1.45;margin-bottom:4px;word-break:break-word}
   .event-teaser-date{font-size:.84rem;color:var(--ink-soft);font-weight:800}
   .event-more{position:absolute;right:16px;bottom:14px;display:inline-flex;align-items:center;gap:5px;border-radius:999px;padding:6px 10px;background:#fff;color:var(--coral-deep);font-size:.78rem;font-weight:900;box-shadow:0 10px 20px -16px rgba(242,113,90,.7);border:1px solid #f6d8cf}
   .event-more span{font-size:.9rem;line-height:1}
   .notice-alert{position:relative;width:100%;text-align:left;border:2px solid #ffb7c6;background:#fff4f7;border-radius:28px;padding:18px 18px 52px;cursor:pointer;box-shadow:0 18px 42px -30px rgba(242,113,90,.58);font-family:var(--body);color:var(--ink);overflow:hidden}
-  .notice-alert::before{content:"";position:absolute;right:16px;top:16px;width:12px;height:12px;border-radius:50%;background:var(--coral);box-shadow:0 0 0 6px rgba(255,138,107,.16)}
   .notice-alert-badge{display:inline-flex;border-radius:999px;padding:6px 10px;background:#fff;color:var(--coral-deep);font-size:.78rem;font-weight:900;margin-bottom:10px;border:1px solid #ffd7df}
   .notice-alert-title{font-weight:700;font-size:1.04rem;line-height:1.45;margin-bottom:4px;word-break:break-word}
   .notice-alert-date{font-size:.84rem;color:var(--ink-soft);font-weight:800}
+  .event-badge,.notice-alert-badge{max-width:calc(100% - 54px)}
+  .summary-visual{position:absolute;right:14px;top:12px;width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;pointer-events:none;overflow:visible;color:var(--coral-deep);background:#ffe9e2;border:1px solid rgba(242,113,90,.18)}
+  .summary-visual svg{display:block;width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+  .summary-photo{overflow:hidden;background:#eaf5fb;color:#668da3;border-color:#cfe1ec}
+  .summary-photo svg{width:21px;height:21px}
+  .summary-photo-img{position:absolute;inset:0;display:block;width:100%;height:100%;object-fit:cover}
+  .summary-photo.is-error .summary-photo-img{display:none}
+  .summary-event{flex-direction:column;gap:0;background:#fff0a8;color:var(--ink);border-color:#f0d97c;font-weight:900;line-height:1}
+  .summary-event-day{font-size:1rem;line-height:1}
+  .summary-event-label{margin-top:2px;font-size:.52rem;line-height:1;letter-spacing:-.04em;color:var(--ink-soft)}
+  .summary-notice{overflow:visible;background:#fff;color:var(--coral-deep);border-color:#ffd7df}
+  .summary-notice::after{content:"";position:absolute;right:-1px;top:-1px;width:9px;height:9px;border-radius:50%;background:var(--coral);box-shadow:0 0 0 4px rgba(255,138,107,.16)}
   .diary-teaser{background:#fffaf3;border-color:#efdcc7}
   .album-teaser{background:#f5fbff;border-color:#cfe1ec}
   .summary-empty{padding:14px 16px;margin-bottom:14px;font-size:.9rem}
@@ -189,9 +204,12 @@
     .image-modal img{order:2;width:auto;height:auto;max-width:100%;max-height:min(82vh,calc(100vh - 76px));max-height:min(82vh,calc(100dvh - 76px))}
     .image-modal .btn.small{position:static;order:1;align-self:flex-end;flex:0 0 var(--image-modal-close-size);left:auto;top:auto;margin:0 0 8px}
     body.mini-open .wrap{padding-top:18px}
-    .mini-cover{min-height:170px;border-radius:24px;padding:14px}
+    .mini-cover{min-height:160px;border-radius:24px;padding:14px}
+    .enrollment-pill{left:14px;top:14px;max-width:calc(100% - 80px);padding:5px 9px;font-size:.72rem}
     .month-sticker{right:14px;top:14px}
     .cover-caption{left:16px;right:16px;bottom:14px}
+    .cover-caption-meta{margin-bottom:4px}
+    .cover-caption p{font-size:1.02rem;line-height:1.35}
     .teacher-note{grid-template-columns:1fr}
     .teacher-avatar{width:64px;height:64px}
     .album-list-mini{grid-template-columns:minmax(0,360px)}
@@ -366,7 +384,7 @@
   var classLoadVersion = 0;
   var eventCalendarDate = firstOfMonth(new Date());
   var selectedEventDate = toDateInput(new Date());
-  var miniCache = { posts: [], media: [], comments: [] };
+  var miniCache = { posts: [], media: [], comments: [], coverPath: '', coverSignedUrl: '', coverRequest: null };
   var BUCKET = 'center-images';
   var directClassId = new URLSearchParams(location.search).get('class_id') || '';
 
@@ -395,7 +413,7 @@
     currentMini = null;
     currentMiniTab = 'diary';
     selectedAlbumKey = null;
-    miniCache = { posts: [], media: [], comments: [] };
+    miniCache = { posts: [], media: [], comments: [], coverPath: '', coverSignedUrl: '', coverRequest: null };
     imageModal.hidden = true;
     imageModalImg.removeAttribute('src');
   }
@@ -502,11 +520,22 @@
 
   async function loadClassRows(ids){
     if (!ids.length) return [];
-    var res = await client.from('classes').select('id,name,age_label,enrolled').in('id', ids);
+    var res = await client.rpc('get_my_approved_class_summaries');
     if (res.error) throw res.error;
-    var rows = res.data || [];
+    var rows = Array.isArray(res.data) ? res.data : [];
+    var requestedIds = new Set(ids);
+    var rowsById = new Map();
+    rows.forEach(function(row){
+      if (!row || !requestedIds.has(row.id)) return;
+      rowsById.set(row.id, {
+        id: row.id,
+        name: row.name,
+        age_label: row.age_label,
+        enrolled: row.enrolled
+      });
+    });
     return ids.map(function(id){
-      return rows.find(function(row){ return row.id === id; }) || { id:id };
+      return rowsById.get(id) || { id:id };
     });
   }
 
@@ -550,12 +579,37 @@
     return /^#[0-9a-fA-F]{3,8}$/.test(text) ? text : '#F7B7C8';
   }
 
-  function visitLabel(row){
-    var total = Number(row && row.enrolled ? row.enrolled : 0);
-    if (!total) return '오늘 0 · 전체 0';
-    var today = new Date().getDate() % total;
-    if (today === 0) today = total;
-    return '오늘 ' + today + ' · 전체 ' + total;
+  function dayFromDateKey(value){
+    var match = String(value || '').match(/^\d{4}-\d{2}-(\d{2})(?:$|T)/);
+    return match ? String(Number(match[1])) : '';
+  }
+
+  function summaryVisualHtml(card){
+    if (card.kind === 'diary') {
+      return '<span class="summary-visual summary-diary" aria-hidden="true">' +
+        '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.7 5.3l4 4M4 20l4.2-1 10.5-10.5a1.4 1.4 0 000-2l-1.2-1.2a1.4 1.4 0 00-2 0L5 15.8 4 20z"/><path d="M12.8 7.9l3.3 3.3"/></svg>' +
+      '</span>';
+    }
+    if (card.kind === 'album') {
+      return '<span class="summary-visual summary-photo" aria-hidden="true">' +
+        '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="14" rx="2.5"/><circle cx="9" cy="10" r="1.5"/><path d="M5.5 17l4.2-4 3.1 2.8 2.4-2.2 3.3 3.4"/></svg>' +
+        (card.image ? '<img class="summary-photo-img" src="' + esc(card.image) + '" alt="" aria-hidden="true">' : '') +
+      '</span>';
+    }
+    if (card.kind === 'event') {
+      return '<span class="summary-visual summary-event" aria-hidden="true">' +
+        '<span class="summary-event-day">' + esc(card.day) + '</span>' +
+        '<span class="summary-event-label">일정</span>' +
+      '</span>';
+    }
+    return '<span class="summary-visual summary-notice" aria-hidden="true">' +
+      '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 13.5v-3l11-4.5v12L4 13.5z"/><path d="M15 9.2c2 .4 3 1.3 3 2.8s-1 2.4-3 2.8M6.5 14.5l1.2 4h3l-1.8-3"/></svg>' +
+    '</span>';
+  }
+
+  function enrolledLabel(row){
+    var enrolled = Number(row && row.enrolled);
+    return Number.isFinite(enrolled) && enrolled > 0 ? '재원 ' + Math.floor(enrolled) + '명' : '';
   }
 
   async function signedUrl(path){
@@ -574,6 +628,33 @@
       out.push(row);
     }
     return out;
+  }
+
+  async function signedCoverUrl(path, authVersion, loadVersion, classId){
+    if (!path) return '';
+    var targetCache = miniCache;
+    if (targetCache.coverPath !== path) {
+      targetCache.coverPath = path;
+      targetCache.coverSignedUrl = '';
+      targetCache.coverRequest = null;
+    }
+    if (targetCache.coverSignedUrl) return targetCache.coverSignedUrl;
+    if (!targetCache.coverRequest) targetCache.coverRequest = signedUrl(path);
+    var request = targetCache.coverRequest;
+    try {
+      var url = await request;
+      if (
+        targetCache !== miniCache ||
+        targetCache.coverPath !== path ||
+        !isCurrentClassLoad(authVersion, loadVersion, classId) ||
+        !currentMini ||
+        currentMini.cover_image !== path
+      ) return '';
+      targetCache.coverSignedUrl = url;
+      return url;
+    } finally {
+      if (targetCache.coverRequest === request) targetCache.coverRequest = null;
+    }
   }
 
   function enabledModules(){
@@ -723,7 +804,7 @@
     currentMini = null;
     currentMiniTab = 'diary';
     selectedAlbumKey = null;
-    miniCache = { posts: [], media: [], comments: [] };
+    miniCache = { posts: [], media: [], comments: [], coverPath: '', coverSignedUrl: '', coverRequest: null };
     miniTitle.textContent = classTitle(row);
     miniRoot.innerHTML = '<div class="empty-mini">반 미니홈피를 불러오고 있어요.</div>';
     leadText.textContent = classTitle(row) + ' 소식입니다.';
@@ -770,7 +851,10 @@
       miniCache = {
         posts: postRows,
         media: signedRows,
-        comments: commentRows
+        comments: commentRows,
+        coverPath: '',
+        coverSignedUrl: '',
+        coverRequest: null
       };
       var next = upcomingEvent();
       if (next) {
@@ -838,16 +922,21 @@
   async function renderMiniHome(authVersion, loadVersion, classId){
     if (!isCurrentClassLoad(authVersion, loadVersion, classId)) return;
     var modules = enabledModules();
+    var latestDiaryRow = latestDiary();
+    var latestPhoto = latestAlbumPhoto();
+    var latestDiaryPhoto = latestDiaryRow ? firstMediaForPost(latestDiaryRow.id) : null;
     var coverStyle = '';
     var coverImg = '';
     if (currentMini.cover_image) {
       try {
-        coverImg = await signedUrl(currentMini.cover_image);
+        coverImg = await signedCoverUrl(currentMini.cover_image, authVersion, loadVersion, classId);
       } catch (_err) {
         coverImg = '';
       }
     }
     if (!isCurrentClassLoad(authVersion, loadVersion, classId)) return;
+    if (!coverImg && latestDiaryPhoto) coverImg = latestDiaryPhoto.signed_url;
+    if (!coverImg && latestPhoto) coverImg = latestPhoto.signed_url;
     if (!coverImg) {
       coverStyle = ' style="background:linear-gradient(135deg,' + safeThemeColor(currentMini.theme_color) + ',#D9C8FF)"';
     }
@@ -858,10 +947,15 @@
     var nextEvent = upcomingEvent();
     var unreadNotice = hasUnreadNotice();
     var latestUnreadNotice = unreadNotice ? latestNotice() : null;
-    var latestDiaryRow = latestDiary();
-    var latestPhoto = latestAlbumPhoto();
     var enabledKeys = modules.map(function(item){ return item.key; });
     var summaryCards = [];
+    var enrolledText = enrolledLabel(currentMiniClass);
+    var diaryHeroTitle = latestDiaryRow && String(latestDiaryRow.title || '').trim();
+    var photoHeroCaption = latestPhoto && String(latestPhoto.caption || '').trim();
+    var miniIntro = String(currentMini.intro || '').trim();
+    var ageLabel = String(currentMiniClass.age_label || '').trim();
+    var heroText = diaryHeroTitle || photoHeroCaption || miniIntro || ageLabel || '오늘도 반짝이는 하루';
+    var heroClassLabel = String(currentMiniClass.name || '').trim() || '우리 반';
 
     if (enabledKeys.includes('notice') && latestUnreadNotice) {
       summaryCards.push({
@@ -887,7 +981,8 @@
         kind:'album',
         badge:'최근 사진',
         title:'사진첩에 올라온 사진',
-        date:latestPhoto.uploaded_at
+        date:latestPhoto.uploaded_at,
+        image:latestPhoto.signed_url
       });
     }
     if (enabledKeys.includes('event') && nextEvent) {
@@ -896,7 +991,8 @@
         kind:'event',
         badge:'다가오는 행사',
         title:nextEvent.title || '행사',
-        date:dateKey(nextEvent.event_date)
+        date:dateKey(nextEvent.event_date),
+        day:dayFromDateKey(nextEvent.event_date)
       });
     }
 
@@ -909,6 +1005,7 @@
           var titleClass = isNotice ? 'notice-alert-title' : 'event-teaser-title';
           var dateClass = isNotice ? 'notice-alert-date' : 'event-teaser-date';
           return '<button type="button" class="' + cardClass + '" data-summary-tab="' + esc(card.tab) + '">' +
+            summaryVisualHtml(card) +
             '<span class="' + badgeClass + '">' + esc(card.badge) + '</span>' +
             '<div class="' + titleClass + '">' + escWithBr(card.title) + '</div>' +
             '<div class="' + dateClass + '">' + esc(formatDate(card.date)) + '</div>' +
@@ -924,12 +1021,16 @@
             '</button>';
           }).join('') + '</div>'
         : '') +
-      '<div class="mini-cover"' + coverStyle + '>' +
+      '<div class="mini-cover' + (coverImg ? ' has-photo' : '') + '"' + coverStyle + '>' +
         (coverImg ? '<img class="mini-cover-img" src="' + esc(coverImg) + '" alt="">' : '') +
-        '<div class="visit-pill">' + esc(visitLabel(currentMiniClass)) + '</div>' +
+        (enrolledText ? '<div class="enrollment-pill">' + esc(enrolledText) + '</div>' : '') +
         '<div class="month-sticker">' + esc(currentMonthLabel()) + '</div>' +
         '<div class="cover-caption">' +
-          '<p>' + esc(currentMiniClass.age_label || '오늘도 반짝이는 하루') + '</p>' +
+          '<div class="cover-caption-meta">' +
+            '<span class="cover-class-label">' + esc(heroClassLabel) + '</span>' +
+            (diaryHeroTitle ? '<span class="cover-activity-label">우리 반 오늘 이야기</span>' : '') +
+          '</div>' +
+          '<p>' + esc(heroText) + '</p>' +
         '</div>' +
       '</div>' +
       '<section class="teacher-note">' +
@@ -1411,6 +1512,12 @@
     leadText.textContent = '승인된 반 미니홈피 목록입니다.';
     showPanel(classesPanel);
   });
+
+  miniRoot.addEventListener('error', function(e){
+    if (!e.target || !e.target.matches('.summary-photo-img')) return;
+    var visual = e.target.closest('.summary-photo');
+    if (visual) visual.classList.add('is-error');
+  }, true);
 
   miniRoot.addEventListener('click', async function(e){
     var summaryCard = e.target.closest('[data-summary-tab]');
