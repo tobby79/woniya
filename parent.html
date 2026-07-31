@@ -115,15 +115,18 @@
   .event-teaser{position:relative;width:100%;text-align:left;border:1.5px dashed #ead7e7;background:#fff7fb;border-radius:28px;padding:18px 18px 52px;cursor:pointer;box-shadow:0 16px 42px -30px rgba(120,80,60,.45);overflow:hidden;font-family:var(--body);color:var(--ink)}
   .event-teaser::after{content:"";position:absolute;right:14px;top:12px;width:38px;height:38px;border-radius:50%;background:rgba(255,138,107,.18);border:2px dashed rgba(255,138,107,.42)}
   .event-badge{display:inline-flex;align-items:center;border-radius:999px;padding:6px 10px;background:#fff0a8;font-family:var(--hand);font-size:1rem;font-weight:700;transform:rotate(-3deg);margin-bottom:10px}
-  .event-teaser-title{font-weight:900;font-size:1.04rem;line-height:1.45;margin-bottom:4px;word-break:break-word}
+  .event-teaser-title{font-weight:700;font-size:1.04rem;line-height:1.45;margin-bottom:4px;word-break:break-word}
   .event-teaser-date{font-size:.84rem;color:var(--ink-soft);font-weight:800}
   .event-more{position:absolute;right:16px;bottom:14px;display:inline-flex;align-items:center;gap:5px;border-radius:999px;padding:6px 10px;background:#fff;color:var(--coral-deep);font-size:.78rem;font-weight:900;box-shadow:0 10px 20px -16px rgba(242,113,90,.7);border:1px solid #f6d8cf}
   .event-more span{font-size:.9rem;line-height:1}
   .notice-alert{position:relative;width:100%;text-align:left;border:2px solid #ffb7c6;background:#fff4f7;border-radius:28px;padding:18px 18px 52px;cursor:pointer;box-shadow:0 18px 42px -30px rgba(242,113,90,.58);font-family:var(--body);color:var(--ink);overflow:hidden}
   .notice-alert::before{content:"";position:absolute;right:16px;top:16px;width:12px;height:12px;border-radius:50%;background:var(--coral);box-shadow:0 0 0 6px rgba(255,138,107,.16)}
   .notice-alert-badge{display:inline-flex;border-radius:999px;padding:6px 10px;background:#fff;color:var(--coral-deep);font-size:.78rem;font-weight:900;margin-bottom:10px;border:1px solid #ffd7df}
-  .notice-alert-title{font-weight:900;font-size:1.04rem;line-height:1.45;margin-bottom:4px;word-break:break-word}
+  .notice-alert-title{font-weight:700;font-size:1.04rem;line-height:1.45;margin-bottom:4px;word-break:break-word}
   .notice-alert-date{font-size:.84rem;color:var(--ink-soft);font-weight:800}
+  .diary-teaser{background:#fffaf3;border-color:#efdcc7}
+  .album-teaser{background:#f5fbff;border-color:#cfe1ec}
+  .summary-empty{padding:14px 16px;margin-bottom:14px;font-size:.9rem}
   .mini-tabs{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));max-width:100%;gap:6px;padding:2px 2px 12px;margin-bottom:6px}
   .mini-tab{width:100%;min-width:0;min-height:44px;border:1.5px solid var(--line);background:var(--paper);color:var(--ink-soft);border-radius:999px;padding:8px 4px;font-family:var(--body);font-size:.78rem;line-height:1.25;font-weight:800;white-space:normal;overflow-wrap:anywhere;word-break:break-word;cursor:pointer}
   .mini-tab-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--coral);margin-left:6px;vertical-align:middle;box-shadow:0 0 0 3px rgba(255,138,107,.16)}
@@ -132,7 +135,7 @@
   .mini-card{position:relative;background:var(--paper);border:1.5px solid var(--line);border-radius:24px;padding:18px;box-shadow:0 16px 42px -28px rgba(120,80,60,.35)}
   .mini-card::before{content:"";position:absolute;top:-9px;left:34px;width:64px;height:20px;background:rgba(255,226,167,.86);transform:rotate(-5deg);border-radius:4px;box-shadow:0 4px 10px -8px rgba(64,55,51,.6)}
   .mini-date{font-size:.78rem;color:var(--sage);font-weight:900;margin-bottom:6px}
-  .mini-card-title{font-weight:900;font-size:1.04rem;margin-bottom:8px}
+  .mini-card-title{font-weight:700;font-size:1.04rem;margin-bottom:8px}
   .mini-body{color:var(--ink-soft);font-size:.94rem;line-height:1.75;word-break:break-word}
   .scrap-photo{position:relative;margin:6px 0 14px;padding:9px;background:#fff;border-radius:10px;box-shadow:0 14px 26px -22px rgba(64,55,51,.55);transform:rotate(-1deg)}
   .scrap-photo img{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:7px;display:block}
@@ -140,6 +143,22 @@
   .album-photo{border:none;padding:0;background:#fff;border-radius:16px;overflow:hidden;aspect-ratio:1;cursor:pointer;box-shadow:0 12px 26px -22px rgba(64,55,51,.55);transform:rotate(-1deg)}
   .album-photo:nth-child(2n){transform:rotate(1.5deg)}
   .album-photo img{width:100%;height:100%;object-fit:cover;display:block}
+  .album-list-mini{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,225px));justify-content:center;gap:14px}
+  .album-card{width:100%;min-height:44px;border:1.5px solid var(--line);border-radius:24px;padding:0;overflow:hidden;background:var(--paper);color:var(--ink);font-family:var(--body);text-align:left;cursor:pointer;box-shadow:0 16px 36px -26px rgba(120,80,60,.48);transition:transform .2s ease,box-shadow .2s ease}
+  .album-card:hover{transform:translateY(-2px);box-shadow:0 20px 42px -26px rgba(120,80,60,.56)}
+  .album-card:focus-visible{outline:3px solid rgba(255,138,107,.48);outline-offset:3px}
+  .album-card-cover{position:relative;display:block;aspect-ratio:4/3;overflow:hidden;background:#f3ece3}
+  .album-card-cover img{display:block;width:100%;height:100%;object-fit:cover}
+  .album-card-kind{position:absolute;right:10px;top:10px;border-radius:999px;padding:5px 8px;background:rgba(255,255,255,.92);color:var(--coral-deep);font-size:.72rem;font-weight:900;box-shadow:0 8px 18px -12px rgba(64,55,51,.6)}
+  .album-card-body{display:block;padding:13px 14px 14px}
+  .album-card-title{display:-webkit-box;min-height:2.8em;overflow:hidden;-webkit-box-orient:vertical;-webkit-line-clamp:2;font-size:.96rem;font-weight:700;line-height:1.4;overflow-wrap:anywhere;word-break:break-word}
+  .album-card-meta{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:8px;color:var(--ink-soft);font-size:.78rem;font-weight:800}
+  .album-detail{display:flex;flex-direction:column;gap:14px;min-width:0}
+  .album-detail-head{display:flex;flex-direction:column;align-items:flex-start;gap:7px;min-width:0}
+  .album-back{width:auto;max-width:100%;min-height:44px;padding:10px 14px;text-align:left;white-space:normal}
+  .album-detail-title{max-width:100%;font-family:var(--display);font-size:1.34rem;line-height:1.4;overflow-wrap:anywhere;word-break:break-word}
+  .album-detail-meta{color:var(--sage);font-size:.82rem;font-weight:900}
+  .album-detail-body{width:100%;padding:14px 16px;border:1.5px dashed var(--line);border-radius:18px;background:rgba(255,255,255,.72);color:var(--ink-soft);font-size:.92rem;line-height:1.7;overflow-wrap:anywhere;word-break:break-word}
   .comment-item{background:#fffdf8;border:1.5px dashed #eadccc;border-radius:22px;padding:16px}
   .comment-reply{margin-top:12px;margin-left:20px;background:#f7f0ff;border-radius:18px;padding:12px 14px;color:var(--ink-soft);font-size:.9rem}
   .comment-form{margin-top:4px;background:var(--paper);border-radius:24px;padding:18px;border:1.5px solid var(--line)}
@@ -156,20 +175,26 @@
   .event-day-num{font-size:.82rem;font-weight:900}
   .event-day-dot{position:absolute;left:8px;bottom:8px;min-width:18px;height:18px;border-radius:999px;background:var(--coral);color:#fff;font-size:.68rem;font-weight:900;display:flex;align-items:center;justify-content:center;padding:0 5px}
   .event-detail{margin-top:14px;display:flex;flex-direction:column;gap:10px}
-  .event-detail-title{font-weight:900}
+  .event-detail-title{font-weight:700}
   .event-detail-item{background:#fff7fb;border:1.5px dashed #ead7e7;border-radius:18px;padding:14px}
   .empty-mini{background:rgba(255,255,255,.72);border:1.5px dashed var(--line);border-radius:22px;padding:22px;text-align:center;color:var(--ink-soft)}
-  .image-modal{position:fixed;inset:0;background:rgba(64,55,51,.72);z-index:20;display:flex;align-items:center;justify-content:center;padding:22px}
+  .image-modal{--image-modal-side:22px;--image-modal-close-size:44px;--image-modal-close-gap:10px;position:fixed;inset:0;background:rgba(64,55,51,.72);z-index:20;display:flex;align-items:center;justify-content:center;padding:22px var(--image-modal-side)}
   .image-modal[hidden]{display:none!important}
-  .image-modal img{max-width:min(920px,100%);max-height:82vh;border-radius:18px;background:#fff;box-shadow:0 30px 80px -24px rgba(0,0,0,.65)}
-  .image-modal button{position:absolute;right:20px;top:18px;width:auto;padding:9px 14px;box-shadow:none}
+  .image-modal-frame{position:relative;display:flex;max-width:min(920px,calc(100vw - var(--image-modal-side) - var(--image-modal-side) - var(--image-modal-close-size) - var(--image-modal-close-gap)));max-height:82vh;transform:translateX(-27px)}
+  .image-modal img{display:block;max-width:100%;max-height:82vh;border-radius:18px;background:#fff;box-shadow:0 30px 80px -24px rgba(0,0,0,.65)}
+  .image-modal .btn.small{position:absolute;left:calc(100% + var(--image-modal-close-gap));top:0;width:var(--image-modal-close-size);min-width:var(--image-modal-close-size);height:var(--image-modal-close-size);padding:0;box-shadow:none}
   @media (max-width:560px){
+    .image-modal{--image-modal-side:12px;padding:12px var(--image-modal-side)}
+    .image-modal-frame{width:fit-content;max-width:calc(100vw - var(--image-modal-side) - var(--image-modal-side));max-height:calc(100vh - 24px);max-height:calc(100dvh - 24px);flex-direction:column;align-items:stretch;transform:none}
+    .image-modal img{order:2;width:auto;height:auto;max-width:100%;max-height:min(82vh,calc(100vh - 76px));max-height:min(82vh,calc(100dvh - 76px))}
+    .image-modal .btn.small{position:static;order:1;align-self:flex-end;flex:0 0 var(--image-modal-close-size);left:auto;top:auto;margin:0 0 8px}
     body.mini-open .wrap{padding-top:18px}
     .mini-cover{min-height:170px;border-radius:24px;padding:14px}
     .month-sticker{right:14px;top:14px}
     .cover-caption{left:16px;right:16px;bottom:14px}
     .teacher-note{grid-template-columns:1fr}
     .teacher-avatar{width:64px;height:64px}
+    .album-list-mini{grid-template-columns:minmax(0,360px)}
     .album-grid-mini{grid-template-columns:repeat(2,1fr)}
   }
   @media (min-width:768px){
@@ -272,8 +297,10 @@
 </main>
 
 <div class="image-modal" id="imageModal" hidden>
-  <button type="button" class="btn small" id="imageModalClose">닫기</button>
-  <img id="imageModalImg" alt="">
+  <div class="image-modal-frame">
+    <img id="imageModalImg" alt="">
+    <button type="button" class="btn small" id="imageModalClose">닫기</button>
+  </div>
 </div>
 
 <script src="supabase-config.js"></script>
@@ -325,12 +352,18 @@
 
   var currentSession = null;
   var authMode = 'login';
-  var loadingState = false;
+  var initialAuthLoaded = false;
+  var authTransitionVersion = 0;
+  var authTransitionRunning = false;
+  var pendingAuthTransition = null;
+  var pendingInitialAuthTransition = null;
   var approvedClasses = [];
   var currentMiniClass = null;
   var currentEnrollment = null;
   var currentMini = null;
   var currentMiniTab = 'diary';
+  var selectedAlbumKey = null;
+  var classLoadVersion = 0;
   var eventCalendarDate = firstOfMonth(new Date());
   var selectedEventDate = toDateInput(new Date());
   var miniCache = { posts: [], media: [], comments: [] };
@@ -352,6 +385,83 @@
       item.hidden = item !== panel;
     });
     document.body.classList.toggle('mini-open', panel === miniPanel);
+  }
+
+  function resetMiniStateForAuthChange(){
+    classLoadVersion += 1;
+    approvedClasses = [];
+    currentMiniClass = null;
+    currentEnrollment = null;
+    currentMini = null;
+    currentMiniTab = 'diary';
+    selectedAlbumKey = null;
+    miniCache = { posts: [], media: [], comments: [] };
+    imageModal.hidden = true;
+    imageModalImg.removeAttribute('src');
+  }
+
+  function isCurrentAuthTransition(version){
+    return version == null || version === authTransitionVersion;
+  }
+
+  function isCurrentClassLoad(authVersion, loadVersion, classId){
+    return isCurrentAuthTransition(authVersion) &&
+      loadVersion === classLoadVersion &&
+      !!classId &&
+      !!currentMiniClass &&
+      currentMiniClass.id === classId;
+  }
+
+  function authSessionUserId(session){
+    return session && session.user ? session.user.id : '';
+  }
+
+  function isNewerSameUserSession(candidate, existing){
+    var candidateUserId = authSessionUserId(candidate);
+    if (!candidateUserId) return false;
+    if (!existing) return true;
+    if (candidateUserId !== authSessionUserId(existing)) return false;
+    var candidateExpiresAt = Number(candidate.expires_at || 0);
+    var existingExpiresAt = Number(existing.expires_at || 0);
+    if (candidateExpiresAt && existingExpiresAt && candidateExpiresAt !== existingExpiresAt) {
+      return candidateExpiresAt > existingExpiresAt;
+    }
+    if (candidateExpiresAt && !existingExpiresAt) return true;
+    return !!candidate.access_token && candidate.access_token !== existing.access_token;
+  }
+
+  function resolveInitialAuthSession(fallbackSession){
+    if (!pendingInitialAuthTransition) return fallbackSession || null;
+    if (pendingInitialAuthTransition.event === 'SIGNED_OUT' || !pendingInitialAuthTransition.session) return null;
+    var pendingSession = pendingInitialAuthTransition.session;
+    var pendingUserId = authSessionUserId(pendingSession);
+    var fallbackUserId = authSessionUserId(fallbackSession);
+    if (!fallbackUserId || fallbackUserId !== pendingUserId) return pendingSession;
+    return isNewerSameUserSession(fallbackSession, pendingSession) ? fallbackSession : pendingSession;
+  }
+
+  function queueAuthTransition(session){
+    var transition = {
+      version: ++authTransitionVersion,
+      session: session
+    };
+    pendingAuthTransition = transition;
+    return transition;
+  }
+
+  async function drainAuthTransitions(){
+    if (authTransitionRunning) return;
+    authTransitionRunning = true;
+    try {
+      while (pendingAuthTransition) {
+        var transition = pendingAuthTransition;
+        pendingAuthTransition = null;
+        await loadParentState(transition.session, transition.version);
+      }
+    } finally {
+      authTransitionRunning = false;
+      if (pendingAuthTransition) drainAuthTransitions();
+    }
   }
 
   function showNotice(title, desc){
@@ -503,6 +613,88 @@
     return noticeRows()[0] || null;
   }
 
+  function diaryRows(){
+    return miniCache.posts
+      .filter(function(row){ return row.type === 'diary'; })
+      .sort(function(a, b){ return new Date(b.created_at).getTime() - new Date(a.created_at).getTime(); });
+  }
+
+  function latestDiary(){
+    return diaryRows()[0] || null;
+  }
+
+  function albumRows(){
+    return miniCache.media
+      .filter(function(row){ return row.signed_url; })
+      .sort(function(a, b){ return new Date(b.uploaded_at).getTime() - new Date(a.uploaded_at).getTime(); });
+  }
+
+  function albumGroups(){
+    function timestamp(value){
+      var time = new Date(value).getTime();
+      return Number.isFinite(time) ? time : 0;
+    }
+
+    function sortedPhotos(rows){
+      return rows.slice().sort(function(a, b){
+        var timeDiff = timestamp(b.uploaded_at) - timestamp(a.uploaded_at);
+        if (timeDiff) return timeDiff;
+        return String(a.id || '').localeCompare(String(b.id || ''));
+      });
+    }
+
+    var albumPosts = miniCache.posts
+      .filter(function(row){ return row.type === 'album'; })
+      .slice()
+      .sort(function(a, b){
+        var timeDiff = timestamp(b.created_at) - timestamp(a.created_at);
+        if (timeDiff) return timeDiff;
+        return String(a.id || '').localeCompare(String(b.id || ''));
+      });
+
+    var groups = albumPosts.map(function(post){
+      var photos = sortedPhotos(miniCache.media.filter(function(row){
+        return row.post_id === post.id && row.signed_url;
+      }));
+      return {
+        album_key: post.id,
+        post_id: post.id,
+        title: post.title || '',
+        body: post.body || '',
+        created_at: post.created_at,
+        photos: photos,
+        photo_count: photos.length,
+        representative_photo: photos[0] || null,
+        is_virtual: false
+      };
+    }).filter(function(group){
+      return group.photo_count > 0;
+    });
+
+    var standalonePhotos = sortedPhotos(miniCache.media.filter(function(row){
+      return row.post_id === null && row.signed_url;
+    }));
+    if (standalonePhotos.length) {
+      groups.push({
+        album_key: '**standalone**',
+        post_id: null,
+        title: '우리 반 일상',
+        body: '',
+        created_at: standalonePhotos[0].uploaded_at,
+        photos: standalonePhotos,
+        photo_count: standalonePhotos.length,
+        representative_photo: standalonePhotos[0],
+        is_virtual: true
+      });
+    }
+
+    return groups;
+  }
+
+  function latestAlbumPhoto(){
+    return albumRows()[0] || null;
+  }
+
   function hasUnreadNotice(){
     var latest = latestNotice();
     if (!latest) return false;
@@ -516,8 +708,12 @@
     });
   }
 
-  async function openClassMini(classId){
-    var row = approvedClasses.find(function(item){ return item.id === classId; });
+  async function openClassMini(classId, authVersion){
+    var startedAuthVersion = authVersion == null ? authTransitionVersion : authVersion;
+    if (!isCurrentAuthTransition(startedAuthVersion)) return;
+    var targetClassId = classId;
+    var startedClassLoadVersion = ++classLoadVersion;
+    var row = approvedClasses.find(function(item){ return item.id === targetClassId; });
     if (!row) return;
     currentMiniClass = row;
     currentEnrollment = {
@@ -526,6 +722,7 @@
     };
     currentMini = null;
     currentMiniTab = 'diary';
+    selectedAlbumKey = null;
     miniCache = { posts: [], media: [], comments: [] };
     miniTitle.textContent = classTitle(row);
     miniRoot.innerHTML = '<div class="empty-mini">반 미니홈피를 불러오고 있어요.</div>';
@@ -533,10 +730,11 @@
     showPanel(miniPanel);
 
     try {
-      var miniRes = await client.from('class_mini').select('*').eq('class_id', classId).maybeSingle();
+      var miniRes = await client.from('class_mini').select('*').eq('class_id', targetClassId).maybeSingle();
+      if (!isCurrentClassLoad(startedAuthVersion, startedClassLoadVersion, targetClassId)) return;
       if (miniRes.error) throw miniRes.error;
       currentMini = miniRes.data || {
-        class_id: classId,
+        class_id: targetClassId,
         theme_color: '#F7B7C8',
         intro: '',
         teacher_message: '',
@@ -545,25 +743,35 @@
 
       var postsRes = await client.from('class_posts')
         .select('*')
-        .eq('class_id', classId)
+        .eq('class_id', targetClassId)
         .order('created_at', { ascending:false });
+      if (!isCurrentClassLoad(startedAuthVersion, startedClassLoadVersion, targetClassId)) return;
       if (postsRes.error) throw postsRes.error;
+      var postRows = postsRes.data || [];
 
       var mediaRes = await client.from('class_media')
         .select('*')
-        .eq('class_id', classId)
+        .eq('class_id', targetClassId)
         .order('uploaded_at', { ascending:false });
+      if (!isCurrentClassLoad(startedAuthVersion, startedClassLoadVersion, targetClassId)) return;
       if (mediaRes.error) throw mediaRes.error;
+      var mediaRows = mediaRes.data || [];
 
       var commentsRes = await client.from('class_comments')
         .select('*')
-        .eq('class_id', classId)
+        .eq('class_id', targetClassId)
         .order('created_at', { ascending:false });
+      if (!isCurrentClassLoad(startedAuthVersion, startedClassLoadVersion, targetClassId)) return;
       if (commentsRes.error) throw commentsRes.error;
+      var commentRows = commentsRes.data || [];
 
-      miniCache.posts = postsRes.data || [];
-      miniCache.media = await signedMediaRows(mediaRes.data || []);
-      miniCache.comments = commentsRes.data || [];
+      var signedRows = await signedMediaRows(mediaRows);
+      if (!isCurrentClassLoad(startedAuthVersion, startedClassLoadVersion, targetClassId)) return;
+      miniCache = {
+        posts: postRows,
+        media: signedRows,
+        comments: commentRows
+      };
       var next = upcomingEvent();
       if (next) {
         selectedEventDate = dateKey(next.event_date);
@@ -572,17 +780,19 @@
         selectedEventDate = toDateInput(new Date());
         eventCalendarDate = firstOfMonth(new Date());
       }
-      renderMiniHome();
+      await renderMiniHome(startedAuthVersion, startedClassLoadVersion, targetClassId);
     } catch (err) {
+      if (!isCurrentClassLoad(startedAuthVersion, startedClassLoadVersion, targetClassId)) return;
       miniRoot.innerHTML = '<div class="empty-mini">' + escWithBr(err && err.message ? err.message : String(err)) + '</div>';
     }
   }
 
-  async function loadDirectClassMini(session){
+  async function loadDirectClassMini(session, authVersion){
     var classRes = await client.from('classes')
       .select('id,name,age_label,teacher_id,center_id')
       .eq('id', directClassId)
       .maybeSingle();
+    if (!isCurrentAuthTransition(authVersion)) return true;
     if (classRes.error) throw classRes.error;
 
     var classRow = classRes.data || null;
@@ -594,21 +804,25 @@
         .select('id,owner_id')
         .eq('id', classRow.center_id)
         .maybeSingle();
+      if (!isCurrentAuthTransition(authVersion)) return true;
       if (centerRes.error) throw centerRes.error;
       isCenterOwner = !!(centerRes.data && centerRes.data.owner_id === session.user.id);
     }
 
     if (!classRow || (!isTeacher && !isCenterOwner)) {
+      if (!isCurrentAuthTransition(authVersion)) return true;
       showNotice('미니홈피를 열 수 없습니다', '해당 반의 담임 선생님 또는 원장님만 직접 접근할 수 있어요.');
       return true;
     }
 
     var miniRes = await client.from('class_mini').select('id').eq('class_id', directClassId).maybeSingle();
+    if (!isCurrentAuthTransition(authVersion)) return true;
     if (miniRes.error) throw miniRes.error;
     if (!miniRes.data) {
       showNotice('아직 미니홈피가 준비되지 않았어요', '담임 선생님이 미니홈피를 준비한 뒤 다시 확인해주세요.');
       return true;
     }
+    if (!isCurrentAuthTransition(authVersion)) return true;
     approvedClasses = [Object.assign({}, classRow, {
       enrollment_id: null,
       last_notice_read_at: null
@@ -617,11 +831,12 @@
     extraInviteBox.hidden = true;
     extraInviteMsg.textContent = '';
     extraInviteCode.value = '';
-    await openClassMini(directClassId);
+    await openClassMini(directClassId, authVersion);
     return true;
   }
 
-  async function renderMiniHome(){
+  async function renderMiniHome(authVersion, loadVersion, classId){
+    if (!isCurrentClassLoad(authVersion, loadVersion, classId)) return;
     var modules = enabledModules();
     var coverStyle = '';
     var coverImg = '';
@@ -632,6 +847,7 @@
         coverImg = '';
       }
     }
+    if (!isCurrentClassLoad(authVersion, loadVersion, classId)) return;
     if (!coverImg) {
       coverStyle = ' style="background:linear-gradient(135deg,' + safeThemeColor(currentMini.theme_color) + ',#D9C8FF)"';
     }
@@ -642,23 +858,64 @@
     var nextEvent = upcomingEvent();
     var unreadNotice = hasUnreadNotice();
     var latestUnreadNotice = unreadNotice ? latestNotice() : null;
-    var hasSummaryCards = !!(latestUnreadNotice || nextEvent);
+    var latestDiaryRow = latestDiary();
+    var latestPhoto = latestAlbumPhoto();
+    var enabledKeys = modules.map(function(item){ return item.key; });
+    var summaryCards = [];
+
+    if (enabledKeys.includes('notice') && latestUnreadNotice) {
+      summaryCards.push({
+        tab:'notice',
+        kind:'notice',
+        badge:'새 공지',
+        title:latestUnreadNotice.title || '공지사항',
+        date:latestUnreadNotice.created_at
+      });
+    }
+    if (enabledKeys.includes('diary') && latestDiaryRow) {
+      summaryCards.push({
+        tab:'diary',
+        kind:'diary',
+        badge:'최근 일지',
+        title:latestDiaryRow.title || '오늘의 반 일지',
+        date:latestDiaryRow.created_at
+      });
+    }
+    if (enabledKeys.includes('album') && latestPhoto) {
+      summaryCards.push({
+        tab:'album',
+        kind:'album',
+        badge:'최근 사진',
+        title:'사진첩에 올라온 사진',
+        date:latestPhoto.uploaded_at
+      });
+    }
+    if (enabledKeys.includes('event') && nextEvent) {
+      summaryCards.push({
+        tab:'event',
+        kind:'event',
+        badge:'다가오는 행사',
+        title:nextEvent.title || '행사',
+        date:dateKey(nextEvent.event_date)
+      });
+    }
 
     miniRoot.innerHTML =
-      (hasSummaryCards ? '<div class="mini-summary-grid has-cards">' +
-        (latestUnreadNotice ? '<button type="button" class="notice-alert" data-jump-notice="true">' +
-          '<span class="notice-alert-badge">새 공지</span>' +
-          '<div class="notice-alert-title">' + escWithBr(latestUnreadNotice.title || '공지사항') + '</div>' +
-          '<div class="notice-alert-date">' + esc(formatDate(latestUnreadNotice.created_at)) + '</div>' +
+      (summaryCards.length ? '<div class="mini-summary-grid has-cards">' +
+        summaryCards.map(function(card){
+          var isNotice = card.kind === 'notice';
+          var cardClass = isNotice ? 'notice-alert' : 'event-teaser' + (card.kind === 'event' ? '' : ' ' + card.kind + '-teaser');
+          var badgeClass = isNotice ? 'notice-alert-badge' : 'event-badge';
+          var titleClass = isNotice ? 'notice-alert-title' : 'event-teaser-title';
+          var dateClass = isNotice ? 'notice-alert-date' : 'event-teaser-date';
+          return '<button type="button" class="' + cardClass + '" data-summary-tab="' + esc(card.tab) + '">' +
+            '<span class="' + badgeClass + '">' + esc(card.badge) + '</span>' +
+            '<div class="' + titleClass + '">' + escWithBr(card.title) + '</div>' +
+            '<div class="' + dateClass + '">' + esc(formatDate(card.date)) + '</div>' +
           '<span class="event-more">더보기 <span aria-hidden="true">→</span></span>' +
-        '</button>' : '') +
-        (nextEvent ? '<button type="button" class="event-teaser" data-jump-event="true">' +
-          '<span class="event-badge">다가오는 행사</span>' +
-          '<div class="event-teaser-title">' + escWithBr(nextEvent.title || '행사') + '</div>' +
-          '<div class="event-teaser-date">' + esc(formatDate(dateKey(nextEvent.event_date))) + '</div>' +
-          '<span class="event-more">더보기 <span aria-hidden="true">→</span></span>' +
-        '</button>' : '') +
-      '</div>' : '') +
+          '</button>';
+        }).join('') +
+      '</div>' : '<div class="empty-mini summary-empty">아직 올라온 새 소식이 없어요.</div>') +
       (modules.length
         ? '<div class="mini-tabs">' + modules.map(function(item){
             return '<button type="button" class="mini-tab' + (item.key === currentMiniTab ? ' active' : '') + '" data-mini-tab="' + esc(item.key) + '">' +
@@ -697,7 +954,7 @@
   }
 
   function renderDiaryTab(content){
-    var rows = miniCache.posts.filter(function(row){ return row.type === 'diary'; });
+    var rows = diaryRows();
     if (!rows.length) {
       content.innerHTML = '<div class="empty-mini">아직 올라온 일지가 없어요.</div>';
       return;
@@ -771,14 +1028,53 @@
   }
 
   function renderAlbumTab(content){
-    var rows = miniCache.media.filter(function(row){ return row.signed_url; });
-    if (!rows.length) {
+    var groups = albumGroups();
+    var selectedGroup = selectedAlbumKey
+      ? groups.find(function(group){ return group.album_key === selectedAlbumKey; })
+      : null;
+    if (selectedAlbumKey && !selectedGroup) selectedAlbumKey = null;
+
+    if (selectedGroup) {
+      content.innerHTML =
+        '<section class="album-detail">' +
+          '<button type="button" class="btn ghost album-back" data-album-back>사진첩으로 돌아가기</button>' +
+          '<header class="album-detail-head">' +
+            '<h2 class="album-detail-title">' + esc(selectedGroup.title || '사진첩') + '</h2>' +
+            '<div class="album-detail-meta">' +
+              esc(formatDate(selectedGroup.created_at)) + ' · ' + esc(selectedGroup.photo_count) + '장' +
+            '</div>' +
+            (!selectedGroup.is_virtual && selectedGroup.body
+              ? '<div class="album-detail-body">' + escWithBr(selectedGroup.body) + '</div>'
+              : '') +
+          '</header>' +
+          '<div class="album-grid-mini">' + selectedGroup.photos.map(function(row){
+            var photoDate = formatDate(row.taken_at || row.uploaded_at);
+            var photoLabel = [row.caption, photoDate].filter(Boolean).join(' · ') || '사진 확대';
+            return '<button type="button" class="album-photo" data-open-image="' + esc(row.signed_url) + '">' +
+              '<img src="' + esc(row.signed_url) + '" alt="' + esc(photoLabel) + '">' +
+            '</button>';
+          }).join('') + '</div>' +
+        '</section>';
+      return;
+    }
+
+    if (!groups.length) {
       content.innerHTML = '<div class="empty-mini">아직 올라온 사진이 없어요.</div>';
       return;
     }
-    content.innerHTML = '<div class="album-grid-mini">' + rows.map(function(row){
-      return '<button type="button" class="album-photo" data-open-image="' + esc(row.signed_url) + '">' +
-        '<img src="' + esc(row.signed_url) + '" alt="' + esc(formatDate(row.taken_at || row.uploaded_at)) + '">' +
+    content.innerHTML = '<div class="album-list-mini">' + groups.map(function(group){
+      return '<button type="button" class="album-card" data-open-album="' + esc(group.album_key) + '">' +
+        '<span class="album-card-cover">' +
+          '<img src="' + esc(group.representative_photo.signed_url) + '" alt="">' +
+          (group.is_virtual ? '<span class="album-card-kind">단독 사진</span>' : '') +
+        '</span>' +
+        '<span class="album-card-body">' +
+          '<span class="album-card-title">' + esc(group.title || '사진첩') + '</span>' +
+          '<span class="album-card-meta">' +
+            '<span>' + esc(formatDate(group.created_at)) + '</span>' +
+            '<span>' + esc(group.photo_count) + '장</span>' +
+          '</span>' +
+        '</span>' +
       '</button>';
     }).join('') + '</div>';
   }
@@ -820,22 +1116,45 @@
   }
 
   async function markNoticesRead(){
-    if (!currentEnrollment || !currentEnrollment.id || !currentSession || !currentSession.user) return;
+    var startedAuthVersion = authTransitionVersion;
+    var startedClassLoadVersion = classLoadVersion;
+    var targetEnrollment = currentEnrollment;
+    var targetEnrollmentId = targetEnrollment && targetEnrollment.id;
+    var targetClassId = currentMiniClass && currentMiniClass.id;
+    var targetUserId = currentSession && currentSession.user ? currentSession.user.id : '';
+    var readAt = new Date().toISOString();
+    if (!targetEnrollment || !targetEnrollmentId || !targetClassId || !targetUserId) return;
     if (!hasUnreadNotice()) return;
-    var now = new Date().toISOString();
-    var cached = currentMiniClass ? approvedClasses.find(function(row){ return row.id === currentMiniClass.id; }) : null;
     var res = await client.from('class_enrollments')
-      .update({ last_notice_read_at: now })
-      .eq('id', currentEnrollment.id)
-      .eq('parent_id', currentSession.user.id);
+      .update({ last_notice_read_at: readAt })
+      .eq('id', targetEnrollment.id)
+      .eq('parent_id', targetUserId);
+    var currentUserId = currentSession && currentSession.user ? currentSession.user.id : '';
+    var currentEnrollmentId = currentEnrollment && currentEnrollment.id;
+    var currentClassId = currentMiniClass && currentMiniClass.id;
+    if (
+      startedAuthVersion !== authTransitionVersion ||
+      startedClassLoadVersion !== classLoadVersion ||
+      currentUserId !== targetUserId ||
+      currentEnrollmentId !== targetEnrollmentId ||
+      currentClassId !== targetClassId
+    ) return;
     if (res.error) {
       showNotice('공지 읽음 처리에 실패했습니다', res.error.message);
       return;
     }
-    currentEnrollment.last_notice_read_at = now;
-    if (currentMiniClass) currentMiniClass.last_notice_read_at = now;
-    if (cached) cached.last_notice_read_at = now;
-    renderMiniHome();
+    targetEnrollment.last_notice_read_at = readAt;
+    if (currentEnrollment && currentEnrollment.id === targetEnrollmentId) {
+      currentEnrollment.last_notice_read_at = readAt;
+    }
+    if (currentMiniClass && currentMiniClass.id === targetClassId) {
+      currentMiniClass.last_notice_read_at = readAt;
+    }
+    var cached = approvedClasses.find(function(row){ return row.id === targetClassId; });
+    if (cached) cached.last_notice_read_at = readAt;
+    if (currentMini) {
+      await renderMiniHome(startedAuthVersion, startedClassLoadVersion, targetClassId);
+    }
   }
 
   async function submitComment(form){
@@ -843,57 +1162,93 @@
     var submit = form.querySelector('#commentSubmit');
     var msg = form.querySelector('#commentMsg');
     var text = body.value.trim();
-    if (!text || !currentMiniClass || !currentSession || !currentSession.user || !currentEnrollment || !currentEnrollment.id) return;
+    var startedAuthVersion = authTransitionVersion;
+    var targetUserId = currentSession && currentSession.user ? currentSession.user.id : '';
+    var targetClass = currentMiniClass;
+    var targetClassId = targetClass && targetClass.id;
+    var targetEnrollmentId = currentEnrollment && currentEnrollment.id;
+    if (!text || !targetUserId || !targetClass || !targetClassId || !targetEnrollmentId) return;
+    function isCurrentCommentTarget(){
+      var currentUserId = currentSession && currentSession.user ? currentSession.user.id : '';
+      var currentClassId = currentMiniClass && currentMiniClass.id;
+      var currentEnrollmentId = currentEnrollment && currentEnrollment.id;
+      return startedAuthVersion === authTransitionVersion &&
+        currentUserId === targetUserId &&
+        currentClassId === targetClassId &&
+        currentEnrollmentId === targetEnrollmentId;
+    }
     submit.disabled = true;
     msg.textContent = '등록 중입니다.';
     msg.className = 'msg';
     var res = await client.from('class_comments').insert({
-      class_id: currentMiniClass.id,
-      author_id: currentSession.user.id,
+      class_id: targetClassId,
+      author_id: targetUserId,
       body: text
     });
-    submit.disabled = false;
+    if (!isCurrentCommentTarget()) return;
     if (res.error) {
+      submit.disabled = false;
       msg.innerHTML = escWithBr(res.error.message);
       msg.className = 'msg error';
       return;
     }
-    body.value = '';
-    msg.textContent = '등록되었습니다.';
     var commentsRes = await client.from('class_comments')
       .select('*')
-      .eq('class_id', currentMiniClass.id)
+      .eq('class_id', targetClassId)
       .order('created_at', { ascending:false });
+    if (!isCurrentCommentTarget()) return;
     if (commentsRes.error) {
+      submit.disabled = false;
       msg.innerHTML = escWithBr(commentsRes.error.message);
       msg.className = 'msg error';
       return;
     }
     miniCache.comments = commentsRes.data || [];
-    renderGuestbookTab(document.getElementById('miniContent'));
+    body.value = '';
+    submit.disabled = false;
+    msg.textContent = '등록되었습니다.';
+    msg.className = 'msg';
+    if (currentMiniTab === 'guestbook') {
+      var content = document.getElementById('miniContent');
+      if (content) {
+        renderGuestbookTab(content);
+        var renderedMsg = content.querySelector('#commentMsg');
+        if (renderedMsg) {
+          renderedMsg.textContent = '등록되었습니다.';
+          renderedMsg.className = 'msg';
+        }
+      }
+    }
   }
 
-  async function loadParentState(session){
+  async function loadParentState(session, authVersion){
+    if (!isCurrentAuthTransition(authVersion)) return;
     if (!session || !session.user) {
+      if (!isCurrentAuthTransition(authVersion)) return;
       logoutBtn.hidden = true;
       leadText.textContent = '로그인 후 초대 코드를 입력해주세요.';
       showPanel(authPanel);
       return;
     }
 
-    loadingState = true;
+    if (!isCurrentAuthTransition(authVersion)) return;
     logoutBtn.hidden = false;
     leadText.textContent = '반 연결 상태를 확인하고 있어요.';
     showPanel(loadingPanel);
 
     try {
-      if (directClassId && await loadDirectClassMini(session)) return;
+      if (directClassId) {
+        var directHandled = await loadDirectClassMini(session, authVersion);
+        if (!isCurrentAuthTransition(authVersion)) return;
+        if (directHandled) return;
+      }
 
       var res = await client
         .from('class_enrollments')
         .select('id, status, class_id, last_notice_read_at')
         .eq('parent_id', session.user.id);
 
+      if (!isCurrentAuthTransition(authVersion)) return;
       if (res.error) throw res.error;
 
       var enrollments = res.data || [];
@@ -902,6 +1257,7 @@
 
       if (approved.length) {
         var rows = await loadClassRows(approved.map(function(row){ return row.class_id; }));
+        if (!isCurrentAuthTransition(authVersion)) return;
         rows = rows.map(function(row){
           var enrollment = approved.find(function(item){ return item.class_id === row.id; });
           return Object.assign({}, row, {
@@ -931,21 +1287,40 @@
       leadText.textContent = '선생님이 알려준 초대 코드를 입력해주세요.';
       showPanel(invitePanel);
     } catch (err) {
+      if (!isCurrentAuthTransition(authVersion)) return;
       showNotice('상태를 불러오지 못했습니다', err && err.message ? err.message : String(err));
-    } finally {
-      loadingState = false;
     }
   }
 
   async function redeemInvite(code, msgEl, submitBtn){
+    var startedAuthVersion = authTransitionVersion;
+    var targetUserId = currentSession && currentSession.user ? currentSession.user.id : '';
+    var targetCode = String(code || '').trim();
+    if (!targetUserId || !targetCode) return;
+    function isCurrentInviteRequest(){
+      var currentUserId = currentSession && currentSession.user ? currentSession.user.id : '';
+      return startedAuthVersion === authTransitionVersion &&
+        !!currentSession &&
+        currentUserId === targetUserId;
+    }
     msgEl.textContent = '';
     submitBtn.disabled = true;
     msgEl.textContent = '연결 신청 중입니다.';
     msgEl.className = 'msg';
 
-    var res = await client.rpc('redeem_class_invite', { p_code: code });
-    submitBtn.disabled = false;
+    var res;
+    try {
+      res = await client.rpc('redeem_class_invite', { p_code: targetCode });
+    } catch (err) {
+      if (!isCurrentInviteRequest()) return;
+      submitBtn.disabled = false;
+      msgEl.innerHTML = escWithBr(err && err.message ? err.message : String(err));
+      msgEl.className = 'msg error';
+      return;
+    }
+    if (!isCurrentInviteRequest()) return;
 
+    submitBtn.disabled = false;
     if (res.error) {
       msgEl.innerHTML = escWithBr(res.error.message);
       msgEl.className = 'msg error';
@@ -991,10 +1366,7 @@
           password: authPassword.value
         });
         if (signUpRes.error) throw signUpRes.error;
-        if (signUpRes.data && signUpRes.data.session) {
-          currentSession = signUpRes.data.session;
-          await loadParentState(currentSession);
-        } else {
+        if (!(signUpRes.data && signUpRes.data.session)) {
           leadText.textContent = '이메일 확인이 필요합니다.';
           showNotice('이메일을 확인해주세요', '가입 확인 메일을 열어 인증을 완료한 뒤 다시 로그인해주세요.');
         }
@@ -1004,8 +1376,6 @@
           password: authPassword.value
         });
         if (loginRes.error) throw loginRes.error;
-        currentSession = loginRes.data.session;
-        await loadParentState(currentSession);
       }
     } catch (err) {
       authMsg.innerHTML = escWithBr(err && err.message ? err.message : String(err));
@@ -1033,42 +1403,60 @@
   classList.addEventListener('click', function(e){
     var btn = e.target.closest('[data-open-class]');
     if (!btn) return;
-    openClassMini(btn.dataset.openClass);
+    openClassMini(btn.dataset.openClass, authTransitionVersion);
   });
 
   miniBackBtn.addEventListener('click', function(){
+    classLoadVersion += 1;
     leadText.textContent = '승인된 반 미니홈피 목록입니다.';
     showPanel(classesPanel);
   });
 
   miniRoot.addEventListener('click', async function(e){
-    var jumpNotice = e.target.closest('[data-jump-notice]');
-    if (jumpNotice) {
-      currentMiniTab = 'notice';
-      renderMiniHome();
-      await markNoticesRead();
-      var tabsForNotice = miniRoot.querySelector('.mini-tabs');
-      if (tabsForNotice) tabsForNotice.scrollIntoView({ behavior:'smooth', block:'start' });
-      return;
-    }
-    var jumpEvent = e.target.closest('[data-jump-event]');
-    if (jumpEvent) {
-      currentMiniTab = 'event';
-      var next = upcomingEvent();
-      if (next) {
-        selectedEventDate = dateKey(next.event_date);
-        eventCalendarDate = firstOfMonth(new Date(selectedEventDate + 'T00:00:00'));
+    var summaryCard = e.target.closest('[data-summary-tab]');
+    if (summaryCard) {
+      var summaryAuthVersion = authTransitionVersion;
+      var summaryClassLoadVersion = classLoadVersion;
+      var summaryClassId = currentMiniClass && currentMiniClass.id;
+      currentMiniTab = summaryCard.dataset.summaryTab;
+      if (currentMiniTab !== 'album') selectedAlbumKey = null;
+      if (currentMiniTab === 'event') {
+        var next = upcomingEvent();
+        if (next) {
+          selectedEventDate = dateKey(next.event_date);
+          eventCalendarDate = firstOfMonth(new Date(selectedEventDate + 'T00:00:00'));
+        }
       }
-      renderMiniHome();
-      var tabs = miniRoot.querySelector('.mini-tabs');
-      if (tabs) tabs.scrollIntoView({ behavior:'smooth', block:'start' });
+      await renderMiniHome(summaryAuthVersion, summaryClassLoadVersion, summaryClassId);
+      if (!isCurrentClassLoad(summaryAuthVersion, summaryClassLoadVersion, summaryClassId)) return;
+      if (currentMiniTab === 'notice') await markNoticesRead();
+      if (!isCurrentClassLoad(summaryAuthVersion, summaryClassLoadVersion, summaryClassId)) return;
+      var tabsForSummary = miniRoot.querySelector('.mini-tabs');
+      if (tabsForSummary) tabsForSummary.scrollIntoView({ behavior:'smooth', block:'start' });
       return;
     }
     var tab = e.target.closest('[data-mini-tab]');
     if (tab) {
+      var tabAuthVersion = authTransitionVersion;
+      var tabClassLoadVersion = classLoadVersion;
+      var tabClassId = currentMiniClass && currentMiniClass.id;
       currentMiniTab = tab.dataset.miniTab;
-      renderMiniHome();
+      if (currentMiniTab !== 'album') selectedAlbumKey = null;
+      await renderMiniHome(tabAuthVersion, tabClassLoadVersion, tabClassId);
+      if (!isCurrentClassLoad(tabAuthVersion, tabClassLoadVersion, tabClassId)) return;
       if (currentMiniTab === 'notice') await markNoticesRead();
+      return;
+    }
+    var albumBackBtn = e.target.closest('[data-album-back]');
+    if (albumBackBtn) {
+      selectedAlbumKey = null;
+      renderAlbumTab(document.getElementById('miniContent'));
+      return;
+    }
+    var albumBtn = e.target.closest('[data-open-album]');
+    if (albumBtn) {
+      selectedAlbumKey = albumBtn.dataset.openAlbum;
+      renderAlbumTab(document.getElementById('miniContent'));
       return;
     }
     var monthBtn = e.target.closest('[data-event-month]');
@@ -1126,14 +1514,65 @@
     showPanel(authPanel);
   });
 
-  client.auth.onAuthStateChange(function(_event, session){
+  client.auth.onAuthStateChange(function(event, session){
+    var currentUserId = authSessionUserId(currentSession);
+    var nextUserId = authSessionUserId(session);
     currentSession = session;
-    if (!loadingState) loadParentState(session);
+
+    if (event === 'INITIAL_SESSION') return;
+    if (event === 'TOKEN_REFRESHED') {
+      if (!initialAuthLoaded && nextUserId) {
+        if (!pendingInitialAuthTransition) {
+          pendingInitialAuthTransition = { event: event, session: session };
+        } else if (
+          pendingInitialAuthTransition.event !== 'SIGNED_OUT' &&
+          authSessionUserId(pendingInitialAuthTransition.session) === nextUserId &&
+          isNewerSameUserSession(session, pendingInitialAuthTransition.session)
+        ) {
+          pendingInitialAuthTransition.session = session;
+        }
+      }
+      return;
+    }
+    if (!initialAuthLoaded) {
+      pendingInitialAuthTransition = { event: event, session: session };
+      return;
+    }
+
+    if (event === 'SIGNED_OUT' || !nextUserId) {
+      queueAuthTransition(null);
+      resetMiniStateForAuthChange();
+      logoutBtn.hidden = true;
+      leadText.textContent = '로그인 후 초대 코드를 입력해주세요.';
+      showPanel(authPanel);
+      drainAuthTransitions();
+      return;
+    }
+
+    if (currentUserId === nextUserId) return;
+
+    queueAuthTransition(session);
+    resetMiniStateForAuthChange();
+    logoutBtn.hidden = false;
+    leadText.textContent = '반 연결 상태를 확인하고 있어요.';
+    showPanel(loadingPanel);
+    drainAuthTransitions();
   });
 
   client.auth.getSession().then(function(res){
-    currentSession = res.data ? res.data.session : null;
-    loadParentState(currentSession);
+    var initialSession = resolveInitialAuthSession(res.data ? res.data.session : null);
+    pendingInitialAuthTransition = null;
+    currentSession = initialSession;
+    initialAuthLoaded = true;
+    queueAuthTransition(initialSession);
+    return drainAuthTransitions();
+  }, function(){
+    var initialSession = resolveInitialAuthSession(null);
+    pendingInitialAuthTransition = null;
+    currentSession = initialSession;
+    initialAuthLoaded = true;
+    queueAuthTransition(initialSession);
+    return drainAuthTransitions();
   });
 
   setAuthMode('login');
