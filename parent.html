@@ -100,6 +100,7 @@
   .mini-top > div{min-width:0}
   .mini-title{font-family:var(--display);font-size:1.26rem;line-height:1.35;overflow-wrap:anywhere}
   .mini-top .btn{flex:0 0 auto}
+  .mini-top-actions{display:flex;align-items:center;justify-content:flex-end;gap:7px;flex:0 0 auto}
   .mini-cover{position:relative;min-height:210px;border-radius:30px;padding:18px;margin-bottom:18px;overflow:hidden;background:linear-gradient(135deg,#ffd8df,#d8c7ff);box-shadow:0 24px 60px -32px rgba(120,80,60,.55);border:2px solid rgba(255,255,255,.8)}
   .mini-cover::after{content:"";position:absolute;inset:0;background:linear-gradient(to bottom,rgba(255,255,255,.08),rgba(255,255,255,.22) 46%,rgba(255,255,255,.78));pointer-events:none}
   .mini-cover.has-photo::after{background:linear-gradient(to bottom,rgba(39,31,28,.05),rgba(39,31,28,.16) 42%,rgba(39,31,28,.76))}
@@ -113,10 +114,16 @@
   .cover-caption p{display:-webkit-box;overflow:hidden;-webkit-box-orient:vertical;-webkit-line-clamp:2;font-family:var(--display);font-size:1.12rem;line-height:1.4;color:var(--ink-soft);font-weight:700;overflow-wrap:anywhere;word-break:break-word}
   .mini-cover.has-photo .cover-caption p{color:#fff;text-shadow:0 2px 12px rgba(30,23,20,.58)}
   .mini-summary-grid{display:grid;grid-template-columns:1fr;gap:14px;margin-bottom:14px}
-  .teacher-note{display:grid;grid-template-columns:72px 1fr;gap:14px;align-items:start;background:var(--paper);border-radius:28px;padding:18px;margin-bottom:18px;border:1.5px solid var(--line)}
-  .teacher-avatar{width:72px;height:72px;border-radius:50%;border:2px dashed var(--coral);background:#fff8f5;display:flex;align-items:center;justify-content:center;font-family:var(--hand);font-size:1.12rem;color:var(--coral-deep);transform:rotate(-4deg)}
-  .speech{position:relative;background:#fffaf3;border:1.5px solid #f1e2d4;border-radius:22px;padding:14px 16px;color:var(--ink-soft);font-size:.94rem}
-  .speech::before{content:"";position:absolute;left:-9px;top:24px;width:16px;height:16px;background:#fffaf3;border-left:1.5px solid #f1e2d4;border-bottom:1.5px solid #f1e2d4;transform:rotate(45deg)}
+  .teacher-profile-card{position:relative;display:grid;grid-template-columns:108px minmax(0,1fr);gap:18px;align-items:center;min-width:0;margin-bottom:18px;padding:18px;border:1.5px solid #eadfd2;border-radius:26px;background:linear-gradient(135deg,#fffdf8,#fff8f2);box-shadow:0 18px 42px -32px rgba(120,80,60,.5);overflow:hidden}
+  .teacher-profile-card::after{content:"";position:absolute;right:-22px;bottom:-28px;width:100px;height:100px;border-radius:50%;background:rgba(255,226,167,.25);pointer-events:none}
+  .teacher-profile-photo{position:relative;z-index:1;width:108px;height:108px;min-width:0}
+  .teacher-profile-image,.teacher-profile-fallback{display:block;width:100%;height:100%;border-radius:50%;border:3px solid rgba(255,255,255,.9);box-shadow:0 12px 26px -18px rgba(64,55,51,.55)}
+  .teacher-profile-image{object-fit:cover;background:#f5eee6}
+  .teacher-profile-fallback{display:flex;align-items:center;justify-content:center;background:#fff1e9;color:var(--coral-deep);font-family:var(--hand);font-size:1.3rem;font-weight:700;border-color:#ffe2d7}
+  .teacher-profile-copy{position:relative;z-index:1;min-width:0}
+  .teacher-profile-role{display:inline-flex;margin-bottom:4px;border-radius:999px;padding:4px 9px;background:#eef5eb;color:#70896d;font-size:.72rem;line-height:1.35;font-weight:900}
+  .teacher-profile-name{font-family:var(--display);font-size:1.22rem;line-height:1.4;font-weight:900;overflow-wrap:anywhere;word-break:keep-all}
+  .teacher-profile-intro{margin-top:6px;color:var(--ink-soft);font-size:.92rem;line-height:1.72;overflow-wrap:anywhere;word-break:keep-all}
   .event-teaser{position:relative;width:100%;text-align:left;border:1.5px dashed #ead7e7;background:#fff7fb;border-radius:28px;padding:18px 18px 52px;cursor:pointer;box-shadow:0 16px 42px -30px rgba(120,80,60,.45);overflow:hidden;font-family:var(--body);color:var(--ink)}
   .event-badge{display:inline-flex;align-items:center;border-radius:999px;padding:6px 10px;background:#fff0a8;font-family:var(--hand);font-size:1rem;font-weight:700;transform:rotate(-3deg);margin-bottom:10px}
   .event-teaser-title{font-weight:700;font-size:1.04rem;line-height:1.45;margin-bottom:4px;word-break:break-word}
@@ -204,14 +211,19 @@
     .image-modal img{order:2;width:auto;height:auto;max-width:100%;max-height:min(82vh,calc(100vh - 76px));max-height:min(82vh,calc(100dvh - 76px))}
     .image-modal .btn.small{position:static;order:1;align-self:flex-end;flex:0 0 var(--image-modal-close-size);left:auto;top:auto;margin:0 0 8px}
     body.mini-open .wrap{padding-top:18px}
+    .mini-top{align-items:flex-start;flex-wrap:wrap}
+    .mini-top-actions{margin-left:auto}
     .mini-cover{min-height:160px;border-radius:24px;padding:14px}
     .enrollment-pill{left:14px;top:14px;max-width:calc(100% - 80px);padding:5px 9px;font-size:.72rem}
     .month-sticker{right:14px;top:14px}
     .cover-caption{left:16px;right:16px;bottom:14px}
     .cover-caption-meta{margin-bottom:4px}
     .cover-caption p{font-size:1.02rem;line-height:1.35}
-    .teacher-note{grid-template-columns:1fr}
-    .teacher-avatar{width:64px;height:64px}
+    .teacher-profile-card{grid-template-columns:68px minmax(0,1fr);gap:12px;padding:14px;border-radius:22px}
+    .teacher-profile-photo{width:68px;height:68px}
+    .teacher-profile-fallback{font-size:1.05rem}
+    .teacher-profile-name{font-size:1.05rem}
+    .teacher-profile-intro{font-size:.86rem;line-height:1.65}
     .album-list-mini{grid-template-columns:minmax(0,360px)}
     .album-grid-mini{grid-template-columns:repeat(2,1fr)}
   }
@@ -303,7 +315,10 @@
         <div class="section-eyebrow">우리 반 미니홈피</div>
         <h1 class="mini-title" id="miniTitle"></h1>
       </div>
-      <button type="button" class="btn ghost small" id="miniBackBtn">목록으로</button>
+      <div class="mini-top-actions">
+        <button type="button" class="btn ghost small" id="miniHomeBtn" aria-label="우리 반 미니홈피 첫 화면으로 돌아가기">홈</button>
+        <button type="button" class="btn ghost small" id="miniBackBtn">목록으로</button>
+      </div>
     </div>
     <div id="miniRoot"></div>
   </section>
@@ -340,6 +355,7 @@
   var noticeTitle = document.getElementById('noticeTitle');
   var noticeDesc = document.getElementById('noticeDesc');
   var miniTitle = document.getElementById('miniTitle');
+  var miniHomeBtn = document.getElementById('miniHomeBtn');
   var miniBackBtn = document.getElementById('miniBackBtn');
   var miniRoot = document.getElementById('miniRoot');
   var imageModal = document.getElementById('imageModal');
@@ -380,11 +396,12 @@
   var currentEnrollment = null;
   var currentMini = null;
   var currentMiniTab = 'diary';
+  var currentMiniView = 'home';
   var selectedAlbumKey = null;
   var classLoadVersion = 0;
   var eventCalendarDate = firstOfMonth(new Date());
   var selectedEventDate = toDateInput(new Date());
-  var miniCache = { posts: [], media: [], comments: [], coverPath: '', coverSignedUrl: '', coverRequest: null };
+  var miniCache = createMiniCache();
   var BUCKET = 'center-images';
   var directClassId = new URLSearchParams(location.search).get('class_id') || '';
 
@@ -405,6 +422,26 @@
     document.body.classList.toggle('mini-open', panel === miniPanel);
   }
 
+  function createMiniCache(){
+    return {
+      posts: [],
+      media: [],
+      comments: [],
+      coverPath: '',
+      coverSignedUrl: '',
+      coverRequest: null,
+      teacherProfile: null,
+      teacherProfileStatus: 'idle',
+      teacherProfileRequest: null,
+      teacherPhotoClassId: '',
+      teacherPhotoMediaId: '',
+      teacherPhotoPath: '',
+      teacherPhotoSignedUrl: '',
+      teacherPhotoRequest: null,
+      teacherPhotoFailed: false
+    };
+  }
+
   function resetMiniStateForAuthChange(){
     classLoadVersion += 1;
     approvedClasses = [];
@@ -412,8 +449,9 @@
     currentEnrollment = null;
     currentMini = null;
     currentMiniTab = 'diary';
+    currentMiniView = 'home';
     selectedAlbumKey = null;
-    miniCache = { posts: [], media: [], comments: [], coverPath: '', coverSignedUrl: '', coverRequest: null };
+    miniCache = createMiniCache();
     imageModal.hidden = true;
     imageModalImg.removeAttribute('src');
   }
@@ -657,6 +695,256 @@
     }
   }
 
+  function teacherProfileFromRpc(data, classId){
+    var rows = Array.isArray(data) ? data : (data ? [data] : []);
+    var row = rows.find(function(item){
+      return item && item.class_id === classId;
+    });
+    if (!row) return null;
+    var mediaId = typeof row.teacher_media_id === 'string' ? row.teacher_media_id.trim() : '';
+    if (!mediaId) return null;
+    return {
+      class_id: classId,
+      teacher_media_id: mediaId,
+      teacher_name: typeof row.teacher_name === 'string' ? row.teacher_name : '',
+      photo_path: typeof row.photo_path === 'string' ? row.photo_path.trim() : '',
+      photo_alt: typeof row.photo_alt === 'string' ? row.photo_alt : '',
+      teacher_intro: typeof row.teacher_intro === 'string' ? row.teacher_intro : ''
+    };
+  }
+
+  function teacherProfilePhotoMatches(cache, profile, classId, mediaId, path){
+    return cache === miniCache &&
+      cache.teacherProfile === profile &&
+      cache.teacherPhotoClassId === classId &&
+      cache.teacherPhotoMediaId === mediaId &&
+      cache.teacherPhotoPath === path &&
+      profile && profile.class_id === classId &&
+      profile.teacher_media_id === mediaId &&
+      profile.photo_path === path;
+  }
+
+  function cachedTeacherPhotoUrl(cache, profile, classId){
+    var mediaId = profile && profile.teacher_media_id ? profile.teacher_media_id : '';
+    var path = profile && profile.photo_path ? profile.photo_path : '';
+    if (!mediaId || !path || cache.teacherPhotoFailed) return '';
+    return teacherProfilePhotoMatches(cache, profile, classId, mediaId, path)
+      ? cache.teacherPhotoSignedUrl
+      : '';
+  }
+
+  async function signedTeacherPhotoUrl(profile, authVersion, loadVersion, classId){
+    var mediaId = profile && profile.teacher_media_id ? profile.teacher_media_id : '';
+    var path = profile && profile.photo_path ? profile.photo_path : '';
+    if (!mediaId || !path) return '';
+    var targetCache = miniCache;
+    if (
+      targetCache.teacherPhotoClassId !== classId ||
+      targetCache.teacherPhotoMediaId !== mediaId ||
+      targetCache.teacherPhotoPath !== path
+    ) {
+      targetCache.teacherPhotoClassId = classId;
+      targetCache.teacherPhotoMediaId = mediaId;
+      targetCache.teacherPhotoPath = path;
+      targetCache.teacherPhotoSignedUrl = '';
+      targetCache.teacherPhotoRequest = null;
+      targetCache.teacherPhotoFailed = false;
+    }
+    if (targetCache.teacherPhotoSignedUrl) return targetCache.teacherPhotoSignedUrl;
+    if (targetCache.teacherPhotoFailed) return '';
+    if (!targetCache.teacherPhotoRequest) targetCache.teacherPhotoRequest = signedUrl(path);
+    var request = targetCache.teacherPhotoRequest;
+    try {
+      var url = await request;
+      if (
+        !teacherProfilePhotoMatches(targetCache, profile, classId, mediaId, path) ||
+        !isCurrentClassLoad(authVersion, loadVersion, classId)
+      ) return '';
+      if (!url) {
+        targetCache.teacherPhotoFailed = true;
+        return '';
+      }
+      targetCache.teacherPhotoSignedUrl = url;
+      return url;
+    } catch (_err) {
+      if (
+        teacherProfilePhotoMatches(targetCache, profile, classId, mediaId, path) &&
+        isCurrentClassLoad(authVersion, loadVersion, classId)
+      ) targetCache.teacherPhotoFailed = true;
+      return '';
+    } finally {
+      if (targetCache.teacherPhotoRequest === request) targetCache.teacherPhotoRequest = null;
+    }
+  }
+
+  function teacherProfilePhotoHtml(profile, photoUrl, authVersion, loadVersion, classId){
+    var validName = String(profile && profile.teacher_name || '').trim();
+    var alt = String(profile && profile.photo_alt || '').trim() ||
+      (validName ? validName + ' 선생님' : '담임 선생님');
+    var mediaId = String(profile && profile.teacher_media_id || '');
+    var path = String(profile && profile.photo_path || '');
+    var imageHtml = photoUrl && mediaId && path
+      ? '<img class="teacher-profile-image" src="' + esc(photoUrl) + '" alt="' + esc(alt) + '" hidden' +
+          ' data-profile-class-id="' + esc(classId) + '"' +
+          ' data-profile-media-id="' + esc(mediaId) + '"' +
+          ' data-profile-photo-path="' + esc(path) + '"' +
+          ' data-profile-auth-version="' + esc(authVersion) + '"' +
+          ' data-profile-load-version="' + esc(loadVersion) + '">'
+      : '';
+    return imageHtml + '<div class="teacher-profile-fallback">담임</div>';
+  }
+
+  function teacherProfileCardHtml(profile, photoUrl, authVersion, loadVersion, classId){
+    var validName = String(profile && profile.teacher_name || '').trim();
+    var name = validName || '우리 반 선생님';
+    var intro = String(profile && profile.teacher_intro || '').trim() || '아이들과 함께할 반가운 이야기를 준비하고 있어요.';
+    var mediaId = String(profile && profile.teacher_media_id || '');
+    var path = String(profile && profile.photo_path || '');
+    return '<section class="teacher-profile-card" aria-label="담임 선생님 프로필"' +
+      ' data-profile-class-id="' + esc(classId) + '"' +
+      ' data-profile-media-id="' + esc(mediaId) + '"' +
+      ' data-profile-photo-path="' + esc(path) + '"' +
+      ' data-profile-auth-version="' + esc(authVersion) + '"' +
+      ' data-profile-load-version="' + esc(loadVersion) + '">' +
+      '<div class="teacher-profile-photo">' + teacherProfilePhotoHtml(profile, photoUrl, authVersion, loadVersion, classId) + '</div>' +
+      '<div class="teacher-profile-copy">' +
+        '<div class="teacher-profile-role">담임 선생님</div>' +
+        '<div class="teacher-profile-name">' + esc(name) + '</div>' +
+        '<div class="teacher-profile-intro">' + escWithBr(intro) + '</div>' +
+      '</div>' +
+    '</section>';
+  }
+
+  function isCurrentTeacherProfileCard(card, cache, authVersion, loadVersion, classId){
+    return !!card && card.isConnected && miniRoot.contains(card) &&
+      cache === miniCache && currentMiniView === 'home' &&
+      isCurrentClassLoad(authVersion, loadVersion, classId) &&
+      card.dataset.profileClassId === classId &&
+      Number(card.dataset.profileAuthVersion) === authVersion &&
+      Number(card.dataset.profileLoadVersion) === loadVersion;
+  }
+
+  function isCurrentTeacherProfileRequest(cache, userId, authVersion, loadVersion, classId){
+    return !!userId &&
+      authSessionUserId(currentSession) === userId &&
+      cache === miniCache &&
+      isCurrentClassLoad(authVersion, loadVersion, classId);
+  }
+
+  function applyTeacherProfilePhoto(cache, profile, photoUrl, authVersion, loadVersion, classId){
+    var mediaId = profile && profile.teacher_media_id ? profile.teacher_media_id : '';
+    var path = profile && profile.photo_path ? profile.photo_path : '';
+    if (!photoUrl || !teacherProfilePhotoMatches(cache, profile, classId, mediaId, path)) return;
+    if (!isCurrentClassLoad(authVersion, loadVersion, classId) || currentMiniView !== 'home') return;
+    var card = miniRoot.querySelector('.teacher-profile-card');
+    if (!isCurrentTeacherProfileCard(card, cache, authVersion, loadVersion, classId)) return;
+    if (card.dataset.profileMediaId !== mediaId || card.dataset.profilePhotoPath !== path) return;
+    var photo = card.querySelector('.teacher-profile-photo');
+    if (!photo) return;
+    photo.innerHTML = teacherProfilePhotoHtml(profile, photoUrl, authVersion, loadVersion, classId);
+  }
+
+  function startTeacherPhotoLoad(cache, profile, authVersion, loadVersion, classId){
+    var mediaId = profile && profile.teacher_media_id ? profile.teacher_media_id : '';
+    var path = profile && profile.photo_path ? profile.photo_path : '';
+    if (cache.teacherProfileStatus !== 'ready' || !mediaId || !path || cache !== miniCache) return;
+    var cachedUrl = cachedTeacherPhotoUrl(cache, profile, classId);
+    if (cachedUrl) {
+      applyTeacherProfilePhoto(cache, profile, cachedUrl, authVersion, loadVersion, classId);
+      return;
+    }
+    if (
+      cache.teacherPhotoRequest &&
+      cache.teacherPhotoClassId === classId &&
+      cache.teacherPhotoMediaId === mediaId &&
+      cache.teacherPhotoPath === path
+    ) return;
+    signedTeacherPhotoUrl(profile, authVersion, loadVersion, classId).then(function(photoUrl){
+      applyTeacherProfilePhoto(cache, profile, photoUrl, authVersion, loadVersion, classId);
+    }).catch(function(){
+      // signedTeacherPhotoUrl handles the fallback state; keep this branch settled.
+    });
+  }
+
+  function refreshTeacherProfileCard(cache, profile, authVersion, loadVersion, classId){
+    if (cache !== miniCache || !isCurrentClassLoad(authVersion, loadVersion, classId)) return;
+    if (currentMiniView !== 'home') return;
+    var card = miniRoot.querySelector('.teacher-profile-card');
+    if (!isCurrentTeacherProfileCard(card, cache, authVersion, loadVersion, classId)) return;
+    var photoUrl = cachedTeacherPhotoUrl(cache, profile, classId);
+    card.outerHTML = teacherProfileCardHtml(profile, photoUrl, authVersion, loadVersion, classId);
+    if (profile && !photoUrl) startTeacherPhotoLoad(cache, profile, authVersion, loadVersion, classId);
+  }
+
+  function startTeacherProfileLoad(cache, authVersion, loadVersion, classId){
+    if (cache.teacherProfileStatus === 'loading' && cache.teacherProfileRequest) {
+      return cache.teacherProfileRequest;
+    }
+    if (cache.teacherProfileStatus === 'ready' || cache.teacherProfileStatus === 'failed') {
+      return Promise.resolve(cache.teacherProfile);
+    }
+    if (cache.teacherProfileStatus !== 'idle') return Promise.resolve(cache.teacherProfile);
+    var requestedUserId = authSessionUserId(currentSession);
+    if (!requestedUserId) {
+      cache.teacherProfile = null;
+      cache.teacherProfileStatus = 'failed';
+      return Promise.resolve(null);
+    }
+    cache.teacherProfileStatus = 'loading';
+    var rpcRequest;
+    try {
+      rpcRequest = client.rpc('get_class_teacher_profile', {
+        p_class_id: classId
+      });
+    } catch (_err) {
+      if (isCurrentTeacherProfileRequest(cache, requestedUserId, authVersion, loadVersion, classId)) {
+        cache.teacherProfile = null;
+        cache.teacherProfileStatus = 'failed';
+      }
+      return Promise.resolve(null);
+    }
+    var request = Promise.resolve(rpcRequest).then(function(profileRes){
+      if (!isCurrentTeacherProfileRequest(cache, requestedUserId, authVersion, loadVersion, classId)) return null;
+      if (!profileRes || profileRes.error) {
+        cache.teacherProfile = null;
+        cache.teacherProfileStatus = 'failed';
+        return null;
+      }
+      var profile = teacherProfileFromRpc(profileRes.data, classId);
+      cache.teacherProfile = profile;
+      cache.teacherProfileStatus = 'ready';
+      refreshTeacherProfileCard(cache, profile, authVersion, loadVersion, classId);
+      return profile;
+    }).catch(function(){
+      if (isCurrentTeacherProfileRequest(cache, requestedUserId, authVersion, loadVersion, classId)) {
+        cache.teacherProfile = null;
+        cache.teacherProfileStatus = 'failed';
+      }
+      return null;
+    });
+    cache.teacherProfileRequest = request;
+    request.then(function(){
+      if (cache.teacherProfileRequest === request) cache.teacherProfileRequest = null;
+    }, function(){
+      if (cache.teacherProfileRequest === request) cache.teacherProfileRequest = null;
+    });
+    return request;
+  }
+
+  function isCurrentTeacherProfileImageTarget(image){
+    if (!image || !image.isConnected || !miniRoot.contains(image)) return false;
+    var classId = image.dataset.profileClassId || '';
+    var mediaId = image.dataset.profileMediaId || '';
+    var path = image.dataset.profilePhotoPath || '';
+    var authVersion = Number(image.dataset.profileAuthVersion);
+    var loadVersion = Number(image.dataset.profileLoadVersion);
+    var profile = miniCache.teacherProfile;
+    return Number.isFinite(authVersion) && Number.isFinite(loadVersion) &&
+      isCurrentClassLoad(authVersion, loadVersion, classId) &&
+      teacherProfilePhotoMatches(miniCache, profile, classId, mediaId, path) &&
+      miniCache.teacherPhotoSignedUrl === image.getAttribute('src');
+  }
+
   function enabledModules(){
     var enabled = currentMini && currentMini.modules_enabled ? currentMini.modules_enabled : {};
     var modules = [
@@ -803,59 +1091,65 @@
     };
     currentMini = null;
     currentMiniTab = 'diary';
+    currentMiniView = 'home';
     selectedAlbumKey = null;
-    miniCache = { posts: [], media: [], comments: [], coverPath: '', coverSignedUrl: '', coverRequest: null };
+    miniCache = createMiniCache();
+    var targetCache = miniCache;
     miniTitle.textContent = classTitle(row);
     miniRoot.innerHTML = '<div class="empty-mini">반 미니홈피를 불러오고 있어요.</div>';
     leadText.textContent = classTitle(row) + ' 소식입니다.';
     showPanel(miniPanel);
+    startTeacherProfileLoad(targetCache, startedAuthVersion, startedClassLoadVersion, targetClassId);
 
     try {
-      var miniRes = await client.from('class_mini').select('*').eq('class_id', targetClassId).maybeSingle();
-      if (!isCurrentClassLoad(startedAuthVersion, startedClassLoadVersion, targetClassId)) return;
+      var contentResults = await Promise.all([
+        client.from('class_mini')
+          .select('*')
+          .eq('class_id', targetClassId)
+          .maybeSingle(),
+        client.from('class_posts')
+          .select('*')
+          .eq('class_id', targetClassId)
+          .order('created_at', { ascending:false }),
+        client.from('class_media')
+          .select('*')
+          .eq('class_id', targetClassId)
+          .order('uploaded_at', { ascending:false }),
+        client.from('class_comments')
+          .select('*')
+          .eq('class_id', targetClassId)
+          .order('created_at', { ascending:false })
+      ]);
+      if (
+        targetCache !== miniCache ||
+        !isCurrentClassLoad(startedAuthVersion, startedClassLoadVersion, targetClassId)
+      ) return;
+      var miniRes = contentResults[0];
+      var postsRes = contentResults[1];
+      var mediaRes = contentResults[2];
+      var commentsRes = contentResults[3];
       if (miniRes.error) throw miniRes.error;
       currentMini = miniRes.data || {
         class_id: targetClassId,
         theme_color: '#F7B7C8',
         intro: '',
-        teacher_message: '',
         modules_enabled: { diary:false, album:false, guestbook:false, notice:false }
       };
-
-      var postsRes = await client.from('class_posts')
-        .select('*')
-        .eq('class_id', targetClassId)
-        .order('created_at', { ascending:false });
-      if (!isCurrentClassLoad(startedAuthVersion, startedClassLoadVersion, targetClassId)) return;
       if (postsRes.error) throw postsRes.error;
       var postRows = postsRes.data || [];
-
-      var mediaRes = await client.from('class_media')
-        .select('*')
-        .eq('class_id', targetClassId)
-        .order('uploaded_at', { ascending:false });
-      if (!isCurrentClassLoad(startedAuthVersion, startedClassLoadVersion, targetClassId)) return;
       if (mediaRes.error) throw mediaRes.error;
       var mediaRows = mediaRes.data || [];
-
-      var commentsRes = await client.from('class_comments')
-        .select('*')
-        .eq('class_id', targetClassId)
-        .order('created_at', { ascending:false });
-      if (!isCurrentClassLoad(startedAuthVersion, startedClassLoadVersion, targetClassId)) return;
       if (commentsRes.error) throw commentsRes.error;
       var commentRows = commentsRes.data || [];
 
       var signedRows = await signedMediaRows(mediaRows);
-      if (!isCurrentClassLoad(startedAuthVersion, startedClassLoadVersion, targetClassId)) return;
-      miniCache = {
-        posts: postRows,
-        media: signedRows,
-        comments: commentRows,
-        coverPath: '',
-        coverSignedUrl: '',
-        coverRequest: null
-      };
+      if (
+        targetCache !== miniCache ||
+        !isCurrentClassLoad(startedAuthVersion, startedClassLoadVersion, targetClassId)
+      ) return;
+      targetCache.posts = postRows;
+      targetCache.media = signedRows;
+      targetCache.comments = commentRows;
       var next = upcomingEvent();
       if (next) {
         selectedEventDate = dateKey(next.event_date);
@@ -940,6 +1234,11 @@
     if (!coverImg) {
       coverStyle = ' style="background:linear-gradient(135deg,' + safeThemeColor(currentMini.theme_color) + ',#D9C8FF)"';
     }
+    var renderCache = miniCache;
+    var teacherProfile = renderCache.teacherProfile;
+    var teacherPhotoUrl = currentMiniView === 'home'
+      ? cachedTeacherPhotoUrl(renderCache, teacherProfile, classId)
+      : '';
 
     if (modules.length && !modules.some(function(item){ return item.key === currentMiniTab; })) {
       currentMiniTab = modules[0].key;
@@ -1033,15 +1332,22 @@
           '<p>' + esc(heroText) + '</p>' +
         '</div>' +
       '</div>' +
-      '<section class="teacher-note">' +
-        '<div class="teacher-avatar">담임</div>' +
-        '<div class="speech">' + escWithBr(currentMini.teacher_message || currentMini.intro || '선생님의 한마디가 곧 올라올 예정이에요.') + '</div>' +
-      '</section>' +
+      (currentMiniView === 'home'
+        ? teacherProfileCardHtml(teacherProfile, teacherPhotoUrl, authVersion, loadVersion, classId)
+        : '') +
       (modules.length
         ? '<div class="mini-content" id="miniContent"></div>'
         : '<div class="empty-mini">아직 준비 중이에요.</div>');
 
     if (modules.length) renderMiniTab();
+    if (
+      currentMiniView === 'home' &&
+      renderCache.teacherProfileStatus === 'ready' &&
+      teacherProfile &&
+      !teacherPhotoUrl
+    ) {
+      startTeacherPhotoLoad(renderCache, teacherProfile, authVersion, loadVersion, classId);
+    }
   }
 
   function renderMiniTab(){
@@ -1513,10 +1819,40 @@
     showPanel(classesPanel);
   });
 
+  miniHomeBtn.addEventListener('click', async function(){
+    var homeAuthVersion = authTransitionVersion;
+    var homeClassLoadVersion = classLoadVersion;
+    var homeClassId = currentMiniClass && currentMiniClass.id;
+    if (!isCurrentClassLoad(homeAuthVersion, homeClassLoadVersion, homeClassId)) return;
+    currentMiniView = 'home';
+    currentMiniTab = 'diary';
+    selectedAlbumKey = null;
+    await renderMiniHome(homeAuthVersion, homeClassLoadVersion, homeClassId);
+  });
+
+  miniRoot.addEventListener('load', function(e){
+    if (!e.target || !e.target.matches('.teacher-profile-image')) return;
+    if (!isCurrentTeacherProfileImageTarget(e.target)) return;
+    var fallback = e.target.parentElement && e.target.parentElement.querySelector('.teacher-profile-fallback');
+    e.target.hidden = false;
+    if (fallback) fallback.hidden = true;
+  }, true);
+
   miniRoot.addEventListener('error', function(e){
-    if (!e.target || !e.target.matches('.summary-photo-img')) return;
-    var visual = e.target.closest('.summary-photo');
-    if (visual) visual.classList.add('is-error');
+    if (!e.target) return;
+    if (e.target.matches('.teacher-profile-image')) {
+      if (!isCurrentTeacherProfileImageTarget(e.target)) return;
+      var fallback = e.target.parentElement && e.target.parentElement.querySelector('.teacher-profile-fallback');
+      e.target.hidden = true;
+      if (fallback) fallback.hidden = false;
+      miniCache.teacherPhotoSignedUrl = '';
+      miniCache.teacherPhotoFailed = true;
+      return;
+    }
+    if (e.target.matches('.summary-photo-img')) {
+      var visual = e.target.closest('.summary-photo');
+      if (visual) visual.classList.add('is-error');
+    }
   }, true);
 
   miniRoot.addEventListener('click', async function(e){
@@ -1525,6 +1861,7 @@
       var summaryAuthVersion = authTransitionVersion;
       var summaryClassLoadVersion = classLoadVersion;
       var summaryClassId = currentMiniClass && currentMiniClass.id;
+      currentMiniView = 'section';
       currentMiniTab = summaryCard.dataset.summaryTab;
       if (currentMiniTab !== 'album') selectedAlbumKey = null;
       if (currentMiniTab === 'event') {
@@ -1547,6 +1884,7 @@
       var tabAuthVersion = authTransitionVersion;
       var tabClassLoadVersion = classLoadVersion;
       var tabClassId = currentMiniClass && currentMiniClass.id;
+      currentMiniView = 'section';
       currentMiniTab = tab.dataset.miniTab;
       if (currentMiniTab !== 'album') selectedAlbumKey = null;
       await renderMiniHome(tabAuthVersion, tabClassLoadVersion, tabClassId);
