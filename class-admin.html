@@ -106,7 +106,16 @@
   .class-select-name{font-size:1.05rem;font-weight:900;color:var(--ink)}
   .class-select-meta{font-size:.84rem;color:var(--ink-soft);margin:5px 0 14px}
   .class-select-button{width:100%;margin-top:auto}
+  .mini-settings-panel{max-width:720px;margin:0 auto}
+  .teacher-intro-description{margin-top:8px;color:var(--ink-soft);font-size:.92rem;line-height:1.65}
+  .teacher-intro-help{margin-top:5px;color:var(--sage);font-size:.84rem;font-weight:700}
+  .teacher-intro-form{margin-top:20px}
+  .teacher-intro-textarea{min-height:120px}
+  .teacher-intro-actions{display:flex;align-items:center;justify-content:space-between;gap:14px}
+  .teacher-intro-count{color:var(--ink-soft);font-size:.84rem;white-space:nowrap}
+  #teacherIntroMsg{white-space:pre-line}
   @media (max-width:760px){.topbar-inner{gap:10px;align-items:flex-start;flex-wrap:wrap}.topbar-actions{width:100%;gap:7px;justify-content:flex-start;flex-wrap:wrap}.topbar-actions #classNameTop{flex:1 0 100%;max-width:100%;margin-right:0}.topbar-actions .btn{height:36px;padding:0 12px;font-size:12.5px}.topbar-actions #logoutBtn{padding:0 10px}.layout,.split{grid-template-columns:1fr}.album-grid,.photo-grid{grid-template-columns:repeat(2,1fr)}.panel{padding:22px}.day-cell{min-height:62px}}
+  @media (max-width:560px){.teacher-intro-actions{align-items:stretch;flex-direction:column}.teacher-intro-actions .btn{width:100%}.teacher-intro-count{align-self:flex-end}}
 </style>
 </head>
 <body>
@@ -161,6 +170,7 @@
       <button type="button" class="tab-btn" data-tab="album">사진 앨범</button>
       <button type="button" class="tab-btn" data-tab="guestbook">방명록</button>
       <button type="button" class="tab-btn" data-tab="notice">공지사항</button>
+      <button type="button" class="tab-btn" data-tab="mini-settings">미니홈피 설정</button>
     </div>
 
     <div class="tab-panel active" data-panel="diary">
@@ -267,6 +277,25 @@
         <section class="list" id="noticeList"></section>
       </div>
     </div>
+
+    <div class="tab-panel" data-panel="mini-settings">
+      <section class="panel mini-settings-panel">
+        <h2 class="card-title">담임 프로필 소개</h2>
+        <p class="teacher-intro-description" id="teacherIntroDescription">반 미니홈피 첫 화면에서 담임 사진과 함께 표시되는 간단한 소개입니다.</p>
+        <p class="teacher-intro-help" id="teacherIntroHelp">담임 사진과 이름은 원장님의 반 관리 화면에서 연결합니다.</p>
+        <form class="teacher-intro-form" id="teacherIntroForm">
+          <div class="field">
+            <label for="teacherIntroInput">담임 소개</label>
+            <textarea class="teacher-intro-textarea" id="teacherIntroInput" maxlength="200" aria-describedby="teacherIntroDescription teacherIntroHelp"></textarea>
+          </div>
+          <div class="teacher-intro-actions">
+            <span class="teacher-intro-count" id="teacherIntroCount">0 / 200</span>
+            <button type="submit" class="btn small" id="teacherIntroSubmit">담임 소개 저장</button>
+          </div>
+          <div class="msg" id="teacherIntroMsg" role="status" aria-live="polite"></div>
+        </form>
+      </section>
+    </div>
   </section>
 
   <section class="panel" id="noticePanel" hidden>
@@ -321,6 +350,17 @@
   var noticeFormBaseline = '';
   var eventFormBaseline = '';
   var albumFormBaseline = '';
+  var teacherIntroMiniRowId = null;
+  var teacherIntroOriginalValue = null;
+  var teacherIntroDraftValue = '';
+  var teacherIntroStateUserId = null;
+  var teacherIntroStateClassId = null;
+  var teacherIntroStateGeneration = 0;
+  var teacherIntroStateLoaded = false;
+  var teacherIntroStatusText = '';
+  var teacherIntroStatusTone = '';
+  var teacherIntroLoadSequence = 0;
+  var teacherIntroSaveOperation = null;
 
   var topbar = document.querySelector('.topbar');
   var loadingPanel = byId('loadingPanel');
@@ -353,6 +393,16 @@
     if (ids.id === 'diaryId') diaryFormBaseline = snapshot;
     if (ids.id === 'noticeId') noticeFormBaseline = snapshot;
   }
+  function normalizeTeacherIntroValue(value){
+    return String(value == null ? '' : value).trim() || null;
+  }
+  function hasUnsavedTeacherIntro(){
+    if (!teacherIntroStateLoaded || !currentSession || !currentSession.user || !currentClass) return false;
+    if (teacherIntroStateUserId !== currentSession.user.id ||
+        teacherIntroStateClassId !== currentClass.id ||
+        teacherIntroStateGeneration !== classLoadGeneration) return false;
+    return normalizeTeacherIntroValue(teacherIntroDraftValue) !== normalizeTeacherIntroValue(teacherIntroOriginalValue);
+  }
   function hasUnsavedClassWork(){
     if (formSnapshot(['diaryId', 'diaryTitle', 'diaryBody']) !== diaryFormBaseline) return true;
     if (formSnapshot(['noticeId', 'noticeTitle', 'noticeBody']) !== noticeFormBaseline) return true;
@@ -360,6 +410,7 @@
     if (!byId('eventModal').hidden &&
         formSnapshot(['eventId', 'eventTitle', 'eventDate', 'eventBody']) !== eventFormBaseline) return true;
     if (formSnapshot(['albumId', 'albumTitle', 'albumDate', 'albumBody']) !== albumFormBaseline) return true;
+    if (hasUnsavedTeacherIntro()) return true;
     return Array.from(document.querySelectorAll('[data-reply-input]')).some(function(input){
       return input.value.trim() !== String(input.dataset.originalValue || '').trim();
     });
@@ -393,6 +444,60 @@
   function setMsg(el, text, isError){
     el.innerHTML = escWithBr(text || '');
     el.className = 'msg' + (isError ? ' error' : '');
+  }
+  function isTeacherIntroContextCurrent(userId, classId, loadGeneration){
+    return !classStaffAccessLost &&
+      !!userId && !!classId &&
+      loadGeneration === classLoadGeneration &&
+      !!currentSession && !!currentSession.user && currentSession.user.id === userId &&
+      !!currentClass && currentClass.id === classId &&
+      !appPanel.hidden;
+  }
+  function isTeacherIntroStateCurrent(){
+    return isTeacherIntroContextCurrent(
+      teacherIntroStateUserId,
+      teacherIntroStateClassId,
+      teacherIntroStateGeneration
+    );
+  }
+  function resetTeacherIntroState(){
+    teacherIntroLoadSequence += 1;
+    teacherIntroSaveOperation = null;
+    teacherIntroMiniRowId = null;
+    teacherIntroOriginalValue = null;
+    teacherIntroDraftValue = '';
+    teacherIntroStateUserId = null;
+    teacherIntroStateClassId = null;
+    teacherIntroStateGeneration = 0;
+    teacherIntroStateLoaded = false;
+    teacherIntroStatusText = '';
+    teacherIntroStatusTone = '';
+  }
+  function setTeacherIntroStatus(text, tone){
+    teacherIntroStatusText = text || '';
+    teacherIntroStatusTone = tone || '';
+  }
+  function renderTeacherIntroPanel(){
+    if (activeTab !== 'mini-settings' || !isTeacherIntroStateCurrent()) return;
+    var textarea = byId('teacherIntroInput');
+    var submit = byId('teacherIntroSubmit');
+    var msg = byId('teacherIntroMsg');
+    var isSaving = !!teacherIntroSaveOperation;
+    var isLocked = !teacherIntroStateLoaded || isSaving || isCreatingClassMini;
+    textarea.value = teacherIntroDraftValue;
+    textarea.disabled = isLocked;
+    submit.disabled = isLocked;
+    submit.textContent = isSaving ? '저장 중...' : '담임 소개 저장';
+    byId('teacherIntroCount').textContent = String(teacherIntroDraftValue.length) + ' / 200';
+    msg.textContent = teacherIntroStatusText;
+    msg.className = 'msg' + (teacherIntroStatusTone === 'error' ? ' error' : teacherIntroStatusTone === 'ok' ? ' ok' : '');
+    byId('teacherIntroForm').setAttribute('aria-busy', isSaving ? 'true' : 'false');
+  }
+  function applyTeacherIntroRow(row, preserveDraft){
+    teacherIntroMiniRowId = row && row.id ? row.id : null;
+    teacherIntroOriginalValue = row && row.teacher_intro != null ? String(row.teacher_intro) : null;
+    if (!preserveDraft) teacherIntroDraftValue = teacherIntroOriginalValue || '';
+    teacherIntroStateLoaded = true;
   }
   function managementLeadText(){
     return classNameTop.textContent + ' 미니홈피를 관리하고 있어요. · ' +
@@ -536,7 +641,7 @@
 
   async function findClassMiniRow(classId){
     var res = await client.from('class_mini')
-      .select('id,class_id')
+      .select('id,class_id,teacher_intro')
       .eq('class_id', classId)
       .maybeSingle();
     if (res.error) throw res.error;
@@ -548,6 +653,168 @@
     if (miniRow) setMiniHomeLinkReady();
     else setMiniHomeLinkMissing();
     return miniRow;
+  }
+
+  async function loadTeacherIntroSettings(){
+    if (!currentSession || !currentSession.user || !currentClass) return;
+    var userId = currentSession.user.id;
+    var classId = currentClass.id;
+    var loadGeneration = classLoadGeneration;
+    var requestSequence = ++teacherIntroLoadSequence;
+
+    teacherIntroMiniRowId = null;
+    teacherIntroOriginalValue = null;
+    teacherIntroDraftValue = '';
+    teacherIntroStateUserId = userId;
+    teacherIntroStateClassId = classId;
+    teacherIntroStateGeneration = loadGeneration;
+    teacherIntroStateLoaded = false;
+    setTeacherIntroStatus('담임 소개를 불러오는 중입니다.', '');
+    renderTeacherIntroPanel();
+
+    try {
+      var miniRow = await findClassMiniRow(classId);
+      if (requestSequence !== teacherIntroLoadSequence ||
+          activeTab !== 'mini-settings' ||
+          !isTeacherIntroContextCurrent(userId, classId, loadGeneration)) return;
+      applyTeacherIntroRow(miniRow, false);
+      setTeacherIntroStatus('', '');
+      renderTeacherIntroPanel();
+    } catch (err) {
+      if (requestSequence !== teacherIntroLoadSequence ||
+          activeTab !== 'mini-settings' ||
+          !isTeacherIntroContextCurrent(userId, classId, loadGeneration)) return;
+      teacherIntroStateLoaded = false;
+      var message = errorMessage(err);
+      if (!isTeacherIntroContextCurrent(userId, classId, loadGeneration)) return;
+      setTeacherIntroStatus('담임 소개를 불러오지 못했습니다.\n' + message, 'error');
+      renderTeacherIntroPanel();
+    }
+  }
+
+  function isUniqueViolation(error){
+    return !!error && String(error.code || '') === '23505';
+  }
+
+  async function refreshTeacherIntroAfterConflict(operation, message){
+    var requestSequence = ++teacherIntroLoadSequence;
+    var miniRow = await findClassMiniRow(operation.classId);
+    if (teacherIntroSaveOperation !== operation ||
+        requestSequence !== teacherIntroLoadSequence ||
+        !isTeacherIntroContextCurrent(operation.userId, operation.classId, operation.loadGeneration)) return false;
+    applyTeacherIntroRow(miniRow, false);
+    setTeacherIntroStatus(message, '');
+    renderTeacherIntroPanel();
+    return true;
+  }
+
+  async function saveTeacherIntro(){
+    if (teacherIntroSaveOperation || !teacherIntroStateLoaded || !isTeacherIntroStateCurrent()) return;
+    var textarea = byId('teacherIntroInput');
+    teacherIntroDraftValue = String(textarea.value || '');
+    if (teacherIntroDraftValue.length > 200) {
+      setTeacherIntroStatus('담임 소개는 200자 이내로 입력해 주세요.', 'error');
+      renderTeacherIntroPanel();
+      return;
+    }
+    if (isCreatingClassMini) {
+      setTeacherIntroStatus('미니홈피 생성이 끝난 뒤 다시 저장해 주세요.', 'error');
+      renderTeacherIntroPanel();
+      return;
+    }
+
+    var operation = {
+      userId: teacherIntroStateUserId,
+      classId: teacherIntroStateClassId,
+      loadGeneration: teacherIntroStateGeneration,
+      rowId: teacherIntroMiniRowId,
+      previousValue: teacherIntroOriginalValue,
+      nextValue: String(textarea.value || '').trim() || null
+    };
+    teacherIntroSaveOperation = operation;
+
+    try {
+      setTeacherIntroStatus('', '');
+      renderTeacherIntroPanel();
+
+      var hasAccess = await ensureCurrentClassStaffAccess();
+      if (!hasAccess) {
+        if (teacherIntroSaveOperation === operation &&
+            isTeacherIntroContextCurrent(operation.userId, operation.classId, operation.loadGeneration)) {
+          setTeacherIntroStatus('반 관리 권한을 확인하지 못해 저장하지 않았습니다.', 'error');
+        }
+        return;
+      }
+      if (teacherIntroSaveOperation !== operation ||
+          !isTeacherIntroContextCurrent(operation.userId, operation.classId, operation.loadGeneration) ||
+          teacherIntroMiniRowId !== operation.rowId ||
+          teacherIntroOriginalValue !== operation.previousValue) return;
+
+      var saveRes;
+      if (operation.rowId) {
+        var updateQuery = client.from('class_mini')
+          .update({ teacher_intro: operation.nextValue })
+          .eq('id', operation.rowId)
+          .eq('class_id', operation.classId);
+        updateQuery = operation.previousValue === null
+          ? updateQuery.is('teacher_intro', null)
+          : updateQuery.eq('teacher_intro', operation.previousValue);
+        saveRes = await updateQuery.select('id,class_id,teacher_intro');
+        if (saveRes.error) throw saveRes.error;
+        var updateRows = Array.isArray(saveRes.data) ? saveRes.data : [];
+        if (updateRows.length === 0) {
+          await refreshTeacherIntroAfterConflict(
+            operation,
+            '다른 화면에서 소개가 변경되어 최신 내용을 불러왔습니다.'
+          );
+          return;
+        }
+        if (updateRows.length !== 1 || updateRows[0].id !== operation.rowId || updateRows[0].class_id !== operation.classId) {
+          throw new Error('담임 소개 저장 결과를 정확히 확인하지 못했습니다. 최신 내용을 다시 불러와 확인해 주세요.');
+        }
+      } else {
+        saveRes = await client.from('class_mini')
+          .insert({ class_id: operation.classId, teacher_intro: operation.nextValue })
+          .select('id,class_id,teacher_intro');
+        if (saveRes.error) {
+          if (isUniqueViolation(saveRes.error)) {
+            await refreshTeacherIntroAfterConflict(
+              operation,
+              '다른 화면에서 미니홈피가 먼저 만들어져 최신 소개를 불러왔습니다. 내용을 확인한 뒤 다시 저장해 주세요.'
+            );
+            return;
+          }
+          throw saveRes.error;
+        }
+        var insertRows = Array.isArray(saveRes.data) ? saveRes.data : [];
+        if (insertRows.length !== 1 || !insertRows[0].id || insertRows[0].class_id !== operation.classId) {
+          throw new Error('담임 소개 생성 결과를 정확히 확인하지 못했습니다. 최신 내용을 다시 불러와 확인해 주세요.');
+        }
+      }
+
+      if (teacherIntroSaveOperation !== operation ||
+          !isTeacherIntroContextCurrent(operation.userId, operation.classId, operation.loadGeneration)) return;
+      var savedRow = saveRes.data[0];
+      applyTeacherIntroRow(savedRow, false);
+      setMiniHomeLinkReady();
+      setTeacherIntroStatus(
+        operation.nextValue === null ? '담임 소개를 제거했습니다.' : '담임 소개를 저장했습니다.',
+        'ok'
+      );
+    } catch (err) {
+      if (teacherIntroSaveOperation !== operation ||
+          !isTeacherIntroContextCurrent(operation.userId, operation.classId, operation.loadGeneration)) return;
+      var message = errorMessage(err);
+      if (!isTeacherIntroContextCurrent(operation.userId, operation.classId, operation.loadGeneration)) return;
+      setTeacherIntroStatus(message, 'error');
+    } finally {
+      if (teacherIntroSaveOperation === operation) {
+        teacherIntroSaveOperation = null;
+        if (isTeacherIntroContextCurrent(operation.userId, operation.classId, operation.loadGeneration)) {
+          renderTeacherIntroPanel();
+        }
+      }
+    }
   }
 
   async function signedUrl(path){
@@ -701,6 +968,7 @@
 
   async function loadClassForStaff(session){
     var loadGeneration = ++classLoadGeneration;
+    resetTeacherIntroState();
     var requestedUserId = session && session.user ? session.user.id : null;
     var ownerConsoleSlug = '';
     classSwitchLink.hidden = true;
@@ -795,7 +1063,6 @@
       }
     } else {
       currentClass = null;
-      currentMini = null;
       currentAccessRole = '';
       classNameTop.textContent = '';
       leadText.textContent = '해당 원장 또는 현재 담임 교사만 반 미니홈피를 관리할 수 있어요.';
@@ -914,21 +1181,31 @@
 
   async function createClassMiniForStaff(){
     if (isCreatingClassMini || !currentClass || !currentSession || !currentSession.user) return;
+    if (teacherIntroSaveOperation) {
+      alert('담임 소개 저장이 끝난 뒤 미니홈피를 만들어 주세요.');
+      return;
+    }
     if (!await ensureCurrentClassStaffAccess()) return;
+    if (teacherIntroSaveOperation) {
+      alert('담임 소개 저장이 끝난 뒤 미니홈피를 만들어 주세요.');
+      return;
+    }
 
     isCreatingClassMini = true;
     setMiniHomeLinkCreating();
     leadText.textContent = '우리 반 미니홈피를 만드는 중입니다...';
 
     try {
+      if (isTeacherIntroStateCurrent()) renderTeacherIntroPanel();
       var insertRes = await client.from('class_mini')
         .insert({ class_id: currentClass.id })
-        .select('id,class_id')
+        .select('id,class_id,teacher_intro')
         .single();
 
       if (insertRes.error) {
         var existing = await findClassMiniRow(currentClass.id);
         if (existing) {
+          if (isTeacherIntroStateCurrent()) applyTeacherIntroRow(existing, true);
           setMiniHomeLinkReady();
           leadText.textContent = '이미 만들어진 미니홈피를 확인했습니다.';
           return;
@@ -939,6 +1216,7 @@
       var miniRow = insertRes.data || await findClassMiniRow(currentClass.id);
       if (!miniRow) throw new Error('미니홈피 생성 결과를 확인하지 못했습니다. 잠시 후 다시 시도해 주세요.');
 
+      if (isTeacherIntroStateCurrent()) applyTeacherIntroRow(miniRow, true);
       setMiniHomeLinkReady();
       leadText.textContent = '우리 반 미니홈피가 만들어졌습니다. 보기 버튼으로 확인할 수 있어요.';
     } catch (err) {
@@ -946,6 +1224,7 @@
       throw err;
     } finally {
       isCreatingClassMini = false;
+      if (isTeacherIntroStateCurrent()) renderTeacherIntroPanel();
     }
   }
 
@@ -1702,6 +1981,7 @@
     if (activeTab === 'album') await loadAlbumTab();
     if (activeTab === 'guestbook') await loadGuestbookTab();
     if (activeTab === 'notice') await loadNoticeTab();
+    if (activeTab === 'mini-settings') await loadTeacherIntroSettings();
   }
 
   var diaryIds = { id:'diaryId', title:'diaryTitle', body:'diaryBody', submit:'diarySubmit', cancel:'diaryCancel', msg:'diaryMsg' };
@@ -1740,6 +2020,11 @@
   });
 
   miniHomeLink.addEventListener('click', function(e){
+    if (miniHomeLink.dataset.action === 'open' && hasUnsavedClassWork() &&
+        !confirm('작성 중인 내용이 저장되지 않았습니다. 반 미니홈피로 이동할까요?')) {
+      e.preventDefault();
+      return;
+    }
     if (miniHomeLink.dataset.action !== 'create') return;
     e.preventDefault();
     createClassMiniForStaff().catch(function(err){
@@ -1765,6 +2050,17 @@
   byId('tabBar').addEventListener('click', async function(e){
     var btn = e.target.closest('.tab-btn');
     if (!btn) return;
+    if (btn.dataset.tab === activeTab && activeTab === 'mini-settings') {
+      if (!teacherIntroStateLoaded && !teacherIntroSaveOperation) {
+        await loadActiveTab();
+      }
+      return;
+    }
+    if (hasUnsavedTeacherIntro()) {
+      if (!confirm('작성 중인 담임 소개가 저장되지 않았습니다. 다른 관리 탭으로 이동할까요?')) return;
+      teacherIntroDraftValue = teacherIntroOriginalValue || '';
+      setTeacherIntroStatus('', '');
+    }
     activeTab = btn.dataset.tab;
     byId('tabBar').querySelectorAll('.tab-btn').forEach(function(item){ item.classList.remove('active'); });
     document.querySelectorAll('.tab-panel').forEach(function(item){ item.classList.remove('active'); });
@@ -1775,6 +2071,21 @@
 
   byId('diaryForm').addEventListener('submit', function(e){ e.preventDefault(); saveSimplePost('diary', diaryIds); });
   byId('noticeForm').addEventListener('submit', function(e){ e.preventDefault(); saveSimplePost('notice', noticeIds); });
+  byId('teacherIntroForm').addEventListener('submit', function(e){
+    e.preventDefault();
+    saveTeacherIntro();
+  });
+  byId('teacherIntroInput').addEventListener('input', function(e){
+    if (!isTeacherIntroStateCurrent() || teacherIntroSaveOperation) return;
+    teacherIntroDraftValue = String(e.target.value || '');
+    byId('teacherIntroCount').textContent = String(teacherIntroDraftValue.length) + ' / 200';
+    if (teacherIntroStatusText) {
+      setTeacherIntroStatus('', '');
+      var msg = byId('teacherIntroMsg');
+      msg.textContent = '';
+      msg.className = 'msg';
+    }
+  });
   byId('diaryCancel').addEventListener('click', function(){ resetSimpleForm(diaryIds, '일지 저장'); });
   byId('noticeCancel').addEventListener('click', function(){ resetSimpleForm(noticeIds, '공지 저장'); });
   var diaryFileInput = byId('diaryFileInput');
