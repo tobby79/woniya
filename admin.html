@@ -337,6 +337,33 @@
   .teacher-assignment-actions .btn.danger{background:transparent;border-color:#efc2c0;color:#c84c49}
   .teacher-assignment-actions .btn.danger:hover{background:#fff5f5}
   .teacher-lifecycle-note{margin:0 0 16px;color:var(--ink-soft);font-size:.9rem;line-height:1.65}
+  .class-teacher-profile-description,.class-teacher-profile-note{color:var(--ink-soft);font-size:.84rem;line-height:1.55}
+  .class-teacher-profile-note{margin-top:6px;padding:10px 12px;border-radius:12px;background:#fff8f5}
+  .class-teacher-profile-form{margin-top:14px}
+  .class-teacher-profile-controls{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:end}
+  .class-teacher-profile-controls .field{margin-bottom:0;min-width:0}
+  .class-teacher-profile-select{
+    width:100%;min-height:46px;border:1.5px solid var(--line);border-radius:14px;padding:11px 38px 11px 14px;
+    font-family:var(--body);font-size:.94rem;color:var(--ink);background:var(--cream);outline:none
+  }
+  .class-teacher-profile-select:focus{border-color:var(--coral)}
+  .class-teacher-profile-select:disabled{opacity:.58;cursor:not-allowed}
+  .class-teacher-profile-save{width:auto;min-width:150px;white-space:nowrap}
+  .class-teacher-profile-preview{
+    display:flex;align-items:center;gap:14px;margin-top:14px;padding:14px;
+    border:1.5px solid #eee3da;border-radius:16px;background:#fff;min-width:0
+  }
+  .class-teacher-profile-avatar-wrap{position:relative;width:68px;height:68px;flex:0 0 68px}
+  .class-teacher-profile-photo,.class-teacher-profile-avatar{
+    position:absolute;inset:0;width:100%;height:100%;border-radius:50%;display:flex;align-items:center;justify-content:center
+  }
+  .class-teacher-profile-photo{object-fit:cover;background:#f1e9e0}
+  .class-teacher-profile-avatar{background:#FFF1EA;color:var(--coral-deep);font-size:.8rem;font-weight:900}
+  .class-teacher-profile-copy{min-width:0;flex:1 1 auto}
+  .class-teacher-profile-name{font-weight:900;color:var(--ink);overflow-wrap:anywhere}
+  .class-teacher-profile-role{margin-top:3px;color:var(--ink-soft);font-size:.84rem;line-height:1.45;overflow-wrap:anywhere}
+  .class-teacher-profile-empty{margin-top:12px;padding:14px;border:1.5px dashed #eadfd3;border-radius:14px;color:var(--ink-soft);font-size:.86rem;line-height:1.55}
+  .class-teacher-profile-empty .btn{margin-top:10px}
   .parent-code-box{margin-top:12px;background:#fff8f5;border:1.5px solid #ffe1d6;border-radius:18px;padding:16px;text-align:center}
   .parent-code-value{font-family:var(--display);font-size:1.7rem;font-weight:800;letter-spacing:.08em;color:var(--coral-deep);word-break:break-all}
   .parent-code-note{margin-top:5px;font-size:.82rem;color:var(--ink-soft)}
@@ -391,6 +418,14 @@
     .bus-stop-summary{align-items:flex-start;flex-direction:column;gap:2px}
     .bus-actions{gap:4px}
     .bus-icon-btn{width:26px;height:26px;border-radius:8px;font-size:.74rem}
+  }
+  @media (max-width:560px){
+    .class-teacher-profile-controls{grid-template-columns:1fr}
+    .class-teacher-profile-save{width:100%;min-width:0}
+  }
+  @media (max-width:360px){
+    .class-teacher-profile-preview{gap:11px;padding:12px}
+    .class-teacher-profile-avatar-wrap{width:56px;height:56px;flex-basis:56px}
   }
   .modal-backdrop{position:fixed;inset:0;z-index:80;background:rgba(64,55,51,.42);display:flex;align-items:center;justify-content:center;padding:22px}
   .modal-panel{width:min(100%,520px);max-height:calc(100vh - 44px);overflow:auto;background:var(--paper);border-radius:24px;padding:24px;box-shadow:0 24px 60px -24px rgba(64,55,51,.48)}
@@ -1154,6 +1189,11 @@
   var facilityTabLoaded = false;
   var programTabLoaded = false;
   var classRows = [];
+  var classTeacherMediaRows = [];
+  var classManagerLoadSequence = 0;
+  var classTeacherProfilePreviewSequence = 0;
+  var classTeacherProfileSaveOperation = null;
+  var classTeacherProfileStatusByClass = Object.create(null);
   var teacherInviteRows = [];
   var teacherAssignmentRows = [];
   var teacherAssignmentsLoadFailed = false;
@@ -3900,6 +3940,308 @@
     '</div>';
   }
 
+  function normalizedTeacherMediaId(value){
+    return value == null ? '' : String(value).trim();
+  }
+
+  function classTeacherMediaById(mediaId){
+    var normalizedId = normalizedTeacherMediaId(mediaId);
+    if (!normalizedId) return null;
+    return classTeacherMediaRows.find(function(row){ return String(row.id) === normalizedId; }) || null;
+  }
+
+  function classTeacherMediaName(row){
+    var name = row && typeof row.title === 'string' ? row.title.trim() : '';
+    return name || '이름 없는 교사 카드';
+  }
+
+  function classTeacherMediaRole(row){
+    return row && typeof row.subtitle === 'string' ? row.subtitle.trim() : '';
+  }
+
+  function classTeacherMediaOptionLabel(row){
+    var name = classTeacherMediaName(row);
+    var role = classTeacherMediaRole(row);
+    return role ? name + ' · ' + role : name;
+  }
+
+  function classTeacherProfilePreviewKey(row){
+    if (!row) return '';
+    return [String(row.center_id || ''), String(row.id || ''), String(row.photo_url || '')].join('|');
+  }
+
+  function classTeacherProfilePreviewMarkup(mediaRow, classId){
+    var name = mediaRow ? classTeacherMediaName(mediaRow) : '선택된 담임 프로필이 없습니다.';
+    var role = mediaRow ? (classTeacherMediaRole(mediaRow) || '역할 정보 없음') : '선택 안 함';
+    return '<div class="class-teacher-profile-preview" data-class-id="' + esc(classId) + '" data-preview-key="' + esc(classTeacherProfilePreviewKey(mediaRow)) + '">' +
+      '<div class="class-teacher-profile-avatar-wrap">' +
+        '<div class="class-teacher-profile-avatar" aria-hidden="true">담임</div>' +
+      '</div>' +
+      '<div class="class-teacher-profile-copy">' +
+        '<div class="class-teacher-profile-name">' + esc(name) + '</div>' +
+        '<div class="class-teacher-profile-role">' + esc(role) + '</div>' +
+      '</div>' +
+    '</div>';
+  }
+
+  function classTeacherProfileStatus(classId){
+    return classTeacherProfileStatusByClass[String(classId)] || { message:'', type:'' };
+  }
+
+  function setClassTeacherProfileStatus(classId, message, type){
+    var key = String(classId || '');
+    if (!key) return;
+    classTeacherProfileStatusByClass[key] = { message:String(message || ''), type:String(type || '') };
+    var statusEl = document.getElementById('classTeacherProfileStatus');
+    if (!statusEl || statusEl.dataset.classId !== key) return;
+    statusEl.textContent = message || '';
+    statusEl.className = 'msg' + (type === 'error' ? ' error' : (type === 'ok' ? ' ok' : ''));
+  }
+
+  function isClassTeacherProfileSavingFor(row){
+    return Boolean(
+      classTeacherProfileSaveOperation &&
+      row &&
+      classTeacherProfileSaveOperation.classId === String(row.id) &&
+      classTeacherProfileSaveOperation.centerId === String(row.center_id)
+    );
+  }
+
+  function renderClassTeacherProfileSection(row){
+    var hasTeacherCards = classTeacherMediaRows.length > 0;
+    var currentMediaId = normalizedTeacherMediaId(row.teacher_media_id);
+    var currentMedia = classTeacherMediaById(currentMediaId);
+    var isSaving = isClassTeacherProfileSavingFor(row);
+    var selectedMediaId = isSaving
+      ? classTeacherProfileSaveOperation.nextTeacherMediaId
+      : (currentMedia ? String(currentMedia.id) : '');
+    var selectedMedia = classTeacherMediaById(selectedMediaId);
+    var status = classTeacherProfileStatus(row.id);
+    var disabled = !hasTeacherCards || Boolean(classTeacherProfileSaveOperation);
+    var options = '<option value=""' + (!selectedMediaId ? ' selected' : '') + '>선택 안 함</option>' +
+      classTeacherMediaRows.map(function(mediaRow){
+        var mediaId = String(mediaRow.id);
+        return '<option value="' + esc(mediaId) + '"' + (mediaId === selectedMediaId ? ' selected' : '') + '>' +
+          esc(classTeacherMediaOptionLabel(mediaRow)) +
+        '</option>';
+      }).join('');
+    var missingCurrentNotice = currentMediaId && !currentMedia
+      ? '<div class="msg error" style="text-align:left">현재 연결된 프로필 카드를 목록에서 찾을 수 없습니다. 다시 선택하거나 연결을 해제해 주세요.</div>'
+      : '';
+    var emptyNotice = !hasTeacherCards
+      ? '<div class="class-teacher-profile-empty">선생님 관리에서 먼저 선생님 카드를 등록해 주세요.' +
+          '<br><button type="button" class="btn ghost class-teacher-profile-manage-btn">선생님 관리로 이동</button>' +
+        '</div>'
+      : '';
+
+    return '<div class="class-subsection class-teacher-profile-section">' +
+      '<div class="class-detail-title">담임 프로필</div>' +
+      '<div class="class-teacher-profile-description" id="classTeacherProfileDescription">반 미니홈피 첫 화면에 표시할 선생님 사진과 이름을 선택해 주세요.</div>' +
+      '<div class="class-teacher-profile-note" id="classTeacherProfileAccountNote">담당 교사 계정은 로그인·반 관리 권한이며, 담임 프로필은 미니홈피에 표시되는 사진·이름입니다. 두 설정은 자동으로 연동되지 않습니다.</div>' +
+      '<form class="class-teacher-profile-form" data-class-id="' + esc(row.id) + '">' +
+        '<div class="class-teacher-profile-controls">' +
+          '<div class="field">' +
+            '<label for="classTeacherProfileSelect">담임 프로필 카드</label>' +
+            '<select id="classTeacherProfileSelect" class="class-teacher-profile-select" data-class-id="' + esc(row.id) + '" aria-describedby="classTeacherProfileDescription classTeacherProfileAccountNote"' + (disabled ? ' disabled' : '') + '>' + options + '</select>' +
+          '</div>' +
+          '<button type="submit" class="btn class-teacher-profile-save"' + (disabled ? ' disabled' : '') + '>' + (isSaving ? '저장 중...' : '담임 프로필 저장') + '</button>' +
+        '</div>' +
+        classTeacherProfilePreviewMarkup(selectedMedia, row.id) +
+        missingCurrentNotice +
+        emptyNotice +
+        '<div class="msg' + (status.type === 'error' ? ' error' : (status.type === 'ok' ? ' ok' : '')) + '" id="classTeacherProfileStatus" data-class-id="' + esc(row.id) + '" role="status" aria-live="polite">' + esc(status.message) + '</div>' +
+      '</form>' +
+    '</div>';
+  }
+
+  function isCurrentClassTeacherProfilePreview(context, classId, mediaRow, previewKey, requestId, previewEl){
+    if (requestId !== classTeacherProfilePreviewSequence || !isCurrentEditableTargetLoad(context)) return false;
+    if (!previewEl || !previewEl.isConnected || previewEl.dataset.classId !== String(classId) || previewEl.dataset.previewKey !== previewKey) return false;
+    if (selectedTeacherClassId !== String(classId)) return false;
+    var select = document.getElementById('classTeacherProfileSelect');
+    if (!select || select.dataset.classId !== String(classId) || select.value !== String(mediaRow.id)) return false;
+    var currentMedia = classTeacherMediaById(mediaRow.id);
+    return Boolean(
+      currentMedia &&
+      String(currentMedia.center_id) === String(context.centerId) &&
+      classTeacherProfilePreviewKey(currentMedia) === previewKey
+    );
+  }
+
+  async function updateClassTeacherProfilePreview(classId, selectedMediaId){
+    var context = currentEditableTargetLoadContext();
+    var select = document.getElementById('classTeacherProfileSelect');
+    var previewEl = classInviteDetail.querySelector('.class-teacher-profile-preview');
+    if (!context || !select || !previewEl || select.dataset.classId !== String(classId) || previewEl.dataset.classId !== String(classId)) return;
+
+    var mediaId = normalizedTeacherMediaId(selectedMediaId);
+    var mediaRow = classTeacherMediaById(mediaId);
+    var previewKey = classTeacherProfilePreviewKey(mediaRow);
+    var requestId = ++classTeacherProfilePreviewSequence;
+    previewEl.outerHTML = classTeacherProfilePreviewMarkup(mediaRow, classId);
+    previewEl = classInviteDetail.querySelector('.class-teacher-profile-preview');
+
+    if (!mediaRow || !mediaRow.photo_url || String(mediaRow.center_id) !== String(context.centerId)) return;
+    var url = await signedUrl(mediaRow.photo_url, context);
+    if (!url || !isCurrentClassTeacherProfilePreview(context, classId, mediaRow, previewKey, requestId, previewEl)) return;
+
+    var avatarWrap = previewEl.querySelector('.class-teacher-profile-avatar-wrap');
+    var avatar = previewEl.querySelector('.class-teacher-profile-avatar');
+    if (!avatarWrap || !avatar) return;
+    var img = document.createElement('img');
+    img.className = 'class-teacher-profile-photo';
+    img.alt = (typeof mediaRow.photo_alt === 'string' && mediaRow.photo_alt.trim()) || (classTeacherMediaName(mediaRow) + ' 선생님 사진');
+    img.hidden = true;
+    img.addEventListener('load', function(){
+      if (!isCurrentClassTeacherProfilePreview(context, classId, mediaRow, previewKey, requestId, previewEl)) return;
+      avatar.hidden = true;
+      img.hidden = false;
+    });
+    img.addEventListener('error', function(){
+      if (!isCurrentClassTeacherProfilePreview(context, classId, mediaRow, previewKey, requestId, previewEl)) return;
+      img.remove();
+      avatar.hidden = false;
+    });
+    avatarWrap.appendChild(img);
+    img.src = url;
+  }
+
+  function isCurrentClassTeacherProfileTarget(operation){
+    var context = currentEditableTargetLoadContext();
+    if (!operation || !context || !currentCenter) return false;
+    return !(
+      context.requestId !== operation.targetRequestId ||
+      context.targetKey !== operation.targetKey ||
+      context.authIdentityKey !== operation.authIdentityKey ||
+      String(context.centerId) !== operation.centerId ||
+      String(currentCenter.id) !== operation.centerId
+    );
+  }
+
+  function isCurrentClassTeacherProfileOperation(operation){
+    if (!isCurrentClassTeacherProfileTarget(operation) || selectedTeacherClassId !== operation.classId) return false;
+    return classRows.some(function(row){
+      return String(row.id) === operation.classId && String(row.center_id) === operation.centerId;
+    });
+  }
+
+  async function saveClassTeacherProfile(classId){
+    if (classTeacherProfileSaveOperation) return;
+    var context = currentEditableTargetLoadContext();
+    var normalizedClassId = String(classId || '');
+    var row = classRows.find(function(item){ return String(item.id) === normalizedClassId; });
+    var select = document.getElementById('classTeacherProfileSelect');
+    if (!context || !currentCenter || !row || !select || select.dataset.classId !== normalizedClassId || selectedTeacherClassId !== normalizedClassId) {
+      setClassTeacherProfileStatus(normalizedClassId, '현재 선택한 원과 반을 확인할 수 없습니다. 반 목록을 다시 불러와 주세요.', 'error');
+      return;
+    }
+
+    var centerId = String(context.centerId || '');
+    if (!centerId || String(currentCenter.id) !== centerId || String(row.center_id) !== centerId) {
+      setClassTeacherProfileStatus(normalizedClassId, '현재 선택한 원의 반인지 확인할 수 없습니다.', 'error');
+      return;
+    }
+
+    var nextTeacherMediaId = normalizedTeacherMediaId(select.value);
+    var selectedMedia = nextTeacherMediaId ? classTeacherMediaById(nextTeacherMediaId) : null;
+    if (nextTeacherMediaId && (!selectedMedia || String(selectedMedia.center_id) !== centerId)) {
+      setClassTeacherProfileStatus(normalizedClassId, '현재 원의 선생님 카드만 담임 프로필로 선택할 수 있습니다.', 'error');
+      return;
+    }
+
+    var previousTeacherMediaId = normalizedTeacherMediaId(row.teacher_media_id);
+    var operation = Object.freeze({
+      targetRequestId:context.requestId,
+      targetKey:context.targetKey,
+      authIdentityKey:context.authIdentityKey,
+      centerId:centerId,
+      classId:normalizedClassId,
+      previousTeacherMediaId:previousTeacherMediaId,
+      nextTeacherMediaId:nextTeacherMediaId
+    });
+    classTeacherProfileSaveOperation = operation;
+
+    try {
+      setClassTeacherProfileStatus(normalizedClassId, '담임 프로필을 저장하는 중입니다.', '');
+      renderClassInviteDetail();
+
+      var query = client.from('classes')
+        .update({ teacher_media_id: nextTeacherMediaId || null })
+        .eq('id', operation.classId)
+        .eq('center_id', operation.centerId);
+      query = operation.previousTeacherMediaId
+        ? query.eq('teacher_media_id', operation.previousTeacherMediaId)
+        : query.is('teacher_media_id', null);
+      var res = await query.select('id,center_id,teacher_media_id');
+      if (res.error) throw res.error;
+
+      var rows = Array.isArray(res.data) ? res.data : [];
+      if (rows.length === 0) {
+        if (isCurrentClassTeacherProfileOperation(operation)) {
+          await loadClassManagerTab(context);
+          if (isCurrentClassTeacherProfileOperation(operation)) {
+            setClassTeacherProfileStatus(operation.classId, '다른 화면이나 세션에서 담임 프로필이 먼저 변경됐습니다. 최신 값을 확인한 뒤 다시 저장해 주세요.', 'error');
+          }
+        }
+        return;
+      }
+      if (
+        rows.length !== 1 ||
+        String(rows[0].id) !== operation.classId ||
+        String(rows[0].center_id) !== operation.centerId ||
+        normalizedTeacherMediaId(rows[0].teacher_media_id) !== operation.nextTeacherMediaId
+      ) throw new Error('담임 프로필 저장 결과를 확인하지 못했습니다.');
+
+      if (isCurrentClassTeacherProfileOperation(operation)) {
+        classManagerLoadSequence++;
+        classRows = classRows.map(function(item){
+          return String(item.id) === operation.classId
+            ? Object.assign({}, item, { teacher_media_id:rows[0].teacher_media_id })
+            : item;
+        });
+        var saveSuccessMessage = operation.nextTeacherMediaId ? '담임 프로필을 연결했습니다.' : '담임 프로필 연결을 해제했습니다.';
+        setClassTeacherProfileStatus(operation.classId, saveSuccessMessage, 'ok');
+
+        var refreshError = null;
+        try {
+          await loadClassManagerTab(context);
+        } catch (err) {
+          refreshError = err;
+          if (isCurrentClassTeacherProfileOperation(operation)) {
+            logAdminError('saveClassTeacherProfile/refresh', err);
+            classManagerStatus.innerHTML = escWithBr('담임 프로필은 저장됐지만 최신 반 관리 데이터를 다시 불러오지 못했습니다: ' + errorMessage(err));
+            classManagerStatus.className = 'msg error';
+          }
+        }
+
+        if (isCurrentClassTeacherProfileOperation(operation)) {
+          var refreshFailed = Boolean(refreshError || classManagerStatus.classList.contains('error'));
+          setClassTeacherProfileStatus(
+            operation.classId,
+            refreshFailed
+              ? saveSuccessMessage + ' 다만 최신 반 관리 데이터를 다시 불러오지 못했습니다. 반 관리 탭을 다시 열어 확인해 주세요.'
+              : saveSuccessMessage,
+            refreshFailed ? 'error' : 'ok'
+          );
+        }
+      }
+    } catch (err) {
+      logAdminError('saveClassTeacherProfile', err);
+      if (isCurrentClassTeacherProfileOperation(operation)) {
+        var message = err && (err.code === '23514' || err.code === '23503')
+          ? '선택한 선생님 카드의 연결 정보를 확인할 수 없습니다. 목록을 다시 불러온 뒤 시도해 주세요.'
+          : '담임 프로필을 저장하지 못했습니다: ' + errorMessage(err);
+        setClassTeacherProfileStatus(operation.classId, message, 'error');
+      }
+    } finally {
+      var ownsSaveOperation = classTeacherProfileSaveOperation === operation;
+      if (ownsSaveOperation) classTeacherProfileSaveOperation = null;
+      if (ownsSaveOperation && isCurrentClassTeacherProfileTarget(operation)) {
+        renderClassInviteDetail();
+      }
+    }
+  }
+
   function renderClassInviteDetail(){
     var row = classRows.find(function(item){ return item.id === selectedTeacherClassId; });
     if (!row) {
@@ -3944,6 +4286,7 @@
     var parentAction = '<button type="button" class="btn ghost parent-code-btn" data-class-id="' + esc(row.id) + '">초대 코드 발급</button>';
     var miniManageAction = renderClassMiniManageAction(row.id);
     var miniAction = renderClassMiniAction(row.id, row.has_mini_home === true || hasClassMini(row.id));
+    var teacherProfileSection = renderClassTeacherProfileSection(row);
 
     classInviteDetail.hidden = false;
     classInviteDetail.innerHTML =
@@ -3959,6 +4302,7 @@
           '<div class="class-detail-actions">' + action + miniManageAction + miniAction + parentAction + '</div>' +
         '</div>' +
         assignmentMeta +
+        teacherProfileSection +
         '<div class="class-subsection">' +
           '<label>선생님 초대 이력</label>' +
           (invites.length
@@ -3978,6 +4322,8 @@
             : '<div class="no-center" style="padding:18px 0">승인 대기 중인 학부모가 없습니다.</div>') +
         '</div>' +
       '</div>';
+    var profileSelect = document.getElementById('classTeacherProfileSelect');
+    if (profileSelect) updateClassTeacherProfilePreview(row.id, profileSelect.value);
   }
 
   function renderClassManager(){
@@ -4053,26 +4399,46 @@
     }
   }
 
+  function isCurrentClassManagerLoad(context, requestId){
+    return requestId === classManagerLoadSequence && isCurrentEditableTargetLoad(context);
+  }
+
   async function loadClassManagerTab(targetContext){
     var context = targetContext || currentEditableTargetLoadContext();
     if (!isCurrentEditableTargetLoad(context) || context.templateMode || !currentCenter) return;
+    var loadRequestId = ++classManagerLoadSequence;
+    classTeacherProfilePreviewSequence++;
     classManagerStatus.textContent = '반 목록을 불러오는 중...';
     classManagerStatus.className = 'msg';
 
-    var classRes = await client.from('classes')
-      .select('id,center_id,name,age_label,capacity,enrolled,waiting,status,teacher_id,created_at')
-      .eq('center_id', context.centerId)
-      .order('created_at', { ascending: true });
+    var initialResults = await Promise.all([
+      client.from('classes')
+        .select('id,center_id,name,age_label,capacity,enrolled,waiting,status,teacher_id,teacher_media_id,created_at')
+        .eq('center_id', context.centerId)
+        .order('created_at', { ascending: true }),
+      client.from('center_media')
+        .select('id,center_id,title,subtitle,photo_url,photo_alt,sort_order')
+        .eq('center_id', context.centerId)
+        .eq('media_type', 'teacher')
+        .order('sort_order', { ascending: true })
+    ]);
+    var classRes = initialResults[0];
+    var teacherMediaRes = initialResults[1];
 
-    if (!isCurrentEditableTargetLoad(context)) return;
-    if (classRes.error) {
-      logAdminError('loadClassManager/classes', classRes.error);
-      classManagerStatus.innerHTML = escWithBr('반 목록을 불러오지 못했습니다: ' + classRes.error.message);
+    if (!isCurrentClassManagerLoad(context, loadRequestId)) return;
+    if (classRes.error || teacherMediaRes.error) {
+      if (classRes.error) logAdminError('loadClassManager/classes', classRes.error);
+      if (teacherMediaRes.error) logAdminError('loadClassManager/teacherMedia', teacherMediaRes.error);
+      var initialLoadError = classRes.error
+        ? '반 목록을 불러오지 못했습니다: ' + classRes.error.message
+        : '담임 프로필 카드 목록을 불러오지 못했습니다: ' + teacherMediaRes.error.message;
+      classManagerStatus.innerHTML = escWithBr(initialLoadError);
       classManagerStatus.className = 'msg error';
       return;
     }
 
     classRows = classRes.data || [];
+    classTeacherMediaRows = teacherMediaRes.data || [];
     teacherInviteRows = [];
     teacherAssignmentRows = [];
     teacherAssignmentsLoadFailed = false;
@@ -4086,7 +4452,7 @@
         .select('id,class_id')
         .in('class_id', ids);
 
-      if (!isCurrentEditableTargetLoad(context)) return;
+      if (!isCurrentClassManagerLoad(context, loadRequestId)) return;
       if (miniRes.error) {
         logAdminError('loadClassManager/classMini', miniRes.error);
         classManagerStatus.innerHTML = escWithBr('미니홈피 상태를 불러오지 못했습니다: ' + miniRes.error.message);
@@ -4106,7 +4472,7 @@
         .in('class_id', ids)
         .order('invited_at', { ascending: false });
 
-      if (!isCurrentEditableTargetLoad(context)) return;
+      if (!isCurrentClassManagerLoad(context, loadRequestId)) return;
       if (inviteRes.error) {
         logAdminError('loadClassManager/invites', inviteRes.error);
         classManagerStatus.innerHTML = escWithBr('초대 이력을 불러오지 못했습니다: ' + inviteRes.error.message);
@@ -4121,7 +4487,7 @@
         .in('class_id', ids)
         .is('ended_at', null);
 
-      if (!isCurrentEditableTargetLoad(context)) return;
+      if (!isCurrentClassManagerLoad(context, loadRequestId)) return;
       if (assignmentRes.error) {
         teacherAssignmentsLoadFailed = true;
         logAdminError('loadClassManager/assignments', assignmentRes.error);
@@ -4136,7 +4502,7 @@
         .in('class_id', ids)
         .order('created_at', { ascending: false });
 
-      if (!isCurrentEditableTargetLoad(context)) return;
+      if (!isCurrentClassManagerLoad(context, loadRequestId)) return;
       if (parentInviteRes.error) {
         logAdminError('loadClassManager/parentInvites', parentInviteRes.error);
         classManagerStatus.innerHTML = escWithBr('학부모 초대 코드 이력을 불러오지 못했습니다: ' + parentInviteRes.error.message);
@@ -4151,7 +4517,7 @@
         .in('class_id', ids)
         .order('requested_at', { ascending: false });
 
-      if (!isCurrentEditableTargetLoad(context)) return;
+      if (!isCurrentClassManagerLoad(context, loadRequestId)) return;
       if (enrollmentRes.error) {
         logAdminError('loadClassManager/enrollments', enrollmentRes.error);
         classManagerStatus.innerHTML = escWithBr('학부모 연결 신청을 불러오지 못했습니다: ' + enrollmentRes.error.message);
@@ -4162,6 +4528,7 @@
       parentEnrollmentRows = enrollmentRes.data || [];
     }
 
+    if (!isCurrentClassManagerLoad(context, loadRequestId)) return;
     if (!classManagerStatus.textContent || classManagerStatus.textContent === '반 목록을 불러오는 중...') {
       classManagerStatus.textContent = '';
       classManagerStatus.className = 'msg';
@@ -4570,7 +4937,30 @@
     renderClassManager();
   });
 
+  classInviteDetail.addEventListener('change', function(e){
+    if (!e.target.matches('#classTeacherProfileSelect')) return;
+    var classId = e.target.dataset.classId || '';
+    setClassTeacherProfileStatus(classId, '', '');
+    updateClassTeacherProfilePreview(classId, e.target.value);
+  });
+
+  classInviteDetail.addEventListener('submit', function(e){
+    var form = e.target.closest('.class-teacher-profile-form');
+    if (!form) return;
+    e.preventDefault();
+    saveClassTeacherProfile(form.dataset.classId).catch(function(err){
+      logAdminError('saveClassTeacherProfile/unhandled', err);
+      setClassTeacherProfileStatus(form.dataset.classId, '담임 프로필을 저장하지 못했습니다: ' + errorMessage(err), 'error');
+    });
+  });
+
   classInviteDetail.addEventListener('click', function(e){
+    var manageTeacherProfilesBtn = e.target.closest('.class-teacher-profile-manage-btn');
+    if (manageTeacherProfilesBtn) {
+      activateTab('teacher');
+      return;
+    }
+
     var manageMiniBtn = e.target.closest('.class-mini-manage-btn');
     if (manageMiniBtn) {
       var manageClassId = manageMiniBtn.dataset.classId;
@@ -5582,6 +5972,10 @@
       currentAdmissionId = null;
       selectedTeacherClassId = null;
       classRows = [];
+      classTeacherMediaRows = [];
+      classTeacherProfilePreviewSequence++;
+      classTeacherProfileSaveOperation = null;
+      classTeacherProfileStatusByClass = Object.create(null);
       teacherInviteRows = [];
       teacherAssignmentRows = [];
       teacherAssignmentsLoadFailed = false;
