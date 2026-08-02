@@ -21,10 +21,19 @@ window.WoniyaTopbar = (function(){
       '.topbar.topbar-forest .brand::before{content:"";width:18px;height:18px;flex:none;background:#769365;border-radius:0 50% 50% 50%;transform:rotate(45deg)}' +
       '.topbar.topbar-forest .topbar-home{color:#425c3d}' +
       '.topbar.topbar-forest .topbar-home:hover{color:#314f3c}' +
+      '.topbar.topbar-compact{padding:8px 0;filter:none;-webkit-mask:none;mask:none;box-shadow:0 1px 0 rgba(120,80,60,.12)}' +
+      '.topbar.topbar-compact .wrap{width:100%;max-width:560px;min-width:0;padding:0 14px;gap:9px}' +
+      '.topbar.topbar-compact .brand{display:block;flex:1 1 auto;min-width:0;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:clamp(.98rem,4.8vw,1.14rem);line-height:1.3}' +
+      '.topbar.topbar-compact .topbar-actions{flex:0 0 auto;min-width:0;max-width:48%;gap:8px}' +
+      '.topbar.topbar-compact .topbar-actions>*{flex:0 1 auto;min-width:0;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}' +
+      '.topbar.topbar-compact .topbar-actions>.topbar-home,.topbar.topbar-compact .topbar-actions>.menu-btn{flex:0 0 auto}' +
+      '.topbar.topbar-compact .topbar-actions>:focus-visible{outline:2px solid currentColor;outline-offset:-2px}' +
+      '.topbar.topbar-compact .brand[aria-disabled="true"]{pointer-events:none;cursor:default}' +
+      '.topbar.topbar-compact.topbar-forest .brand::before{display:inline-block;vertical-align:-2px;margin-right:8px}' +
       'body.theme-forest .menu-panel{top:78px;right:max(clamp(24px,4vw,72px),calc((100vw - 1320px)/2 + clamp(24px,4vw,72px)));left:auto;width:clamp(240px,25vw,340px);max-width:calc(100vw - 40px);max-height:calc(100vh - 98px);overflow-y:auto;padding:12px;background:linear-gradient(145deg,rgba(251,249,239,.98),rgba(232,234,215,.98));border:1px solid rgba(86,115,74,.16);border-radius:28px 16px 30px 18px / 20px 30px 18px 28px;box-shadow:0 24px 54px -28px rgba(32,56,44,.58)}' +
       'body.theme-forest .menu-panel a{padding:13px 16px;border-radius:6px 17px 6px 17px;color:#314f3c}' +
       'body.theme-forest .menu-panel a:hover,body.theme-forest .menu-panel a:focus-visible{background:rgba(118,147,101,.14)}' +
-      '@media(max-width:600px){.topbar.topbar-forest .wrap{padding:0 20px}.topbar.topbar-forest .brand{max-width:min(48vw,210px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:1.05rem}.topbar.topbar-forest .topbar-actions{gap:9px}.topbar-preview-badge{max-width:86px;overflow:hidden;text-overflow:ellipsis;padding-inline:7px;font-size:.66rem}body.theme-forest .menu-panel{top:74px;right:20px;left:auto;width:min(86vw,320px);max-width:calc(100vw - 40px)}}';
+      '@media(max-width:600px){.topbar.topbar-forest .wrap{padding:0 20px}.topbar.topbar-forest .brand{max-width:min(48vw,210px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:1.05rem}.topbar.topbar-forest .topbar-actions{gap:9px}.topbar-preview-badge{max-width:86px;overflow:hidden;text-overflow:ellipsis;padding-inline:7px;font-size:.66rem}body.theme-forest .menu-panel{top:74px;right:20px;left:auto;width:min(86vw,320px);max-width:calc(100vw - 40px)}.topbar.topbar-compact .wrap{padding:0 12px;gap:7px}.topbar.topbar-compact .brand{max-width:100%;font-size:clamp(.94rem,4.8vw,1.05rem)}.topbar.topbar-compact .topbar-actions{gap:6px}}';
     document.head.appendChild(style);
   }
 
@@ -34,15 +43,104 @@ window.WoniyaTopbar = (function(){
       '<polyline points="9 21 9 12 15 12 15 21"/>' +
     '</svg>';
 
+  function hasOwn(object, key){
+    return Object.prototype.hasOwnProperty.call(object, key);
+  }
+
+  function cleanText(value, fallback){
+    var text = String(value == null ? '' : value).trim();
+    return text || fallback;
+  }
+
+  function isManagedTopbar(nav){
+    return !!nav && nav.getAttribute('data-woniya-topbar') === 'true';
+  }
+
+  function setBrandState(brand, options, allowLegacyFallback, normalizeName){
+    brand.textContent = normalizeName
+      ? cleanText(options.centerName, '우리 원')
+      : (options.centerName || '원이야');
+
+    var brandHref = cleanText(options.brandHref, '');
+    if (!brandHref && allowLegacyFallback) {
+      brandHref = cleanText(options.homeHref, '') || '#top';
+    }
+    if (options.brandDisabled === true || !brandHref) {
+      brand.removeAttribute('href');
+      brand.setAttribute('aria-disabled', 'true');
+      brand.setAttribute('tabindex', '-1');
+      return;
+    }
+    brand.href = brandHref;
+    brand.removeAttribute('aria-disabled');
+    brand.removeAttribute('tabindex');
+  }
+
+  function syncActions(actions, options){
+    var previewBadge = actions.querySelector('.topbar-preview-badge');
+    if (options.previewLabel) {
+      if (!previewBadge) {
+        previewBadge = document.createElement('span');
+        previewBadge.className = 'topbar-preview-badge';
+      }
+      previewBadge.textContent = options.previewLabel;
+      actions.appendChild(previewBadge);
+    } else if (previewBadge) {
+      previewBadge.remove();
+    }
+
+    var home = actions.querySelector('.topbar-home');
+    if (options.showHome === false) {
+      if (home) home.remove();
+    } else {
+      if (!home) {
+        home = document.createElement('a');
+        home.className = 'topbar-home';
+        home.setAttribute('aria-label', '홈으로');
+        home.innerHTML = HOME_ICON_SVG;
+      }
+      home.href = options.homeHref || 'index.html';
+      actions.appendChild(home);
+    }
+
+    var menuBtn = document.getElementById('menuBtn');
+    var actionElement = options.actionElement && options.actionElement.nodeType === 1
+      ? options.actionElement
+      : null;
+    if (actionElement) actionElement.setAttribute('data-woniya-topbar-action', 'true');
+    var managedActions = Array.prototype.filter.call(actions.children, function(child){
+      return child.getAttribute('data-woniya-topbar-action') === 'true';
+    });
+    if (menuBtn) actions.appendChild(menuBtn);
+    managedActions.forEach(function(action){ actions.appendChild(action); });
+    if (actionElement && managedActions.indexOf(actionElement) < 0) actions.appendChild(actionElement);
+  }
+
   function init(options){
     options = options || {};
-    var centerName = options.centerName || '원이야';
+
+    var existingNav = document.getElementById('topbar');
+    if (existingNav && !isManagedTopbar(existingNav)) return existingNav;
 
     ensureStyle();
 
+    if (existingNav) {
+      var existingBrand = existingNav.querySelector('#brandLink');
+      var existingActions = existingNav.querySelector('.topbar-actions');
+      if (!existingBrand || !existingActions) return existingNav;
+      existingNav.classList.toggle('topbar-forest', options.theme === 'forest');
+      existingNav.classList.toggle('topbar-compact', options.compact === true);
+      setBrandState(existingBrand, options, options.compact !== true && !hasOwn(options, 'brandDisabled') && !hasOwn(options, 'brandHref'), options.compact === true);
+      syncActions(existingActions, options);
+      return existingNav;
+    }
+
     var nav = document.createElement('nav');
-    nav.className = 'topbar' + (options.theme === 'forest' ? ' topbar-forest' : '');
+    nav.className = 'topbar' +
+      (options.theme === 'forest' ? ' topbar-forest' : '') +
+      (options.compact === true ? ' topbar-compact' : '');
     nav.id = 'topbar';
+    nav.setAttribute('data-woniya-topbar', 'true');
 
     var wrap = document.createElement('div');
     wrap.className = 'wrap';
@@ -50,33 +148,32 @@ window.WoniyaTopbar = (function(){
     var brand = document.createElement('a');
     brand.className = 'brand';
     brand.id = 'brandLink';
-    brand.href = options.brandHref || options.homeHref || '#top';
-    brand.textContent = centerName;
+    setBrandState(brand, options, options.compact !== true && !hasOwn(options, 'brandDisabled') && !hasOwn(options, 'brandHref'), options.compact === true);
 
     var actions = document.createElement('div');
     actions.className = 'topbar-actions';
-
-    var home = document.createElement('a');
-    home.className = 'topbar-home';
-    home.href = options.homeHref || 'index.html';
-    home.setAttribute('aria-label', '홈으로');
-    home.innerHTML = HOME_ICON_SVG;
-    if (options.previewLabel) {
-      var previewBadge = document.createElement('span');
-      previewBadge.className = 'topbar-preview-badge';
-      previewBadge.textContent = options.previewLabel;
-      actions.appendChild(previewBadge);
-    }
-    actions.appendChild(home);
-
-    var menuBtn = document.getElementById('menuBtn');
-    if (menuBtn) actions.appendChild(menuBtn);
+    syncActions(actions, options);
 
     wrap.appendChild(brand);
     wrap.appendChild(actions);
     nav.appendChild(wrap);
 
     document.body.insertBefore(nav, document.body.firstChild);
+    return nav;
+  }
+
+  function updateBrand(options){
+    options = options || {};
+    var nav = document.getElementById('topbar');
+    if (!isManagedTopbar(nav)) return null;
+    var brand = nav && nav.querySelector('#brandLink');
+    if (!brand) return null;
+    var nextOptions = {
+      centerName: hasOwn(options, 'centerName') ? options.centerName : brand.textContent,
+      brandHref: hasOwn(options, 'brandHref') ? options.brandHref : '',
+      brandDisabled: options.brandDisabled
+    };
+    setBrandState(brand, nextOptions, false, true);
     return nav;
   }
 
@@ -143,6 +240,7 @@ window.WoniyaTopbar = (function(){
 
   return {
     init: init,
+    updateBrand: updateBrand,
     readTarget: readTarget,
     buildUrl: buildUrl,
     bindMenu: bindMenu

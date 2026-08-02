@@ -34,24 +34,13 @@
   }
   [hidden]{display:none!important}
 
-  /* 상단 네비 (admissions.html/directions.html/template-sunshine.html과 동일한 구름 밑단 실루엣) */
-  .topbar{
-    position:sticky;top:0;z-index:20;
-    --cloud-dip:16px; --cloud-unit:64px;
-    padding:18px 0 calc(18px + var(--cloud-dip));
-    background:var(--paper);
-    backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
-    filter:drop-shadow(0 4px 6px rgba(180,140,110,.28));
-    -webkit-mask:radial-gradient(var(--cloud-dip) at 50% 100%, #0000 96%, #000) 50% 0 / var(--cloud-unit) 100% repeat-x;
-    mask:radial-gradient(var(--cloud-dip) at 50% 100%, #0000 96%, #000) 50% 0 / var(--cloud-unit) 100% repeat-x;
-  }
-  @media (max-width:719px){ .topbar{--cloud-dip:12px; --cloud-unit:52px} }
-  .topbar-inner{max-width:560px;margin:0 auto;padding:0 22px;display:flex;align-items:center;justify-content:space-between;gap:14px}
-  .brand{font-family:var(--display);font-size:1.2rem;color:var(--ink);text-decoration:none;letter-spacing:-.5px}
-  .topbar-actions{display:flex;align-items:center;gap:10px}
-  .back-link{font-size:.85rem;color:var(--coral-deep);text-decoration:none;font-weight:700}
+  #topbar.topbar-compact{position:sticky;top:0;z-index:20;background:rgba(255,255,255,.94);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+  #topbar.topbar-compact > .wrap{width:100%;max-width:480px;margin:0 auto;padding-left:22px;padding-right:22px}
+  body.mini-open #topbar.topbar-compact > .wrap{max-width:760px}
+  #topbar.topbar-compact .brand{font-family:var(--display);color:var(--ink);text-decoration:none;letter-spacing:-.5px}
+  #topbar.topbar-compact #logoutBtn{flex:0 0 auto;padding:7px 12px;white-space:nowrap}
 
-  .wrap{max-width:480px;margin:0 auto;padding:46px 22px 70px}
+  .parent-wrap{max-width:480px;margin:0 auto;padding:38px 22px 70px}
   .section-eyebrow{font-family:var(--hand);font-size:1.15rem;color:var(--sage);font-weight:700;text-align:center}
   .section-title{font-family:var(--display);font-size:1.72rem;margin:8px 0 22px;letter-spacing:-.5px;line-height:1.38;text-align:center}
   .lead{color:var(--ink-soft);font-size:.95rem;text-align:center;margin-bottom:24px}
@@ -91,10 +80,10 @@
   .class-meta{margin-top:4px;font-size:.84rem;color:var(--ink-soft)}
   .class-actions{margin-top:14px}
   .extra-invite{margin-top:18px;padding-top:18px;border-top:1px solid var(--line)}
-  body.mini-open .wrap{max-width:760px;padding-top:24px}
-  body.mini-open .wrap > .section-eyebrow,
-  body.mini-open .wrap > .section-title,
-  body.mini-open .wrap > .lead{display:none}
+  body.mini-open .parent-wrap{max-width:760px;padding-top:24px}
+  body.mini-open .parent-wrap > .section-eyebrow,
+  body.mini-open .parent-wrap > .section-title,
+  body.mini-open .parent-wrap > .lead{display:none}
   .mini-panel{background:transparent;box-shadow:none;padding:0}
   .mini-top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:16px}
   .mini-top > div{min-width:0}
@@ -218,11 +207,14 @@
   .image-modal img{display:block;max-width:100%;max-height:82vh;border-radius:18px;background:#fff;box-shadow:0 30px 80px -24px rgba(0,0,0,.65)}
   .image-modal .btn.small{position:absolute;left:calc(100% + var(--image-modal-close-gap));top:0;width:var(--image-modal-close-size);min-width:var(--image-modal-close-size);height:var(--image-modal-close-size);padding:0;box-shadow:none}
   @media (max-width:560px){
+    .parent-wrap{padding-left:12px;padding-right:12px}
+    #topbar.topbar-compact > .wrap{padding-left:12px;padding-right:12px}
     .image-modal{--image-modal-side:12px;padding:12px var(--image-modal-side)}
     .image-modal-frame{width:fit-content;max-width:calc(100vw - var(--image-modal-side) - var(--image-modal-side));max-height:calc(100vh - 24px);max-height:calc(100dvh - 24px);flex-direction:column;align-items:stretch;transform:none}
     .image-modal img{order:2;width:auto;height:auto;max-width:100%;max-height:min(82vh,calc(100vh - 76px));max-height:min(82vh,calc(100dvh - 76px))}
     .image-modal .btn.small{position:static;order:1;align-self:flex-end;flex:0 0 var(--image-modal-close-size);left:auto;top:auto;margin:0 0 8px}
-    body.mini-open .wrap{padding-top:18px}
+    body.mini-open .parent-wrap{padding-top:18px}
+    #topbar.topbar-compact #logoutBtn{padding:6px 9px;font-size:.78rem}
     .mini-top{align-items:flex-start;flex-wrap:wrap}
     .mini-top-actions{margin-left:auto}
     .mini-cover{min-height:160px;border-radius:24px;padding:14px}
@@ -258,17 +250,9 @@
 </head>
 <body>
 
-<header class="topbar">
-  <div class="topbar-inner">
-    <a class="brand" href="index.html">원이야</a>
-    <div class="topbar-actions">
-      <button type="button" class="btn ghost small" id="logoutBtn" hidden>로그아웃</button>
-      <a class="back-link" href="index.html">홈으로</a>
-    </div>
-  </div>
-</header>
+<button type="button" class="btn ghost small" id="logoutBtn" hidden>로그아웃</button>
 
-<main class="wrap">
+<main class="parent-wrap">
   <div class="section-eyebrow">학부모 공간</div>
   <h1 class="section-title">우리 반 소식을<br>안전하게 확인해요</h1>
   <p class="lead" id="leadText">로그인 후 초대 코드를 입력해주세요.</p>
@@ -359,15 +343,24 @@
   </div>
 </div>
 
+<script src="topbar.js"></script>
 <script src="supabase-config.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 (function(){
+  var logoutBtn = document.getElementById('logoutBtn');
+  WoniyaTopbar.init({
+    compact: true,
+    showHome: false,
+    centerName: '우리 원',
+    brandDisabled: true,
+    actionElement: logoutBtn
+  });
+
   var cfg = window.__SUPABASE_CONFIG__;
   var client = supabase.createClient(cfg.url, cfg.anonKey);
 
   var leadText = document.getElementById('leadText');
-  var logoutBtn = document.getElementById('logoutBtn');
   var loadingPanel = document.getElementById('loadingPanel');
   var authPanel = document.getElementById('authPanel');
   var invitePanel = document.getElementById('invitePanel');
@@ -426,6 +419,12 @@
   var selectedEventDate = toDateInput(new Date());
   var miniCache = createMiniCache();
   var BUCKET = 'center-images';
+  var CENTER_TEMPLATE_FILES = {
+    sunshine: 'template-sunshine.html',
+    forest: 'template-forest.html',
+    carnival: 'template-carnival.html',
+    gallery: 'template-gallery.html'
+  };
   var directClassId = new URLSearchParams(location.search).get('class_id') || '';
 
   function esc(s){
@@ -450,6 +449,9 @@
       posts: [],
       media: [],
       comments: [],
+      centerBrand: null,
+      centerBrandStatus: 'idle',
+      centerBrandRequest: null,
       coverPath: '',
       coverSignedUrl: '',
       coverRequest: null,
@@ -475,6 +477,7 @@
     currentMiniView = 'home';
     selectedAlbumKey = null;
     miniCache = createMiniCache();
+    resetCenterBrand();
     imageModal.hidden = true;
     imageModalImg.removeAttribute('src');
   }
@@ -489,6 +492,101 @@
       !!classId &&
       !!currentMiniClass &&
       currentMiniClass.id === classId;
+  }
+
+  function resetCenterBrand(){
+    WoniyaTopbar.updateBrand({
+      centerName: '우리 원',
+      brandHref: '',
+      brandDisabled: true
+    });
+  }
+
+  function centerHomepageUrl(center){
+    if (!center || center.status !== 'published') return '';
+    var slug = String(center.slug || '').trim();
+    if (!slug) return '';
+    var template = String(center.template || '').trim();
+    var templateFile = CENTER_TEMPLATE_FILES[template] || CENTER_TEMPLATE_FILES.sunshine;
+    return templateFile + '?slug=' + encodeURIComponent(slug);
+  }
+
+  function isCurrentCenterBrandRequest(cache, userId, authVersion, loadVersion, classId){
+    return !!userId &&
+      authSessionUserId(currentSession) === userId &&
+      cache === miniCache &&
+      isCurrentClassLoad(authVersion, loadVersion, classId);
+  }
+
+  function applyCenterBrand(cache, center, userId, authVersion, loadVersion, classId){
+    if (!isCurrentCenterBrandRequest(cache, userId, authVersion, loadVersion, classId)) return;
+    var name = String(center && center.name || '').trim();
+    var href = centerHomepageUrl(center);
+    if (!name || !href) {
+      resetCenterBrand();
+      return;
+    }
+    WoniyaTopbar.updateBrand({
+      centerName: name,
+      brandHref: href,
+      brandDisabled: false
+    });
+  }
+
+  function startCenterBrandLoad(cache, authVersion, loadVersion, classId){
+    if (!cache || !isCurrentClassLoad(authVersion, loadVersion, classId)) return Promise.resolve(null);
+    if (cache.centerBrandStatus === 'loading' && cache.centerBrandRequest) return cache.centerBrandRequest;
+    var requestedUserId = authSessionUserId(currentSession);
+    if (!requestedUserId) return Promise.resolve(null);
+    if (cache.centerBrandStatus === 'ready') {
+      applyCenterBrand(cache, cache.centerBrand, requestedUserId, authVersion, loadVersion, classId);
+      return Promise.resolve(cache.centerBrand);
+    }
+    if (cache.centerBrandStatus === 'failed') return Promise.resolve(null);
+
+    cache.centerBrandStatus = 'loading';
+    var request = (async function(){
+      var classRes = await client.from('classes')
+        .select('center_id')
+        .eq('id', classId)
+        .maybeSingle();
+      if (!isCurrentCenterBrandRequest(cache, requestedUserId, authVersion, loadVersion, classId)) return null;
+      if (classRes.error || !classRes.data || !classRes.data.center_id) return null;
+
+      var centerId = classRes.data.center_id;
+      var centerRes = await client.from('centers')
+        .select('id,name,slug,template,status')
+        .eq('id', centerId)
+        .maybeSingle();
+      if (!isCurrentCenterBrandRequest(cache, requestedUserId, authVersion, loadVersion, classId)) return null;
+      if (centerRes.error || !centerRes.data || centerRes.data.id !== centerId) return null;
+      if (centerRes.data.status !== 'published') return null;
+      if (!String(centerRes.data.name || '').trim() || !String(centerRes.data.slug || '').trim()) return null;
+      return centerRes.data;
+    })();
+
+    var handledRequest = request.then(function(center){
+      if (!isCurrentCenterBrandRequest(cache, requestedUserId, authVersion, loadVersion, classId)) return null;
+      cache.centerBrand = center;
+      cache.centerBrandStatus = center ? 'ready' : 'failed';
+      if (center) applyCenterBrand(cache, center, requestedUserId, authVersion, loadVersion, classId);
+      else resetCenterBrand();
+      return center;
+    }, function(){
+      if (isCurrentCenterBrandRequest(cache, requestedUserId, authVersion, loadVersion, classId)) {
+        cache.centerBrand = null;
+        cache.centerBrandStatus = 'failed';
+        resetCenterBrand();
+      }
+      return null;
+    });
+    cache.centerBrandRequest = handledRequest;
+    handledRequest.then(function(){
+      if (cache.centerBrandRequest === handledRequest) cache.centerBrandRequest = null;
+    }, function(){
+      if (cache.centerBrandRequest === handledRequest) cache.centerBrandRequest = null;
+    });
+    return handledRequest;
   }
 
   function authSessionUserId(session){
@@ -1118,10 +1216,12 @@
     selectedAlbumKey = null;
     miniCache = createMiniCache();
     var targetCache = miniCache;
+    resetCenterBrand();
     miniTitle.textContent = classTitle(row);
     miniRoot.innerHTML = '<div class="empty-mini">반 미니홈피를 불러오고 있어요.</div>';
     leadText.textContent = classTitle(row) + ' 소식입니다.';
     showPanel(miniPanel);
+    startCenterBrandLoad(targetCache, startedAuthVersion, startedClassLoadVersion, targetClassId);
     startTeacherProfileLoad(targetCache, startedAuthVersion, startedClassLoadVersion, targetClassId);
 
     try {
@@ -1849,6 +1949,7 @@
 
   miniBackBtn.addEventListener('click', function(){
     classLoadVersion += 1;
+    resetCenterBrand();
     leadText.textContent = '승인된 반 미니홈피 목록입니다.';
     showPanel(classesPanel);
   });
@@ -1986,7 +2087,7 @@
       return;
     }
     currentSession = null;
-    currentMiniClass = null;
+    resetMiniStateForAuthChange();
     logoutBtn.hidden = true;
     setAuthMode('login');
     leadText.textContent = '로그인 후 초대 코드를 입력해주세요.';
