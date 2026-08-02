@@ -159,8 +159,20 @@
   .mini-date{font-size:.78rem;color:var(--sage);font-weight:900;margin-bottom:6px}
   .mini-card-title{font-weight:700;font-size:1.04rem;margin-bottom:8px}
   .mini-body{color:var(--ink-soft);font-size:.94rem;line-height:1.75;word-break:break-word}
-  .scrap-photo{position:relative;margin:6px 0 14px;padding:9px;background:#fff;border-radius:10px;box-shadow:0 14px 26px -22px rgba(64,55,51,.55);transform:rotate(-1deg)}
-  .scrap-photo img{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:7px;display:block}
+  .diary-card{min-width:0;padding:22px;background:#fffdf8;border-color:#eadfce;box-shadow:0 18px 44px -32px rgba(120,80,60,.42)}
+  .diary-card.no-photo{background:#fffef9}
+  .diary-card-head{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px 12px;min-width:0;margin-bottom:12px}
+  .diary-card-label{display:inline-flex;max-width:100%;border-radius:999px;padding:5px 10px;background:#fff0a8;color:var(--ink);font-family:var(--display);font-size:.78rem;line-height:1.35;font-weight:900;overflow-wrap:anywhere;word-break:keep-all;pointer-events:none}
+  .diary-card-date{display:inline-flex;flex:0 0 auto;border:1px solid #eadfce;border-radius:10px;padding:5px 9px;background:#fff;color:var(--sage);font-size:.76rem;line-height:1.35;font-weight:900;box-shadow:0 8px 16px -14px rgba(64,55,51,.45);transform:rotate(1deg);pointer-events:none}
+  .diary-card-title{min-width:0;margin:0 0 16px;font-family:var(--display);font-size:1.2rem;line-height:1.45;font-weight:900;overflow-wrap:anywhere;word-break:keep-all}
+  .diary-picture{position:relative;min-width:0;margin:4px 0 18px;padding:10px;border:1px solid #e9ded2;border-radius:16px;background:#fff;box-shadow:0 14px 28px -24px rgba(64,55,51,.5)}
+  .diary-picture::before{content:"";position:absolute;z-index:1;left:50%;top:-8px;width:74px;height:18px;border-radius:3px;background:rgba(255,226,167,.82);box-shadow:0 4px 10px -9px rgba(64,55,51,.5);transform:translateX(-50%) rotate(-2deg);pointer-events:none}
+  .diary-picture img{display:block;width:100%;max-width:100%;aspect-ratio:2/1;border-radius:10px;object-fit:cover;background:#f5eee6}
+  .diary-writing{min-width:0;border:1px solid #eee3d5;border-radius:18px;padding:14px 16px 16px;background:rgba(255,255,255,.62)}
+  .diary-card.no-photo .diary-writing{margin-top:2px}
+  .diary-writing-label{display:flex;align-items:center;gap:6px;margin-bottom:7px;color:var(--coral-deep);font-size:.78rem;line-height:1.4;font-weight:900;overflow-wrap:anywhere;word-break:keep-all}
+  .diary-writing-label::before{content:"";flex:0 0 7px;width:7px;height:7px;border-radius:50%;background:#ffd28a;box-shadow:0 0 0 3px rgba(255,210,138,.2)}
+  .diary-writing-body{min-width:0;padding:2px 2px 3px;color:var(--ink-soft);font-size:.94rem;line-height:1.75;overflow-wrap:anywhere;word-break:keep-all;background-image:repeating-linear-gradient(to bottom,transparent 0,transparent calc(1.75em - 1px),rgba(156,184,154,.2) calc(1.75em - 1px),rgba(156,184,154,.2) 1.75em);background-position:0 .12em}
   .album-grid-mini{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
   .album-photo{border:none;padding:0;background:#fff;border-radius:16px;overflow:hidden;aspect-ratio:1;cursor:pointer;box-shadow:0 12px 26px -22px rgba(64,55,51,.55);transform:rotate(-1deg)}
   .album-photo:nth-child(2n){transform:rotate(1.5deg)}
@@ -224,6 +236,17 @@
     .teacher-profile-fallback{font-size:1.05rem}
     .teacher-profile-name{font-size:1.05rem}
     .teacher-profile-intro{font-size:.86rem;line-height:1.65}
+    .diary-card{padding:15px;border-radius:20px}
+    .diary-card-head{align-items:flex-start;gap:7px 9px;margin-bottom:10px}
+    .diary-card-label{font-size:.74rem;padding:4px 9px}
+    .diary-card-date{font-size:.72rem;padding:4px 8px}
+    .diary-card-title{margin-bottom:13px;font-size:1.06rem;line-height:1.45}
+    .diary-picture{margin:3px 0 15px;padding:7px;border-radius:13px}
+    .diary-picture::before{top:-6px;width:58px;height:14px}
+    .diary-picture img{border-radius:8px}
+    .diary-writing{padding:12px 13px 14px;border-radius:15px}
+    .diary-writing-label{font-size:.75rem;margin-bottom:6px}
+    .diary-writing-body{font-size:.9rem;line-height:1.7;background-image:repeating-linear-gradient(to bottom,transparent 0,transparent calc(1.7em - 1px),rgba(156,184,154,.2) calc(1.7em - 1px),rgba(156,184,154,.2) 1.7em)}
     .album-list-mini{grid-template-columns:minmax(0,360px)}
     .album-grid-mini{grid-template-columns:repeat(2,1fr)}
   }
@@ -1368,11 +1391,22 @@
     }
     content.innerHTML = rows.map(function(row){
       var media = firstMediaForPost(row.id);
-      return '<article class="mini-card">' +
-        '<div class="mini-date">' + esc(formatDate(row.created_at)) + '</div>' +
-        '<div class="mini-card-title">' + esc(row.title || '오늘의 반 일지') + '</div>' +
-        (media ? '<div class="scrap-photo"><img src="' + esc(media.signed_url) + '" alt=""></div>' : '') +
-        '<div class="mini-body">' + escWithBr(row.body || '') + '</div>' +
+      var title = String(row.title || '').trim();
+      var displayTitle = title || '오늘의 반 일지';
+      var cardMode = media ? 'has-photo' : 'no-photo';
+      var cardLabel = media ? '우리 반 그림일기' : '우리 반 오늘 이야기';
+      var photoAlt = title ? title + ' 활동 사진' : '우리 반 활동 사진';
+      return '<article class="mini-card diary-card ' + cardMode + '">' +
+        '<header class="diary-card-head">' +
+          '<span class="diary-card-label">' + cardLabel + '</span>' +
+          '<time class="diary-card-date" datetime="' + esc(dateKey(row.created_at)) + '">' + esc(formatDate(row.created_at)) + '</time>' +
+        '</header>' +
+        '<h2 class="diary-card-title">' + esc(displayTitle) + '</h2>' +
+        (media ? '<figure class="diary-picture"><img src="' + esc(media.signed_url) + '" alt="' + esc(photoAlt) + '"></figure>' : '') +
+        '<section class="diary-writing" aria-label="선생님이 기록한 하루">' +
+          '<div class="diary-writing-label">선생님이 기록한 하루</div>' +
+          '<div class="diary-writing-body">' + escWithBr(row.body || '') + '</div>' +
+        '</section>' +
       '</article>';
     }).join('');
   }
