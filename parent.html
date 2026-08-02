@@ -971,7 +971,7 @@
   function enabledModules(){
     var enabled = currentMini && currentMini.modules_enabled ? currentMini.modules_enabled : {};
     var modules = [
-      { key:'diary', label:'일지' },
+      { key:'diary', label:'반 이야기' },
       { key:'event', label:'행사' },
       { key:'album', label:'사진첩' },
       { key:'guestbook', label:'방명록' },
@@ -1292,8 +1292,8 @@
       summaryCards.push({
         tab:'diary',
         kind:'diary',
-        badge:'최근 일지',
-        title:latestDiaryRow.title || '오늘의 반 일지',
+        badge:'최근 이야기',
+        title:latestDiaryRow.title || '반 이야기',
         date:latestDiaryRow.created_at
       });
     }
@@ -1386,13 +1386,13 @@
   function renderDiaryTab(content){
     var rows = diaryRows();
     if (!rows.length) {
-      content.innerHTML = '<div class="empty-mini">아직 올라온 일지가 없어요.</div>';
+      content.innerHTML = '<div class="empty-mini">새로운 반 이야기가 올라오면 이곳에서 만날 수 있어요.</div>';
       return;
     }
     content.innerHTML = rows.map(function(row){
       var media = firstMediaForPost(row.id);
       var title = String(row.title || '').trim();
-      var displayTitle = title || '오늘의 반 일지';
+      var displayTitle = title || '반 이야기';
       var cardMode = media ? 'has-photo' : 'no-photo';
       var cardLabel = media ? '우리 반 그림일기' : '우리 반 오늘 이야기';
       var photoAlt = title ? title + ' 활동 사진' : '우리 반 활동 사진';

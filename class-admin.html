@@ -95,6 +95,7 @@
   .upload-icon{font-size:2rem;margin-bottom:8px}.upload-hint{font-size:.86rem;color:var(--ink-soft);line-height:1.5}.upload-hint strong{color:var(--coral-deep)}
   .upload-label{display:block;font-size:.86rem;font-weight:700;color:var(--ink-soft);margin:0 0 6px}
   .upload-note{font-size:.86rem;color:var(--ink-soft);margin:0 0 10px}
+  .diary-guidance{margin:0 0 16px;padding:11px 12px;border-radius:12px;background:#fffaf3;color:var(--ink-soft);font-size:.86rem;line-height:1.65;overflow-wrap:anywhere;word-break:keep-all}
   #diaryPhotoGrid,#albumDraftPhotoGrid{margin-bottom:16px}
   .detail-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:16px}
   .detail-desc{margin-top:8px;color:var(--ink-soft);font-size:.92rem;line-height:1.65;word-break:break-word}
@@ -165,7 +166,7 @@
 
   <section id="appPanel" hidden>
     <div class="tab-bar" id="tabBar">
-      <button type="button" class="tab-btn active" data-tab="diary">오늘의 반 일지</button>
+      <button type="button" class="tab-btn active" data-tab="diary">반 이야기</button>
       <button type="button" class="tab-btn" data-tab="event">행사 일정</button>
       <button type="button" class="tab-btn" data-tab="album">사진 앨범</button>
       <button type="button" class="tab-btn" data-tab="guestbook">방명록</button>
@@ -178,13 +179,14 @@
         <section class="panel">
           <form id="diaryForm">
             <input type="hidden" id="diaryId">
+            <p class="diary-guidance">매일 작성하지 않아도 괜찮아요. 학부모님과 나누고 싶은 활동이나 특별한 하루를 편하게 기록해 주세요.</p>
             <div class="field"><label for="diaryTitle">제목</label><input type="text" id="diaryTitle" required></div>
             <div class="field"><label for="diaryBody">본문</label><textarea id="diaryBody" required></textarea></div>
             <div class="upload-label">이미지 업로드 (선택)</div>
             <div class="upload-note">이미지는 한꺼번에 저장할 수 있음(10장 이내 추천)</div>
             <input type="file" id="diaryFileInput" accept="image/*" multiple hidden>
             <div class="photo-grid" id="diaryPhotoGrid"></div>
-            <button type="submit" class="btn" id="diarySubmit">일지 저장</button>
+            <button type="submit" class="btn" id="diarySubmit">이야기 올리기</button>
             <button type="button" class="btn ghost" id="diaryCancel" hidden style="margin-top:10px">수정 취소</button>
             <div class="msg" id="diaryMsg"></div>
           </form>
@@ -1270,7 +1272,7 @@
   async function renderDiaryList(rows){
     var listEl = byId('diaryList');
     if (!rows.length) {
-      listEl.innerHTML = '<div class="empty">아직 작성된 글이 없습니다.</div>';
+      listEl.innerHTML = '<div class="empty">아직 올린 반 이야기가 없습니다. 특별한 활동이 있을 때 편하게 남겨 주세요.</div>';
       return;
     }
     var ids = rows.map(function(row){ return row.id; });
@@ -1336,12 +1338,12 @@
           byId(ids.submit).textContent = '수정 저장';
           byId(ids.cancel).hidden = false;
           rememberSimpleFormBaseline(ids);
-          setMsg(msg, '일지 내용은 저장되었지만 일부 사진 업로드에 실패했습니다.\n' + uploadResult.failed.map(function(item){ return item.name + ': ' + item.message; }).join('\n'), true);
+          setMsg(msg, '반 이야기는 저장되었지만 일부 사진 업로드에 실패했습니다.\n' + uploadResult.failed.map(function(item){ return item.name + ': ' + item.message; }).join('\n'), true);
           return;
         }
       }
 
-      resetSimpleForm(ids, type === 'diary' ? '일지 저장' : '공지 저장');
+      resetSimpleForm(ids, type === 'diary' ? '이야기 올리기' : '공지 저장');
       setMsg(msg, '저장되었습니다.');
       if (type === 'diary') await loadDiaryTab();
       if (type === 'notice') await loadNoticeTab();
@@ -1405,7 +1407,7 @@
   }
 
   function diaryUploadTile(){
-    return '<div class="upload-zone" id="diaryUploadZone" tabindex="0" role="button" aria-label="일지 사진 선택">' +
+    return '<div class="upload-zone" id="diaryUploadZone" tabindex="0" role="button" aria-label="반 이야기 사진 선택">' +
       '<div class="upload-icon">+</div>' +
       '<div class="upload-hint"><strong>클릭하거나 사진을 여기에 드래그</strong><br>JPG · PNG · WebP · 최대 10MB</div>' +
     '</div>';
@@ -2086,7 +2088,7 @@
       msg.className = 'msg';
     }
   });
-  byId('diaryCancel').addEventListener('click', function(){ resetSimpleForm(diaryIds, '일지 저장'); });
+  byId('diaryCancel').addEventListener('click', function(){ resetSimpleForm(diaryIds, '이야기 올리기'); });
   byId('noticeCancel').addEventListener('click', function(){ resetSimpleForm(noticeIds, '공지 저장'); });
   var diaryFileInput = byId('diaryFileInput');
   diaryFileInput.addEventListener('change', function(){ addDiaryDraftFiles(Array.from(diaryFileInput.files)); diaryFileInput.value = ''; });
