@@ -194,7 +194,10 @@
   .parent-inquiry-unread-indicator{display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;width:18px;height:18px;border-radius:50%;background:#fff0ea}
   .parent-inquiry-unread-dot{width:8px;height:8px;border-radius:50%;background:var(--coral);box-shadow:0 0 0 3px rgba(255,138,107,.16)}
   .parent-inquiry-list-actions,.parent-inquiry-form-actions,.parent-inquiry-detail-actions{display:flex;align-items:center;justify-content:flex-end;gap:8px;flex-wrap:wrap;margin-top:16px}
+  .parent-inquiry-primary-actions{margin-top:20px}
+  .parent-inquiry-load-more-actions[hidden]{display:none}
   .parent-inquiry-list{display:flex;flex-direction:column;gap:12px;margin-top:18px;min-width:0}
+  .parent-inquiry-list:empty{display:none}
   .parent-inquiry-card{min-width:0;border:1.5px solid var(--line);border-radius:20px;background:#fffdf8;overflow:hidden}
   .parent-inquiry-card-open{display:block;width:100%;min-width:0;padding:16px;border:0;background:transparent;color:inherit;text-align:left;font-family:var(--body);cursor:pointer}
   .parent-inquiry-card-open:disabled{cursor:default}
@@ -208,6 +211,7 @@
   .parent-inquiry-status-badge{background:#f3eee8;color:var(--ink-soft)}
   .parent-inquiry-unread-badge{background:#fff0ea;color:var(--coral-deep)}
   .parent-inquiry-list-state{margin-top:16px}
+  .parent-inquiry-list-state:empty{display:none}
   .parent-inquiry-empty{padding:20px;border:1.5px dashed var(--line);border-radius:20px;background:rgba(255,255,255,.72);color:var(--ink-soft);text-align:center}
   .parent-inquiry-form{margin-top:18px}
   .parent-inquiry-form textarea{min-height:150px}
@@ -299,6 +303,9 @@
     .album-list-mini{grid-template-columns:minmax(0,360px)}
     .album-grid-mini{grid-template-columns:repeat(2,1fr)}
     .parent-inquiry-toolbar,.parent-inquiry-detail-head{align-items:stretch;flex-direction:column}
+    .parent-inquiry-toolbar .parent-inquiry-heading{flex-basis:auto}
+    #parentInquiryDetailView .parent-inquiry-detail-nav{margin-bottom:20px}
+    .parent-inquiry-detail-head .parent-inquiry-detail-metadata{flex-basis:auto;min-height:0}
     .parent-inquiry-message-content{max-width:88%}
     .parent-inquiry-form-actions,.parent-inquiry-detail-actions{align-items:stretch}
     .parent-inquiry-form-actions .btn,.parent-inquiry-detail-actions .btn{flex:1 1 180px}
@@ -2287,10 +2294,12 @@
     var createBtn = document.getElementById('parentInquiryCreateBtn');
     if (createBtn) createBtn.disabled = true;
     var loadMore = document.getElementById('parentInquiryLoadMoreBtn');
+    var loadMoreActions = document.getElementById('parentInquiryLoadMoreActions');
     if (loadMore) {
       loadMore.hidden = true;
       loadMore.disabled = true;
     }
+    if (loadMoreActions) loadMoreActions.hidden = true;
     var listView = document.getElementById('parentInquiryListView');
     if (listView) listView.setAttribute('aria-busy', 'false');
     setParentInquiryListMessage('승인된 학부모 연결이 있는 반에서 문의를 이용할 수 있습니다.', false, true);
@@ -2339,10 +2348,12 @@
     var listView = document.getElementById('parentInquiryListView');
     if (listView) listView.setAttribute('aria-busy', parentInquiryState.isLoading ? 'true' : 'false');
     var loadMore = document.getElementById('parentInquiryLoadMoreBtn');
+    var loadMoreActions = document.getElementById('parentInquiryLoadMoreActions');
     if (loadMore) {
       loadMore.hidden = !parentInquiryState.hasLoaded || !parentInquiryState.hasMore;
       loadMore.disabled = parentInquiryState.isLoading;
     }
+    if (loadMoreActions) loadMoreActions.hidden = !parentInquiryState.hasLoaded || !parentInquiryState.hasMore;
     syncParentInquiryUnreadIndicators();
   }
 
@@ -3544,15 +3555,15 @@
                 '<span class="parent-inquiry-unread-dot" aria-hidden="true"></span>' +
               '</span>' +
             '</div>' +
-            '<p class="parent-inquiry-description">문의는 선생님의 교육 활동 시간 이후 순차적으로 확인됩니다. 긴급한 내용은 원으로 전화해 주세요.</p>' +
+            '<p class="parent-inquiry-description">문의는 선생님의 교육 활동 시간 이후 순차적으로 확인됩니다.<br>긴급한 내용은 원으로 전화해 주세요.<br>서로 존중하는 말로 문의를 남겨 주세요.</p>' +
           '</div>' +
         '</div>' +
-        '<div class="parent-inquiry-list-actions">' +
+        '<div class="parent-inquiry-list-actions parent-inquiry-primary-actions">' +
           '<button type="button" class="btn" id="parentInquiryCreateBtn">새 문의 작성</button>' +
         '</div>' +
         '<div class="parent-inquiry-list" id="parentInquiryList"></div>' +
         '<div class="parent-inquiry-list-state" id="parentInquiryListState" role="status" aria-live="polite"></div>' +
-        '<div class="parent-inquiry-list-actions">' +
+        '<div class="parent-inquiry-list-actions parent-inquiry-load-more-actions" id="parentInquiryLoadMoreActions" hidden>' +
           '<button type="button" class="btn ghost" id="parentInquiryLoadMoreBtn" hidden disabled>더 보기</button>' +
         '</div>' +
       '</section>';
