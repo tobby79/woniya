@@ -85,12 +85,14 @@
   body.mini-open .parent-wrap > .section-title,
   body.mini-open .parent-wrap > .lead{display:none}
   .mini-panel{background:transparent;box-shadow:none;padding:0}
-  .mini-top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:16px}
-  .mini-top > div{min-width:0}
+  .mini-hero{min-width:0;margin-bottom:14px;padding:16px;border:1.5px solid var(--line);border-radius:30px;background:var(--paper);box-shadow:0 18px 44px -30px rgba(120,80,60,.5)}
+  .mini-hero-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px;min-width:0}
+  .mini-hero-identity{min-width:0}
+  .mini-hero .section-eyebrow{font-size:1.02rem;line-height:1.3;text-align:left}
   .mini-title{font-family:var(--display);font-size:1.32rem;line-height:1.32;font-weight:400;overflow-wrap:anywhere;word-break:keep-all}
-  .mini-top .btn{flex:0 0 auto}
-  .mini-top-actions{display:flex;align-items:center;justify-content:flex-end;gap:7px;flex:0 0 auto}
-  .mini-cover{position:relative;min-height:210px;border-radius:30px;padding:18px;margin-bottom:18px;overflow:hidden;background:linear-gradient(135deg,#ffd8df,#d8c7ff);box-shadow:0 24px 60px -32px rgba(120,80,60,.55);border:2px solid rgba(255,255,255,.8)}
+  .mini-hero-actions{display:flex;align-items:center;justify-content:flex-end;gap:7px;flex:0 0 auto;flex-wrap:wrap}
+  .mini-hero-actions .btn{flex:0 0 auto;min-height:40px}
+  .mini-cover{position:relative;min-height:210px;border-radius:24px;padding:18px;overflow:hidden;background:linear-gradient(135deg,#ffd8df,#d8c7ff);box-shadow:0 20px 46px -32px rgba(120,80,60,.55);border:2px solid rgba(255,255,255,.8)}
   .mini-cover::after{content:"";position:absolute;inset:0;background:linear-gradient(to bottom,rgba(255,255,255,.08),rgba(255,255,255,.22) 46%,rgba(255,255,255,.78));pointer-events:none}
   .mini-cover.has-photo::after{background:linear-gradient(to bottom,rgba(39,31,28,.05),rgba(39,31,28,.16) 42%,rgba(39,31,28,.76))}
   .mini-cover-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
@@ -262,6 +264,11 @@
   .image-modal-frame{position:relative;display:flex;max-width:min(920px,calc(100vw - var(--image-modal-side) - var(--image-modal-side) - var(--image-modal-close-size) - var(--image-modal-close-gap)));max-height:82vh;transform:translateX(-27px)}
   .image-modal img{display:block;max-width:100%;max-height:82vh;border-radius:18px;background:#fff;box-shadow:0 30px 80px -24px rgba(0,0,0,.65)}
   .image-modal .btn.small{position:absolute;left:calc(100% + var(--image-modal-close-gap));top:0;width:var(--image-modal-close-size);min-width:var(--image-modal-close-size);height:var(--image-modal-close-size);padding:0;box-shadow:none}
+  .parent-inquiry-floating{position:fixed;right:max(18px,calc((100vw - 760px)/2 - 70px),env(safe-area-inset-right));bottom:calc(18px + env(safe-area-inset-bottom));z-index:15;display:inline-flex;align-items:center;justify-content:center;width:52px;height:52px;padding:0;border:0;border-radius:50%;background:var(--coral);color:#fff;cursor:pointer;box-shadow:0 18px 34px -14px rgba(242,113,90,.72);transition:transform .2s ease,box-shadow .2s ease}
+  .parent-inquiry-floating:hover{transform:translateY(-2px);box-shadow:0 22px 38px -14px rgba(242,113,90,.78)}
+  .parent-inquiry-floating:focus-visible{outline:3px solid rgba(255,138,107,.48);outline-offset:3px}
+  .parent-inquiry-floating-icon{display:block;flex:0 0 auto;width:22px;height:22px}
+  .parent-inquiry-floating-dot{position:absolute;right:4px;top:4px;width:9px;height:9px;border:2px solid #fff;border-radius:50%;background:#d94b38;box-shadow:0 0 0 3px rgba(255,255,255,.2)}
   @media (max-width:560px){
     .parent-wrap{padding-left:12px;padding-right:12px}
     #topbar.topbar-compact > .wrap{padding-left:12px;padding-right:12px}
@@ -271,9 +278,13 @@
     .image-modal .btn.small{position:static;order:1;align-self:flex-end;flex:0 0 var(--image-modal-close-size);left:auto;top:auto;margin:0 0 8px}
     body.mini-open .parent-wrap{padding-top:18px}
     #topbar.topbar-compact #logoutBtn{padding:6px 9px;font-size:.78rem}
-    .mini-top{align-items:flex-start;flex-wrap:wrap}
-    .mini-top-actions{margin-left:auto}
+    .mini-hero{padding:12px;border-radius:24px}
+    .mini-hero-head{align-items:flex-start;flex-direction:column;gap:10px;margin-bottom:12px}
+    .mini-hero-actions{justify-content:flex-start;width:100%}
+    .mini-hero-actions .btn{padding:8px 14px}
     .mini-cover{min-height:160px;border-radius:24px;padding:14px}
+    .parent-inquiry-floating{right:max(16px,env(safe-area-inset-right));bottom:calc(16px + env(safe-area-inset-bottom));width:48px;height:48px}
+    .parent-inquiry-floating-icon{width:20px;height:20px}
     .enrollment-pill{left:14px;top:14px;max-width:calc(100% - 80px);padding:5px 9px;font-size:.72rem}
     .month-sticker{right:14px;top:14px}
     .cover-caption{left:16px;right:16px;bottom:14px}
@@ -392,16 +403,6 @@
   </section>
 
   <section class="mini-panel" id="miniPanel" hidden>
-    <div class="mini-top">
-      <div>
-        <div class="section-eyebrow">우리 반 미니홈피</div>
-        <h1 class="mini-title" id="miniTitle"></h1>
-      </div>
-      <div class="mini-top-actions">
-        <button type="button" class="btn ghost small" id="miniHomeBtn" aria-label="우리 반 미니홈피 첫 화면으로 돌아가기">홈</button>
-        <button type="button" class="btn ghost small" id="miniBackBtn">목록으로</button>
-      </div>
-    </div>
     <div id="miniRoot"></div>
   </section>
 
@@ -410,6 +411,13 @@
     <p class="result-desc" id="noticeDesc"></p>
   </section>
 </main>
+
+<button type="button" class="parent-inquiry-floating" id="parentInquiryFloatingBtn" aria-label="문의 보기" title="문의 보기" hidden>
+  <svg class="parent-inquiry-floating-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+    <path d="M5.5 5.25h13a2 2 0 0 1 2 2v7.5a2 2 0 0 1-2 2H11l-4.6 3.1a.6.6 0 0 1-.94-.5v-2.6a2 2 0 0 1-1.96-2v-7.5a2 2 0 0 1 2-2Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+  </svg>
+  <span class="parent-inquiry-floating-dot" id="parentInquiryFloatingDot" aria-label="새 메시지 있음" hidden></span>
+</button>
 
 <div class="image-modal" id="imageModal" hidden>
   <div class="image-modal-frame">
@@ -445,10 +453,9 @@
   var noticePanel = document.getElementById('noticePanel');
   var noticeTitle = document.getElementById('noticeTitle');
   var noticeDesc = document.getElementById('noticeDesc');
-  var miniTitle = document.getElementById('miniTitle');
-  var miniHomeBtn = document.getElementById('miniHomeBtn');
-  var miniBackBtn = document.getElementById('miniBackBtn');
   var miniRoot = document.getElementById('miniRoot');
+  var parentInquiryFloatingBtn = document.getElementById('parentInquiryFloatingBtn');
+  var parentInquiryFloatingDot = document.getElementById('parentInquiryFloatingDot');
   var imageModal = document.getElementById('imageModal');
   var imageModalImg = document.getElementById('imageModalImg');
   var imageModalClose = document.getElementById('imageModalClose');
@@ -519,6 +526,7 @@
       item.hidden = item !== panel;
     });
     document.body.classList.toggle('mini-open', panel === miniPanel);
+    syncParentInquiryFloatingButton();
   }
 
   function createMiniCache(){
@@ -618,6 +626,25 @@
         row.id === currentMiniClass.id &&
         row.enrollment_id === currentEnrollment.id;
     });
+  }
+
+  function syncParentInquiryFloatingButton(){
+    if (!parentInquiryFloatingBtn) return;
+    var inquiryEnabled = !!currentMini && enabledModules().some(function(item){
+      return item.key === 'inquiry';
+    });
+    var blockingModalOpen = !!document.querySelector('.image-modal:not([hidden]),[role="dialog"]:not([hidden]),dialog[open]');
+    var shouldShow = !miniPanel.hidden &&
+      !!currentMiniClass &&
+      !!currentMini &&
+      isApprovedParentInquiryContext() &&
+      inquiryEnabled &&
+      currentMiniTab !== 'inquiry' &&
+      !blockingModalOpen;
+    parentInquiryFloatingBtn.hidden = !shouldShow;
+    if (parentInquiryFloatingDot) {
+      parentInquiryFloatingDot.hidden = !parentInquiryState || parentInquiryState.unreadExists !== true;
+    }
   }
 
   function clearParentInquiryForUnavailableContext(){
@@ -1403,7 +1430,6 @@
     miniCache = createMiniCache();
     var targetCache = miniCache;
     resetCenterBrand();
-    miniTitle.textContent = classTitle(row);
     miniRoot.innerHTML = '<div class="empty-mini">반 미니홈피를 불러오고 있어요.</div>';
     leadText.textContent = classTitle(row) + ' 소식입니다.';
     showPanel(miniPanel);
@@ -1607,6 +1633,30 @@
     }
 
     miniRoot.innerHTML =
+      '<section class="mini-hero" aria-labelledby="miniTitle">' +
+        '<div class="mini-hero-head">' +
+          '<div class="mini-hero-identity">' +
+            '<div class="section-eyebrow">우리 반 미니홈피</div>' +
+            '<h1 class="mini-title" id="miniTitle">' + esc(classTitle(currentMiniClass)) + '</h1>' +
+          '</div>' +
+          '<div class="mini-hero-actions">' +
+            '<button type="button" class="btn ghost small" id="miniHomeBtn" aria-label="우리 반 미니홈피 첫 화면으로 돌아가기">홈</button>' +
+            '<button type="button" class="btn ghost small" id="miniBackBtn">목록으로</button>' +
+          '</div>' +
+        '</div>' +
+        '<div class="mini-cover' + (coverImg ? ' has-photo' : '') + '"' + coverStyle + '>' +
+          (coverImg ? '<img class="mini-cover-img" src="' + esc(coverImg) + '" alt="">' : '') +
+          (enrolledText ? '<div class="enrollment-pill">' + esc(enrolledText) + '</div>' : '') +
+          '<div class="month-sticker">' + esc(currentMonthLabel()) + '</div>' +
+          '<div class="cover-caption">' +
+            '<div class="cover-caption-meta">' +
+              '<span class="cover-class-label">' + esc(heroClassLabel) + '</span>' +
+              (diaryHeroTitle ? '<span class="cover-activity-label">우리 반 오늘 이야기</span>' : '') +
+            '</div>' +
+            '<p>' + esc(heroText) + '</p>' +
+          '</div>' +
+        '</div>' +
+      '</section>' +
       (summaryCards.length ? '<div class="mini-summary-grid has-cards">' +
         summaryCards.map(function(card){
           var isNotice = card.kind === 'notice';
@@ -1632,18 +1682,6 @@
             '</button>';
           }).join('') + '</div>'
         : '') +
-      '<div class="mini-cover' + (coverImg ? ' has-photo' : '') + '"' + coverStyle + '>' +
-        (coverImg ? '<img class="mini-cover-img" src="' + esc(coverImg) + '" alt="">' : '') +
-        (enrolledText ? '<div class="enrollment-pill">' + esc(enrolledText) + '</div>' : '') +
-        '<div class="month-sticker">' + esc(currentMonthLabel()) + '</div>' +
-        '<div class="cover-caption">' +
-          '<div class="cover-caption-meta">' +
-            '<span class="cover-class-label">' + esc(heroClassLabel) + '</span>' +
-            (diaryHeroTitle ? '<span class="cover-activity-label">우리 반 오늘 이야기</span>' : '') +
-          '</div>' +
-          '<p>' + esc(heroText) + '</p>' +
-        '</div>' +
-      '</div>' +
       (currentMiniView === 'home'
         ? teacherProfileCardHtml(teacherProfile, teacherPhotoUrl, authVersion, loadVersion, classId)
         : '') +
@@ -1652,6 +1690,7 @@
         : '<div class="empty-mini">아직 준비 중이에요.</div>');
 
     if (modules.length) renderMiniTab();
+    syncParentInquiryFloatingButton();
     if (
       currentMiniView === 'home' &&
       renderCache.teacherProfileStatus === 'ready' &&
@@ -1888,16 +1927,18 @@
     var listIndicator = document.getElementById('parentInquiryUnreadIndicator');
     if (listIndicator) listIndicator.hidden = !unreadExists;
     var inquiryTab = miniRoot && miniRoot.querySelector('.mini-tab[data-mini-tab="inquiry"]');
-    if (!inquiryTab) return;
-    var tabDot = inquiryTab.querySelector('.parent-inquiry-tab-dot');
-    if (unreadExists && !tabDot) {
-      tabDot = document.createElement('span');
-      tabDot.className = 'mini-tab-dot parent-inquiry-tab-dot';
-      tabDot.setAttribute('aria-label', '새 메시지 있음');
-      inquiryTab.appendChild(tabDot);
-    } else if (!unreadExists && tabDot) {
-      tabDot.remove();
+    if (inquiryTab) {
+      var tabDot = inquiryTab.querySelector('.parent-inquiry-tab-dot');
+      if (unreadExists && !tabDot) {
+        tabDot = document.createElement('span');
+        tabDot.className = 'mini-tab-dot parent-inquiry-tab-dot';
+        tabDot.setAttribute('aria-label', '새 메시지 있음');
+        inquiryTab.appendChild(tabDot);
+      } else if (!unreadExists && tabDot) {
+        tabDot.remove();
+      }
     }
+    syncParentInquiryFloatingButton();
   }
 
   function showParentInquiryAuthenticationRequired(){
@@ -3890,25 +3931,27 @@
     openClassMini(btn.dataset.openClass, authTransitionVersion);
   });
 
-  miniBackBtn.addEventListener('click', function(){
-    classLoadVersion += 1;
-    resetParentInquiryState();
-    miniRoot.innerHTML = '';
-    resetCenterBrand();
-    leadText.textContent = '승인된 반 미니홈피 목록입니다.';
-    showPanel(classesPanel);
-  });
-
-  miniHomeBtn.addEventListener('click', async function(){
-    var homeAuthVersion = authTransitionVersion;
-    var homeClassLoadVersion = classLoadVersion;
-    var homeClassId = currentMiniClass && currentMiniClass.id;
-    if (!isCurrentClassLoad(homeAuthVersion, homeClassLoadVersion, homeClassId)) return;
-    if (currentMiniTab === 'inquiry') leaveParentInquirySubview();
-    currentMiniView = 'home';
-    currentMiniTab = 'diary';
+  parentInquiryFloatingBtn.addEventListener('click', async function(){
+    var floatingAuthVersion = authTransitionVersion;
+    var floatingClassLoadVersion = classLoadVersion;
+    var floatingClassId = currentMiniClass && currentMiniClass.id;
+    if (
+      parentInquiryFloatingBtn.hidden ||
+      !isCurrentClassLoad(floatingAuthVersion, floatingClassLoadVersion, floatingClassId) ||
+      !isApprovedParentInquiryContext() ||
+      !enabledModules().some(function(item){ return item.key === 'inquiry'; })
+    ) {
+      syncParentInquiryFloatingButton();
+      return;
+    }
+    leaveParentInquirySubview();
+    currentMiniView = 'section';
+    currentMiniTab = 'inquiry';
     selectedAlbumKey = null;
-    await renderMiniHome(homeAuthVersion, homeClassLoadVersion, homeClassId);
+    await renderMiniHome(floatingAuthVersion, floatingClassLoadVersion, floatingClassId);
+    if (!isCurrentClassLoad(floatingAuthVersion, floatingClassLoadVersion, floatingClassId)) return;
+    var inquiryContent = document.getElementById('miniContent');
+    if (inquiryContent) inquiryContent.scrollIntoView({ behavior:'smooth', block:'start' });
   });
 
   miniRoot.addEventListener('load', function(e){
@@ -3982,6 +4025,29 @@
   });
 
   miniRoot.addEventListener('click', async function(e){
+    var miniBackButton = e.target.closest('#miniBackBtn');
+    if (miniBackButton) {
+      classLoadVersion += 1;
+      resetParentInquiryState();
+      miniRoot.innerHTML = '';
+      resetCenterBrand();
+      leadText.textContent = '승인된 반 미니홈피 목록입니다.';
+      showPanel(classesPanel);
+      return;
+    }
+    var miniHomeButton = e.target.closest('#miniHomeBtn');
+    if (miniHomeButton) {
+      var homeAuthVersion = authTransitionVersion;
+      var homeClassLoadVersion = classLoadVersion;
+      var homeClassId = currentMiniClass && currentMiniClass.id;
+      if (!isCurrentClassLoad(homeAuthVersion, homeClassLoadVersion, homeClassId)) return;
+      if (currentMiniTab === 'inquiry') leaveParentInquirySubview();
+      currentMiniView = 'home';
+      currentMiniTab = 'diary';
+      selectedAlbumKey = null;
+      await renderMiniHome(homeAuthVersion, homeClassLoadVersion, homeClassId);
+      return;
+    }
     var inquiryCloseButton = e.target.closest('#parentInquiryCloseBtn');
     if (inquiryCloseButton) {
       e.preventDefault();
@@ -4133,18 +4199,21 @@
     if (imageBtn) {
       imageModalImg.src = imageBtn.dataset.openImage;
       imageModal.hidden = false;
+      syncParentInquiryFloatingButton();
     }
   });
 
   imageModalClose.addEventListener('click', function(){
     imageModal.hidden = true;
     imageModalImg.removeAttribute('src');
+    syncParentInquiryFloatingButton();
   });
 
   imageModal.addEventListener('click', function(e){
     if (e.target === imageModal) {
       imageModal.hidden = true;
       imageModalImg.removeAttribute('src');
+      syncParentInquiryFloatingButton();
     }
   });
 
