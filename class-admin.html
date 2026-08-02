@@ -115,8 +115,70 @@
   .teacher-intro-actions{display:flex;align-items:center;justify-content:space-between;gap:14px}
   .teacher-intro-count{color:var(--ink-soft);font-size:.84rem;white-space:nowrap}
   #teacherIntroMsg{white-space:pre-line}
-  @media (max-width:760px){.topbar-inner{gap:10px;align-items:flex-start;flex-wrap:wrap}.topbar-actions{width:100%;gap:7px;justify-content:flex-start;flex-wrap:wrap}.topbar-actions #classNameTop{flex:1 0 100%;max-width:100%;margin-right:0}.topbar-actions .btn{height:36px;padding:0 12px;font-size:12.5px}.topbar-actions #logoutBtn{padding:0 10px}.layout,.split{grid-template-columns:1fr}.album-grid,.photo-grid{grid-template-columns:repeat(2,1fr)}.panel{padding:22px}.day-cell{min-height:62px}}
+  .inquiry-view{max-width:820px;margin:0 auto}
+  .inquiry-list-panel,.inquiry-detail-panel{min-width:0}
+  .inquiry-toolbar{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;flex-wrap:wrap}
+  .inquiry-heading{flex:1 1 360px;min-width:0}
+  .inquiry-title-row{display:flex;align-items:center;gap:9px;flex-wrap:wrap;min-width:0}
+  .inquiry-title{font-family:var(--display);font-size:1.35rem;line-height:1.35;min-width:0;word-break:keep-all;overflow-wrap:anywhere}
+  .inquiry-description{margin-top:6px;color:var(--ink-soft);font-size:.9rem;line-height:1.65;word-break:keep-all;overflow-wrap:anywhere}
+  .inquiry-unread-indicator{display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;width:18px;height:18px;margin-left:4px;border-radius:50%;background:#fff0ea;vertical-align:middle}
+  .inquiry-unread-dot{width:8px;height:8px;border-radius:50%;background:var(--coral-deep);box-shadow:0 0 0 3px rgba(242,113,90,.12)}
+  .inquiry-filter{display:flex;align-items:center;gap:8px;flex:0 0 auto}
+  .inquiry-filter label{margin:0;white-space:nowrap}
+  .inquiry-filter select{width:auto;min-width:132px;padding:9px 34px 9px 12px;background-color:var(--paper)}
+  .inquiry-list{display:flex;flex-direction:column;gap:12px;margin-top:20px}
+  .inquiry-list-state{margin-top:16px}
+  .inquiry-list-actions{display:flex;justify-content:center;margin-top:16px}
+  .inquiry-card{min-width:0;border:1.5px solid var(--line);border-radius:18px;background:var(--cream);overflow:hidden}
+  .inquiry-card--unread{border-color:#ffc7b7;background:#fff8f5}
+  .inquiry-card-open[data-open-inquiry]{display:block;width:100%;min-width:0;padding:18px;border:0;background:transparent;color:inherit;text-align:left;cursor:pointer;font-family:var(--body)}
+  .inquiry-card-open[data-open-inquiry]:focus-visible{outline:2px solid rgba(242,113,90,.42);outline-offset:-3px}
+  .inquiry-card-open[data-open-inquiry]:disabled{cursor:default}
+  .inquiry-card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;min-width:0}
+  .inquiry-card-copy{flex:1 1 280px;min-width:0}
+  .inquiry-card-document,.inquiry-card-subject{min-width:0;word-break:keep-all;overflow-wrap:anywhere}
+  .inquiry-card-document{color:var(--sage);font-size:.78rem;font-weight:800}
+  .inquiry-card-subject{margin-top:5px;color:var(--ink);font-size:1rem;font-weight:900;line-height:1.45}
+  .inquiry-card-meta{display:flex;gap:7px 10px;flex-wrap:wrap;margin-top:8px;color:var(--ink-soft);font-size:.8rem}
+  .inquiry-card-created-at,.inquiry-card-status{min-width:0;word-break:keep-all;overflow-wrap:anywhere}
+  .inquiry-card-badges{display:flex;justify-content:flex-end;gap:6px;flex-wrap:wrap}
+  .inquiry-status-badge,.inquiry-unread-mark,.inquiry-response-mark{display:inline-flex;align-items:center;min-height:24px;padding:3px 9px;border-radius:999px;font-size:.75rem;font-weight:800;line-height:1.25}
+  .inquiry-status-badge{background:#efe9e2;color:var(--ink-soft)}
+  .inquiry-unread-mark{display:none;background:#fff0ea;color:var(--coral-deep)}
+  .inquiry-response-mark{display:none;background:#eef5ed;color:#668064}
+  .inquiry-card--unread .inquiry-unread-mark,.inquiry-card--requires-response .inquiry-response-mark{display:inline-flex}
+  .inquiry-detail-nav{margin-bottom:14px}
+  .inquiry-detail-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;flex-wrap:wrap;padding-bottom:18px;border-bottom:1.5px solid var(--line)}
+  .inquiry-detail-metadata{display:flex;align-items:center;gap:5px;flex:1 1 420px;min-width:0;flex-wrap:wrap}
+  .inquiry-detail-document,.inquiry-detail-date{min-width:0;word-break:keep-all;overflow-wrap:anywhere}
+  .inquiry-detail-document{color:var(--sage);font-size:.8rem;font-weight:800}
+  .inquiry-detail-date{color:var(--ink-soft);font-size:.8rem;font-weight:700}
+  .inquiry-detail-separator{color:var(--line)}
+  .inquiry-detail-head>.inquiry-status-badge{align-self:flex-start}
+  .inquiry-visually-hidden{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}
+  .inquiry-message-list{display:flex;flex-direction:column;gap:12px;margin-top:16px;min-width:0}
+  .inquiry-message{display:flex;width:100%;min-width:0}
+  .inquiry-message--parent{justify-content:flex-start}
+  .inquiry-message--teacher,.inquiry-message--owner{justify-content:flex-end}
+  .inquiry-message-content{max-width:min(78%,560px);min-width:0}
+  .inquiry-message-role{margin:0 6px 5px;color:var(--ink-soft);font-size:.75rem;font-weight:800}
+  .inquiry-message--teacher .inquiry-message-role,.inquiry-message--owner .inquiry-message-role{text-align:right}
+  .inquiry-message-bubble{padding:13px 15px;border-radius:17px;background:#f5eee6;color:var(--ink);font-size:.9rem;line-height:1.65;word-break:keep-all;overflow-wrap:anywhere}
+  .inquiry-message--teacher .inquiry-message-bubble{background:#eef5ed}
+  .inquiry-message--owner .inquiry-message-bubble{background:#fff0ea}
+  .inquiry-message-meta{margin:5px 6px 0;color:var(--ink-soft);font-size:.72rem}
+  .inquiry-message--teacher .inquiry-message-meta,.inquiry-message--owner .inquiry-message-meta{text-align:right}
+  .inquiry-status-message-list{display:flex;flex-direction:column;align-items:center;gap:8px;margin-top:16px}
+  .inquiry-status-message{max-width:100%;padding:5px 10px;border-radius:999px;background:#f3eee8;color:var(--ink-soft);font-size:.74rem;line-height:1.45;text-align:center;word-break:keep-all;overflow-wrap:anywhere}
+  .inquiry-message-list>.inquiry-status-message{align-self:center}
+  .inquiry-reply-section{margin-top:24px;padding-top:20px;border-top:1.5px solid var(--line)}
+  .inquiry-reply-textarea{min-height:132px}
+  .inquiry-reply-actions{display:flex;align-items:center;justify-content:flex-end;gap:8px;flex-wrap:wrap}
+  .inquiry-closed-notice{margin-top:14px;padding:12px 14px;border-radius:14px;background:#f3eee8;color:var(--ink-soft);font-size:.86rem;line-height:1.6;text-align:center}
+  @media (max-width:760px){.topbar-inner{gap:10px;align-items:flex-start;flex-wrap:wrap}.topbar-actions{width:100%;gap:7px;justify-content:flex-start;flex-wrap:wrap}.topbar-actions #classNameTop{flex:1 0 100%;max-width:100%;margin-right:0}.topbar-actions .btn{height:36px;padding:0 12px;font-size:12.5px}.topbar-actions #logoutBtn{padding:0 10px}.layout,.split{grid-template-columns:1fr}.album-grid,.photo-grid{grid-template-columns:repeat(2,1fr)}.panel{padding:22px}.day-cell{min-height:62px}.inquiry-toolbar,.inquiry-detail-head{align-items:stretch;flex-direction:column}.inquiry-filter{justify-content:space-between}.inquiry-message-content{max-width:88%}.inquiry-reply-actions{align-items:stretch}.inquiry-reply-actions .btn{flex:1 1 180px}}
   @media (max-width:560px){.teacher-intro-actions{align-items:stretch;flex-direction:column}.teacher-intro-actions .btn{width:100%}.teacher-intro-count{align-self:flex-end}}
+  @media (max-width:320px){.inquiry-filter{align-items:stretch;flex-direction:column}.inquiry-filter select{width:100%}.inquiry-card-head,.inquiry-card-badges{justify-content:flex-start}.inquiry-message-content{max-width:94%}.inquiry-reply-actions{flex-direction:column}.inquiry-reply-actions .btn{flex-basis:auto;width:100%}}
 </style>
 </head>
 <body>
@@ -169,7 +231,12 @@
       <button type="button" class="tab-btn active" data-tab="diary">반 이야기</button>
       <button type="button" class="tab-btn" data-tab="event">행사 일정</button>
       <button type="button" class="tab-btn" data-tab="album">사진 앨범</button>
-      <button type="button" class="tab-btn" data-tab="guestbook">방명록</button>
+      <button type="button" class="tab-btn" data-tab="inquiry">
+        학부모 문의
+        <span class="inquiry-unread-indicator" id="inquiryUnreadIndicator" aria-label="읽지 않은 문의 있음" hidden>
+          <span class="inquiry-unread-dot" aria-hidden="true"></span>
+        </span>
+      </button>
       <button type="button" class="tab-btn" data-tab="notice">공지사항</button>
       <button type="button" class="tab-btn" data-tab="mini-settings">미니홈피 설정</button>
     </div>
@@ -260,8 +327,69 @@
       </div>
     </div>
 
-    <div class="tab-panel" data-panel="guestbook">
-      <section class="list" id="commentList"></section>
+    <div class="tab-panel" data-panel="inquiry">
+      <div class="inquiry-view inquiry-list-view" id="inquiryListView">
+        <section class="panel inquiry-list-panel">
+          <div class="inquiry-toolbar">
+            <div class="inquiry-heading">
+              <div class="inquiry-title-row">
+                <h2 class="inquiry-title">학부모 문의</h2>
+              </div>
+              <p class="inquiry-description">학부모가 남긴 비공개 문의를 확인하고 메시지를 주고받을 수 있습니다.</p>
+            </div>
+            <div class="inquiry-filter">
+              <label for="inquiryStatusFilter">상태</label>
+              <select id="inquiryStatusFilter" disabled>
+                <option value="">전체 문의</option>
+                <option value="received">접수</option>
+                <option value="in_progress">확인 중</option>
+                <option value="answered">답변 완료</option>
+                <option value="closed">종료</option>
+              </select>
+            </div>
+          </div>
+          <div class="inquiry-list" id="inquiryList"></div>
+          <div class="inquiry-list-state" id="inquiryListState" role="status" aria-live="polite"></div>
+          <div class="inquiry-list-actions">
+            <button type="button" class="btn ghost" id="inquiryLoadMoreBtn" disabled hidden>더 보기</button>
+          </div>
+        </section>
+      </div>
+
+      <div class="inquiry-view inquiry-detail-view" id="inquiryDetailView" aria-labelledby="inquiryDetailTitle" aria-busy="false" hidden>
+        <section class="panel inquiry-detail-panel">
+          <div class="inquiry-detail-nav">
+            <button type="button" class="btn ghost" id="inquiryBackBtn">문의 목록</button>
+          </div>
+          <h2 class="inquiry-visually-hidden" id="inquiryDetailTitle">문의 상세</h2>
+          <header class="inquiry-detail-head">
+            <div class="inquiry-detail-metadata">
+              <div class="inquiry-detail-document" id="inquiryDetailDocumentNo">문의번호</div>
+              <span class="inquiry-detail-separator" aria-hidden="true">·</span>
+              <div class="inquiry-detail-date" id="inquiryDetailCreatedAt">접수 날짜 확인 중</div>
+            </div>
+            <span class="inquiry-status-badge" id="inquiryDetailStatus">상태</span>
+          </header>
+
+          <div class="inquiry-message-list" id="inquiryMessageList"></div>
+          <div class="inquiry-status-message-list" id="inquiryStatusMessageList" aria-live="polite"></div>
+
+          <section class="inquiry-reply-section">
+            <form id="inquiryReplyForm">
+              <div class="field">
+                <label for="inquiryReplyInput">메시지 작성</label>
+                <textarea class="inquiry-reply-textarea" id="inquiryReplyInput" maxlength="5000" disabled></textarea>
+              </div>
+              <div class="inquiry-reply-actions">
+                <button type="submit" class="btn small" id="inquiryReplySubmit" disabled>메시지 보내기</button>
+                <button type="button" class="btn danger" id="inquiryCloseBtn" disabled>문의 종료</button>
+              </div>
+              <div class="msg" id="inquiryDetailMsg" role="status" aria-live="polite"></div>
+            </form>
+            <div class="inquiry-closed-notice" id="inquiryClosedNotice" hidden>종료된 문의에는 새 메시지를 보낼 수 없습니다.</div>
+          </section>
+        </section>
+      </div>
     </div>
 
     <div class="tab-panel" data-panel="notice">
@@ -363,6 +491,29 @@
   var teacherIntroStatusTone = '';
   var teacherIntroLoadSequence = 0;
   var teacherIntroSaveOperation = null;
+  var INQUIRY_PAGE_LIMIT = 20;
+  var inquiryState = {
+    rows: [],
+    cursor: null,
+    hasMore: false,
+    isLoading: false,
+    loadSequence: 0,
+    unreadExists: false,
+    selectedInquiryId: null,
+    thread: null,
+    replyDraft: '',
+    replyOperation: null,
+    closeOperation: null,
+    filterStatus: '',
+    hasLoaded: false,
+    lastLoadFailed: false,
+    errorText: '',
+    unreadLoadSequence: 0,
+    detailSequence: 0,
+    replyThreadSequence: 0,
+    isDetailLoading: false,
+    detailError: ''
+  };
 
   var topbar = document.querySelector('.topbar');
   var loadingPanel = byId('loadingPanel');
@@ -412,10 +563,7 @@
     if (!byId('eventModal').hidden &&
         formSnapshot(['eventId', 'eventTitle', 'eventDate', 'eventBody']) !== eventFormBaseline) return true;
     if (formSnapshot(['albumId', 'albumTitle', 'albumDate', 'albumBody']) !== albumFormBaseline) return true;
-    if (hasUnsavedTeacherIntro()) return true;
-    return Array.from(document.querySelectorAll('[data-reply-input]')).some(function(input){
-      return input.value.trim() !== String(input.dataset.originalValue || '').trim();
-    });
+    return hasUnsavedTeacherIntro();
   }
   function syncTopbarHeight(){
     if (!topbar) return;
@@ -427,7 +575,13 @@
     return code === '42501' || code === 'pgrst301' || message.indexOf('row-level security') !== -1 ||
       message.indexOf('permission denied') !== -1 || message.indexOf('jwt') !== -1 ||
       message.indexOf('not authorized') !== -1 || message.indexOf('unauthorized') !== -1 ||
-      message.indexOf('forbidden') !== -1;
+      message.indexOf('forbidden') !== -1 || message.indexOf('class_access_denied') !== -1;
+  }
+  function isInquiryNotAuthenticatedError(error){
+    var message = error && error.message
+      ? String(error.message).trim().toLowerCase()
+      : String(error || '').trim().toLowerCase();
+    return message === 'not_authenticated';
   }
   function errorMessage(error){
     if (isClassAuthorizationError(error)) {
@@ -446,6 +600,98 @@
   function setMsg(el, text, isError){
     el.innerHTML = escWithBr(text || '');
     el.className = 'msg' + (isError ? ' error' : '');
+  }
+  function resetInquiryDetailDom(){
+    var backBtn = byId('inquiryBackBtn');
+    backBtn.disabled = false;
+    backBtn.removeAttribute('aria-disabled');
+    byId('inquiryDetailDocumentNo').textContent = '문의번호';
+    byId('inquiryDetailCreatedAt').textContent = '접수 날짜 확인 중';
+    byId('inquiryDetailStatus').textContent = '상태';
+    byId('inquiryMessageList').innerHTML = '';
+    byId('inquiryStatusMessageList').innerHTML = '';
+    byId('inquiryStatusMessageList').hidden = true;
+    var replyInput = byId('inquiryReplyInput');
+    replyInput.value = '';
+    replyInput.disabled = true;
+    var replySubmit = byId('inquiryReplySubmit');
+    replySubmit.disabled = true;
+    replySubmit.textContent = '메시지 보내기';
+    replySubmit.setAttribute('aria-disabled', 'true');
+    replySubmit.setAttribute('aria-busy', 'false');
+    var closeBtn = byId('inquiryCloseBtn');
+    closeBtn.disabled = true;
+    closeBtn.hidden = false;
+    closeBtn.textContent = '문의 종료';
+    closeBtn.setAttribute('aria-disabled', 'true');
+    closeBtn.setAttribute('aria-busy', 'false');
+    byId('inquiryReplyForm').setAttribute('aria-busy', 'false');
+    byId('inquiryDetailView').setAttribute('aria-busy', 'false');
+    setMsg(byId('inquiryDetailMsg'), '');
+    byId('inquiryClosedNotice').hidden = true;
+  }
+  function clearInquiryDetailState(showList){
+    inquiryState.detailSequence += 1;
+    inquiryState.replyThreadSequence += 1;
+    inquiryState.isDetailLoading = false;
+    inquiryState.detailError = '';
+    inquiryState.selectedInquiryId = null;
+    inquiryState.thread = null;
+    inquiryState.replyDraft = '';
+    inquiryState.replyOperation = null;
+    inquiryState.closeOperation = null;
+    resetInquiryDetailDom();
+    if (showList) {
+      byId('inquiryListView').hidden = false;
+      byId('inquiryDetailView').hidden = true;
+    }
+  }
+  function resetInquiryState(){
+    inquiryState.loadSequence += 1;
+    inquiryState.unreadLoadSequence += 1;
+    inquiryState.rows = [];
+    inquiryState.cursor = null;
+    inquiryState.hasMore = false;
+    inquiryState.isLoading = false;
+    inquiryState.unreadExists = false;
+    inquiryState.filterStatus = '';
+    inquiryState.hasLoaded = false;
+    inquiryState.lastLoadFailed = false;
+    inquiryState.errorText = '';
+    clearInquiryDetailState(true);
+
+    byId('inquiryList').innerHTML = '';
+    var listState = byId('inquiryListState');
+    listState.textContent = '';
+    listState.className = 'inquiry-list-state';
+    byId('inquiryUnreadIndicator').hidden = true;
+    var statusFilter = byId('inquiryStatusFilter');
+    statusFilter.value = '';
+    statusFilter.disabled = true;
+    var loadMore = byId('inquiryLoadMoreBtn');
+    loadMore.hidden = true;
+    loadMore.disabled = true;
+    byId('inquiryListView').setAttribute('aria-busy', 'false');
+
+  }
+  function showInquiryAuthenticationRequired(){
+    classLoadGeneration += 1;
+    resetInquiryState();
+    currentSession = null;
+    currentClass = null;
+    currentAccessRole = '';
+    classStaffAccessLost = false;
+    logoutBtn.hidden = true;
+    logoutBtn.disabled = false;
+    classSwitchLink.hidden = true;
+    classSwitchLink.removeAttribute('href');
+    miniHomeLink.hidden = true;
+    miniHomeLink.removeAttribute('href');
+    miniHomeLink.removeAttribute('data-action');
+    classNameTop.textContent = '';
+    leadText.textContent = '로그인 후 반 관리 권한을 확인해 주세요.';
+    setMsg(byId('authMsg'), '');
+    showPanel(authPanel);
   }
   function isTeacherIntroContextCurrent(userId, classId, loadGeneration){
     return !classStaffAccessLost &&
@@ -507,6 +753,7 @@
   }
 
   function showClassAccessNotice(title, description){
+    resetInquiryState();
     currentClass = null;
     currentAccessRole = '';
     classSwitchLink.hidden = true;
@@ -527,6 +774,7 @@
 
   function showTeacherAccessEnded(){
     if (classStaffAccessLost) return;
+    resetInquiryState();
     classStaffAccessLost = true;
     currentClass = null;
     currentAccessRole = '';
@@ -548,6 +796,7 @@
       return;
     }
     if (classStaffAccessLost) return;
+    resetInquiryState();
     classStaffAccessLost = true;
     currentClass = null;
     currentAccessRole = '';
@@ -610,6 +859,16 @@
   function formatDateTime(value){
     if (!value) return '';
     return new Date(value).toLocaleString('ko-KR');
+  }
+  function formatInquiryDateTime(value){
+    if (value === null || value === undefined || String(value).trim() === '') return '날짜 확인 필요';
+    var date = value instanceof Date ? value : new Date(value);
+    if (Number.isNaN(date.getTime())) return '날짜 확인 필요';
+    return formatDateTime(date);
+  }
+  function formatInquiryNumberForDisplay(documentNo){
+    var match = String(documentNo || '').trim().match(/(\d{6}-\d{4})$/);
+    return match ? match[1] : '확인 필요';
   }
   function sameMonth(a, b){ return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth(); }
   function safeName(name){ return String(name || 'photo').replace(/[^a-zA-Z0-9._-]/g, '_'); }
@@ -971,6 +1230,7 @@
   async function loadClassForStaff(session){
     var loadGeneration = ++classLoadGeneration;
     resetTeacherIntroState();
+    resetInquiryState();
     var requestedUserId = session && session.user ? session.user.id : null;
     var ownerConsoleSlug = '';
     classSwitchLink.hidden = true;
@@ -1169,6 +1429,7 @@
       classSwitchLink.hidden = true;
     }
     showPanel(appPanel);
+    refreshInquiryUnreadIndicator();
     if (currentAccessRole === 'teacher') {
       refreshClassSwitcherVisibility(session, loadGeneration, requestedUserId);
     }
@@ -1931,48 +2192,1426 @@
     await loadAlbumPhotos();
   }
 
-  async function loadGuestbookTab(){
-    var res = await client.from('class_comments')
-      .select('*')
-      .eq('class_id', currentClass.id)
-      .order('created_at', { ascending:false });
-    if (res.error) {
-      byId('commentList').innerHTML = '<div class="empty">' + esc(errorMessage(res.error)) + '</div>';
-      return;
-    }
-    var rows = (res.data || []).sort(function(a, b){
-      var ar = a.reply ? 1 : 0;
-      var br = b.reply ? 1 : 0;
-      if (ar !== br) return ar - br;
-      return new Date(b.created_at) - new Date(a.created_at);
-    });
-    byId('commentList').innerHTML = rows.length ? rows.map(function(row){
-      return '<article class="card">' +
-        '<div class="card-head"><div>' +
-          '<div class="card-title">학부모 방명록</div>' +
-          '<div class="card-meta">' + esc(formatDateTime(row.created_at)) + ' · ' + esc(row.author_id) + '</div>' +
-        '</div>' + (row.reply ? '<span class="card-meta">답글 완료</span>' : '<span class="card-meta">답글 필요</span>') + '</div>' +
-        '<div class="card-body">' + escWithBr(row.body || '') + '</div>' +
-        '<div class="field" style="margin-top:14px"><label for="reply-' + esc(row.id) + '">관리자 답글</label><textarea id="reply-' + esc(row.id) + '" data-reply-input="' + esc(row.id) + '">' + esc(row.reply || '') + '</textarea></div>' +
-        (row.replied_at ? '<div class="card-meta">답글 저장: ' + esc(formatDateTime(row.replied_at)) + '</div>' : '') +
-        '<div class="actions"><button type="button" class="btn small" data-save-reply="' + esc(row.id) + '">답글 저장</button></div>' +
-      '</article>';
-    }).join('') : '<div class="empty">아직 방명록 글이 없습니다.</div>';
-    var replyValues = new Map(rows.map(function(row){ return [String(row.id), row.reply || '']; }));
-    byId('commentList').querySelectorAll('[data-reply-input]').forEach(function(input){
-      input.dataset.originalValue = replyValues.get(input.dataset.replyInput) || '';
-    });
+  function inquiryStatusLabel(value){
+    return ({
+      received:'접수',
+      in_progress:'확인 중',
+      answered:'답변 완료',
+      closed:'종료'
+    })[value] || '상태 확인 필요';
   }
 
-  async function saveReply(id){
-    if (!await ensureCurrentClassStaffAccess()) return;
-    var input = document.querySelector('[data-reply-input="' + id + '"]');
-    var res = await client.from('class_comments')
-      .update({ reply: input.value.trim(), replied_at: new Date().toISOString() })
-      .eq('id', id)
-      .eq('class_id', currentClass.id);
-    if (res.error) { alert(errorMessage(res.error)); return; }
-    await loadGuestbookTab();
+  function isInquiryListContextCurrent(userId, classId, loadGeneration, requestSequence){
+    return !classStaffAccessLost &&
+      requestSequence === inquiryState.loadSequence &&
+      loadGeneration === classLoadGeneration &&
+      !!currentSession && !!currentSession.user && currentSession.user.id === userId &&
+      !!currentClass && currentClass.id === classId;
+  }
+
+  function isInquiryUnreadContextCurrent(userId, classId, loadGeneration, requestSequence){
+    return !classStaffAccessLost &&
+      requestSequence === inquiryState.unreadLoadSequence &&
+      loadGeneration === classLoadGeneration &&
+      !!currentSession && !!currentSession.user && currentSession.user.id === userId &&
+      !!currentClass && currentClass.id === classId;
+  }
+
+  function setInquiryListMessage(text, isError, isEmpty){
+    var stateEl = byId('inquiryListState');
+    if (isEmpty) {
+      stateEl.className = 'inquiry-list-state';
+      stateEl.innerHTML = '<div class="empty">' + esc(text || '') + '</div>';
+      return;
+    }
+    setMsg(stateEl, text || '', !!isError);
+    stateEl.classList.add('inquiry-list-state');
+  }
+
+  function renderInquiryList(){
+    var listEl = byId('inquiryList');
+    listEl.innerHTML = inquiryState.rows.map(function(row){
+      var documentNo = formatInquiryNumberForDisplay(row.document_no);
+      var unreadLabel = row.status === 'received' ? '새 문의' : '새 메시지';
+      var cardClass = 'inquiry-card';
+      if (row.has_unread_parent_message) cardClass += ' inquiry-card--unread';
+      if (row.requires_response) cardClass += ' inquiry-card--requires-response';
+      return '<article class="' + cardClass + '">' +
+        '<button type="button" class="inquiry-card-open" data-open-inquiry="' + esc(row.inquiry_id) + '" aria-label="' + esc('문의번호 ' + documentNo + ' 문의 상세 보기') + '">' +
+          '<div class="inquiry-card-head">' +
+            '<div class="inquiry-card-copy">' +
+              '<div class="inquiry-card-document">' + esc('문의번호 ' + documentNo) + '</div>' +
+              '<div class="inquiry-card-subject">' + esc(row.subject || '제목 없음') + '</div>' +
+              '<div class="inquiry-card-meta">' +
+                '<span class="inquiry-card-created-at">' + esc(formatInquiryDateTime(row.created_at)) + '</span>' +
+              '</div>' +
+            '</div>' +
+            '<div class="inquiry-card-badges">' +
+              '<span class="inquiry-status-badge inquiry-card-status">' + esc(inquiryStatusLabel(row.status)) + '</span>' +
+              (row.has_unread_parent_message ? '<span class="inquiry-unread-mark">' + esc(unreadLabel) + '</span>' : '') +
+              (row.requires_response ? '<span class="inquiry-response-mark">답변 필요</span>' : '') +
+            '</div>' +
+          '</div>' +
+        '</button>' +
+      '</article>';
+    }).join('');
+
+    if (inquiryState.isLoading && !inquiryState.rows.length) {
+      setInquiryListMessage('문의 목록을 불러오고 있습니다.', false, true);
+    } else if (inquiryState.errorText) {
+      setInquiryListMessage(inquiryState.errorText, true, false);
+    } else if (inquiryState.hasLoaded && !inquiryState.rows.length) {
+      setInquiryListMessage('아직 접수된 학부모 문의가 없습니다.', false, true);
+    } else if (inquiryState.isLoading) {
+      setInquiryListMessage('문의 목록을 더 불러오고 있습니다.', false, false);
+    } else {
+      setInquiryListMessage('', false, false);
+    }
+
+    byId('inquiryListView').setAttribute('aria-busy', inquiryState.isLoading ? 'true' : 'false');
+    var filter = byId('inquiryStatusFilter');
+    filter.disabled = classStaffAccessLost || !currentClass;
+    var loadMore = byId('inquiryLoadMoreBtn');
+    loadMore.hidden = !inquiryState.hasLoaded || !inquiryState.hasMore;
+    loadMore.disabled = inquiryState.isLoading;
+  }
+
+  function restartInquiryList(){
+    // 읽음·답변·종료 후 목록을 갱신할 때도 기존 cursor를 폐기하고 첫 페이지부터 다시 조회합니다.
+    inquiryState.loadSequence += 1;
+    inquiryState.rows = [];
+    inquiryState.cursor = null;
+    inquiryState.hasMore = false;
+    inquiryState.isLoading = false;
+    inquiryState.hasLoaded = false;
+    inquiryState.lastLoadFailed = false;
+    inquiryState.errorText = '';
+    renderInquiryList();
+  }
+
+  function isInquiryMutationContextCurrent(context){
+    return !!context && !classStaffAccessLost &&
+      context.classLoadGeneration === classLoadGeneration &&
+      !!currentSession && !!currentSession.user && currentSession.user.id === context.userId &&
+      !!currentClass && currentClass.id === context.classId;
+  }
+
+  function refreshInquiryListAfterMutation(context){
+    if (!isInquiryMutationContextCurrent(context)) return false;
+
+    inquiryState.loadSequence += 1;
+    inquiryState.unreadLoadSequence += 1;
+    inquiryState.rows = [];
+    inquiryState.cursor = null;
+    inquiryState.hasMore = false;
+    inquiryState.isLoading = false;
+    inquiryState.hasLoaded = false;
+    inquiryState.lastLoadFailed = false;
+    inquiryState.errorText = '';
+
+    loadInquiryList({ append:false });
+    refreshInquiryUnreadIndicator();
+    return true;
+  }
+
+  async function loadInquiryList(options){
+    var append = !!(options && options.append);
+    if (!currentSession || !currentSession.user || !currentClass || classStaffAccessLost) return;
+    if (inquiryState.isLoading) return;
+    if (append && (!inquiryState.hasMore || !inquiryState.cursor)) return;
+
+    var requestedUserId = currentSession.user.id;
+    var requestedClassId = currentClass.id;
+    var requestedGeneration = classLoadGeneration;
+    var requestedStatus = inquiryState.filterStatus || null;
+    var requestedCursor = append ? inquiryState.cursor : null;
+    var requestSequence = ++inquiryState.loadSequence;
+
+    inquiryState.isLoading = true;
+    inquiryState.errorText = '';
+    inquiryState.lastLoadFailed = false;
+    if (!append) {
+      inquiryState.rows = [];
+      inquiryState.cursor = null;
+      inquiryState.hasMore = false;
+      inquiryState.hasLoaded = false;
+    }
+    renderInquiryList();
+
+    try {
+      var res = await client.rpc('get_class_inquiries_for_staff', {
+        p_class_id: requestedClassId,
+        p_status: requestedStatus,
+        p_unread_only: false,
+        p_before_has_unread_parent_message: requestedCursor ? requestedCursor.has_unread_parent_message : null,
+        p_before_requires_response: requestedCursor ? requestedCursor.requires_response : null,
+        p_before_updated_at: requestedCursor ? requestedCursor.updated_at : null,
+        p_before_id: requestedCursor ? requestedCursor.inquiry_id : null,
+        p_limit: INQUIRY_PAGE_LIMIT
+      });
+
+      if (!isInquiryListContextCurrent(requestedUserId, requestedClassId, requestedGeneration, requestSequence)) return;
+      if (res.error) {
+        if (isInquiryNotAuthenticatedError(res.error)) {
+          showInquiryAuthenticationRequired();
+          return;
+        }
+        var authorizationError = isClassAuthorizationError(res.error);
+        errorMessage(res.error);
+        if (authorizationError || !isInquiryListContextCurrent(requestedUserId, requestedClassId, requestedGeneration, requestSequence)) return;
+        inquiryState.errorText = '문의 목록을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.';
+        inquiryState.lastLoadFailed = true;
+        if (!append) inquiryState.hasMore = false;
+        return;
+      }
+
+      var pageRows = res.data || [];
+      var validRows = Array.isArray(pageRows) && pageRows.every(function(row){
+        return row &&
+          typeof row.inquiry_id === 'string' && !!row.inquiry_id &&
+          row.class_id === requestedClassId &&
+          typeof row.has_unread_parent_message === 'boolean' &&
+          typeof row.requires_response === 'boolean' &&
+          typeof row.updated_at === 'string' && !!row.updated_at;
+      });
+      if (!validRows) {
+        inquiryState.errorText = '문의 목록을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.';
+        inquiryState.lastLoadFailed = true;
+        if (!append) inquiryState.hasMore = false;
+        return;
+      }
+
+      var lastRow = pageRows.length ? pageRows[pageRows.length - 1] : null;
+      var nextCursor = lastRow ? {
+        has_unread_parent_message: lastRow.has_unread_parent_message,
+        requires_response: lastRow.requires_response,
+        updated_at: lastRow.updated_at,
+        inquiry_id: lastRow.inquiry_id
+      } : null;
+      var paginationDidNotAdvance = append && requestedCursor && nextCursor &&
+        requestedCursor.has_unread_parent_message === nextCursor.has_unread_parent_message &&
+        requestedCursor.requires_response === nextCursor.requires_response &&
+        requestedCursor.updated_at === nextCursor.updated_at &&
+        requestedCursor.inquiry_id === nextCursor.inquiry_id;
+      if (paginationDidNotAdvance) {
+        inquiryState.hasMore = false;
+        inquiryState.hasLoaded = true;
+        inquiryState.lastLoadFailed = false;
+        inquiryState.errorText = '';
+        return;
+      }
+
+      if (append) {
+        var existingIds = new Set(inquiryState.rows.map(function(row){ return row.inquiry_id; }));
+        pageRows.forEach(function(row){
+          if (existingIds.has(row.inquiry_id)) return;
+          existingIds.add(row.inquiry_id);
+          inquiryState.rows.push(row);
+        });
+      } else {
+        inquiryState.rows = pageRows.slice();
+      }
+
+      inquiryState.cursor = nextCursor;
+      inquiryState.hasMore = pageRows.length === INQUIRY_PAGE_LIMIT;
+      inquiryState.hasLoaded = true;
+      inquiryState.lastLoadFailed = false;
+      inquiryState.errorText = '';
+    } catch (err) {
+      if (!isInquiryListContextCurrent(requestedUserId, requestedClassId, requestedGeneration, requestSequence)) return;
+      if (isInquiryNotAuthenticatedError(err)) {
+        showInquiryAuthenticationRequired();
+        return;
+      }
+      var authorizationError = isClassAuthorizationError(err);
+      errorMessage(err);
+      if (authorizationError || !isInquiryListContextCurrent(requestedUserId, requestedClassId, requestedGeneration, requestSequence)) return;
+      inquiryState.errorText = '문의 목록을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.';
+      inquiryState.lastLoadFailed = true;
+      if (!append) inquiryState.hasMore = false;
+    } finally {
+      if (isInquiryListContextCurrent(requestedUserId, requestedClassId, requestedGeneration, requestSequence)) {
+        inquiryState.isLoading = false;
+        renderInquiryList();
+      }
+    }
+  }
+
+  function inquiryErrorToken(error){
+    return error && error.message
+      ? String(error.message).trim().toLowerCase()
+      : String(error || '').trim().toLowerCase();
+  }
+
+  function isInquiryDetailContextCurrent(userId, classId, loadGeneration, requestSequence, inquiryId){
+    return !classStaffAccessLost &&
+      requestSequence === inquiryState.detailSequence &&
+      loadGeneration === classLoadGeneration &&
+      inquiryState.selectedInquiryId === inquiryId &&
+      !!currentSession && !!currentSession.user && currentSession.user.id === userId &&
+      !!currentClass && currentClass.id === classId;
+  }
+
+  var allowedStaffInquiryStatuses = new Set(['received', 'in_progress', 'answered', 'closed']);
+  var allowedStaffInquiryMessageTypes = new Set(['message', 'status_change']);
+  var allowedStaffInquirySenderRoles = new Set(['parent', 'teacher', 'owner', 'system']);
+
+  function isStaffInquiryPlainObject(value){
+    return !!value && typeof value === 'object' && !Array.isArray(value);
+  }
+
+  function isStaffInquiryNullableDateValue(value){
+    return value === null || (typeof value === 'string' && !!value.trim());
+  }
+
+  function isValidStaffInquiryMessage(message){
+    if (!isStaffInquiryPlainObject(message) ||
+        typeof message.id !== 'string' || !message.id.trim() ||
+        !(message.sender_id === null || (typeof message.sender_id === 'string' && !!message.sender_id.trim())) ||
+        typeof message.sender_role !== 'string' || !allowedStaffInquirySenderRoles.has(message.sender_role) ||
+        typeof message.message_type !== 'string' || !allowedStaffInquiryMessageTypes.has(message.message_type) ||
+        typeof message.body !== 'string' ||
+        typeof message.created_at !== 'string' || !message.created_at.trim()) return false;
+
+    var statusFromValid = message.status_from === null ||
+      (typeof message.status_from === 'string' && allowedStaffInquiryStatuses.has(message.status_from));
+    var statusToValid = message.status_to === null ||
+      (typeof message.status_to === 'string' && allowedStaffInquiryStatuses.has(message.status_to));
+    var statusesArePaired = (message.status_from === null && message.status_to === null) ||
+      (message.status_from !== null && message.status_to !== null && message.status_from !== message.status_to);
+    if (!statusFromValid || !statusToValid || !statusesArePaired) return false;
+    return message.message_type !== 'status_change' || message.status_from !== null;
+  }
+
+  function isValidStaffInquiryThread(thread, inquiryId, classId){
+    if (!isStaffInquiryPlainObject(thread) ||
+        !isStaffInquiryPlainObject(thread.inquiry) ||
+        !Array.isArray(thread.messages) ||
+        !isStaffInquiryPlainObject(thread.permissions) ||
+        (thread.viewer_role !== 'teacher' && thread.viewer_role !== 'owner')) return false;
+
+    var inquiry = thread.inquiry;
+    if (typeof inquiry.id !== 'string' || !inquiry.id.trim() || inquiry.id !== inquiryId ||
+        typeof inquiry.class_id !== 'string' || !inquiry.class_id.trim() || inquiry.class_id !== classId ||
+        typeof inquiry.author_id !== 'string' || !inquiry.author_id.trim() ||
+        typeof inquiry.document_no !== 'string' || !inquiry.document_no.trim() ||
+        typeof inquiry.category !== 'string' ||
+        typeof inquiry.subject !== 'string' ||
+        typeof inquiry.status !== 'string' || !allowedStaffInquiryStatuses.has(inquiry.status)) return false;
+
+    var inquiryDateFields = [
+      'created_at', 'updated_at', 'last_message_at', 'last_parent_message_at',
+      'last_staff_message_at', 'parent_last_read_at', 'staff_last_read_at',
+      'answered_at', 'closed_at'
+    ];
+    if (!inquiryDateFields.every(function(key){
+      return isStaffInquiryNullableDateValue(inquiry[key]);
+    })) return false;
+
+    var permissions = thread.permissions;
+    if (typeof permissions.can_add_parent_message !== 'boolean' ||
+        typeof permissions.can_reply !== 'boolean' ||
+        typeof permissions.can_start_review !== 'boolean' ||
+        typeof permissions.can_close !== 'boolean' ||
+        typeof permissions.can_mark_read !== 'boolean') return false;
+
+    return thread.messages.every(isValidStaffInquiryMessage);
+  }
+
+  function inquirySenderLabel(role){
+    return ({
+      parent:'학부모',
+      teacher:'담임 선생님',
+      owner:'원장 선생님',
+      system:'안내'
+    })[role] || '안내';
+  }
+
+  function inquirySenderClass(role){
+    return ['parent', 'teacher', 'owner'].indexOf(role) !== -1 ? role : 'unknown';
+  }
+
+  function appendInquiryDetailError(text){
+    if (!text) return;
+    if (!inquiryState.detailError) inquiryState.detailError = text;
+    else if (inquiryState.detailError.indexOf(text) === -1) inquiryState.detailError += '\n' + text;
+    setMsg(byId('inquiryDetailMsg'), inquiryState.detailError, true);
+  }
+
+  function showInquiryDetailLoading(){
+    resetInquiryDetailDom();
+    byId('inquiryListView').hidden = true;
+    byId('inquiryDetailView').hidden = false;
+    byId('inquiryDetailView').setAttribute('aria-busy', 'true');
+    setMsg(byId('inquiryDetailMsg'), '문의 상세를 불러오고 있습니다.');
+  }
+
+  function renderInquiryReplyControls(thread){
+    var inquiry = thread && thread.inquiry ? thread.inquiry : null;
+    var permissions = thread && thread.permissions ? thread.permissions : {};
+    var isClosed = !!inquiry && inquiry.status === 'closed';
+    var isStaffViewer = !!thread && (thread.viewer_role === 'teacher' || thread.viewer_role === 'owner');
+    var canReply = !!inquiry && !isClosed && isStaffViewer && permissions.can_reply === true;
+    var canClose = !!inquiry && !isClosed && isStaffViewer && permissions.can_close === true;
+    var replyOperation = inquiryState.replyOperation;
+    var closeOperation = inquiryState.closeOperation;
+    if (replyOperation && (!inquiry || replyOperation.inquiryId !== inquiry.id)) {
+      inquiryState.replyOperation = null;
+      replyOperation = null;
+    }
+    if (closeOperation && (!inquiry || closeOperation.inquiryId !== inquiry.id)) {
+      inquiryState.closeOperation = null;
+      closeOperation = null;
+    }
+    if (!canReply) {
+      inquiryState.replyDraft = '';
+      inquiryState.replyOperation = null;
+      replyOperation = null;
+    }
+    if (!canClose) {
+      inquiryState.closeOperation = null;
+      closeOperation = null;
+    }
+    var isReplySubmitting = !!replyOperation && replyOperation.status === 'submitting';
+    var isReplyUncertain = !!replyOperation && replyOperation.status === 'uncertain';
+    var isCloseSubmitting = !!closeOperation && closeOperation.status === 'submitting';
+    var isCloseUncertain = !!closeOperation && closeOperation.status === 'uncertain';
+    var isCloseChecking = isCloseUncertain && closeOperation.isChecking === true;
+    var isCloseSucceeded = !!closeOperation && closeOperation.status === 'succeeded';
+    var backBtn = byId('inquiryBackBtn');
+    backBtn.disabled = isReplySubmitting || isCloseSubmitting;
+    if (backBtn.disabled) backBtn.setAttribute('aria-disabled', 'true');
+    else backBtn.removeAttribute('aria-disabled');
+    var replyInput = byId('inquiryReplyInput');
+    var replySubmit = byId('inquiryReplySubmit');
+    replyInput.value = canReply ? inquiryState.replyDraft : '';
+    replyInput.disabled = !canReply || isReplySubmitting || isCloseSubmitting || isCloseUncertain || isCloseSucceeded;
+    replySubmit.disabled = !canReply || isReplySubmitting || isCloseSubmitting || isCloseUncertain || isCloseSucceeded;
+    replySubmit.textContent = isReplySubmitting ? '메시지 전송 중...' : '메시지 보내기';
+    if (replySubmit.disabled) replySubmit.setAttribute('aria-disabled', 'true');
+    else replySubmit.removeAttribute('aria-disabled');
+    replySubmit.setAttribute('aria-busy', isReplySubmitting ? 'true' : 'false');
+
+    var closeBtn = byId('inquiryCloseBtn');
+    closeBtn.hidden = !canClose && !isClosed;
+    closeBtn.disabled = !canClose || isReplySubmitting || isReplyUncertain ||
+      isCloseSubmitting || isCloseChecking || isCloseSucceeded;
+    closeBtn.textContent = isCloseSubmitting ? '종료 처리 중...' : '문의 종료';
+    if (closeBtn.disabled) closeBtn.setAttribute('aria-disabled', 'true');
+    else closeBtn.removeAttribute('aria-disabled');
+    closeBtn.setAttribute('aria-busy', isCloseSubmitting ? 'true' : 'false');
+    byId('inquiryReplyForm').setAttribute('aria-busy', isReplySubmitting || isCloseSubmitting ? 'true' : 'false');
+  }
+
+  function renderInquiryDetail(thread){
+    var inquiry = thread.inquiry;
+    var isClosed = inquiry.status === 'closed';
+    byId('inquiryDetailDocumentNo').textContent = '문의번호 ' + formatInquiryNumberForDisplay(inquiry.document_no);
+    byId('inquiryDetailCreatedAt').textContent = '접수 ' + formatInquiryDateTime(inquiry.created_at);
+    byId('inquiryDetailStatus').textContent = inquiryStatusLabel(inquiry.status);
+
+    var visibleMessages = thread.messages.filter(function(message){
+      return !(message.message_type === 'status_change' &&
+        message.status_from === 'received' &&
+        message.status_to === 'in_progress');
+    });
+    byId('inquiryMessageList').innerHTML = visibleMessages.length ? visibleMessages.map(function(message){
+      var createdAt = esc(formatInquiryDateTime(message.created_at));
+      if (message.message_type !== 'message') {
+        return '<div class="inquiry-status-message">' +
+          '<div>' + escWithBr(message.body) + '</div>' +
+          '<div>' + createdAt + '</div>' +
+        '</div>';
+      }
+      var senderClass = inquirySenderClass(message.sender_role);
+      return '<div class="inquiry-message inquiry-message--' + senderClass + '">' +
+        '<div class="inquiry-message-content">' +
+          '<div class="inquiry-message-role">' + esc(inquirySenderLabel(message.sender_role)) + '</div>' +
+          '<div class="inquiry-message-bubble">' + escWithBr(message.body) + '</div>' +
+          '<div class="inquiry-message-meta">' + createdAt + '</div>' +
+        '</div>' +
+      '</div>';
+    }).join('') : '<div class="empty">아직 표시할 문의 내용이 없습니다.</div>';
+    byId('inquiryStatusMessageList').innerHTML = '';
+    byId('inquiryStatusMessageList').hidden = true;
+
+    renderInquiryReplyControls(thread);
+    byId('inquiryClosedNotice').hidden = !isClosed;
+    byId('inquiryDetailView').setAttribute('aria-busy', 'false');
+    setMsg(byId('inquiryDetailMsg'), inquiryState.detailError, !!inquiryState.detailError);
+  }
+
+  function showInquiryDetailLoadError(){
+    inquiryState.isDetailLoading = false;
+    inquiryState.thread = null;
+    inquiryState.detailError = '문의 상세를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.';
+    resetInquiryDetailDom();
+    byId('inquiryListView').hidden = true;
+    byId('inquiryDetailView').hidden = false;
+    setMsg(byId('inquiryDetailMsg'), inquiryState.detailError, true);
+  }
+
+  function showInvalidStaffInquiryThread(){
+    inquiryState.isDetailLoading = false;
+    inquiryState.thread = null;
+    inquiryState.detailError = '문의 상세 정보를 확인하지 못했습니다.';
+    resetInquiryDetailDom();
+    byId('inquiryListView').hidden = true;
+    byId('inquiryDetailView').hidden = false;
+    byId('inquiryDetailView').setAttribute('aria-busy', 'false');
+    setMsg(byId('inquiryDetailMsg'), inquiryState.detailError, true);
+  }
+
+  function returnToInquiryList(options){
+    var reload = !!(options && options.reload);
+    clearInquiryDetailState(true);
+    if (reload) restartInquiryList();
+    if ((!inquiryState.rows.length || !inquiryState.hasLoaded || inquiryState.lastLoadFailed) &&
+        !inquiryState.isLoading) {
+      loadInquiryList({ append:false });
+    }
+  }
+
+  function returnToInquiryListFromDetail(){
+    var replyOperation = inquiryState.replyOperation;
+    var closeOperation = inquiryState.closeOperation;
+    var isSubmitting = (!!replyOperation && replyOperation.status === 'submitting') ||
+      (!!closeOperation && closeOperation.status === 'submitting');
+    if (isSubmitting) {
+      setInquiryReplyMessage('현재 문의 작업을 처리하고 있습니다. 잠시 후 다시 시도해 주세요.', true);
+      return false;
+    }
+
+    var hasUncertainOperation = (!!replyOperation && replyOperation.status === 'uncertain') ||
+      (!!closeOperation && closeOperation.status === 'uncertain');
+    var hasReplyDraft = !!String(inquiryState.replyDraft || '').trim();
+    if (hasUncertainOperation || hasReplyDraft) {
+      var confirmMessage = hasUncertainOperation
+        ? '처리 결과가 아직 확인되지 않은 문의 작업이 있습니다.\n이 화면을 나가면 같은 요청으로 다시 확인할 수 없습니다. 목록으로 돌아가시겠어요?'
+        : '작성 중인 메시지가 삭제됩니다. 목록으로 돌아가시겠어요?';
+      if (!confirm(confirmMessage)) return false;
+    }
+
+    returnToInquiryList();
+    return true;
+  }
+
+  function handleInquiryDetailAccessError(error, context){
+    if (!isInquiryDetailContextCurrent(
+      context.userId,
+      context.classId,
+      context.loadGeneration,
+      context.requestSequence,
+      context.inquiryId
+    )) return true;
+    var token = inquiryErrorToken(error);
+    if (token === 'not_authenticated') {
+      showInquiryAuthenticationRequired();
+      return true;
+    }
+    if (token === 'inquiry_not_found_or_denied') {
+      returnToInquiryList({ reload:true });
+      return true;
+    }
+    if (token === 'class_access_denied' || isClassAuthorizationError(error)) {
+      clearInquiryDetailState(false);
+      errorMessage(error);
+      return true;
+    }
+    return false;
+  }
+
+  function handleInquiryMutationAccessError(error, mutationContext, detailContext){
+    if (!isInquiryMutationContextCurrent(mutationContext)) return true;
+    var token = inquiryErrorToken(error);
+    if (token === 'not_authenticated') {
+      showInquiryAuthenticationRequired();
+      return true;
+    }
+    if (token === 'inquiry_not_found_or_denied') {
+      if (detailContext && isInquiryDetailContextCurrent(
+        detailContext.userId,
+        detailContext.classId,
+        detailContext.loadGeneration,
+        detailContext.requestSequence,
+        detailContext.inquiryId
+      )) clearInquiryDetailState(true);
+      refreshInquiryListAfterMutation(mutationContext);
+      return true;
+    }
+    if (token === 'class_access_denied' || isClassAuthorizationError(error)) {
+      errorMessage(error);
+      return true;
+    }
+    return false;
+  }
+
+  async function requestInquiryThread(context){
+    try {
+      var res = await client.rpc('get_class_inquiry_thread', {
+        p_inquiry_id: context.inquiryId
+      });
+      if (!isInquiryDetailContextCurrent(
+        context.userId,
+        context.classId,
+        context.loadGeneration,
+        context.requestSequence,
+        context.inquiryId
+      )) return { stale:true };
+      if (res.error) return { error:res.error };
+      if (res.data && res.data.inquiry &&
+          res.data.inquiry.id === context.inquiryId &&
+          res.data.inquiry.class_id === context.classId &&
+          res.data.viewer_role !== 'teacher' && res.data.viewer_role !== 'owner') {
+        return { denied:true };
+      }
+      if (!isValidStaffInquiryThread(res.data, context.inquiryId, context.classId)) return { invalid:true };
+      return { thread:res.data };
+    } catch (error) {
+      if (!isInquiryDetailContextCurrent(
+        context.userId,
+        context.classId,
+        context.loadGeneration,
+        context.requestSequence,
+        context.inquiryId
+      )) return { stale:true };
+      return { error:error };
+    }
+  }
+
+  function isInquiryReplyDetailContextCurrent(context){
+    return !!context && isInquiryDetailContextCurrent(
+      context.userId,
+      context.classId,
+      context.classLoadGeneration,
+      context.detailSequence,
+      context.inquiryId
+    );
+  }
+
+  function isInquiryMutationThreadContextCurrent(context, requestSequence){
+    return inquiryState.replyThreadSequence === requestSequence &&
+      isInquiryReplyDetailContextCurrent(context);
+  }
+
+  function inquiryReplyDetailContext(context){
+    return {
+      userId: context.userId,
+      classId: context.classId,
+      loadGeneration: context.classLoadGeneration,
+      requestSequence: context.detailSequence,
+      inquiryId: context.inquiryId
+    };
+  }
+
+  function setInquiryReplyMessage(text, isError){
+    inquiryState.detailError = text || '';
+    setMsg(byId('inquiryDetailMsg'), inquiryState.detailError, !!isError);
+  }
+
+  function isInquiryReplyOperationCurrent(context, operation){
+    return !!context && !!operation &&
+      context.stateRef === inquiryState &&
+      operation.stateRef === inquiryState &&
+      inquiryState.replyOperation === operation &&
+      operation.requestKey === context.requestKey &&
+      operation.inquiryId === context.inquiryId &&
+      operation.userId === context.userId &&
+      operation.classId === context.classId &&
+      operation.classLoadGeneration === context.classLoadGeneration &&
+      operation.detailSequence === context.detailSequence &&
+      isInquiryReplyDetailContextCurrent(context);
+  }
+
+  function isInquiryCloseOperationCurrent(context, operation){
+    return !!context && !!operation &&
+      context.stateRef === inquiryState &&
+      operation.stateRef === inquiryState &&
+      inquiryState.closeOperation === operation &&
+      operation.requestKey === context.requestKey &&
+      operation.inquiryId === context.inquiryId &&
+      operation.userId === context.userId &&
+      operation.classId === context.classId &&
+      operation.classLoadGeneration === context.classLoadGeneration &&
+      operation.detailSequence === context.detailSequence &&
+      inquiryState.selectedInquiryId === context.inquiryId &&
+      isInquiryReplyDetailContextCurrent(context);
+  }
+
+  function isValidStaffInquiryReplyResponse(row, inquiryId){
+    return isStaffInquiryPlainObject(row) &&
+      typeof row.message_id === 'string' && !!row.message_id.trim() &&
+      typeof row.inquiry_id === 'string' && !!row.inquiry_id.trim() &&
+      row.inquiry_id === inquiryId &&
+      typeof row.status === 'string' && allowedStaffInquiryStatuses.has(row.status) &&
+      typeof row.message_created_at === 'string' && !!row.message_created_at.trim() &&
+      typeof row.last_message_at === 'string' && !!row.last_message_at.trim();
+  }
+
+  function lockStaffInquiryReplyAndClose(context, preserveDraft){
+    if (!isInquiryReplyDetailContextCurrent(context)) return false;
+    var draft = preserveDraft ? inquiryState.replyDraft : '';
+    var thread = inquiryState.thread;
+    if (thread && thread.inquiry && thread.inquiry.id === context.inquiryId &&
+        thread.inquiry.class_id === context.classId) {
+      inquiryState.thread = Object.assign({}, thread, {
+        inquiry: Object.assign({}, thread.inquiry),
+        permissions: Object.assign({}, thread.permissions || {}, {
+          can_reply: false,
+          can_close: false
+        })
+      });
+      renderInquiryReplyControls(inquiryState.thread);
+      if (preserveDraft) {
+        inquiryState.replyDraft = draft;
+        byId('inquiryReplyInput').value = draft;
+      }
+      return true;
+    }
+
+    var replyInput = byId('inquiryReplyInput');
+    var replySubmit = byId('inquiryReplySubmit');
+    var closeBtn = byId('inquiryCloseBtn');
+    replyInput.disabled = true;
+    replySubmit.disabled = true;
+    replySubmit.setAttribute('aria-disabled', 'true');
+    replySubmit.setAttribute('aria-busy', 'false');
+    closeBtn.disabled = true;
+    closeBtn.setAttribute('aria-disabled', 'true');
+    closeBtn.setAttribute('aria-busy', 'false');
+    byId('inquiryReplyForm').setAttribute('aria-busy', 'false');
+    return false;
+  }
+
+  async function reloadInquiryThreadAfterReply(context, failureMessage, keepControlsDisabled, knownClosed){
+    var requestSequence = ++inquiryState.replyThreadSequence;
+    var detailContext = inquiryReplyDetailContext(context);
+    var result = await requestInquiryThread(detailContext);
+    if (!isInquiryMutationThreadContextCurrent(context, requestSequence)) return false;
+    if (result.stale) return false;
+    if (result.error) {
+      if (handleInquiryDetailAccessError(result.error, detailContext)) return false;
+      if (isInquiryMutationThreadContextCurrent(context, requestSequence)) {
+        if (!keepControlsDisabled && inquiryState.thread) renderInquiryReplyControls(inquiryState.thread);
+        appendInquiryDetailError(failureMessage);
+      }
+      return false;
+    }
+    if (result.denied) {
+      returnToInquiryList({ reload:true });
+      return false;
+    }
+    if (result.invalid) {
+      if (isInquiryMutationThreadContextCurrent(context, requestSequence)) {
+        if (keepControlsDisabled && inquiryState.thread) appendInquiryDetailError(failureMessage);
+        else showInvalidStaffInquiryThread();
+      }
+      return false;
+    }
+    if (!isInquiryMutationThreadContextCurrent(context, requestSequence) ||
+        !result.thread || !result.thread.inquiry ||
+        result.thread.inquiry.id !== context.inquiryId ||
+        result.thread.inquiry.class_id !== context.classId) return false;
+    if (knownClosed && result.thread.inquiry.status !== 'closed') {
+      applyConfirmedInquiryClosedState(context);
+      appendInquiryDetailError(failureMessage);
+      return false;
+    }
+    inquiryState.thread = result.thread;
+    renderInquiryDetail(result.thread);
+    return true;
+  }
+
+  async function submitInquiryReply(){
+    var thread = inquiryState.thread;
+    var inquiry = thread && thread.inquiry ? thread.inquiry : null;
+    var permissions = thread && thread.permissions ? thread.permissions : {};
+    var replyInput = byId('inquiryReplyInput');
+    var rawBody = String(replyInput.value || '');
+    var normalizedBody = rawBody.trim();
+    inquiryState.replyDraft = rawBody;
+
+    if (!inquiry || !currentSession || !currentSession.user || !currentClass || classStaffAccessLost) {
+      setInquiryReplyMessage('메시지를 보낼 수 없습니다. 문의 목록에서 다시 확인해 주세요.', true);
+      return;
+    }
+
+    var context = {
+      userId: currentSession.user.id,
+      classId: currentClass.id,
+      classLoadGeneration: classLoadGeneration,
+      inquiryId: inquiry.id,
+      detailSequence: inquiryState.detailSequence,
+      stateRef: inquiryState,
+      requestKey: ''
+    };
+    if (!isInquiryReplyDetailContextCurrent(context) ||
+        inquiry.class_id !== context.classId ||
+        inquiryState.selectedInquiryId !== context.inquiryId) return;
+    if (inquiryState.replyOperation && inquiryState.replyOperation.status === 'submitting') return;
+    if (inquiryState.closeOperation &&
+        (inquiryState.closeOperation.status === 'submitting' ||
+         inquiryState.closeOperation.status === 'uncertain' ||
+         inquiryState.closeOperation.status === 'succeeded')) {
+      renderInquiryReplyControls(thread);
+      setInquiryReplyMessage('문의 종료 처리 결과를 먼저 확인해 주세요.', true);
+      return;
+    }
+
+    if (thread.viewer_role !== 'teacher' && thread.viewer_role !== 'owner' ||
+        permissions.can_reply !== true || inquiry.status === 'closed') {
+      inquiryState.replyDraft = '';
+      inquiryState.replyOperation = null;
+      renderInquiryReplyControls(thread);
+      setInquiryReplyMessage('현재 이 문의에는 메시지를 보낼 수 없습니다.', true);
+      return;
+    }
+    if (!normalizedBody) {
+      setInquiryReplyMessage('메시지 내용을 입력해 주세요.', true);
+      return;
+    }
+    if (normalizedBody.length > 5000) {
+      setInquiryReplyMessage('메시지는 5000자 이내로 입력해 주세요.', true);
+      return;
+    }
+
+    var previousOperation = inquiryState.replyOperation;
+    var canReuseRequestKey = !!previousOperation && previousOperation.status === 'uncertain' &&
+      previousOperation.inquiryId === context.inquiryId &&
+      previousOperation.body === normalizedBody &&
+      previousOperation.userId === context.userId &&
+      previousOperation.classId === context.classId &&
+      previousOperation.classLoadGeneration === context.classLoadGeneration;
+    if (previousOperation && previousOperation.status === 'uncertain' && !canReuseRequestKey) {
+      inquiryState.replyOperation = null;
+    }
+
+    var requestKey = canReuseRequestKey ? previousOperation.requestKey : '';
+    if (!requestKey) {
+      try {
+        requestKey = crypto.randomUUID();
+      } catch (_error) {
+        setInquiryReplyMessage('메시지 전송을 준비하지 못했습니다. 잠시 후 다시 시도해 주세요.', true);
+        return;
+      }
+    }
+
+    var operation = {
+      inquiryId: context.inquiryId,
+      body: normalizedBody,
+      requestKey: requestKey,
+      userId: context.userId,
+      classId: context.classId,
+      classLoadGeneration: context.classLoadGeneration,
+      detailSequence: context.detailSequence,
+      stateRef: inquiryState,
+      status: 'submitting'
+    };
+    context.requestKey = requestKey;
+    inquiryState.replyOperation = operation;
+    inquiryState.detailError = '';
+    renderInquiryReplyControls(thread);
+    setMsg(byId('inquiryDetailMsg'), '');
+
+    var res;
+    var replyError = null;
+    try {
+      res = await client.rpc('reply_to_class_inquiry', {
+        p_inquiry_id: context.inquiryId,
+        p_body: normalizedBody,
+        p_request_key: requestKey
+      });
+    } catch (error) {
+      replyError = error;
+    }
+    if (!replyError && res && res.error) replyError = res.error;
+    if (!isInquiryMutationContextCurrent(context) || context.stateRef !== inquiryState) return;
+
+    if (replyError) {
+      if (!isInquiryReplyOperationCurrent(context, operation)) {
+        refreshInquiryListAfterMutation(context);
+        return;
+      }
+      if (handleInquiryMutationAccessError(replyError, context, inquiryReplyDetailContext(context))) return;
+      var errorToken = inquiryErrorToken(replyError);
+      if (errorToken === 'invalid_input') {
+        if (inquiryState.replyOperation === operation) inquiryState.replyOperation = null;
+        if (isInquiryReplyDetailContextCurrent(context)) {
+          renderInquiryReplyControls(thread);
+          setInquiryReplyMessage('메시지 내용을 다시 확인해 주세요.', true);
+        }
+        return;
+      }
+
+      refreshInquiryListAfterMutation(context);
+      if (errorToken === 'inquiry_closed') {
+        if (inquiryState.replyOperation === operation) inquiryState.replyOperation = null;
+        if (!isInquiryReplyDetailContextCurrent(context)) return;
+        inquiryState.replyDraft = '';
+        renderInquiryReplyControls(null);
+        setInquiryReplyMessage('문의가 종료되어 새 메시지를 보낼 수 없습니다.', true);
+        await reloadInquiryThreadAfterReply(
+          context,
+          '종료된 문의의 최신 내용을 다시 불러오지 못했습니다.',
+          true
+        );
+        return;
+      }
+      if (errorToken === 'request_key_conflict') {
+        if (inquiryState.replyOperation === operation) inquiryState.replyOperation = null;
+        if (!isInquiryReplyDetailContextCurrent(context)) return;
+        renderInquiryReplyControls(thread);
+        setInquiryReplyMessage('메시지 전송 요청이 충돌했습니다. 최신 내용을 확인한 뒤 다시 보내 주세요.', true);
+        await reloadInquiryThreadAfterReply(
+          context,
+          '문의 최신 내용을 다시 불러오지 못했습니다.',
+          false
+        );
+        return;
+      }
+      if (errorToken === 'invalid_status_transition') {
+        if (inquiryState.replyOperation === operation) inquiryState.replyOperation = null;
+        if (!isInquiryReplyDetailContextCurrent(context)) return;
+        lockStaffInquiryReplyAndClose(context, true);
+        setInquiryReplyMessage('문의 상태가 변경되었습니다. 최신 상태를 다시 확인해 주세요.', true);
+        await reloadInquiryThreadAfterReply(
+          context,
+          '문의 상태가 변경되었지만 최신 내용을 다시 불러오지 못했습니다.',
+          true,
+          false
+        );
+        return;
+      }
+
+      if (!isInquiryReplyDetailContextCurrent(context)) return;
+      if (inquiryState.replyOperation === operation) inquiryState.replyOperation.status = 'uncertain';
+      renderInquiryReplyControls(thread);
+      setInquiryReplyMessage('메시지 전송 결과를 확인하지 못했습니다. 같은 메시지를 다시 보내면 안전하게 재시도합니다.', true);
+      await reloadInquiryThreadAfterReply(
+        context,
+        '문의 최신 내용을 다시 불러오지 못했습니다.',
+        false
+      );
+      return;
+    }
+
+    var replyRow = res && Array.isArray(res.data) ? res.data[0] : null;
+    var clearSuccess = isValidStaffInquiryReplyResponse(replyRow, context.inquiryId);
+    refreshInquiryListAfterMutation(context);
+    if (!isInquiryReplyOperationCurrent(context, operation)) return;
+    if (!clearSuccess) {
+      if (inquiryState.replyOperation === operation) inquiryState.replyOperation.status = 'uncertain';
+      renderInquiryReplyControls(thread);
+      setInquiryReplyMessage('메시지 전송 결과를 확인하지 못했습니다. 같은 메시지를 다시 보내면 안전하게 재시도합니다.', true);
+      await reloadInquiryThreadAfterReply(
+        context,
+        '문의 최신 내용을 다시 불러오지 못했습니다.',
+        false
+      );
+      return;
+    }
+
+    operation.status = 'succeeded';
+    inquiryState.replyDraft = '';
+    if (inquiryState.replyOperation === operation) inquiryState.replyOperation = null;
+    if (replyRow.status === 'closed') {
+      inquiryState.detailError = '메시지 처리 상태를 확인했습니다. 현재 문의는 종료되었습니다.';
+      if (!applyConfirmedInquiryClosedState(context)) {
+        lockStaffInquiryReplyAndClose(context, false);
+        byId('inquiryClosedNotice').hidden = false;
+        setInquiryReplyMessage(inquiryState.detailError, false);
+      }
+      await reloadInquiryThreadAfterReply(
+        context,
+        '문의는 종료된 상태로 확인되었지만 최신 내용을 다시 불러오지 못했습니다.',
+        true,
+        true
+      );
+      return;
+    }
+    inquiryState.detailError = '';
+    await reloadInquiryThreadAfterReply(
+      context,
+      '메시지는 저장되었지만 최신 내용을 다시 불러오지 못했습니다.',
+      false
+    );
+  }
+
+  function applyConfirmedInquiryClosedState(context){
+    if (!isInquiryReplyDetailContextCurrent(context)) return false;
+    var thread = inquiryState.thread;
+    if (!thread || !thread.inquiry ||
+        thread.inquiry.id !== context.inquiryId ||
+        thread.inquiry.class_id !== context.classId) return false;
+
+    inquiryState.replyDraft = '';
+    inquiryState.replyOperation = null;
+    inquiryState.closeOperation = null;
+    inquiryState.thread = Object.assign({}, thread, {
+      inquiry: Object.assign({}, thread.inquiry, { status:'closed' }),
+      permissions: Object.assign({}, thread.permissions || {}, {
+        can_reply: false,
+        can_close: false,
+        can_start_review: false
+      })
+    });
+    renderInquiryDetail(inquiryState.thread);
+    return true;
+  }
+
+  async function reloadInquiryThreadAfterClose(context, failureMessage, knownClosed, keepControlsDisabled){
+    var requestSequence = ++inquiryState.replyThreadSequence;
+    var detailContext = inquiryReplyDetailContext(context);
+    var result = await requestInquiryThread(detailContext);
+    if (!isInquiryMutationThreadContextCurrent(context, requestSequence)) return null;
+    if (result.stale) return null;
+    if (result.error) {
+      if (handleInquiryDetailAccessError(result.error, detailContext)) return null;
+      if (isInquiryMutationThreadContextCurrent(context, requestSequence)) {
+        if (knownClosed) applyConfirmedInquiryClosedState(context);
+        else if (!keepControlsDisabled) {
+          if (inquiryState.closeOperation && inquiryState.closeOperation.status === 'uncertain') {
+            inquiryState.closeOperation.isChecking = false;
+          }
+          if (inquiryState.thread) renderInquiryReplyControls(inquiryState.thread);
+        }
+        appendInquiryDetailError(failureMessage);
+      }
+      return null;
+    }
+    if (result.denied) {
+      returnToInquiryList({ reload:true });
+      return null;
+    }
+    if (result.invalid) {
+      if (isInquiryMutationThreadContextCurrent(context, requestSequence)) {
+        if (keepControlsDisabled && inquiryState.thread) appendInquiryDetailError(failureMessage);
+        else showInvalidStaffInquiryThread();
+      }
+      return null;
+    }
+    if (!isInquiryMutationThreadContextCurrent(context, requestSequence) ||
+        !result.thread || !result.thread.inquiry ||
+        result.thread.inquiry.id !== context.inquiryId ||
+        result.thread.inquiry.class_id !== context.classId) return null;
+    if (knownClosed && result.thread.inquiry.status !== 'closed') {
+      applyConfirmedInquiryClosedState(context);
+      appendInquiryDetailError(failureMessage);
+      return null;
+    }
+
+    if (result.thread.inquiry.status === 'closed') {
+      inquiryState.replyDraft = '';
+      inquiryState.replyOperation = null;
+      inquiryState.closeOperation = null;
+      inquiryState.detailError = '';
+    } else if (inquiryState.closeOperation && inquiryState.closeOperation.status === 'uncertain') {
+      inquiryState.closeOperation.isChecking = false;
+    }
+    inquiryState.thread = result.thread;
+    renderInquiryDetail(result.thread);
+    return result.thread;
+  }
+
+  async function closeCurrentInquiry(){
+    var thread = inquiryState.thread;
+    var inquiry = thread && thread.inquiry ? thread.inquiry : null;
+    var permissions = thread && thread.permissions ? thread.permissions : {};
+    if (!inquiry || !currentSession || !currentSession.user || !currentClass || classStaffAccessLost) {
+      setInquiryReplyMessage('문의를 종료할 수 없습니다. 문의 목록에서 다시 확인해 주세요.', true);
+      return;
+    }
+
+    var context = {
+      userId: currentSession.user.id,
+      classId: currentClass.id,
+      classLoadGeneration: classLoadGeneration,
+      inquiryId: inquiry.id,
+      detailSequence: inquiryState.detailSequence,
+      stateRef: inquiryState,
+      requestKey: ''
+    };
+    if (!isInquiryReplyDetailContextCurrent(context) ||
+        inquiry.class_id !== context.classId ||
+        inquiryState.selectedInquiryId !== context.inquiryId) return;
+
+    var replyOperation = inquiryState.replyOperation;
+    if (replyOperation && replyOperation.status === 'submitting') {
+      setInquiryReplyMessage('메시지 전송이 끝난 뒤 문의를 종료해 주세요.', true);
+      return;
+    }
+    if (replyOperation && replyOperation.status === 'uncertain') {
+      setInquiryReplyMessage('메시지 전송 결과를 먼저 확인하거나 같은 메시지를 다시 보내 주세요.', true);
+      return;
+    }
+    if (inquiryState.closeOperation && inquiryState.closeOperation.status === 'submitting') return;
+    if ((thread.viewer_role !== 'teacher' && thread.viewer_role !== 'owner') ||
+        permissions.can_close !== true || inquiry.status === 'closed') {
+      renderInquiryReplyControls(thread);
+      setInquiryReplyMessage('현재 이 문의는 종료할 수 없습니다.', true);
+      return;
+    }
+
+    var confirmMessage = '문의를 종료하면 더 이상 메시지를 작성할 수 없습니다. 종료하시겠습니까?';
+    if (String(byId('inquiryReplyInput').value || '').trim()) {
+      confirmMessage += '\n작성 중인 메시지는 종료하면 삭제됩니다.';
+    }
+    if (!confirm(confirmMessage)) return;
+
+    var previousOperation = inquiryState.closeOperation;
+    var canReuseRequestKey = !!previousOperation && previousOperation.status === 'uncertain' &&
+      previousOperation.inquiryId === context.inquiryId &&
+      previousOperation.userId === context.userId &&
+      previousOperation.classId === context.classId &&
+      previousOperation.classLoadGeneration === context.classLoadGeneration;
+    if (previousOperation && previousOperation.status === 'uncertain' && !canReuseRequestKey) {
+      inquiryState.closeOperation = null;
+    }
+
+    var requestKey = canReuseRequestKey ? previousOperation.requestKey : '';
+    if (!requestKey) {
+      try {
+        requestKey = crypto.randomUUID();
+      } catch (_error) {
+        setInquiryReplyMessage('문의 종료를 준비하지 못했습니다. 잠시 후 다시 시도해 주세요.', true);
+        return;
+      }
+    }
+
+    var operation = {
+      inquiryId: context.inquiryId,
+      requestKey: requestKey,
+      userId: context.userId,
+      classId: context.classId,
+      classLoadGeneration: context.classLoadGeneration,
+      detailSequence: context.detailSequence,
+      stateRef: inquiryState,
+      status: 'submitting'
+    };
+    context.requestKey = requestKey;
+    inquiryState.replyThreadSequence += 1;
+    inquiryState.closeOperation = operation;
+    inquiryState.detailError = '';
+    renderInquiryReplyControls(thread);
+    setMsg(byId('inquiryDetailMsg'), '');
+
+    var res;
+    var closeError = null;
+    try {
+      res = await client.rpc('close_class_inquiry', {
+        p_inquiry_id: context.inquiryId,
+        p_request_key: requestKey
+      });
+    } catch (error) {
+      closeError = error;
+    }
+    if (!closeError && res && res.error) closeError = res.error;
+    if (!isInquiryMutationContextCurrent(context)) return;
+
+    if (closeError) {
+      if (handleInquiryMutationAccessError(closeError, context, inquiryReplyDetailContext(context))) return;
+      var errorToken = inquiryErrorToken(closeError);
+      if (errorToken === 'invalid_input') {
+        if (inquiryState.closeOperation === operation) inquiryState.closeOperation = null;
+        if (isInquiryReplyDetailContextCurrent(context)) {
+          renderInquiryReplyControls(thread);
+          setInquiryReplyMessage('문의 종료 요청을 처리하지 못했습니다. 상태를 다시 확인해 주세요.', true);
+        }
+        return;
+      }
+      if (errorToken === 'invalid_status_transition') {
+        refreshInquiryListAfterMutation(context);
+        if (!isInquiryCloseOperationCurrent(context, operation)) return;
+        inquiryState.closeOperation = null;
+        lockStaffInquiryReplyAndClose(context, true);
+        setInquiryReplyMessage('문의 상태가 변경되었습니다. 최신 상태를 다시 확인해 주세요.', true);
+        await reloadInquiryThreadAfterClose(
+          context,
+          '문의 상태가 변경되었지만 최신 내용을 다시 불러오지 못했습니다.',
+          false,
+          true
+        );
+        return;
+      }
+
+      refreshInquiryListAfterMutation(context);
+      if (errorToken === 'inquiry_closed') {
+        if (inquiryState.closeOperation === operation) inquiryState.closeOperation = null;
+        if (!isInquiryReplyDetailContextCurrent(context)) return;
+        inquiryState.replyDraft = '';
+        inquiryState.replyOperation = null;
+        inquiryState.detailError = '';
+        applyConfirmedInquiryClosedState(context);
+        await reloadInquiryThreadAfterClose(
+          context,
+          '문의는 종료되었지만 최신 내용을 다시 불러오지 못했습니다.',
+          true
+        );
+        return;
+      }
+      if (errorToken === 'request_key_conflict') {
+        if (inquiryState.closeOperation === operation) inquiryState.closeOperation = null;
+        if (!isInquiryReplyDetailContextCurrent(context)) return;
+        renderInquiryReplyControls(thread);
+        setInquiryReplyMessage('문의 종료 요청이 충돌했습니다. 최신 상태를 확인한 뒤 다시 시도해 주세요.', true);
+        await reloadInquiryThreadAfterClose(
+          context,
+          '문의 최신 내용을 다시 불러오지 못했습니다.',
+          false
+        );
+        return;
+      }
+
+      if (!isInquiryReplyDetailContextCurrent(context)) return;
+      if (inquiryState.closeOperation === operation) {
+        inquiryState.closeOperation.status = 'uncertain';
+        inquiryState.closeOperation.isChecking = true;
+      }
+      renderInquiryReplyControls(thread);
+      setInquiryReplyMessage('문의 종료 결과를 확인하지 못했습니다. 최신 상태 확인 후 같은 요청으로 다시 시도할 수 있습니다.', true);
+      await reloadInquiryThreadAfterClose(
+        context,
+        '문의 최신 내용을 다시 불러오지 못했습니다.',
+        false
+      );
+      return;
+    }
+
+    var closeRow = res && Array.isArray(res.data) ? res.data[0] : null;
+    var clearSuccess = !!closeRow && closeRow.inquiry_id === context.inquiryId && closeRow.status === 'closed';
+    refreshInquiryListAfterMutation(context);
+    if (!clearSuccess) {
+      if (!isInquiryReplyDetailContextCurrent(context)) return;
+      if (inquiryState.closeOperation === operation) {
+        inquiryState.closeOperation.status = 'uncertain';
+        inquiryState.closeOperation.isChecking = true;
+      }
+      renderInquiryReplyControls(thread);
+      setInquiryReplyMessage('문의 종료 결과를 확인하지 못했습니다. 최신 상태 확인 후 같은 요청으로 다시 시도할 수 있습니다.', true);
+      await reloadInquiryThreadAfterClose(
+        context,
+        '문의 최신 내용을 다시 불러오지 못했습니다.',
+        false
+      );
+      return;
+    }
+
+    operation.status = 'succeeded';
+    if (!isInquiryReplyDetailContextCurrent(context)) {
+      if (inquiryState.closeOperation === operation) inquiryState.closeOperation = null;
+      return;
+    }
+    inquiryState.replyDraft = '';
+    inquiryState.replyOperation = null;
+    inquiryState.detailError = '';
+    applyConfirmedInquiryClosedState(context);
+    await reloadInquiryThreadAfterClose(
+      context,
+      '문의는 종료되었지만 최신 내용을 다시 불러오지 못했습니다.',
+      true
+    );
+  }
+
+  async function markInquiryStaffRead(context, mutationContext, thread){
+    if (!isInquiryDetailContextCurrent(
+      context.userId,
+      context.classId,
+      context.loadGeneration,
+      context.requestSequence,
+      context.inquiryId
+    )) return;
+    if (thread.viewer_role !== 'teacher' && thread.viewer_role !== 'owner') return;
+
+    var res;
+    try {
+      res = await client.rpc('mark_class_inquiry_staff_read', {
+        p_inquiry_id: context.inquiryId
+      });
+    } catch (error) {
+      if (!isInquiryMutationContextCurrent(mutationContext)) return;
+      if (handleInquiryMutationAccessError(error, mutationContext, context)) return;
+      refreshInquiryListAfterMutation(mutationContext);
+      if (isInquiryDetailContextCurrent(
+        context.userId,
+        context.classId,
+        context.loadGeneration,
+        context.requestSequence,
+        context.inquiryId
+      )) appendInquiryDetailError('문의 읽음 상태를 갱신하지 못했습니다. 잠시 후 다시 시도해 주세요.');
+      return;
+    }
+
+    if (!isInquiryMutationContextCurrent(mutationContext)) return;
+    if (res.error) {
+      if (handleInquiryMutationAccessError(res.error, mutationContext, context)) return;
+      refreshInquiryListAfterMutation(mutationContext);
+      if (isInquiryDetailContextCurrent(
+        context.userId,
+        context.classId,
+        context.loadGeneration,
+        context.requestSequence,
+        context.inquiryId
+      )) appendInquiryDetailError('문의 읽음 상태를 갱신하지 못했습니다. 잠시 후 다시 시도해 주세요.');
+      return;
+    }
+    refreshInquiryListAfterMutation(mutationContext);
+    if (!Array.isArray(res.data) || !res.data[0] || res.data[0].inquiry_id !== context.inquiryId) {
+      if (isInquiryDetailContextCurrent(
+        context.userId,
+        context.classId,
+        context.loadGeneration,
+        context.requestSequence,
+        context.inquiryId
+      )) appendInquiryDetailError('문의 읽음 상태를 갱신하지 못했습니다. 잠시 후 다시 시도해 주세요.');
+      return;
+    }
+  }
+
+  async function openInquiry(inquiryId){
+    if (!currentSession || !currentSession.user || !currentClass || classStaffAccessLost) return;
+    if (!inquiryId || !inquiryState.rows.some(function(row){ return row.inquiry_id === inquiryId; })) return;
+
+    inquiryState.replyThreadSequence += 1;
+    inquiryState.selectedInquiryId = inquiryId;
+    inquiryState.thread = null;
+    inquiryState.replyDraft = '';
+    inquiryState.replyOperation = null;
+    inquiryState.closeOperation = null;
+    inquiryState.detailError = '';
+    inquiryState.isDetailLoading = true;
+    var context = {
+      userId: currentSession.user.id,
+      classId: currentClass.id,
+      loadGeneration: classLoadGeneration,
+      requestSequence: ++inquiryState.detailSequence,
+      inquiryId: inquiryId
+    };
+    var mutationContext = {
+      userId: context.userId,
+      classId: context.classId,
+      classLoadGeneration: context.loadGeneration
+    };
+    showInquiryDetailLoading();
+
+    var initialResult = await requestInquiryThread(context);
+    if (initialResult.stale) return;
+    if (initialResult.error) {
+      if (handleInquiryDetailAccessError(initialResult.error, context)) return;
+      showInquiryDetailLoadError();
+      return;
+    }
+    if (initialResult.denied) {
+      returnToInquiryList({ reload:true });
+      return;
+    }
+    if (initialResult.invalid) {
+      showInvalidStaffInquiryThread();
+      return;
+    }
+
+    var finalThread = initialResult.thread;
+    if (finalThread.inquiry.status === 'received' &&
+        finalThread.permissions.can_start_review === true &&
+        (finalThread.viewer_role === 'teacher' || finalThread.viewer_role === 'owner')) {
+      var reviewRes;
+      var reviewError = null;
+      try {
+        reviewRes = await client.rpc('start_class_inquiry_review', {
+          p_inquiry_id: inquiryId
+        });
+      } catch (error) {
+        reviewError = error;
+      }
+
+      if (!reviewError && reviewRes && reviewRes.error) reviewError = reviewRes.error;
+      if (!isInquiryMutationContextCurrent(mutationContext)) return;
+      if (reviewError && handleInquiryMutationAccessError(reviewError, mutationContext, context)) return;
+      refreshInquiryListAfterMutation(mutationContext);
+
+      if (!isInquiryDetailContextCurrent(
+        context.userId,
+        context.classId,
+        context.loadGeneration,
+        context.requestSequence,
+        context.inquiryId
+      )) return;
+
+      var reviewToken = reviewError ? inquiryErrorToken(reviewError) : '';
+      if (reviewError && reviewToken !== 'inquiry_closed') {
+        appendInquiryDetailError('문의 확인 상태를 갱신하지 못했습니다. 잠시 후 다시 시도해 주세요.');
+      } else {
+        if (!reviewError) {
+          var reviewRow = reviewRes && Array.isArray(reviewRes.data) ? reviewRes.data[0] : null;
+          if (!reviewRow || reviewRow.inquiry_id !== inquiryId || typeof reviewRow.changed !== 'boolean') {
+            appendInquiryDetailError('문의 확인 상태를 확인하지 못했습니다. 잠시 후 다시 시도해 주세요.');
+          }
+        }
+        // changed 여부와 관계없이 경쟁 상태를 반영하기 위해 thread를 다시 조회합니다.
+        var refreshedResult = await requestInquiryThread(context);
+        if (refreshedResult.stale) return;
+        if (refreshedResult.error) {
+          if (handleInquiryDetailAccessError(refreshedResult.error, context)) return;
+          appendInquiryDetailError('문의 최신 상태를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.');
+        } else if (refreshedResult.denied) {
+          returnToInquiryList({ reload:true });
+          return;
+        } else if (refreshedResult.invalid) {
+          showInvalidStaffInquiryThread();
+          return;
+        } else {
+          finalThread = refreshedResult.thread;
+        }
+      }
+    }
+
+    if (!isInquiryDetailContextCurrent(
+      context.userId,
+      context.classId,
+      context.loadGeneration,
+      context.requestSequence,
+      context.inquiryId
+    )) return;
+    inquiryState.thread = finalThread;
+    inquiryState.isDetailLoading = false;
+    renderInquiryDetail(finalThread);
+    await markInquiryStaffRead(context, mutationContext, finalThread);
+  }
+
+  async function refreshInquiryUnreadIndicator(){
+    if (!currentSession || !currentSession.user || !currentClass || classStaffAccessLost) return;
+    var requestedUserId = currentSession.user.id;
+    var requestedClassId = currentClass.id;
+    var requestedGeneration = classLoadGeneration;
+    var requestSequence = ++inquiryState.unreadLoadSequence;
+
+    try {
+      var res = await client.rpc('get_class_inquiries_for_staff', {
+        p_class_id: requestedClassId,
+        p_status: null,
+        p_unread_only: true,
+        p_before_has_unread_parent_message: null,
+        p_before_requires_response: null,
+        p_before_updated_at: null,
+        p_before_id: null,
+        p_limit: 1
+      });
+      if (!isInquiryUnreadContextCurrent(requestedUserId, requestedClassId, requestedGeneration, requestSequence)) return;
+      if (res.error) {
+        if (isInquiryNotAuthenticatedError(res.error)) showInquiryAuthenticationRequired();
+        return;
+      }
+      if (!Array.isArray(res.data)) return;
+      if (res.data.length && (!res.data[0] || res.data[0].class_id !== requestedClassId)) return;
+      inquiryState.unreadExists = res.data.length > 0;
+      byId('inquiryUnreadIndicator').hidden = !inquiryState.unreadExists;
+    } catch (err) {
+      if (!isInquiryUnreadContextCurrent(requestedUserId, requestedClassId, requestedGeneration, requestSequence)) return;
+      if (isInquiryNotAuthenticatedError(err)) {
+        showInquiryAuthenticationRequired();
+        return;
+      }
+      // 목록 조회와 독립된 보조 표시이므로 실패를 목록 화면에 전파하지 않습니다.
+    }
   }
 
   async function loadActiveTab(){
@@ -1981,7 +3620,11 @@
     if (activeTab === 'diary') await loadDiaryTab();
     if (activeTab === 'event') await loadEventTab();
     if (activeTab === 'album') await loadAlbumTab();
-    if (activeTab === 'guestbook') await loadGuestbookTab();
+    if (activeTab === 'inquiry' &&
+        (!inquiryState.hasLoaded || inquiryState.lastLoadFailed) &&
+        !inquiryState.isLoading) {
+      await loadInquiryList({ append:false });
+    }
     if (activeTab === 'notice') await loadNoticeTab();
     if (activeTab === 'mini-settings') await loadTeacherIntroSettings();
   }
@@ -2011,6 +3654,7 @@
     isSigningOut = true;
     logoutBtn.disabled = true;
     classLoadGeneration += 1;
+    resetInquiryState();
     var res = await client.auth.signOut();
     if (res.error) {
       isSigningOut = false;
@@ -2052,6 +3696,12 @@
   byId('tabBar').addEventListener('click', async function(e){
     var btn = e.target.closest('.tab-btn');
     if (!btn) return;
+    if (btn.dataset.tab === activeTab && activeTab === 'inquiry') {
+      if ((!inquiryState.hasLoaded || inquiryState.lastLoadFailed) && !inquiryState.isLoading) {
+        await loadActiveTab();
+      }
+      return;
+    }
     if (btn.dataset.tab === activeTab && activeTab === 'mini-settings') {
       if (!teacherIntroStateLoaded && !teacherIntroSaveOperation) {
         await loadActiveTab();
@@ -2069,6 +3719,45 @@
     btn.classList.add('active');
     document.querySelector('.tab-panel[data-panel="' + activeTab + '"]').classList.add('active');
     await loadActiveTab();
+  });
+
+  byId('inquiryStatusFilter').addEventListener('change', function(e){
+    var value = String(e.target.value || '');
+    if (['', 'received', 'in_progress', 'answered', 'closed'].indexOf(value) === -1) value = '';
+    inquiryState.filterStatus = value;
+    restartInquiryList();
+    loadInquiryList({ append:false });
+  });
+
+  byId('inquiryLoadMoreBtn').addEventListener('click', function(){
+    loadInquiryList({ append:true });
+  });
+
+  byId('inquiryBackBtn').addEventListener('click', function(e){
+    e.preventDefault();
+    returnToInquiryListFromDetail();
+  });
+
+  byId('inquiryReplyInput').addEventListener('input', function(e){
+    inquiryState.replyDraft = String(e.target.value || '');
+    var operation = inquiryState.replyOperation;
+    if (operation && operation.status === 'uncertain' &&
+        operation.body !== inquiryState.replyDraft.trim()) {
+      inquiryState.replyOperation = null;
+      inquiryState.detailError = '';
+      setMsg(byId('inquiryDetailMsg'), '');
+      if (inquiryState.thread) renderInquiryReplyControls(inquiryState.thread);
+    }
+  });
+
+  byId('inquiryReplyForm').addEventListener('submit', async function(e){
+    e.preventDefault();
+    await submitInquiryReply();
+  });
+
+  byId('inquiryCloseBtn').addEventListener('click', async function(e){
+    e.preventDefault();
+    await closeCurrentInquiry();
   });
 
   byId('diaryForm').addEventListener('submit', function(e){ e.preventDefault(); saveSimplePost('diary', diaryIds); });
@@ -2094,6 +3783,7 @@
   diaryFileInput.addEventListener('change', function(){ addDiaryDraftFiles(Array.from(diaryFileInput.files)); diaryFileInput.value = ''; });
 
   document.addEventListener('click', async function(e){
+    var openInquiryBtn = e.target.closest('[data-open-inquiry]');
     var editPost = e.target.closest('[data-edit-post]');
     var deleteBtn = e.target.closest('[data-delete-post]');
     var editEventBtn = e.target.closest('[data-edit-event]');
@@ -2102,7 +3792,12 @@
     var deleteDiaryMediaBtn = e.target.closest('[data-delete-diary-media]');
     var removeDiaryDraftBtn = e.target.closest('[data-remove-diary-draft]');
     var removeDraftBtn = e.target.closest('[data-remove-draft]');
-    var saveReplyBtn = e.target.closest('[data-save-reply]');
+    if (openInquiryBtn) {
+      e.preventDefault();
+      e.stopPropagation();
+      await openInquiry(openInquiryBtn.dataset.openInquiry);
+      return;
+    }
     if (editPost) { await editSimplePost(editPost.dataset.editPost, editPost.dataset.type); }
     if (deleteBtn) { e.stopPropagation(); await deletePost(deleteBtn.dataset.deletePost, deleteBtn.dataset.type); }
     if (editEventBtn) { await editEvent(editEventBtn.dataset.editEvent); }
@@ -2111,7 +3806,6 @@
     if (deleteDiaryMediaBtn) { await deleteDiaryMedia(deleteDiaryMediaBtn.dataset.deleteDiaryMedia, deleteDiaryMediaBtn.dataset.path); }
     if (removeDiaryDraftBtn) { removeDiaryDraftFile(removeDiaryDraftBtn.dataset.removeDiaryDraft); }
     if (removeDraftBtn) { removeDraftFile(removeDraftBtn.dataset.removeDraft); }
-    if (saveReplyBtn) { await saveReply(saveReplyBtn.dataset.saveReply); }
   });
 
   byId('calendarGrid').addEventListener('click', function(e){
@@ -2180,6 +3874,7 @@
 
     if (event === 'SIGNED_OUT') {
       classLoadGeneration += 1;
+      resetInquiryState();
       currentSession = null;
       currentClass = null;
       currentAccessRole = '';
@@ -2199,6 +3894,7 @@
     if (event === 'SIGNED_IN' &&
         (classStaffAccessLost || (previousUserId && nextUserId && previousUserId !== nextUserId))) {
       classLoadGeneration += 1;
+      resetInquiryState();
       location.reload();
       return;
     }

@@ -182,9 +182,61 @@
   .album-detail-title{max-width:100%;font-family:var(--display);font-size:1.3rem;line-height:1.4;font-weight:400;overflow-wrap:anywhere;word-break:keep-all}
   .album-detail-meta{color:var(--sage);font-size:.82rem;font-weight:900}
   .album-detail-body{width:100%;padding:14px 16px;border:1.5px dashed var(--line);border-radius:18px;background:rgba(255,255,255,.72);color:var(--ink-soft);font-size:.92rem;line-height:1.7;font-weight:400;overflow-wrap:anywhere;word-break:keep-all}
-  .comment-item{background:#fffdf8;border:1.5px dashed #eadccc;border-radius:22px;padding:16px}
-  .comment-reply{margin-top:12px;margin-left:20px;background:#f7f0ff;border-radius:18px;padding:12px 14px;color:var(--ink-soft);font-size:.9rem}
-  .comment-form{margin-top:4px;background:var(--paper);border-radius:24px;padding:18px;border:1.5px solid var(--line)}
+  .parent-inquiry-view{min-width:0}
+  .parent-inquiry-view[hidden]{display:none}
+  .parent-inquiry-panel{min-width:0;background:var(--paper);border:1.5px solid var(--line);border-radius:24px;padding:20px;box-shadow:0 16px 42px -28px rgba(120,80,60,.35)}
+  .parent-inquiry-toolbar,.parent-inquiry-detail-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;flex-wrap:wrap;min-width:0}
+  .parent-inquiry-heading{flex:1 1 320px;min-width:0}
+  .parent-inquiry-title{min-width:0;font-family:var(--display);font-weight:400;line-height:1.4;word-break:keep-all;overflow-wrap:anywhere}
+  .parent-inquiry-title{font-size:1.28rem}
+  .parent-inquiry-description{margin-top:7px;color:var(--ink-soft);font-size:.9rem;line-height:1.7;word-break:keep-all;overflow-wrap:anywhere}
+  .parent-inquiry-title-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-width:0}
+  .parent-inquiry-unread-indicator{display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;width:18px;height:18px;border-radius:50%;background:#fff0ea}
+  .parent-inquiry-unread-dot{width:8px;height:8px;border-radius:50%;background:var(--coral);box-shadow:0 0 0 3px rgba(255,138,107,.16)}
+  .parent-inquiry-list-actions,.parent-inquiry-form-actions,.parent-inquiry-detail-actions{display:flex;align-items:center;justify-content:flex-end;gap:8px;flex-wrap:wrap;margin-top:16px}
+  .parent-inquiry-list{display:flex;flex-direction:column;gap:12px;margin-top:18px;min-width:0}
+  .parent-inquiry-card{min-width:0;border:1.5px solid var(--line);border-radius:20px;background:#fffdf8;overflow:hidden}
+  .parent-inquiry-card-open{display:block;width:100%;min-width:0;padding:16px;border:0;background:transparent;color:inherit;text-align:left;font-family:var(--body);cursor:pointer}
+  .parent-inquiry-card-open:disabled{cursor:default}
+  .parent-inquiry-card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;flex-wrap:wrap;min-width:0}
+  .parent-inquiry-document,.parent-inquiry-card-subject,.parent-inquiry-detail-document,.parent-inquiry-detail-date{min-width:0;word-break:keep-all;overflow-wrap:anywhere}
+  .parent-inquiry-document,.parent-inquiry-detail-document{color:var(--sage);font-size:.78rem;font-weight:800}
+  .parent-inquiry-card-subject{margin-top:5px;color:var(--ink);font-weight:800;line-height:1.45}
+  .parent-inquiry-card-meta{display:flex;gap:6px 9px;flex-wrap:wrap;margin-top:8px;color:var(--ink-soft);font-size:.78rem}
+  .parent-inquiry-badges{display:flex;gap:6px;flex-wrap:wrap}
+  .parent-inquiry-status-badge,.parent-inquiry-unread-badge{display:inline-flex;align-items:center;min-height:24px;padding:3px 9px;border-radius:999px;font-size:.74rem;font-weight:800;line-height:1.3}
+  .parent-inquiry-status-badge{background:#f3eee8;color:var(--ink-soft)}
+  .parent-inquiry-unread-badge{background:#fff0ea;color:var(--coral-deep)}
+  .parent-inquiry-list-state{margin-top:16px}
+  .parent-inquiry-empty{padding:20px;border:1.5px dashed var(--line);border-radius:20px;background:rgba(255,255,255,.72);color:var(--ink-soft);text-align:center}
+  .parent-inquiry-form{margin-top:18px}
+  .parent-inquiry-form textarea{min-height:150px}
+  .parent-inquiry-detail-nav{margin-bottom:14px}
+  .parent-inquiry-detail-head{padding-bottom:16px;border-bottom:1.5px solid var(--line)}
+  .parent-inquiry-detail-metadata{display:flex;align-items:center;gap:5px;flex:1 1 320px;min-width:0;flex-wrap:wrap}
+  .parent-inquiry-detail-date{color:var(--ink-soft);font-size:.8rem;font-weight:700}
+  .parent-inquiry-detail-separator{color:var(--line)}
+  .parent-inquiry-detail-badges{display:flex;align-self:flex-start;gap:6px;flex-wrap:wrap}
+  .parent-inquiry-visually-hidden{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}
+  .parent-inquiry-message-list{display:flex;flex-direction:column;gap:12px;margin-top:16px;min-width:0}
+  .parent-inquiry-message{display:flex;width:100%;min-width:0}
+  .parent-inquiry-message--parent{justify-content:flex-end}
+  .parent-inquiry-message--teacher,.parent-inquiry-message--owner{justify-content:flex-start}
+  .parent-inquiry-message--notice{justify-content:center}
+  .parent-inquiry-message-content{max-width:min(78%,540px);min-width:0}
+  .parent-inquiry-message-role{margin:0 6px 5px;color:var(--ink-soft);font-size:.74rem;font-weight:800}
+  .parent-inquiry-message--parent .parent-inquiry-message-role{text-align:right}
+  .parent-inquiry-message-bubble{padding:12px 14px;border-radius:17px;background:#f5eee6;color:var(--ink);font-size:.9rem;line-height:1.65;word-break:keep-all;overflow-wrap:anywhere}
+  .parent-inquiry-message--parent .parent-inquiry-message-bubble{background:#fff0ea}
+  .parent-inquiry-message--teacher .parent-inquiry-message-bubble{background:#eef5ed}
+  .parent-inquiry-message--owner .parent-inquiry-message-bubble{background:#f7f0ff}
+  .parent-inquiry-message--notice .parent-inquiry-message-bubble{background:#f3eee8}
+  .parent-inquiry-message-meta{margin:5px 6px 0;color:var(--ink-soft);font-size:.72rem}
+  .parent-inquiry-message--parent .parent-inquiry-message-meta{text-align:right}
+  .parent-inquiry-reply-section{margin-top:22px;padding-top:18px;border-top:1.5px solid var(--line)}
+  .parent-inquiry-closed-notice{margin-top:16px;padding:14px;border-radius:16px;background:#f3eee8;color:var(--ink-soft);font-size:.86rem;line-height:1.6;text-align:center}
+  .parent-inquiry-closed-notice p+p{margin-top:2px}
+  .parent-inquiry-closed-actions{display:flex;justify-content:center;margin-top:12px}
   .event-calendar-card{background:var(--paper);border:1.5px solid var(--line);border-radius:24px;padding:18px;box-shadow:0 16px 42px -28px rgba(120,80,60,.35)}
   .event-calendar-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}
   .event-calendar-title{font-family:var(--display);font-size:1.16rem;line-height:1.4;font-weight:400}
@@ -246,6 +298,17 @@
     .album-detail-title{font-size:1.17rem;line-height:1.42}
     .album-list-mini{grid-template-columns:minmax(0,360px)}
     .album-grid-mini{grid-template-columns:repeat(2,1fr)}
+    .parent-inquiry-toolbar,.parent-inquiry-detail-head{align-items:stretch;flex-direction:column}
+    .parent-inquiry-message-content{max-width:88%}
+    .parent-inquiry-form-actions,.parent-inquiry-detail-actions{align-items:stretch}
+    .parent-inquiry-form-actions .btn,.parent-inquiry-detail-actions .btn{flex:1 1 180px}
+  }
+  @media (max-width:320px){
+    .parent-inquiry-panel{padding:16px}
+    .parent-inquiry-message-content{max-width:94%}
+    .parent-inquiry-form-actions,.parent-inquiry-detail-actions{flex-direction:column}
+    .parent-inquiry-form-actions .btn,.parent-inquiry-detail-actions .btn{flex-basis:auto;width:100%}
+    .parent-inquiry-closed-actions .btn{width:100%}
   }
   @media (min-width:768px){
     .mini-summary-grid.has-cards{grid-template-columns:repeat(auto-fit,minmax(220px,1fr));align-items:stretch}
@@ -423,6 +486,8 @@
   var eventCalendarDate = firstOfMonth(new Date());
   var selectedEventDate = toDateInput(new Date());
   var miniCache = createMiniCache();
+  var parentInquiryState = createParentInquiryState();
+  var PARENT_INQUIRY_PAGE_LIMIT = 20;
   var BUCKET = 'center-images';
   var CENTER_TEMPLATE_FILES = {
     sunshine: 'template-sunshine.html',
@@ -453,7 +518,6 @@
     return {
       posts: [],
       media: [],
-      comments: [],
       centerBrand: null,
       centerBrandStatus: 'idle',
       centerBrandRequest: null,
@@ -472,8 +536,116 @@
     };
   }
 
+  function createParentInquiryState(){
+    return {
+      view: 'list',
+      rows: [],
+      cursor: null,
+      hasMore: false,
+      hasLoaded: false,
+      isLoading: false,
+      isDetailLoading: false,
+      lastLoadFailed: false,
+      selectedInquiryId: null,
+      thread: null,
+      createDraft: {
+        body: ''
+      },
+      replyDraft: '',
+      createOperation: null,
+      messageOperation: null,
+      closeOperation: null,
+      listSequence: 0,
+      detailSequence: 0,
+      mutationThreadSequence: 0,
+      unreadSequence: 0,
+      unreadExists: false,
+      errorText: '',
+      noticeText: '',
+      createMessage: '',
+      createMessageIsError: false,
+      detailError: '',
+      detailMessageIsError: false
+    };
+  }
+
+  function resetParentInquiryState(){
+    var previous = parentInquiryState || createParentInquiryState();
+    var next = createParentInquiryState();
+    next.listSequence = Number(previous.listSequence || 0) + 1;
+    next.detailSequence = Number(previous.detailSequence || 0) + 1;
+    next.mutationThreadSequence = Number(previous.mutationThreadSequence || 0) + 1;
+    next.unreadSequence = Number(previous.unreadSequence || 0) + 1;
+    parentInquiryState = next;
+    syncParentInquiryUnreadIndicators();
+    var content = document.getElementById('miniContent');
+    if (content && currentMiniTab === 'inquiry') content.innerHTML = '';
+  }
+
+  function leaveParentInquirySubview(){
+    if (!parentInquiryState || parentInquiryState.view === 'list') return;
+    parentInquiryState.detailSequence += 1;
+    parentInquiryState.mutationThreadSequence += 1;
+    parentInquiryState.view = 'list';
+    parentInquiryState.isDetailLoading = false;
+    parentInquiryState.selectedInquiryId = null;
+    parentInquiryState.thread = null;
+    parentInquiryState.createDraft = { body:'' };
+    parentInquiryState.replyDraft = '';
+    parentInquiryState.createOperation = null;
+    parentInquiryState.messageOperation = null;
+    parentInquiryState.closeOperation = null;
+    parentInquiryState.createMessage = '';
+    parentInquiryState.createMessageIsError = false;
+    parentInquiryState.detailError = '';
+    parentInquiryState.detailMessageIsError = false;
+  }
+
+  function isApprovedParentInquiryContext(){
+    if (!currentSession || !currentSession.user || !currentSession.user.id) return false;
+    if (!currentMiniClass || !currentMiniClass.id) return false;
+    if (!currentEnrollment || !currentEnrollment.id) return false;
+    if (currentMiniClass.enrollment_id !== currentEnrollment.id) return false;
+    return approvedClasses.some(function(row){
+      return row &&
+        row.id === currentMiniClass.id &&
+        row.enrollment_id === currentEnrollment.id;
+    });
+  }
+
+  function clearParentInquiryForUnavailableContext(){
+    parentInquiryState.listSequence += 1;
+    parentInquiryState.unreadSequence += 1;
+    parentInquiryState.detailSequence += 1;
+    parentInquiryState.mutationThreadSequence += 1;
+    parentInquiryState.view = 'list';
+    parentInquiryState.isDetailLoading = false;
+    parentInquiryState.rows = [];
+    parentInquiryState.cursor = null;
+    parentInquiryState.hasMore = false;
+    parentInquiryState.hasLoaded = false;
+    parentInquiryState.isLoading = false;
+    parentInquiryState.lastLoadFailed = false;
+    parentInquiryState.selectedInquiryId = null;
+    parentInquiryState.thread = null;
+    parentInquiryState.createDraft = { body:'' };
+    parentInquiryState.replyDraft = '';
+    parentInquiryState.createOperation = null;
+    parentInquiryState.messageOperation = null;
+    parentInquiryState.closeOperation = null;
+    parentInquiryState.unreadExists = false;
+    parentInquiryState.errorText = '';
+    parentInquiryState.noticeText = '';
+    parentInquiryState.createMessage = '';
+    parentInquiryState.createMessageIsError = false;
+    parentInquiryState.detailError = '';
+    parentInquiryState.detailMessageIsError = false;
+    syncParentInquiryUnreadIndicators();
+  }
+
   function resetMiniStateForAuthChange(){
     classLoadVersion += 1;
+    resetParentInquiryState();
     approvedClasses = [];
     currentMiniClass = null;
     currentEnrollment = null;
@@ -1077,11 +1249,12 @@
       { key:'diary', label:'반 이야기' },
       { key:'event', label:'행사' },
       { key:'album', label:'사진첩' },
-      { key:'guestbook', label:'방명록' },
+      { key:'inquiry', label:'문의', enabledKey:'guestbook' },
       { key:'notice', label:'공지' }
     ];
     return modules.filter(function(item){
-      return enabled[item.key] !== false;
+      return enabled[item.enabledKey || item.key] !== false &&
+        (item.key !== 'inquiry' || isApprovedParentInquiryContext());
     });
   }
 
@@ -1208,6 +1381,7 @@
     if (!isCurrentAuthTransition(startedAuthVersion)) return;
     var targetClassId = classId;
     var startedClassLoadVersion = ++classLoadVersion;
+    resetParentInquiryState();
     var row = approvedClasses.find(function(item){ return item.id === targetClassId; });
     if (!row) return;
     currentMiniClass = row;
@@ -1242,11 +1416,7 @@
         client.from('class_media')
           .select('*')
           .eq('class_id', targetClassId)
-          .order('uploaded_at', { ascending:false }),
-        client.from('class_comments')
-          .select('*')
-          .eq('class_id', targetClassId)
-          .order('created_at', { ascending:false })
+          .order('uploaded_at', { ascending:false })
       ]);
       if (
         targetCache !== miniCache ||
@@ -1255,7 +1425,6 @@
       var miniRes = contentResults[0];
       var postsRes = contentResults[1];
       var mediaRes = contentResults[2];
-      var commentsRes = contentResults[3];
       if (miniRes.error) throw miniRes.error;
       currentMini = miniRes.data || {
         class_id: targetClassId,
@@ -1267,8 +1436,6 @@
       var postRows = postsRes.data || [];
       if (mediaRes.error) throw mediaRes.error;
       var mediaRows = mediaRes.data || [];
-      if (commentsRes.error) throw commentsRes.error;
-      var commentRows = commentsRes.data || [];
 
       var signedRows = await signedMediaRows(mediaRows);
       if (
@@ -1277,7 +1444,6 @@
       ) return;
       targetCache.posts = postRows;
       targetCache.media = signedRows;
-      targetCache.comments = commentRows;
       var next = upcomingEvent();
       if (next) {
         selectedEventDate = dateKey(next.event_date);
@@ -1287,8 +1453,16 @@
         eventCalendarDate = firstOfMonth(new Date());
       }
       await renderMiniHome(startedAuthVersion, startedClassLoadVersion, targetClassId);
+      if (
+        isCurrentClassLoad(startedAuthVersion, startedClassLoadVersion, targetClassId) &&
+        isApprovedParentInquiryContext() &&
+        enabledModules().some(function(item){ return item.key === 'inquiry'; })
+      ) {
+        refreshParentInquiryUnreadIndicator();
+      }
     } catch (err) {
       if (!isCurrentClassLoad(startedAuthVersion, startedClassLoadVersion, targetClassId)) return;
+      resetParentInquiryState();
       miniRoot.innerHTML = '<div class="empty-mini">' + escWithBr(err && err.message ? err.message : String(err)) + '</div>';
     }
   }
@@ -1317,6 +1491,7 @@
 
     if (!classRow || (!isTeacher && !isCenterOwner)) {
       if (!isCurrentAuthTransition(authVersion)) return true;
+      resetParentInquiryState();
       showNotice('미니홈피를 열 수 없습니다', '해당 반의 담임 선생님 또는 원장님만 직접 접근할 수 있어요.');
       return true;
     }
@@ -1325,6 +1500,7 @@
     if (!isCurrentAuthTransition(authVersion)) return true;
     if (miniRes.error) throw miniRes.error;
     if (!miniRes.data) {
+      resetParentInquiryState();
       showNotice('아직 미니홈피가 준비되지 않았어요', '담임 선생님이 미니홈피를 준비한 뒤 다시 확인해주세요.');
       return true;
     }
@@ -1445,6 +1621,7 @@
             return '<button type="button" class="mini-tab' + (item.key === currentMiniTab ? ' active' : '') + '" data-mini-tab="' + esc(item.key) + '">' +
               esc(item.label) +
               (item.key === 'notice' && unreadNotice ? '<span class="mini-tab-dot" aria-label="안 읽은 공지"></span>' : '') +
+              (item.key === 'inquiry' && parentInquiryState.unreadExists ? '<span class="mini-tab-dot parent-inquiry-tab-dot" aria-label="새 메시지 있음"></span>' : '') +
             '</button>';
           }).join('') + '</div>'
         : '') +
@@ -1484,7 +1661,7 @@
     if (currentMiniTab === 'diary') renderDiaryTab(content);
     if (currentMiniTab === 'event') renderEventTab(content);
     if (currentMiniTab === 'album') renderAlbumTab(content);
-    if (currentMiniTab === 'guestbook') renderGuestbookTab(content);
+    if (currentMiniTab === 'inquiry') renderParentInquiryTab(content);
     if (currentMiniTab === 'notice') renderNoticeTab(content);
   }
 
@@ -1625,25 +1802,1820 @@
     }).join('') + '</div>';
   }
 
-  function renderGuestbookTab(content){
-    var canComment = !!(currentEnrollment && currentEnrollment.id);
-    var list = miniCache.comments.length
-      ? miniCache.comments.map(function(row){
-          return '<article class="comment-item">' +
-            '<div class="mini-date">' + esc(formatDate(row.created_at)) + ' · 학부모</div>' +
-            '<div class="mini-body">' + escWithBr(row.body || '') + '</div>' +
-            (row.reply ? '<div class="comment-reply"><strong>선생님 답글</strong><br>' + escWithBr(row.reply) + '</div>' : '') +
-          '</article>';
-        }).join('')
-      : '<div class="empty-mini">아직 방명록 글이 없어요.</div>';
-    content.innerHTML = list + (canComment
-      ? '<form class="comment-form" id="commentForm">' +
-        '<label for="commentBody">방명록 남기기</label>' +
-        '<textarea id="commentBody" required placeholder="선생님께 남길 말을 적어주세요."></textarea>' +
-        '<button type="submit" class="btn" id="commentSubmit" style="margin-top:12px">등록</button>' +
-        '<div class="msg" id="commentMsg"></div>' +
-      '</form>'
-      : '');
+  function formatParentInquiryDateTime(value){
+    if (value == null || String(value).trim() === '') return '날짜 확인 필요';
+    var date = value instanceof Date ? value : new Date(value);
+    if (isNaN(date.getTime())) return '날짜 확인 필요';
+    return formatDate(date) || '날짜 확인 필요';
+  }
+
+  function formatInquiryNumberForDisplay(documentNo){
+    var match = String(documentNo || '').trim().match(/(\d{6}-\d{4})$/);
+    return match ? match[1] : '확인 필요';
+  }
+
+  function parentInquiryHasUnreadReply(inquiry){
+    if (!inquiry || !inquiry.last_staff_message_at) return false;
+    var lastStaffMessageAt = new Date(inquiry.last_staff_message_at).getTime();
+    if (!Number.isFinite(lastStaffMessageAt)) return false;
+    if (!inquiry.parent_last_read_at) return true;
+    var parentLastReadAt = new Date(inquiry.parent_last_read_at).getTime();
+    return !Number.isFinite(parentLastReadAt) || lastStaffMessageAt > parentLastReadAt;
+  }
+
+  function parentInquiryStatusBadgesHtml(status, hasUnreadReply){
+    var badges = [];
+    if (hasUnreadReply === true) {
+      badges.push('<span class="parent-inquiry-unread-badge">새 메시지</span>');
+    }
+    if (status === 'closed') {
+      badges.push('<span class="parent-inquiry-status-badge">종료</span>');
+    } else if (!hasUnreadReply && (status === 'received' || status === 'in_progress')) {
+      badges.push('<span class="parent-inquiry-status-badge">답변 기다리는 중</span>');
+    }
+    return badges.join('');
+  }
+
+  function parentInquiryErrorToken(error){
+    return error && error.message
+      ? String(error.message).trim().toLowerCase()
+      : String(error || '').trim().toLowerCase();
+  }
+
+  function isParentInquiryListContextCurrent(context){
+    return !!context &&
+      isApprovedParentInquiryContext() &&
+      parentInquiryState === context.state &&
+      parentInquiryState.listSequence === context.requestSequence &&
+      authTransitionVersion === context.authVersion &&
+      classLoadVersion === context.classVersion &&
+      !!currentSession && !!currentSession.user && currentSession.user.id === context.userId &&
+      !!currentMiniClass && currentMiniClass.id === context.classId;
+  }
+
+  function isParentInquiryUnreadContextCurrent(context){
+    return !!context &&
+      isApprovedParentInquiryContext() &&
+      parentInquiryState === context.state &&
+      parentInquiryState.unreadSequence === context.requestSequence &&
+      authTransitionVersion === context.authVersion &&
+      classLoadVersion === context.classVersion &&
+      !!currentSession && !!currentSession.user && currentSession.user.id === context.userId &&
+      !!currentMiniClass && currentMiniClass.id === context.classId;
+  }
+
+  function handleParentInquiryApprovalContextLoss(context, forceLoss){
+    if (!context || parentInquiryState !== context.state) return;
+    if (authTransitionVersion !== context.authVersion || classLoadVersion !== context.classVersion) return;
+    if (!currentSession || !currentSession.user || currentSession.user.id !== context.userId) return;
+    if (!currentMiniClass || currentMiniClass.id !== context.classId) return;
+    if (!forceLoss && isApprovedParentInquiryContext()) return;
+    clearParentInquiryForUnavailableContext();
+    if (currentMiniTab === 'inquiry') {
+      renderParentInquiryUnavailable(document.getElementById('miniContent'));
+    }
+  }
+
+  function syncParentInquiryUnreadIndicators(){
+    var unreadExists = !!parentInquiryState && parentInquiryState.unreadExists === true;
+    var listIndicator = document.getElementById('parentInquiryUnreadIndicator');
+    if (listIndicator) listIndicator.hidden = !unreadExists;
+    var inquiryTab = miniRoot && miniRoot.querySelector('.mini-tab[data-mini-tab="inquiry"]');
+    if (!inquiryTab) return;
+    var tabDot = inquiryTab.querySelector('.parent-inquiry-tab-dot');
+    if (unreadExists && !tabDot) {
+      tabDot = document.createElement('span');
+      tabDot.className = 'mini-tab-dot parent-inquiry-tab-dot';
+      tabDot.setAttribute('aria-label', '새 메시지 있음');
+      inquiryTab.appendChild(tabDot);
+    } else if (!unreadExists && tabDot) {
+      tabDot.remove();
+    }
+  }
+
+  function showParentInquiryAuthenticationRequired(){
+    queueAuthTransition(null);
+    currentSession = null;
+    resetMiniStateForAuthChange();
+    logoutBtn.hidden = true;
+    setAuthMode('login');
+    leadText.textContent = '로그인 후 초대 코드를 입력해주세요.';
+    showPanel(authPanel);
+    drainAuthTransitions();
+  }
+
+  function showParentInquiryApprovalRequired(){
+    classLoadVersion += 1;
+    resetParentInquiryState();
+    leadText.textContent = '현재 반 연결 상태를 확인해 주세요.';
+    showNotice('문의 목록을 열 수 없습니다', '현재 반 연결 상태를 다시 확인해 주세요.');
+  }
+
+  function showParentInquiryClassAccessDenied(){
+    classLoadVersion += 1;
+    resetParentInquiryState();
+    leadText.textContent = '현재 반 접근 상태를 확인해 주세요.';
+    showNotice('문의를 접수할 수 없습니다', '현재 반에서는 문의를 이용할 수 없습니다.');
+  }
+
+  function handleParentInquiryAccessError(error){
+    var token = parentInquiryErrorToken(error);
+    if (token === 'not_authenticated') {
+      showParentInquiryAuthenticationRequired();
+      return true;
+    }
+    if (token === 'parent_not_approved') {
+      showParentInquiryApprovalRequired();
+      return true;
+    }
+    return false;
+  }
+
+  function makeInquirySubjectFromBody(body){
+    var normalizedBody = String(body || '').trim();
+    var firstNonEmptyLine = normalizedBody.split(/\r\n?|\n/).find(function(line){
+      return !!line.trim();
+    }) || normalizedBody;
+    var normalizedLine = firstNonEmptyLine.replace(/\s+/gu, ' ').trim();
+    var characters = Array.from(normalizedLine);
+    if (characters.length <= 50) return normalizedLine;
+    return characters.slice(0, 49).join('') + '…';
+  }
+
+  function normalizeParentInquiryCreateDraft(draft){
+    var body = String(draft && draft.body || '').trim();
+    return {
+      category: 'general',
+      subject: makeInquirySubjectFromBody(body),
+      body: body
+    };
+  }
+
+  function validateParentInquiryCreateDraft(draft){
+    if (!draft.body) return '문의 내용을 입력해 주세요.';
+    if (draft.body.length > 5000) return '문의 내용은 5000자 이내로 작성해 주세요.';
+    return '';
+  }
+
+  function setParentInquiryCreateMessage(text, isError){
+    parentInquiryState.createMessage = String(text || '');
+    parentInquiryState.createMessageIsError = !!isError;
+    var message = document.getElementById('parentInquiryCreateMsg');
+    if (!message) return;
+    message.textContent = parentInquiryState.createMessage;
+    message.className = parentInquiryState.createMessageIsError ? 'msg error' : 'msg';
+  }
+
+  function isParentInquiryMutationContextCurrent(context){
+    return !!context &&
+      isApprovedParentInquiryContext() &&
+      parentInquiryState === context.state &&
+      authTransitionVersion === context.authVersion &&
+      classLoadVersion === context.classVersion &&
+      !!currentSession && !!currentSession.user && currentSession.user.id === context.userId &&
+      !!currentMiniClass && currentMiniClass.id === context.classId;
+  }
+
+  function isParentInquiryCreateOperationCurrent(context, operation){
+    return isParentInquiryMutationContextCurrent(context) &&
+      context.state.view === 'create' &&
+      context.state.createOperation === operation;
+  }
+
+  function parentInquiryCreateOperationMatches(operation, draft, context){
+    return !!operation && operation.status === 'uncertain' &&
+      operation.classId === context.classId &&
+      operation.userId === context.userId &&
+      operation.authTransitionVersion === context.authVersion &&
+      operation.classLoadVersion === context.classVersion &&
+      operation.stateRef === context.state &&
+      operation.category === draft.category &&
+      operation.subject === draft.subject &&
+      operation.body === draft.body;
+  }
+
+  function isValidParentInquiryCreateResponse(row){
+    // 최초 생성은 received이며, 동일 request key 재시도는 기존 문의의 현재 lifecycle 상태를 반환할 수 있습니다.
+    // 네 lifecycle 상태 모두 같은 문의의 생성 성공으로 처리합니다.
+    var validStatuses = ['received', 'in_progress', 'answered', 'closed'];
+    return !!row &&
+      typeof row.inquiry_id === 'string' && !!row.inquiry_id.trim() &&
+      typeof row.document_no === 'string' && !!row.document_no.trim() &&
+      validStatuses.indexOf(row.status) >= 0 &&
+      typeof row.created_at === 'string' && !!row.created_at.trim();
+  }
+
+  function refreshParentInquiryListAfterMutation(context){
+    if (!isParentInquiryMutationContextCurrent(context)) return null;
+    var state = context.state;
+    state.listSequence += 1;
+    state.unreadSequence += 1;
+    state.rows = [];
+    state.cursor = null;
+    state.hasMore = false;
+    state.hasLoaded = false;
+    state.isLoading = false;
+    state.lastLoadFailed = false;
+    state.errorText = '';
+    var listRequest = loadParentInquiryList({ append:false });
+    var listRequestSequence = state.listSequence;
+    refreshParentInquiryUnreadIndicator();
+    return {
+      listRequest: listRequest,
+      listRequestSequence: listRequestSequence
+    };
+  }
+
+  function isParentInquiryPlainObject(value){
+    return !!value && typeof value === 'object' && !Array.isArray(value);
+  }
+
+  function isParentInquiryDateFieldValid(value){
+    if (value === null) return true;
+    if (typeof value !== 'string' || !value.trim()) return false;
+    return !isNaN(new Date(value).getTime());
+  }
+
+  function isParentInquiryDetailContextCurrent(context){
+    return !!context &&
+      isApprovedParentInquiryContext() &&
+      parentInquiryState === context.state &&
+      parentInquiryState.view === 'detail' &&
+      parentInquiryState.detailSequence === context.requestSequence &&
+      parentInquiryState.selectedInquiryId === context.inquiryId &&
+      authTransitionVersion === context.authVersion &&
+      classLoadVersion === context.classVersion &&
+      !!currentSession && !!currentSession.user && currentSession.user.id === context.userId &&
+      !!currentMiniClass && currentMiniClass.id === context.classId;
+  }
+
+  function isParentInquiryReadContextCurrent(context, mutationSequence){
+    return isParentInquiryDetailContextCurrent(context) &&
+      parentInquiryState.mutationThreadSequence === mutationSequence;
+  }
+
+  function parentInquiryDetailMutationContext(context){
+    return {
+      userId: context.userId,
+      classId: context.classId,
+      authVersion: context.authVersion,
+      classVersion: context.classVersion,
+      state: context.state
+    };
+  }
+
+  const allowedParentInquiryStatuses = new Set([
+    'received',
+    'in_progress',
+    'answered',
+    'closed'
+  ]);
+
+  function isValidParentInquiryThread(thread, context){
+    if (!isParentInquiryPlainObject(thread) ||
+        !isParentInquiryPlainObject(thread.inquiry) ||
+        !Array.isArray(thread.messages) ||
+        !isParentInquiryPlainObject(thread.permissions) ||
+        thread.viewer_role !== 'parent') return false;
+    var inquiry = thread.inquiry;
+    if (inquiry.id !== context.inquiryId || inquiry.class_id !== context.classId ||
+        typeof inquiry.author_id !== 'string' || inquiry.author_id !== context.userId ||
+        typeof inquiry.document_no !== 'string' || typeof inquiry.category !== 'string' ||
+        typeof inquiry.subject !== 'string' || typeof inquiry.status !== 'string' ||
+        !allowedParentInquiryStatuses.has(inquiry.status)) return false;
+    var dateFields = [
+      'created_at', 'updated_at', 'last_message_at', 'last_parent_message_at',
+      'last_staff_message_at', 'parent_last_read_at', 'staff_last_read_at',
+      'answered_at', 'closed_at'
+    ];
+    if (!dateFields.every(function(key){ return isParentInquiryDateFieldValid(inquiry[key]); })) return false;
+    if (typeof thread.permissions.can_add_parent_message !== 'boolean' ||
+        typeof thread.permissions.can_close !== 'boolean' ||
+        typeof thread.permissions.can_mark_read !== 'boolean') return false;
+    return thread.messages.every(function(message){
+      return isParentInquiryPlainObject(message) &&
+        typeof message.sender_role === 'string' &&
+        typeof message.message_type === 'string' &&
+        typeof message.body === 'string' &&
+        isParentInquiryDateFieldValid(message.created_at);
+    });
+  }
+
+  function setParentInquiryDetailMessage(text, isError){
+    parentInquiryState.detailError = String(text || '');
+    parentInquiryState.detailMessageIsError = !!isError && !!parentInquiryState.detailError;
+    var message = document.getElementById('parentInquiryDetailMsg');
+    if (!message) return;
+    message.textContent = parentInquiryState.detailError;
+    message.className = parentInquiryState.detailMessageIsError ? 'msg error' : 'msg';
+  }
+
+  function syncParentInquiryReplyUi(){
+    var state = parentInquiryState;
+    var thread = state && state.thread;
+    var inquiry = thread && thread.inquiry;
+    var messageOperation = state && state.messageOperation;
+    var closeOperation = state && state.closeOperation;
+    var isMessageSubmitting = !!messageOperation && messageOperation.status === 'submitting';
+    var messageBlocksClose = !!messageOperation &&
+      (messageOperation.status === 'submitting' || messageOperation.status === 'uncertain');
+    var isCloseSubmitting = !!closeOperation && closeOperation.status === 'submitting';
+    var closeBlocksMessage = !!closeOperation &&
+      (closeOperation.status === 'submitting' || closeOperation.status === 'uncertain');
+    var selectedInquiryId = state && state.selectedInquiryId;
+    var threadInquiryId = inquiry && inquiry.id;
+    var inquiryIdsMatch = typeof selectedInquiryId === 'string' && !!selectedInquiryId.trim() &&
+      typeof threadInquiryId === 'string' && !!threadInquiryId.trim() &&
+      threadInquiryId === selectedInquiryId;
+    var canAddMessageBase = !!state &&
+      isApprovedParentInquiryContext() &&
+      state.view === 'detail' &&
+      inquiryIdsMatch &&
+      !!thread && thread.viewer_role === 'parent' &&
+      !!inquiry && allowedParentInquiryStatuses.has(inquiry.status) &&
+      inquiry.status !== 'closed' &&
+      !!thread.permissions && thread.permissions.can_add_parent_message === true;
+    var canAddMessage = canAddMessageBase && !closeBlocksMessage;
+    var canRetryClose = isParentInquiryCloseRetryContext(state, closeOperation, selectedInquiryId);
+    var canCloseBase = !!state &&
+      isApprovedParentInquiryContext() &&
+      state.view === 'detail' &&
+      inquiryIdsMatch &&
+      !!thread && thread.viewer_role === 'parent' &&
+      !!inquiry && allowedParentInquiryStatuses.has(inquiry.status) &&
+      !!thread.permissions &&
+      ((inquiry.status !== 'closed' && thread.permissions.can_close === true) || canRetryClose);
+    var canClose = canCloseBase && !messageBlocksClose && !isCloseSubmitting;
+    var form = document.getElementById('parentInquiryReplyForm');
+    var input = document.getElementById('parentInquiryReplyInput');
+    var submit = document.getElementById('parentInquiryReplySubmit');
+    var close = document.getElementById('parentInquiryCloseBtn');
+    var back = document.getElementById('parentInquiryDetailBackBtn');
+    var isAnySubmitting = isMessageSubmitting || isCloseSubmitting;
+    if (form) form.setAttribute('aria-busy', isAnySubmitting ? 'true' : 'false');
+    if (input) {
+      input.value = canAddMessageBase ? String(state.replyDraft || '') : '';
+      input.disabled = !canAddMessage || isMessageSubmitting;
+    }
+    if (submit) {
+      submit.disabled = !canAddMessage || isMessageSubmitting;
+      submit.textContent = isMessageSubmitting ? '전송 중...' : '메시지 보내기';
+      submit.setAttribute('aria-busy', isMessageSubmitting ? 'true' : 'false');
+    }
+    if (close) {
+      close.hidden = !canCloseBase;
+      close.disabled = !canClose;
+      close.textContent = isCloseSubmitting ? '종료 처리 중...' : '문의 종료';
+      close.setAttribute('aria-busy', isCloseSubmitting ? 'true' : 'false');
+    }
+    if (back) back.disabled = isAnySubmitting;
+  }
+
+  function parentInquiryMessageHtml(message){
+    var dateText = formatParentInquiryDateTime(message.created_at);
+    var roleMap = {
+      parent: { label:'나', className:'parent' },
+      teacher: { label:'담임 선생님', className:'teacher' },
+      owner: { label:'원장 선생님', className:'owner' },
+      system: { label:'안내', className:'notice' }
+    };
+    var role = roleMap[message.sender_role] || { label:'안내', className:'notice' };
+    return '<article class="parent-inquiry-message parent-inquiry-message--' + role.className + '">' +
+      '<div class="parent-inquiry-message-content">' +
+        '<div class="parent-inquiry-message-role">' + esc(role.label) + '</div>' +
+        '<div class="parent-inquiry-message-bubble">' + escWithBr(message.body) + '</div>' +
+        '<div class="parent-inquiry-message-meta">' + esc(dateText) + '</div>' +
+      '</div>' +
+    '</article>';
+  }
+
+  function renderParentInquiryDetailLoading(){
+    var content = document.getElementById('miniContent');
+    if (!content) return;
+    renderParentInquiryDetailView(content);
+    var detailView = document.getElementById('parentInquiryDetailView');
+    if (detailView) detailView.setAttribute('aria-busy', 'true');
+    var messageList = document.getElementById('parentInquiryMessageList');
+    if (messageList) messageList.innerHTML = '<div class="parent-inquiry-empty">문의 내용을 불러오고 있습니다.</div>';
+    setParentInquiryDetailMessage('', false);
+  }
+
+  function renderParentInquiryDetailFailure(message){
+    parentInquiryState.thread = null;
+    parentInquiryState.isDetailLoading = false;
+    var content = document.getElementById('miniContent');
+    if (!content) return;
+    renderParentInquiryDetailView(content);
+    var messageList = document.getElementById('parentInquiryMessageList');
+    if (messageList) messageList.innerHTML = '<div class="parent-inquiry-empty">문의 내용을 표시할 수 없습니다.</div>';
+    setParentInquiryDetailMessage(message, true);
+  }
+
+  function renderParentInquiryDetail(thread){
+    var content = document.getElementById('miniContent');
+    if (!content || !thread || !thread.inquiry) return;
+    renderParentInquiryDetailView(content);
+    var inquiry = thread.inquiry;
+    var documentNo = document.getElementById('parentInquiryDocumentNo');
+    var createdAt = document.getElementById('parentInquiryDetailCreatedAt');
+    var statusBadges = document.getElementById('parentInquiryDetailBadges');
+    if (documentNo) documentNo.textContent = '문의번호 ' + formatInquiryNumberForDisplay(inquiry.document_no);
+    if (createdAt) createdAt.textContent = '접수 ' + formatParentInquiryDateTime(inquiry.created_at);
+    if (statusBadges) {
+      statusBadges.innerHTML = parentInquiryStatusBadgesHtml(
+        inquiry.status,
+        parentInquiryHasUnreadReply(inquiry)
+      );
+      statusBadges.hidden = !statusBadges.innerHTML;
+    }
+
+    var messageList = document.getElementById('parentInquiryMessageList');
+    if (messageList) {
+      var visibleMessages = thread.messages.filter(function(message){
+        return message.message_type === 'message';
+      });
+      messageList.innerHTML = visibleMessages.length
+        ? visibleMessages.map(parentInquiryMessageHtml).join('')
+        : '<div class="parent-inquiry-empty">아직 표시할 문의 내용이 없습니다.</div>';
+    }
+
+    var isClosed = inquiry.status === 'closed';
+    var canAddMessage = thread.viewer_role === 'parent' &&
+      thread.permissions.can_add_parent_message === true && !isClosed;
+    var canClose = thread.viewer_role === 'parent' &&
+      thread.permissions.can_close === true && !isClosed;
+    var replyInput = document.getElementById('parentInquiryReplyInput');
+    var replySubmit = document.getElementById('parentInquiryReplySubmit');
+    var closeButton = document.getElementById('parentInquiryCloseBtn');
+    var replySection = document.getElementById('parentInquiryReplySection');
+    var closedNotice = document.getElementById('parentInquiryClosedNotice');
+    var preserveReplyDraftForCloseRetry = parentInquiryState.closeOperation &&
+      parentInquiryState.closeOperation.status === 'uncertain';
+    if (!canAddMessage && !preserveReplyDraftForCloseRetry) parentInquiryState.replyDraft = '';
+    if (replyInput) {
+      replyInput.value = canAddMessage ? parentInquiryState.replyDraft : '';
+      replyInput.disabled = !canAddMessage;
+    }
+    if (replySubmit) replySubmit.disabled = !canAddMessage;
+    if (closeButton) {
+      closeButton.hidden = !canClose;
+      closeButton.disabled = true;
+    }
+    if (replySection) replySection.hidden = isClosed;
+    if (closedNotice) closedNotice.hidden = !isClosed;
+    var detailView = document.getElementById('parentInquiryDetailView');
+    if (detailView) detailView.setAttribute('aria-busy', 'false');
+    setParentInquiryDetailMessage(parentInquiryState.detailError, parentInquiryState.detailMessageIsError);
+    syncParentInquiryReplyUi();
+  }
+
+  function setParentInquiryListMessage(text, isError, isEmpty){
+    var stateEl = document.getElementById('parentInquiryListState');
+    if (!stateEl) return;
+    stateEl.textContent = '';
+    stateEl.className = 'parent-inquiry-list-state';
+    if (!text) return;
+    var message = document.createElement('div');
+    message.className = isEmpty ? 'parent-inquiry-empty' : (isError ? 'msg error' : 'msg');
+    message.textContent = text;
+    stateEl.appendChild(message);
+  }
+
+  function renderParentInquiryUnavailable(content){
+    if (!content) return;
+    renderParentInquiryListView(content);
+    var createBtn = document.getElementById('parentInquiryCreateBtn');
+    if (createBtn) createBtn.disabled = true;
+    var loadMore = document.getElementById('parentInquiryLoadMoreBtn');
+    if (loadMore) {
+      loadMore.hidden = true;
+      loadMore.disabled = true;
+    }
+    var listView = document.getElementById('parentInquiryListView');
+    if (listView) listView.setAttribute('aria-busy', 'false');
+    setParentInquiryListMessage('승인된 학부모 연결이 있는 반에서 문의를 이용할 수 있습니다.', false, true);
+  }
+
+  function renderParentInquiryList(){
+    if (currentMiniTab !== 'inquiry' || parentInquiryState.view !== 'list') return;
+    var listEl = document.getElementById('parentInquiryList');
+    if (!listEl) return;
+    listEl.innerHTML = parentInquiryState.rows.map(function(row){
+      var documentNo = formatInquiryNumberForDisplay(row.document_no);
+      var subject = row.subject || '제목 없음';
+      var isClosed = row.is_closed === true || row.status === 'closed';
+      var cardClass = 'parent-inquiry-card' + (isClosed ? ' parent-inquiry-card--closed' : '');
+      var statusBadgesHtml = parentInquiryStatusBadgesHtml(row.status, row.has_unread_reply);
+      return '<article class="' + cardClass + '">' +
+        '<button type="button" class="parent-inquiry-card-open" data-open-parent-inquiry="' + esc(row.inquiry_id) + '" aria-label="' + esc('문의번호 ' + documentNo + ' 문의 상세 보기') + '">' +
+          '<div class="parent-inquiry-card-head">' +
+            '<div class="parent-inquiry-heading">' +
+              '<div class="parent-inquiry-document">' + esc('문의번호 ' + documentNo) + '</div>' +
+              '<div class="parent-inquiry-card-subject">' + esc(subject) + '</div>' +
+              '<div class="parent-inquiry-card-meta">' +
+                '<span>' + esc(formatParentInquiryDateTime(row.created_at)) + '</span>' +
+              '</div>' +
+            '</div>' +
+            (statusBadgesHtml ? '<div class="parent-inquiry-badges">' + statusBadgesHtml + '</div>' : '') +
+          '</div>' +
+        '</button>' +
+      '</article>';
+    }).join('');
+
+    if (parentInquiryState.isLoading && !parentInquiryState.rows.length) {
+      setParentInquiryListMessage('문의 목록을 불러오고 있습니다.', false, true);
+    } else if (parentInquiryState.errorText) {
+      setParentInquiryListMessage(parentInquiryState.errorText, true, false);
+    } else if (parentInquiryState.noticeText) {
+      setParentInquiryListMessage(parentInquiryState.noticeText, false, false);
+    } else if (parentInquiryState.hasLoaded && !parentInquiryState.rows.length) {
+      setParentInquiryListMessage('아직 작성한 문의가 없습니다.', false, true);
+    } else if (parentInquiryState.isLoading) {
+      setParentInquiryListMessage('문의 목록을 더 불러오고 있습니다.', false, false);
+    } else {
+      setParentInquiryListMessage('', false, false);
+    }
+
+    var listView = document.getElementById('parentInquiryListView');
+    if (listView) listView.setAttribute('aria-busy', parentInquiryState.isLoading ? 'true' : 'false');
+    var loadMore = document.getElementById('parentInquiryLoadMoreBtn');
+    if (loadMore) {
+      loadMore.hidden = !parentInquiryState.hasLoaded || !parentInquiryState.hasMore;
+      loadMore.disabled = parentInquiryState.isLoading;
+    }
+    syncParentInquiryUnreadIndicators();
+  }
+
+  function isValidParentInquiryRow(row, classId){
+    return !!row &&
+      typeof row.inquiry_id === 'string' && !!row.inquiry_id.trim() &&
+      row.class_id === classId &&
+      typeof row.document_no === 'string' &&
+      typeof row.category === 'string' &&
+      typeof row.subject === 'string' &&
+      typeof row.status === 'string' &&
+      typeof row.has_unread_reply === 'boolean' &&
+      typeof row.is_closed === 'boolean' &&
+      typeof row.updated_at === 'string' && !!row.updated_at.trim();
+  }
+
+  async function loadParentInquiryList(options){
+    var append = !!(options && options.append);
+    if (!isApprovedParentInquiryContext()) {
+      clearParentInquiryForUnavailableContext();
+      if (currentMiniTab === 'inquiry') {
+        renderParentInquiryUnavailable(document.getElementById('miniContent'));
+      }
+      return;
+    }
+    var state = parentInquiryState;
+    if (state.isLoading) return;
+    if (append && (!state.hasMore || !state.cursor)) return;
+
+    var requestedCursor = append ? state.cursor : null;
+    var context = {
+      userId: currentSession.user.id,
+      classId: currentMiniClass.id,
+      authVersion: authTransitionVersion,
+      classVersion: classLoadVersion,
+      state: state,
+      requestSequence: ++state.listSequence
+    };
+    state.isLoading = true;
+    state.errorText = '';
+    state.lastLoadFailed = false;
+    if (!append) {
+      state.noticeText = '';
+      state.rows = [];
+      state.cursor = null;
+      state.hasMore = false;
+      state.hasLoaded = false;
+    }
+    renderParentInquiryList();
+
+    try {
+      var res = await client.rpc('get_my_class_inquiries', {
+        p_class_id: context.classId,
+        p_status: null,
+        p_before_has_unread_reply: requestedCursor ? requestedCursor.hasUnreadReply : null,
+        p_before_updated_at: requestedCursor ? requestedCursor.updatedAt : null,
+        p_before_id: requestedCursor ? requestedCursor.inquiryId : null,
+        p_limit: PARENT_INQUIRY_PAGE_LIMIT
+      });
+      if (!isParentInquiryListContextCurrent(context)) {
+        handleParentInquiryApprovalContextLoss(context);
+        return;
+      }
+      if (res.error) {
+        if (handleParentInquiryAccessError(res.error)) return;
+        state.errorText = '문의 목록을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.';
+        state.lastLoadFailed = true;
+        if (!append) state.hasMore = false;
+        return;
+      }
+
+      var pageRows = res.data || [];
+      if (!Array.isArray(pageRows) || !pageRows.every(function(row){
+        return isValidParentInquiryRow(row, context.classId);
+      })) {
+        state.errorText = '문의 목록을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.';
+        state.lastLoadFailed = true;
+        if (!append) state.hasMore = false;
+        return;
+      }
+
+      var lastRow = pageRows.length ? pageRows[pageRows.length - 1] : null;
+      var nextCursor = lastRow ? {
+        hasUnreadReply: lastRow.has_unread_reply,
+        updatedAt: lastRow.updated_at,
+        inquiryId: lastRow.inquiry_id
+      } : null;
+      var paginationDidNotAdvance = append && requestedCursor && nextCursor &&
+        requestedCursor.hasUnreadReply === nextCursor.hasUnreadReply &&
+        requestedCursor.updatedAt === nextCursor.updatedAt &&
+        requestedCursor.inquiryId === nextCursor.inquiryId;
+      if (paginationDidNotAdvance) {
+        state.hasMore = false;
+        state.hasLoaded = true;
+        state.lastLoadFailed = false;
+        state.errorText = '';
+        return;
+      }
+
+      var existingIds = new Set(append ? state.rows.map(function(row){ return row.inquiry_id; }) : []);
+      var nextRows = append ? state.rows.slice() : [];
+      pageRows.forEach(function(row){
+        if (existingIds.has(row.inquiry_id)) return;
+        existingIds.add(row.inquiry_id);
+        nextRows.push(row);
+      });
+      state.rows = nextRows;
+      state.cursor = nextCursor;
+      state.hasMore = pageRows.length === PARENT_INQUIRY_PAGE_LIMIT;
+      state.hasLoaded = true;
+      state.lastLoadFailed = false;
+      state.errorText = '';
+    } catch (err) {
+      if (!isParentInquiryListContextCurrent(context)) {
+        handleParentInquiryApprovalContextLoss(context);
+        return;
+      }
+      if (handleParentInquiryAccessError(err)) return;
+      state.errorText = '문의 목록을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.';
+      state.lastLoadFailed = true;
+      if (!append) state.hasMore = false;
+    } finally {
+      if (isParentInquiryListContextCurrent(context)) {
+        state.isLoading = false;
+        renderParentInquiryList();
+      }
+    }
+  }
+
+  async function refreshParentInquiryUnreadIndicator(){
+    if (!isApprovedParentInquiryContext()) {
+      clearParentInquiryForUnavailableContext();
+      if (currentMiniTab === 'inquiry') {
+        renderParentInquiryUnavailable(document.getElementById('miniContent'));
+      }
+      return;
+    }
+    var state = parentInquiryState;
+    var context = {
+      userId: currentSession.user.id,
+      classId: currentMiniClass.id,
+      authVersion: authTransitionVersion,
+      classVersion: classLoadVersion,
+      state: state,
+      requestSequence: ++state.unreadSequence
+    };
+    try {
+      var res = await client.rpc('get_my_class_inquiries', {
+        p_class_id: context.classId,
+        p_status: null,
+        p_before_has_unread_reply: null,
+        p_before_updated_at: null,
+        p_before_id: null,
+        p_limit: 1
+      });
+      if (!isParentInquiryUnreadContextCurrent(context)) {
+        handleParentInquiryApprovalContextLoss(context);
+        return;
+      }
+      if (res.error) {
+        handleParentInquiryAccessError(res.error);
+        return;
+      }
+      if (!Array.isArray(res.data)) {
+        state.unreadExists = false;
+        syncParentInquiryUnreadIndicators();
+        return;
+      }
+      var firstRow = res.data.length ? res.data[0] : null;
+      if (firstRow && (
+        firstRow.class_id !== context.classId ||
+        typeof firstRow.has_unread_reply !== 'boolean'
+      )) {
+        state.unreadExists = false;
+        syncParentInquiryUnreadIndicators();
+        return;
+      }
+      state.unreadExists = !!firstRow && firstRow.has_unread_reply === true;
+      syncParentInquiryUnreadIndicators();
+    } catch (err) {
+      if (!isParentInquiryUnreadContextCurrent(context)) {
+        handleParentInquiryApprovalContextLoss(context);
+        return;
+      }
+      if (handleParentInquiryAccessError(err)) return;
+      // 목록과 독립된 보조 표시이므로 일반 오류는 목록 화면에 전파하지 않습니다.
+    }
+  }
+
+  function syncParentInquiryCreateUi(){
+    if (parentInquiryState.view !== 'create') return;
+    var operation = parentInquiryState.createOperation;
+    var isSubmitting = !!operation && operation.status === 'submitting';
+    var canEdit = isApprovedParentInquiryContext() && !isSubmitting;
+    var form = document.getElementById('parentInquiryCreateForm');
+    var body = document.getElementById('parentInquiryBody');
+    var submit = document.getElementById('parentInquirySubmitBtn');
+    var back = document.getElementById('parentInquiryCreateBackBtn');
+    if (form) form.setAttribute('aria-busy', isSubmitting ? 'true' : 'false');
+    if (body) body.disabled = !canEdit;
+    if (submit) {
+      submit.disabled = !canEdit;
+      submit.textContent = isSubmitting ? '문의 접수 중...' : '문의 보내기';
+      submit.setAttribute('aria-busy', isSubmitting ? 'true' : 'false');
+    }
+    if (back) back.disabled = isSubmitting;
+    setParentInquiryCreateMessage(parentInquiryState.createMessage, parentInquiryState.createMessageIsError);
+  }
+
+  async function submitNewParentInquiry(){
+    if (!isApprovedParentInquiryContext()) {
+      clearParentInquiryForUnavailableContext();
+      renderParentInquiryUnavailable(document.getElementById('miniContent'));
+      return;
+    }
+    var state = parentInquiryState;
+    if (state.view !== 'create') return;
+    if (state.createOperation && state.createOperation.status === 'submitting') return;
+
+    var draft = normalizeParentInquiryCreateDraft(state.createDraft);
+    var validationMessage = validateParentInquiryCreateDraft(draft);
+    if (validationMessage) {
+      setParentInquiryCreateMessage(validationMessage, true);
+      return;
+    }
+
+    var context = {
+      userId: currentSession.user.id,
+      classId: currentMiniClass.id,
+      authVersion: authTransitionVersion,
+      classVersion: classLoadVersion,
+      state: state
+    };
+    var operation = state.createOperation;
+    if (!parentInquiryCreateOperationMatches(operation, draft, context)) {
+      state.createOperation = null;
+      var requestKey;
+      try {
+        requestKey = crypto.randomUUID();
+      } catch (err) {
+        setParentInquiryCreateMessage('문의 접수를 시작하지 못했습니다. 잠시 후 다시 시도해 주세요.', true);
+        return;
+      }
+      operation = {
+        classId: context.classId,
+        category: draft.category,
+        subject: draft.subject,
+        body: draft.body,
+        requestKey: requestKey,
+        userId: context.userId,
+        authTransitionVersion: context.authVersion,
+        classLoadVersion: context.classVersion,
+        stateRef: context.state,
+        status: 'submitting'
+      };
+      state.createOperation = operation;
+    } else {
+      operation.status = 'submitting';
+    }
+
+    state.createMessage = '';
+    state.createMessageIsError = false;
+    syncParentInquiryCreateUi();
+
+    try {
+      var res = await client.rpc('create_class_inquiry', {
+        p_class_id: context.classId,
+        p_category: draft.category,
+        p_subject: draft.subject,
+        p_body: draft.body,
+        p_request_key: operation.requestKey
+      });
+      if (!isParentInquiryMutationContextCurrent(context)) return;
+
+      if (res.error) {
+        var token = parentInquiryErrorToken(res.error);
+        if (token === 'not_authenticated') {
+          showParentInquiryAuthenticationRequired();
+          return;
+        }
+        if (token === 'parent_not_approved') {
+          if (state.createOperation === operation) state.createOperation = null;
+          state.createDraft = { body:'' };
+          handleParentInquiryApprovalContextLoss(context, true);
+          showParentInquiryApprovalRequired();
+          return;
+        }
+        if (token === 'class_access_denied') {
+          showParentInquiryClassAccessDenied();
+          return;
+        }
+        if (token === 'request_key_conflict') {
+          var conflictOperationIsCurrent = isParentInquiryCreateOperationCurrent(context, operation);
+          if (conflictOperationIsCurrent) state.createOperation = null;
+          refreshParentInquiryListAfterMutation(context);
+          if (conflictOperationIsCurrent && isParentInquiryMutationContextCurrent(context) && state.view === 'create') {
+            setParentInquiryCreateMessage('문의 접수 요청을 다시 시작해 주세요.', true);
+            syncParentInquiryCreateUi();
+          }
+          return;
+        }
+        if (token === 'invalid_input') {
+          if (isParentInquiryCreateOperationCurrent(context, operation)) {
+            state.createOperation = null;
+            setParentInquiryCreateMessage('문의 내용을 다시 확인해 주세요.', true);
+            syncParentInquiryCreateUi();
+          }
+          return;
+        }
+        if (token === 'daily_sequence_exhausted') {
+          if (isParentInquiryCreateOperationCurrent(context, operation)) {
+            state.createOperation = null;
+            setParentInquiryCreateMessage('오늘은 문의 접수가 많아 접수할 수 없습니다. 원으로 연락해 주세요.', true);
+            syncParentInquiryCreateUi();
+          }
+          return;
+        }
+        operation.status = 'uncertain';
+        refreshParentInquiryListAfterMutation(context);
+        if (isParentInquiryCreateOperationCurrent(context, operation)) {
+          setParentInquiryCreateMessage('접수 결과를 확인하지 못했습니다. 입력을 변경하지 않고 다시 시도해 주세요.', true);
+          syncParentInquiryCreateUi();
+        }
+        return;
+      }
+
+      var rows = res.data;
+      var result = Array.isArray(rows) && rows.length ? rows[0] : null;
+      if (!isValidParentInquiryCreateResponse(result)) {
+        operation.status = 'uncertain';
+        refreshParentInquiryListAfterMutation(context);
+        if (isParentInquiryCreateOperationCurrent(context, operation)) {
+          setParentInquiryCreateMessage('접수 결과를 확인하지 못했습니다. 입력을 변경하지 않고 다시 시도해 주세요.', true);
+          syncParentInquiryCreateUi();
+        }
+        return;
+      }
+
+      operation.status = 'succeeded';
+      var listRefresh = refreshParentInquiryListAfterMutation(context);
+      if (!isParentInquiryCreateOperationCurrent(context, operation)) return;
+      state.createDraft = { body:'' };
+      state.createOperation = null;
+      state.createMessage = '';
+      state.createMessageIsError = false;
+      state.noticeText = '문의 접수 상태를 확인했습니다.';
+      state.view = 'list';
+      renderParentInquiryTab(document.getElementById('miniContent'));
+
+      if (listRefresh) await listRefresh.listRequest;
+      if (!isParentInquiryMutationContextCurrent(context) || state.view !== 'list') return;
+      if (listRefresh && state.listSequence !== listRefresh.listRequestSequence) return;
+      if (state.lastLoadFailed) {
+        state.noticeText = '';
+        state.errorText = '문의는 접수되었지만 목록을 다시 불러오지 못했습니다.';
+      }
+      renderParentInquiryList();
+    } catch (err) {
+      if (!isParentInquiryMutationContextCurrent(context)) return;
+      operation.status = 'uncertain';
+      refreshParentInquiryListAfterMutation(context);
+      if (isParentInquiryCreateOperationCurrent(context, operation)) {
+        setParentInquiryCreateMessage('접수 결과를 확인하지 못했습니다. 입력을 변경하지 않고 다시 시도해 주세요.', true);
+        syncParentInquiryCreateUi();
+      }
+    }
+  }
+
+  function normalizeParentInquiryReplyDraft(value){
+    return String(value || '').trim();
+  }
+
+  function validateParentInquiryReplyBody(body){
+    if (!body) return '메시지 내용을 입력해 주세요.';
+    if (body.length > 5000) return '메시지는 5000자 이내로 작성해 주세요.';
+    return '';
+  }
+
+  function parentInquiryMessageOperationMatches(operation, body, context){
+    return !!operation && operation.status === 'uncertain' &&
+      operation.inquiryId === context.inquiryId &&
+      operation.body === body &&
+      operation.userId === context.userId &&
+      operation.classId === context.classId &&
+      operation.authTransitionVersion === context.authVersion &&
+      operation.classLoadVersion === context.classVersion &&
+      operation.stateRef === context.state &&
+      operation.detailSequence === context.requestSequence;
+  }
+
+  function isParentInquiryMessageOperationAttached(context, operation){
+    return isParentInquiryDetailContextCurrent(context) &&
+      context.operation === operation &&
+      context.state.messageOperation === operation &&
+      typeof operation.requestKey === 'string' && !!operation.requestKey.trim() &&
+      context.requestKey === operation.requestKey &&
+      operation.inquiryId === context.inquiryId &&
+      operation.userId === context.userId &&
+      operation.classId === context.classId &&
+      operation.authTransitionVersion === context.authVersion &&
+      operation.classLoadVersion === context.classVersion &&
+      operation.stateRef === context.state &&
+      operation.detailSequence === context.requestSequence;
+  }
+
+  function isParentInquiryMessageOperationCurrent(context, operation){
+    return isParentInquiryMessageOperationAttached(context, operation) &&
+      context.state.mutationThreadSequence === context.mutationSequence;
+  }
+
+  function isValidParentInquiryMessageResponse(row, inquiryId){
+    // 동일 request key 재호출은 기존 메시지와 문의의 현재 lifecycle 상태를 반환합니다.
+    return !!row &&
+      typeof row.message_id === 'string' && !!row.message_id.trim() &&
+      typeof row.inquiry_id === 'string' && row.inquiry_id === inquiryId &&
+      allowedParentInquiryStatuses.has(row.status) &&
+      typeof row.message_created_at === 'string' && !!row.message_created_at.trim() &&
+      typeof row.last_message_at === 'string' && !!row.last_message_at.trim();
+  }
+
+  function parentInquiryCloseOperationMatches(operation, context){
+    return !!operation && operation.status === 'uncertain' &&
+      operation.inquiryId === context.inquiryId &&
+      operation.userId === context.userId &&
+      operation.classId === context.classId &&
+      operation.authTransitionVersion === context.authVersion &&
+      operation.classLoadVersion === context.classVersion &&
+      operation.stateRef === context.state &&
+      operation.detailSequence === context.requestSequence;
+  }
+
+  function isParentInquiryCloseOperationAttached(context, operation){
+    return isParentInquiryDetailContextCurrent(context) &&
+      context.state.closeOperation === operation &&
+      operation.inquiryId === context.inquiryId &&
+      operation.userId === context.userId &&
+      operation.classId === context.classId &&
+      operation.authTransitionVersion === context.authVersion &&
+      operation.classLoadVersion === context.classVersion &&
+      operation.stateRef === context.state &&
+      operation.detailSequence === context.requestSequence;
+  }
+
+  function isParentInquiryCloseOperationCurrent(context, operation){
+    return isParentInquiryCloseOperationAttached(context, operation) &&
+      context.state.mutationThreadSequence === context.mutationSequence;
+  }
+
+  function isParentInquiryCloseRetryContext(state, operation, inquiryId){
+    return !!state && !!operation && operation.status === 'uncertain' &&
+      typeof inquiryId === 'string' && !!inquiryId.trim() &&
+      operation.inquiryId === inquiryId &&
+      !!currentSession && !!currentSession.user && operation.userId === currentSession.user.id &&
+      !!currentMiniClass && operation.classId === currentMiniClass.id &&
+      operation.authTransitionVersion === authTransitionVersion &&
+      operation.classLoadVersion === classLoadVersion &&
+      operation.stateRef === state &&
+      operation.detailSequence === state.detailSequence;
+  }
+
+  function isValidParentInquiryCloseResponse(row, inquiryId){
+    return !!row &&
+      typeof row.inquiry_id === 'string' && row.inquiry_id === inquiryId &&
+      row.status === 'closed' &&
+      typeof row.closed_at === 'string' && !!row.closed_at.trim() &&
+      typeof row.closed_by_role === 'string' && !!row.closed_by_role.trim();
+  }
+
+  async function refreshParentInquiryThreadAfterMutation(context){
+    if (!isParentInquiryDetailContextCurrent(context)) return { stale:true };
+    var state = context.state;
+    var requestSequence = ++state.mutationThreadSequence;
+    var res;
+    try {
+      res = await client.rpc('get_class_inquiry_thread', {
+        p_inquiry_id: context.inquiryId
+      });
+    } catch (err) {
+      if (!isParentInquiryReadContextCurrent(context, requestSequence)) {
+        handleParentInquiryApprovalContextLoss(context);
+        return { stale:true };
+      }
+      if (handleParentInquiryDetailAccessError(err, context, requestSequence)) return { handled:true };
+      return { ok:false };
+    }
+    if (!isParentInquiryReadContextCurrent(context, requestSequence)) {
+      handleParentInquiryApprovalContextLoss(context);
+      return { stale:true };
+    }
+    if (res.error) {
+      if (handleParentInquiryDetailAccessError(res.error, context, requestSequence)) return { handled:true };
+      return { ok:false };
+    }
+    if (!isValidParentInquiryThread(res.data, context)) return { ok:false };
+    state.thread = res.data;
+    state.detailError = '';
+    state.detailMessageIsError = false;
+    renderParentInquiryDetail(res.data);
+    return { ok:true, thread:res.data };
+  }
+
+  function applyParentInquiryClosedState(state, inquiryId){
+    state.replyDraft = '';
+    var thread = state.thread;
+    if (!thread || !thread.inquiry || !thread.permissions ||
+        typeof inquiryId !== 'string' || !inquiryId.trim() ||
+        state.selectedInquiryId !== inquiryId || thread.inquiry.id !== inquiryId) {
+      syncParentInquiryReplyUi();
+      return false;
+    }
+    state.thread = Object.assign({}, thread, {
+      inquiry: Object.assign({}, thread.inquiry, { status:'closed' }),
+      permissions: Object.assign({}, thread.permissions, {
+        can_add_parent_message:false,
+        can_close:false
+      })
+    });
+    renderParentInquiryDetail(state.thread);
+    return true;
+  }
+
+  function applyParentInquiryCloseDisabledState(state, inquiryId, preserveReplyDraft){
+    var replyDraft = preserveReplyDraft ? state.replyDraft : '';
+    var thread = state.thread;
+    if (!thread || !thread.inquiry || !thread.permissions ||
+        typeof inquiryId !== 'string' || !inquiryId.trim() ||
+        state.selectedInquiryId !== inquiryId || thread.inquiry.id !== inquiryId) {
+      syncParentInquiryReplyUi();
+      return false;
+    }
+    state.thread = Object.assign({}, thread, {
+      inquiry: Object.assign({}, thread.inquiry),
+      permissions: Object.assign({}, thread.permissions, {
+        can_add_parent_message:false,
+        can_close:false
+      })
+    });
+    renderParentInquiryDetail(state.thread);
+    if (preserveReplyDraft) {
+      state.replyDraft = replyDraft;
+      var replyInput = document.getElementById('parentInquiryReplyInput');
+      if (replyInput) {
+        replyInput.value = replyDraft;
+        replyInput.disabled = true;
+      }
+    }
+    return true;
+  }
+
+  async function handleParentInquiryMessageUncertain(context, operation){
+    var state = context.state;
+    operation.status = 'uncertain';
+    refreshParentInquiryListAfterMutation(parentInquiryDetailMutationContext(context));
+    if (isParentInquiryMessageOperationAttached(context, operation)) {
+      setParentInquiryDetailMessage('전송 결과를 확인하지 못했습니다. 내용을 변경하지 않고 다시 시도해 주세요.', true);
+      syncParentInquiryReplyUi();
+    }
+    var refreshResult = await refreshParentInquiryThreadAfterMutation(context);
+    if (refreshResult.stale || refreshResult.handled) return;
+    if (isParentInquiryMessageOperationAttached(context, operation)) {
+      setParentInquiryDetailMessage('전송 결과를 확인하지 못했습니다. 내용을 변경하지 않고 다시 시도해 주세요.', true);
+      syncParentInquiryReplyUi();
+    }
+  }
+
+  async function submitParentInquiryMessage(){
+    if (!isApprovedParentInquiryContext()) {
+      clearParentInquiryForUnavailableContext();
+      renderParentInquiryUnavailable(document.getElementById('miniContent'));
+      return;
+    }
+    var state = parentInquiryState;
+    var thread = state.thread;
+    var inquiry = thread && thread.inquiry;
+    var selectedInquiryId = state.selectedInquiryId;
+    var threadInquiryId = inquiry && inquiry.id;
+    var inquiryIdsMatch = typeof selectedInquiryId === 'string' && !!selectedInquiryId.trim() &&
+      typeof threadInquiryId === 'string' && !!threadInquiryId.trim() &&
+      threadInquiryId === selectedInquiryId;
+    if (!inquiryIdsMatch) {
+      setParentInquiryDetailMessage('문의 정보를 다시 불러온 뒤 시도해 주세요.', true);
+      syncParentInquiryReplyUi();
+      return;
+    }
+    if (state.view !== 'detail' ||
+        !thread || thread.viewer_role !== 'parent' || !inquiry ||
+        !allowedParentInquiryStatuses.has(inquiry.status) || inquiry.status === 'closed' ||
+        !thread.permissions || thread.permissions.can_add_parent_message !== true) return;
+    if (state.messageOperation && state.messageOperation.status === 'submitting') return;
+    if (state.closeOperation &&
+        (state.closeOperation.status === 'submitting' || state.closeOperation.status === 'uncertain')) {
+      setParentInquiryDetailMessage('문의 종료 처리 결과를 먼저 확인해 주세요.', true);
+      syncParentInquiryReplyUi();
+      return;
+    }
+
+    var body = normalizeParentInquiryReplyDraft(state.replyDraft);
+    var validationMessage = validateParentInquiryReplyBody(body);
+    if (validationMessage) {
+      setParentInquiryDetailMessage(validationMessage, true);
+      return;
+    }
+
+    var context = {
+      userId: currentSession.user.id,
+      classId: currentMiniClass.id,
+      authVersion: authTransitionVersion,
+      classVersion: classLoadVersion,
+      state: state,
+      requestSequence: state.detailSequence,
+      inquiryId: state.selectedInquiryId
+    };
+    var operation = state.messageOperation;
+    if (!parentInquiryMessageOperationMatches(operation, body, context)) {
+      state.messageOperation = null;
+      var requestKey;
+      try {
+        requestKey = crypto.randomUUID();
+      } catch (err) {
+        setParentInquiryDetailMessage('메시지 전송을 시작하지 못했습니다. 잠시 후 다시 시도해 주세요.', true);
+        return;
+      }
+      operation = {
+        inquiryId: context.inquiryId,
+        body: body,
+        requestKey: requestKey,
+        userId: context.userId,
+        classId: context.classId,
+        authTransitionVersion: context.authVersion,
+        classLoadVersion: context.classVersion,
+        stateRef: context.state,
+        detailSequence: context.requestSequence,
+        status: 'submitting'
+      };
+      state.messageOperation = operation;
+    } else {
+      operation.status = 'submitting';
+    }
+    context.mutationSequence = ++state.mutationThreadSequence;
+    context.operation = operation;
+    context.requestKey = operation.requestKey;
+    setParentInquiryDetailMessage('', false);
+    syncParentInquiryReplyUi();
+
+    var mutationContext = parentInquiryDetailMutationContext(context);
+    var res;
+    try {
+      res = await client.rpc('add_parent_class_inquiry_message', {
+        p_inquiry_id: context.inquiryId,
+        p_body: body,
+        p_request_key: operation.requestKey
+      });
+    } catch (err) {
+      if (!isParentInquiryMutationContextCurrent(mutationContext)) {
+        handleParentInquiryApprovalContextLoss(context);
+        return;
+      }
+      if (!isParentInquiryMessageOperationCurrent(context, operation)) {
+        refreshParentInquiryListAfterMutation(mutationContext);
+        return;
+      }
+      await handleParentInquiryMessageUncertain(context, operation);
+      return;
+    }
+
+    if (!isParentInquiryMutationContextCurrent(mutationContext)) {
+      handleParentInquiryApprovalContextLoss(context);
+      return;
+    }
+    if (!isParentInquiryMessageOperationCurrent(context, operation)) {
+      refreshParentInquiryListAfterMutation(mutationContext);
+      return;
+    }
+    if (res.error) {
+      var token = parentInquiryErrorToken(res.error);
+      if (token === 'not_authenticated') {
+        showParentInquiryAuthenticationRequired();
+        return;
+      }
+      if (token === 'parent_not_approved') {
+        if (state.messageOperation === operation) state.messageOperation = null;
+        state.replyDraft = '';
+        handleParentInquiryApprovalContextLoss(context, true);
+        showParentInquiryApprovalRequired();
+        return;
+      }
+      if (token === 'inquiry_not_found_or_denied') {
+        if (state.messageOperation === operation) state.messageOperation = null;
+        state.replyDraft = '';
+        refreshParentInquiryListAfterMutation(mutationContext);
+        if (isParentInquiryDetailContextCurrent(context)) returnParentInquiryDetailToList(context, false);
+        return;
+      }
+      if (token === 'inquiry_closed') {
+        if (state.messageOperation === operation) state.messageOperation = null;
+        state.replyDraft = '';
+        refreshParentInquiryListAfterMutation(mutationContext);
+        if (isParentInquiryDetailContextCurrent(context)) {
+          applyParentInquiryClosedState(state, context.inquiryId);
+          var closedRefresh = await refreshParentInquiryThreadAfterMutation(context);
+          if (!closedRefresh.stale && !closedRefresh.handled && isParentInquiryDetailContextCurrent(context)) {
+            setParentInquiryDetailMessage('종료된 문의에는 새 메시지를 보낼 수 없습니다.', true);
+            syncParentInquiryReplyUi();
+          }
+        }
+        return;
+      }
+      if (token === 'request_key_conflict') {
+        if (state.messageOperation === operation) state.messageOperation = null;
+        refreshParentInquiryListAfterMutation(mutationContext);
+        if (isParentInquiryDetailContextCurrent(context)) {
+          await refreshParentInquiryThreadAfterMutation(context);
+          if (isParentInquiryDetailContextCurrent(context)) {
+            setParentInquiryDetailMessage('메시지 전송을 다시 시작해 주세요.', true);
+            syncParentInquiryReplyUi();
+          }
+        }
+        return;
+      }
+      if (token === 'invalid_input') {
+        if (state.messageOperation === operation) state.messageOperation = null;
+        if (isParentInquiryDetailContextCurrent(context)) {
+          setParentInquiryDetailMessage('메시지 내용을 다시 확인해 주세요.', true);
+          syncParentInquiryReplyUi();
+        }
+        return;
+      }
+      if (token === 'invalid_status_transition') {
+        if (state.messageOperation === operation) state.messageOperation = null;
+        refreshParentInquiryListAfterMutation(mutationContext);
+        if (isParentInquiryDetailContextCurrent(context)) {
+          applyParentInquiryCloseDisabledState(state, context.inquiryId, true);
+          setParentInquiryDetailMessage('문의 상태가 변경되었습니다. 최신 상태를 다시 확인해 주세요.', true);
+          var statusRefresh = await refreshParentInquiryThreadAfterMutation(context);
+          if (statusRefresh.stale || statusRefresh.handled) return;
+          if (!isParentInquiryDetailContextCurrent(context)) return;
+          setParentInquiryDetailMessage(
+            statusRefresh.ok
+              ? '문의 상태가 변경되었습니다. 최신 상태를 다시 확인해 주세요.'
+              : '문의 상태가 변경되었지만 최신 내용을 다시 불러오지 못했습니다.',
+            true
+          );
+          syncParentInquiryReplyUi();
+        }
+        return;
+      }
+      await handleParentInquiryMessageUncertain(context, operation);
+      return;
+    }
+
+    var result = Array.isArray(res.data) && res.data.length ? res.data[0] : null;
+    if (!isValidParentInquiryMessageResponse(result, context.inquiryId)) {
+      await handleParentInquiryMessageUncertain(context, operation);
+      return;
+    }
+
+    operation.status = 'succeeded';
+    refreshParentInquiryListAfterMutation(mutationContext);
+    if (!isParentInquiryMessageOperationCurrent(context, operation)) return;
+    state.replyDraft = '';
+    state.messageOperation = null;
+    var succeededClosed = result.status === 'closed';
+    if (succeededClosed) {
+      applyParentInquiryClosedState(state, context.inquiryId);
+      setParentInquiryDetailMessage('메시지 전송 상태를 확인했습니다. 현재 문의는 종료되었습니다.', false);
+      syncParentInquiryReplyUi();
+    }
+    var refreshResult = await refreshParentInquiryThreadAfterMutation(context);
+    if (refreshResult.stale || refreshResult.handled) return;
+    if (!isParentInquiryDetailContextCurrent(context)) return;
+    if (refreshResult.ok && succeededClosed) {
+      setParentInquiryDetailMessage('메시지 전송 상태를 확인했습니다. 현재 문의는 종료되었습니다.', false);
+    } else if (refreshResult.ok) {
+      setParentInquiryDetailMessage('메시지를 보냈습니다.', false);
+    } else if (succeededClosed) {
+      setParentInquiryDetailMessage('문의는 종료된 상태로 확인되었지만 최신 내용을 다시 불러오지 못했습니다.', true);
+    } else {
+      setParentInquiryDetailMessage('메시지는 전송되었지만 최신 내용을 다시 불러오지 못했습니다.', true);
+    }
+    syncParentInquiryReplyUi();
+  }
+
+  async function handleParentInquiryCloseUncertain(context, operation){
+    operation.status = 'uncertain';
+    refreshParentInquiryListAfterMutation(parentInquiryDetailMutationContext(context));
+    if (isParentInquiryCloseOperationAttached(context, operation)) {
+      setParentInquiryDetailMessage('종료 처리 결과를 확인하지 못했습니다. 다시 시도해 주세요.', true);
+      syncParentInquiryReplyUi();
+    }
+    var refreshResult = await refreshParentInquiryThreadAfterMutation(context);
+    if (refreshResult.stale || refreshResult.handled) return;
+    if (isParentInquiryCloseOperationAttached(context, operation)) {
+      setParentInquiryDetailMessage('종료 처리 결과를 확인하지 못했습니다. 다시 시도해 주세요.', true);
+      syncParentInquiryReplyUi();
+    }
+  }
+
+  async function closeParentInquiry(){
+    if (!isApprovedParentInquiryContext()) {
+      clearParentInquiryForUnavailableContext();
+      renderParentInquiryUnavailable(document.getElementById('miniContent'));
+      return;
+    }
+    var state = parentInquiryState;
+    var thread = state.thread;
+    var inquiry = thread && thread.inquiry;
+    var selectedInquiryId = state.selectedInquiryId;
+    var threadInquiryId = inquiry && inquiry.id;
+    var inquiryIdsMatch = typeof selectedInquiryId === 'string' && !!selectedInquiryId.trim() &&
+      typeof threadInquiryId === 'string' && !!threadInquiryId.trim() &&
+      threadInquiryId === selectedInquiryId;
+    var messageOperation = state.messageOperation;
+    var closeOperation = state.closeOperation;
+    var messageBlocksClose = !!messageOperation &&
+      (messageOperation.status === 'submitting' || messageOperation.status === 'uncertain');
+    var context = {
+      userId: currentSession.user.id,
+      classId: currentMiniClass.id,
+      authVersion: authTransitionVersion,
+      classVersion: classLoadVersion,
+      state: state,
+      requestSequence: state.detailSequence,
+      inquiryId: selectedInquiryId
+    };
+    var canRetryClose = isParentInquiryCloseRetryContext(state, closeOperation, selectedInquiryId);
+    var canStartClose = !!inquiry && allowedParentInquiryStatuses.has(inquiry.status) &&
+      inquiry.status !== 'closed' && !!thread.permissions && thread.permissions.can_close === true;
+    if (!inquiryIdsMatch || state.view !== 'detail' ||
+        !thread || thread.viewer_role !== 'parent' || !inquiry ||
+        !allowedParentInquiryStatuses.has(inquiry.status) || !thread.permissions ||
+        (!canStartClose && !canRetryClose) ||
+        messageBlocksClose) {
+      setParentInquiryDetailMessage('문의 상태를 다시 불러온 뒤 시도해 주세요.', true);
+      syncParentInquiryReplyUi();
+      return;
+    }
+    if (closeOperation && closeOperation.status === 'submitting') return;
+
+    var hasReplyDraft = !!normalizeParentInquiryReplyDraft(state.replyDraft);
+    var closeConfirmMessage = hasReplyDraft
+      ? '이 문의를 종료하시겠어요?\n작성 중인 메시지는 삭제되며, 종료 후에는 새 메시지를 보낼 수 없습니다.'
+      : '이 문의를 종료하시겠어요?\n종료 후에는 새 메시지를 보낼 수 없습니다.';
+    var confirmed = window.confirm(closeConfirmMessage);
+    if (!confirmed) return;
+
+    var operation = state.closeOperation;
+    if (!parentInquiryCloseOperationMatches(operation, context)) {
+      state.closeOperation = null;
+      var requestKey;
+      try {
+        requestKey = crypto.randomUUID();
+      } catch (err) {
+        setParentInquiryDetailMessage('문의 종료 처리를 시작하지 못했습니다. 잠시 후 다시 시도해 주세요.', true);
+        return;
+      }
+      operation = {
+        inquiryId: context.inquiryId,
+        requestKey: requestKey,
+        userId: context.userId,
+        classId: context.classId,
+        authTransitionVersion: context.authVersion,
+        classLoadVersion: context.classVersion,
+        stateRef: context.state,
+        detailSequence: context.requestSequence,
+        status: 'submitting'
+      };
+      state.closeOperation = operation;
+    } else {
+      operation.status = 'submitting';
+    }
+    context.mutationSequence = ++state.mutationThreadSequence;
+    context.operation = operation;
+    setParentInquiryDetailMessage('', false);
+    syncParentInquiryReplyUi();
+
+    var mutationContext = parentInquiryDetailMutationContext(context);
+    var res;
+    try {
+      res = await client.rpc('close_class_inquiry', {
+        p_inquiry_id: context.inquiryId,
+        p_request_key: operation.requestKey
+      });
+    } catch (err) {
+      if (!isParentInquiryMutationContextCurrent(mutationContext)) {
+        handleParentInquiryApprovalContextLoss(context);
+        return;
+      }
+      await handleParentInquiryCloseUncertain(context, operation);
+      return;
+    }
+
+    if (!isParentInquiryMutationContextCurrent(mutationContext)) {
+      handleParentInquiryApprovalContextLoss(context);
+      return;
+    }
+    if (res.error) {
+      var token = parentInquiryErrorToken(res.error);
+      if (token === 'not_authenticated') {
+        showParentInquiryAuthenticationRequired();
+        return;
+      }
+      if (token === 'inquiry_not_found_or_denied') {
+        if (state.closeOperation === operation) state.closeOperation = null;
+        refreshParentInquiryListAfterMutation(mutationContext);
+        if (isParentInquiryDetailContextCurrent(context)) returnParentInquiryDetailToList(context, false);
+        return;
+      }
+      if (token === 'inquiry_closed') {
+        var closeOperationIsCurrent = isParentInquiryCloseOperationCurrent(context, operation);
+        if (state.closeOperation === operation) state.closeOperation = null;
+        refreshParentInquiryListAfterMutation(mutationContext);
+        if (closeOperationIsCurrent && isParentInquiryDetailContextCurrent(context)) {
+          state.messageOperation = null;
+          state.replyDraft = '';
+          applyParentInquiryClosedState(state, context.inquiryId);
+          setParentInquiryDetailMessage('이미 종료된 문의입니다.', false);
+          syncParentInquiryReplyUi();
+          var closedRefresh = await refreshParentInquiryThreadAfterMutation(context);
+          if (!closedRefresh.stale && !closedRefresh.handled && isParentInquiryDetailContextCurrent(context)) {
+            setParentInquiryDetailMessage('이미 종료된 문의입니다.', false);
+            syncParentInquiryReplyUi();
+          }
+        }
+        return;
+      }
+      if (token === 'request_key_conflict') {
+        if (state.closeOperation === operation) state.closeOperation = null;
+        refreshParentInquiryListAfterMutation(mutationContext);
+        if (isParentInquiryDetailContextCurrent(context)) {
+          await refreshParentInquiryThreadAfterMutation(context);
+          if (isParentInquiryDetailContextCurrent(context)) {
+            setParentInquiryDetailMessage('문의 종료 요청을 다시 시작해 주세요.', true);
+            syncParentInquiryReplyUi();
+          }
+        }
+        return;
+      }
+      if (token === 'invalid_input') {
+        if (state.closeOperation === operation) state.closeOperation = null;
+        if (isParentInquiryDetailContextCurrent(context)) {
+          setParentInquiryDetailMessage('문의 종료 요청을 처리하지 못했습니다. 다시 시도해 주세요.', true);
+          syncParentInquiryReplyUi();
+        }
+        return;
+      }
+      if (token === 'invalid_status_transition') {
+        if (state.closeOperation === operation) state.closeOperation = null;
+        refreshParentInquiryListAfterMutation(mutationContext);
+        if (isParentInquiryDetailContextCurrent(context)) {
+          applyParentInquiryCloseDisabledState(state, context.inquiryId);
+          await refreshParentInquiryThreadAfterMutation(context);
+          if (isParentInquiryDetailContextCurrent(context)) {
+            setParentInquiryDetailMessage('문의 상태가 변경되어 종료할 수 없습니다.', true);
+            syncParentInquiryReplyUi();
+          }
+        }
+        return;
+      }
+      await handleParentInquiryCloseUncertain(context, operation);
+      return;
+    }
+
+    var result = Array.isArray(res.data) && res.data.length ? res.data[0] : null;
+    if (!isValidParentInquiryCloseResponse(result, context.inquiryId)) {
+      await handleParentInquiryCloseUncertain(context, operation);
+      return;
+    }
+
+    operation.status = 'succeeded';
+    refreshParentInquiryListAfterMutation(mutationContext);
+    if (!isParentInquiryCloseOperationCurrent(context, operation)) return;
+    state.closeOperation = null;
+    state.messageOperation = null;
+    state.replyDraft = '';
+    applyParentInquiryClosedState(state, context.inquiryId);
+    setParentInquiryDetailMessage('문의를 종료했습니다.', false);
+    syncParentInquiryReplyUi();
+    var refreshResult = await refreshParentInquiryThreadAfterMutation(context);
+    if (refreshResult.stale || refreshResult.handled) return;
+    if (!isParentInquiryDetailContextCurrent(context)) return;
+    if (refreshResult.ok) {
+      setParentInquiryDetailMessage('문의를 종료했습니다.', false);
+    } else {
+      setParentInquiryDetailMessage('문의는 종료되었지만 최신 내용을 다시 불러오지 못했습니다.', true);
+    }
+    syncParentInquiryReplyUi();
+  }
+
+  function returnParentInquiryDetailToList(context, refreshList){
+    if (!isParentInquiryDetailContextCurrent(context)) return;
+    if (refreshList) refreshParentInquiryListAfterMutation(parentInquiryDetailMutationContext(context));
+    leaveParentInquirySubview();
+    renderParentInquiryTab(document.getElementById('miniContent'));
+  }
+
+  function handleParentInquiryDetailAccessError(error, context, mutationSequence){
+    var token = parentInquiryErrorToken(error);
+    if (token === 'not_authenticated') {
+      showParentInquiryAuthenticationRequired();
+      return true;
+    }
+    if (token === 'parent_not_approved') {
+      handleParentInquiryApprovalContextLoss(context, true);
+      showParentInquiryApprovalRequired();
+      return true;
+    }
+    if (token === 'inquiry_not_found_or_denied') {
+      if (mutationSequence != null && !isParentInquiryReadContextCurrent(context, mutationSequence)) return true;
+      returnParentInquiryDetailToList(context, true);
+      return true;
+    }
+    return false;
+  }
+
+  async function markParentInquiryRead(context, thread){
+    if (!isParentInquiryDetailContextCurrent(context) ||
+        thread.viewer_role !== 'parent' ||
+        thread.permissions.can_mark_read !== true) return;
+    var mutationContext = parentInquiryDetailMutationContext(context);
+    var mutationSequence = ++context.state.mutationThreadSequence;
+    var res;
+    try {
+      res = await client.rpc('mark_class_inquiry_parent_read', {
+        p_inquiry_id: context.inquiryId
+      });
+    } catch (err) {
+      if (!isParentInquiryMutationContextCurrent(mutationContext)) {
+        handleParentInquiryApprovalContextLoss(context);
+        return;
+      }
+      if (handleParentInquiryDetailAccessError(err, context, mutationSequence)) return;
+      refreshParentInquiryListAfterMutation(mutationContext);
+      if (isParentInquiryReadContextCurrent(context, mutationSequence)) {
+        setParentInquiryDetailMessage('메시지 읽음 상태를 갱신하지 못했습니다. 잠시 후 다시 확인해 주세요.', true);
+      }
+      return;
+    }
+
+    if (!isParentInquiryMutationContextCurrent(mutationContext)) {
+      handleParentInquiryApprovalContextLoss(context);
+      return;
+    }
+    if (res.error) {
+      var token = parentInquiryErrorToken(res.error);
+      if (token === 'not_authenticated') {
+        showParentInquiryAuthenticationRequired();
+        return;
+      }
+      if (token === 'parent_not_approved') {
+        handleParentInquiryApprovalContextLoss(context, true);
+        showParentInquiryApprovalRequired();
+        return;
+      }
+      if (token === 'inquiry_not_found_or_denied') {
+        refreshParentInquiryListAfterMutation(mutationContext);
+        if (isParentInquiryReadContextCurrent(context, mutationSequence)) {
+          returnParentInquiryDetailToList(context, false);
+        }
+        return;
+      }
+      refreshParentInquiryListAfterMutation(mutationContext);
+      if (isParentInquiryReadContextCurrent(context, mutationSequence)) {
+        setParentInquiryDetailMessage('메시지 읽음 상태를 갱신하지 못했습니다. 잠시 후 다시 확인해 주세요.', true);
+      }
+      return;
+    }
+
+    var result = Array.isArray(res.data) && res.data.length ? res.data[0] : null;
+    var validResult = !!result &&
+      result.inquiry_id === context.inquiryId &&
+      typeof result.parent_last_read_at === 'string' &&
+      !!result.parent_last_read_at.trim();
+    refreshParentInquiryListAfterMutation(mutationContext);
+    if (validResult && isParentInquiryReadContextCurrent(context, mutationSequence)) {
+      var currentThread = context.state.thread;
+      if (currentThread && currentThread.inquiry && currentThread.inquiry.id === context.inquiryId) {
+        context.state.thread = Object.assign({}, currentThread, {
+          inquiry:Object.assign({}, currentThread.inquiry, {
+            parent_last_read_at:result.parent_last_read_at
+          })
+        });
+        renderParentInquiryDetail(context.state.thread);
+      }
+    }
+    if (!validResult && isParentInquiryReadContextCurrent(context, mutationSequence)) {
+      setParentInquiryDetailMessage('메시지 읽음 상태를 갱신하지 못했습니다. 잠시 후 다시 확인해 주세요.', true);
+    }
+  }
+
+  async function openParentInquiry(inquiryId){
+    if (!isApprovedParentInquiryContext()) {
+      clearParentInquiryForUnavailableContext();
+      renderParentInquiryUnavailable(document.getElementById('miniContent'));
+      return;
+    }
+    if (typeof inquiryId !== 'string' || !inquiryId.trim()) return;
+    var state = parentInquiryState;
+    if (!state.rows.some(function(row){ return row.inquiry_id === inquiryId; })) return;
+
+    state.detailSequence += 1;
+    state.mutationThreadSequence += 1;
+    state.selectedInquiryId = inquiryId;
+    state.thread = null;
+    state.replyDraft = '';
+    state.messageOperation = null;
+    state.closeOperation = null;
+    state.detailError = '';
+    state.detailMessageIsError = false;
+    state.isDetailLoading = true;
+    state.view = 'detail';
+    var context = {
+      userId: currentSession.user.id,
+      classId: currentMiniClass.id,
+      authVersion: authTransitionVersion,
+      classVersion: classLoadVersion,
+      state: state,
+      requestSequence: state.detailSequence,
+      inquiryId: inquiryId
+    };
+    renderParentInquiryDetailLoading();
+
+    var res;
+    try {
+      res = await client.rpc('get_class_inquiry_thread', {
+        p_inquiry_id: inquiryId
+      });
+    } catch (err) {
+      if (!isParentInquiryDetailContextCurrent(context)) {
+        handleParentInquiryApprovalContextLoss(context);
+        return;
+      }
+      state.isDetailLoading = false;
+      if (handleParentInquiryDetailAccessError(err, context)) return;
+      renderParentInquiryDetailFailure('문의 내용을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.');
+      return;
+    }
+
+    if (!isParentInquiryDetailContextCurrent(context)) {
+      handleParentInquiryApprovalContextLoss(context);
+      return;
+    }
+    if (res.error) {
+      state.isDetailLoading = false;
+      if (handleParentInquiryDetailAccessError(res.error, context)) return;
+      renderParentInquiryDetailFailure('문의 내용을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.');
+      return;
+    }
+    if (!isValidParentInquiryThread(res.data, context)) {
+      state.isDetailLoading = false;
+      renderParentInquiryDetailFailure('문의 상세 정보를 확인하지 못했습니다.');
+      return;
+    }
+
+    state.thread = res.data;
+    state.isDetailLoading = false;
+    state.detailError = '';
+    state.detailMessageIsError = false;
+    renderParentInquiryDetail(res.data);
+    await markParentInquiryRead(context, res.data);
+  }
+
+  function renderParentInquiryTab(content){
+    if (!isApprovedParentInquiryContext()) {
+      clearParentInquiryForUnavailableContext();
+      renderParentInquiryUnavailable(content);
+      return;
+    }
+    if (parentInquiryState.view === 'create') {
+      renderParentInquiryCreateView(content);
+      return;
+    }
+    if (parentInquiryState.view === 'detail') {
+      if (parentInquiryState.isDetailLoading) {
+        renderParentInquiryDetailLoading();
+      } else if (parentInquiryState.thread) {
+        renderParentInquiryDetail(parentInquiryState.thread);
+      } else if (parentInquiryState.detailError) {
+        renderParentInquiryDetailFailure(parentInquiryState.detailError);
+      } else {
+        renderParentInquiryDetailView(content);
+      }
+      return;
+    }
+    renderParentInquiryListView(content);
+    renderParentInquiryList();
+    if ((!parentInquiryState.hasLoaded || parentInquiryState.lastLoadFailed) && !parentInquiryState.isLoading) {
+      loadParentInquiryList({ append:false });
+    }
+  }
+
+  function renderParentInquiryListView(content){
+    content.innerHTML =
+      '<section class="parent-inquiry-view parent-inquiry-panel" id="parentInquiryListView" aria-labelledby="parentInquiryListTitle">' +
+        '<div class="parent-inquiry-toolbar">' +
+          '<div class="parent-inquiry-heading">' +
+            '<div class="parent-inquiry-title-row">' +
+              '<h2 class="parent-inquiry-title" id="parentInquiryListTitle">내 문의</h2>' +
+              '<span class="parent-inquiry-unread-indicator" id="parentInquiryUnreadIndicator"' + (parentInquiryState.unreadExists ? '' : ' hidden') + ' aria-label="새 메시지 있음">' +
+                '<span class="parent-inquiry-unread-dot" aria-hidden="true"></span>' +
+              '</span>' +
+            '</div>' +
+            '<p class="parent-inquiry-description">문의는 선생님의 교육 활동 시간 이후 순차적으로 확인됩니다. 긴급한 내용은 원으로 전화해 주세요.</p>' +
+          '</div>' +
+        '</div>' +
+        '<div class="parent-inquiry-list-actions">' +
+          '<button type="button" class="btn" id="parentInquiryCreateBtn">새 문의 작성</button>' +
+        '</div>' +
+        '<div class="parent-inquiry-list" id="parentInquiryList"></div>' +
+        '<div class="parent-inquiry-list-state" id="parentInquiryListState" role="status" aria-live="polite"></div>' +
+        '<div class="parent-inquiry-list-actions">' +
+          '<button type="button" class="btn ghost" id="parentInquiryLoadMoreBtn" hidden disabled>더 보기</button>' +
+        '</div>' +
+      '</section>';
+  }
+
+  function renderParentInquiryCreateView(content){
+    var draft = parentInquiryState.createDraft;
+    content.innerHTML =
+      '<section class="parent-inquiry-view parent-inquiry-panel" id="parentInquiryCreateView" aria-labelledby="parentInquiryCreateTitle">' +
+        '<div class="parent-inquiry-detail-nav">' +
+          '<button type="button" class="btn ghost small" id="parentInquiryCreateBackBtn">목록으로 돌아가기</button>' +
+        '</div>' +
+        '<h2 class="parent-inquiry-title" id="parentInquiryCreateTitle">새 문의 작성</h2>' +
+        '<p class="parent-inquiry-description">문의는 교육 활동 후 순차적으로 확인됩니다.<br>긴급한 내용은 원으로 전화해 주세요.<br>서로 존중하는 말로 문의를 남겨 주세요.</p>' +
+        '<form class="parent-inquiry-form" id="parentInquiryCreateForm" aria-busy="false">' +
+          '<label for="parentInquiryBody">내용</label>' +
+          '<textarea id="parentInquiryBody" maxlength="5000">' + esc(draft.body) + '</textarea>' +
+          '<div class="msg" id="parentInquiryCreateMsg" role="status" aria-live="polite"></div>' +
+          '<div class="parent-inquiry-form-actions">' +
+            '<button type="submit" class="btn" id="parentInquirySubmitBtn" aria-busy="false">문의 보내기</button>' +
+          '</div>' +
+        '</form>' +
+      '</section>';
+    syncParentInquiryCreateUi();
+  }
+
+  function renderParentInquiryDetailView(content){
+    content.innerHTML =
+      '<section class="parent-inquiry-view parent-inquiry-panel" id="parentInquiryDetailView" aria-labelledby="parentInquiryDetailTitle" aria-busy="false">' +
+        '<div class="parent-inquiry-detail-nav">' +
+          '<button type="button" class="btn ghost small" id="parentInquiryDetailBackBtn">목록으로 돌아가기</button>' +
+        '</div>' +
+        '<h2 class="parent-inquiry-visually-hidden" id="parentInquiryDetailTitle">문의 상세</h2>' +
+        '<header class="parent-inquiry-detail-head">' +
+          '<div class="parent-inquiry-detail-metadata">' +
+            '<div class="parent-inquiry-detail-document" id="parentInquiryDocumentNo">문의번호</div>' +
+            '<span class="parent-inquiry-detail-separator" aria-hidden="true">·</span>' +
+            '<div class="parent-inquiry-detail-date" id="parentInquiryDetailCreatedAt">접수 날짜 확인 필요</div>' +
+          '</div>' +
+          '<div class="parent-inquiry-detail-badges" id="parentInquiryDetailBadges" hidden></div>' +
+        '</header>' +
+        '<div class="parent-inquiry-message-list" id="parentInquiryMessageList">' +
+          '<div class="parent-inquiry-empty">문의 내용을 불러오면 여기에 대화와 상태 기록이 표시됩니다.</div>' +
+        '</div>' +
+        '<section class="parent-inquiry-reply-section" id="parentInquiryReplySection" aria-label="메시지 작성">' +
+          '<form class="parent-inquiry-form" id="parentInquiryReplyForm" aria-busy="false">' +
+            '<label for="parentInquiryReplyInput">메시지 작성</label>' +
+            '<textarea id="parentInquiryReplyInput" maxlength="5000" disabled></textarea>' +
+            '<div class="parent-inquiry-detail-actions">' +
+              '<button type="submit" class="btn" id="parentInquiryReplySubmit" aria-busy="false" disabled>메시지 보내기</button>' +
+              '<button type="button" class="btn ghost" id="parentInquiryCloseBtn" aria-busy="false" disabled>문의 종료</button>' +
+            '</div>' +
+          '</form>' +
+        '</section>' +
+        '<aside class="parent-inquiry-closed-notice" id="parentInquiryClosedNotice" aria-label="종료된 문의 안내" hidden>' +
+          '<p>이 문의는 종료되었습니다.</p>' +
+          '<p>추가로 전할 내용이 있다면 새 문의를 작성해 주세요.</p>' +
+          '<div class="parent-inquiry-closed-actions">' +
+            '<button type="button" class="btn" id="parentInquiryClosedCreateBtn">새 문의 작성</button>' +
+          '</div>' +
+        '</aside>' +
+        '<div class="msg" id="parentInquiryDetailMsg" role="status" aria-live="polite"></div>' +
+      '</section>';
   }
 
   function renderNoticeTab(content){
@@ -1703,70 +3675,6 @@
     }
   }
 
-  async function submitComment(form){
-    var body = form.querySelector('#commentBody');
-    var submit = form.querySelector('#commentSubmit');
-    var msg = form.querySelector('#commentMsg');
-    var text = body.value.trim();
-    var startedAuthVersion = authTransitionVersion;
-    var targetUserId = currentSession && currentSession.user ? currentSession.user.id : '';
-    var targetClass = currentMiniClass;
-    var targetClassId = targetClass && targetClass.id;
-    var targetEnrollmentId = currentEnrollment && currentEnrollment.id;
-    if (!text || !targetUserId || !targetClass || !targetClassId || !targetEnrollmentId) return;
-    function isCurrentCommentTarget(){
-      var currentUserId = currentSession && currentSession.user ? currentSession.user.id : '';
-      var currentClassId = currentMiniClass && currentMiniClass.id;
-      var currentEnrollmentId = currentEnrollment && currentEnrollment.id;
-      return startedAuthVersion === authTransitionVersion &&
-        currentUserId === targetUserId &&
-        currentClassId === targetClassId &&
-        currentEnrollmentId === targetEnrollmentId;
-    }
-    submit.disabled = true;
-    msg.textContent = '등록 중입니다.';
-    msg.className = 'msg';
-    var res = await client.from('class_comments').insert({
-      class_id: targetClassId,
-      author_id: targetUserId,
-      body: text
-    });
-    if (!isCurrentCommentTarget()) return;
-    if (res.error) {
-      submit.disabled = false;
-      msg.innerHTML = escWithBr(res.error.message);
-      msg.className = 'msg error';
-      return;
-    }
-    var commentsRes = await client.from('class_comments')
-      .select('*')
-      .eq('class_id', targetClassId)
-      .order('created_at', { ascending:false });
-    if (!isCurrentCommentTarget()) return;
-    if (commentsRes.error) {
-      submit.disabled = false;
-      msg.innerHTML = escWithBr(commentsRes.error.message);
-      msg.className = 'msg error';
-      return;
-    }
-    miniCache.comments = commentsRes.data || [];
-    body.value = '';
-    submit.disabled = false;
-    msg.textContent = '등록되었습니다.';
-    msg.className = 'msg';
-    if (currentMiniTab === 'guestbook') {
-      var content = document.getElementById('miniContent');
-      if (content) {
-        renderGuestbookTab(content);
-        var renderedMsg = content.querySelector('#commentMsg');
-        if (renderedMsg) {
-          renderedMsg.textContent = '등록되었습니다.';
-          renderedMsg.className = 'msg';
-        }
-      }
-    }
-  }
-
   async function loadParentState(session, authVersion){
     if (!isCurrentAuthTransition(authVersion)) return;
     if (!session || !session.user) {
@@ -1812,7 +3720,23 @@
           });
         });
         approvedClasses = rows;
-        if (currentMiniClass && !miniPanel.hidden) return;
+        if (currentMiniClass && !miniPanel.hidden) {
+          var currentClassStillApproved = rows.some(function(row){
+            return row.id === currentMiniClass.id;
+          });
+          if (currentClassStillApproved) return;
+          classLoadVersion += 1;
+          resetParentInquiryState();
+          currentMiniClass = null;
+          currentEnrollment = null;
+          currentMini = null;
+          currentMiniTab = 'diary';
+          currentMiniView = 'home';
+          selectedAlbumKey = null;
+          miniCache = createMiniCache();
+          miniRoot.innerHTML = '';
+          resetCenterBrand();
+        }
         classList.innerHTML = rows.map(renderClassCard).join('');
         extraInviteBox.hidden = true;
         extraInviteMsg.textContent = '';
@@ -1823,17 +3747,20 @@
       }
 
       if (pending.length) {
+        resetParentInquiryState();
         leadText.textContent = '승인을 기다리고 있어요.';
         showPanel(pendingPanel);
         return;
       }
 
+      resetParentInquiryState();
       inviteMsg.textContent = '';
       inviteCode.value = '';
       leadText.textContent = '선생님이 알려준 초대 코드를 입력해주세요.';
       showPanel(invitePanel);
     } catch (err) {
       if (!isCurrentAuthTransition(authVersion)) return;
+      resetParentInquiryState();
       showNotice('상태를 불러오지 못했습니다', err && err.message ? err.message : String(err));
     }
   }
@@ -1954,6 +3881,8 @@
 
   miniBackBtn.addEventListener('click', function(){
     classLoadVersion += 1;
+    resetParentInquiryState();
+    miniRoot.innerHTML = '';
     resetCenterBrand();
     leadText.textContent = '승인된 반 미니홈피 목록입니다.';
     showPanel(classesPanel);
@@ -1964,6 +3893,7 @@
     var homeClassLoadVersion = classLoadVersion;
     var homeClassId = currentMiniClass && currentMiniClass.id;
     if (!isCurrentClassLoad(homeAuthVersion, homeClassLoadVersion, homeClassId)) return;
+    if (currentMiniTab === 'inquiry') leaveParentInquirySubview();
     currentMiniView = 'home';
     currentMiniTab = 'diary';
     selectedAlbumKey = null;
@@ -1995,14 +3925,141 @@
     }
   }, true);
 
+  miniRoot.addEventListener('submit', async function(e){
+    var replyForm = e.target && e.target.closest('#parentInquiryReplyForm');
+    if (replyForm) {
+      e.preventDefault();
+      await submitParentInquiryMessage();
+      return;
+    }
+    var createForm = e.target && e.target.closest('#parentInquiryCreateForm');
+    if (!createForm) return;
+    e.preventDefault();
+    await submitNewParentInquiry();
+  });
+
+  miniRoot.addEventListener('input', function(e){
+    if (e.target && e.target.id === 'parentInquiryReplyInput' && parentInquiryState.view === 'detail') {
+      var messageOperation = parentInquiryState.messageOperation;
+      if (messageOperation && messageOperation.status === 'submitting') return;
+      parentInquiryState.replyDraft = e.target.value;
+      if (messageOperation && messageOperation.status === 'uncertain' &&
+          normalizeParentInquiryReplyDraft(parentInquiryState.replyDraft) !== messageOperation.body) {
+        parentInquiryState.messageOperation = null;
+      }
+      setParentInquiryDetailMessage('', false);
+      syncParentInquiryReplyUi();
+      return;
+    }
+    if (!e.target || parentInquiryState.view !== 'create' || e.target.id !== 'parentInquiryBody') return;
+    parentInquiryState.createDraft.body = e.target.value;
+    var operation = parentInquiryState.createOperation;
+    if (operation && operation.status === 'uncertain') {
+      var context = {
+        userId: currentSession && currentSession.user ? currentSession.user.id : '',
+        classId: currentMiniClass && currentMiniClass.id,
+        authVersion: authTransitionVersion,
+        classVersion: classLoadVersion,
+        state: parentInquiryState
+      };
+      var draft = normalizeParentInquiryCreateDraft(parentInquiryState.createDraft);
+      if (!parentInquiryCreateOperationMatches(operation, draft, context)) {
+        parentInquiryState.createOperation = null;
+      }
+    }
+    if (!parentInquiryState.createOperation) setParentInquiryCreateMessage('', false);
+  });
+
   miniRoot.addEventListener('click', async function(e){
+    var inquiryCloseButton = e.target.closest('#parentInquiryCloseBtn');
+    if (inquiryCloseButton) {
+      e.preventDefault();
+      await closeParentInquiry();
+      return;
+    }
+    var inquiryOpenButton = e.target.closest('[data-open-parent-inquiry]');
+    if (inquiryOpenButton) {
+      var inquiryId = String(inquiryOpenButton.dataset.openParentInquiry || '').trim();
+      if (!inquiryId) return;
+      if (!isApprovedParentInquiryContext()) {
+        clearParentInquiryForUnavailableContext();
+        renderParentInquiryUnavailable(document.getElementById('miniContent'));
+        return;
+      }
+      await openParentInquiry(inquiryId);
+      return;
+    }
+    var inquiryLoadMoreBtn = e.target.closest('#parentInquiryLoadMoreBtn');
+    if (inquiryLoadMoreBtn) {
+      loadParentInquiryList({ append:true });
+      return;
+    }
+    var inquiryCreateBtn = e.target.closest('#parentInquiryCreateBtn, #parentInquiryClosedCreateBtn');
+    if (inquiryCreateBtn) {
+      if (!isApprovedParentInquiryContext()) {
+        clearParentInquiryForUnavailableContext();
+        renderParentInquiryUnavailable(document.getElementById('miniContent'));
+        return;
+      }
+      parentInquiryState.detailSequence += 1;
+      parentInquiryState.mutationThreadSequence += 1;
+      parentInquiryState.view = 'create';
+      parentInquiryState.selectedInquiryId = null;
+      parentInquiryState.thread = null;
+      parentInquiryState.createDraft = { body:'' };
+      parentInquiryState.replyDraft = '';
+      parentInquiryState.createOperation = null;
+      parentInquiryState.messageOperation = null;
+      parentInquiryState.closeOperation = null;
+      parentInquiryState.noticeText = '';
+      parentInquiryState.createMessage = '';
+      parentInquiryState.createMessageIsError = false;
+      parentInquiryState.detailError = '';
+      parentInquiryState.detailMessageIsError = false;
+      renderParentInquiryTab(document.getElementById('miniContent'));
+      return;
+    }
+    var inquiryBackBtn = e.target.closest('#parentInquiryCreateBackBtn, #parentInquiryDetailBackBtn');
+    if (inquiryBackBtn) {
+      if (inquiryBackBtn.id === 'parentInquiryCreateBackBtn') {
+        var createOperation = parentInquiryState.createOperation;
+        if (createOperation && createOperation.status === 'submitting') return;
+        var createDraft = parentInquiryState.createDraft || {};
+        var hasCreateDraft = !!String(createDraft.body || '').trim();
+        if ((createOperation && createOperation.status === 'uncertain') || hasCreateDraft) {
+          var leaveConfirmed = window.confirm('작성 중인 문의 내용과 재시도 정보가 사라집니다. 목록으로 돌아가시겠습니까?');
+          if (!leaveConfirmed) return;
+        }
+      } else {
+        var messageOperation = parentInquiryState.messageOperation;
+        var closeOperation = parentInquiryState.closeOperation;
+        if ((messageOperation && messageOperation.status === 'submitting') ||
+            (closeOperation && closeOperation.status === 'submitting')) return;
+        var hasReplyDraft = !!String(parentInquiryState.replyDraft || '');
+        if (closeOperation && closeOperation.status === 'uncertain') {
+          var leaveUncertainCloseConfirmed = window.confirm(
+            '종료 처리 결과가 아직 확인되지 않았습니다.\n' +
+            '이 화면을 나가면 같은 요청으로 다시 확인할 수 없으며 작성 중인 내용도 사라집니다. 목록으로 돌아가시겠어요?'
+          );
+          if (!leaveUncertainCloseConfirmed) return;
+        } else if ((messageOperation && messageOperation.status === 'uncertain') || hasReplyDraft) {
+          var leaveDetailConfirmed = window.confirm('작성 중인 메시지와 재시도 정보가 사라집니다. 목록으로 돌아가시겠습니까?');
+          if (!leaveDetailConfirmed) return;
+        }
+      }
+      leaveParentInquirySubview();
+      renderParentInquiryTab(document.getElementById('miniContent'));
+      return;
+    }
     var summaryCard = e.target.closest('[data-summary-tab]');
     if (summaryCard) {
       var summaryAuthVersion = authTransitionVersion;
       var summaryClassLoadVersion = classLoadVersion;
       var summaryClassId = currentMiniClass && currentMiniClass.id;
+      var summaryTab = summaryCard.dataset.summaryTab;
+      if (currentMiniTab === 'inquiry' && summaryTab !== 'inquiry') leaveParentInquirySubview();
       currentMiniView = 'section';
-      currentMiniTab = summaryCard.dataset.summaryTab;
+      currentMiniTab = summaryTab;
       if (currentMiniTab !== 'album') selectedAlbumKey = null;
       if (currentMiniTab === 'event') {
         var next = upcomingEvent();
@@ -2024,8 +4081,10 @@
       var tabAuthVersion = authTransitionVersion;
       var tabClassLoadVersion = classLoadVersion;
       var tabClassId = currentMiniClass && currentMiniClass.id;
+      var nextTab = tab.dataset.miniTab;
+      if (currentMiniTab === 'inquiry' && nextTab !== 'inquiry') leaveParentInquirySubview();
       currentMiniView = 'section';
-      currentMiniTab = tab.dataset.miniTab;
+      currentMiniTab = nextTab;
       if (currentMiniTab !== 'album') selectedAlbumKey = null;
       await renderMiniHome(tabAuthVersion, tabClassLoadVersion, tabClassId);
       if (!isCurrentClassLoad(tabAuthVersion, tabClassLoadVersion, tabClassId)) return;
@@ -2066,13 +4125,6 @@
     }
   });
 
-  miniRoot.addEventListener('submit', async function(e){
-    if (e.target && e.target.id === 'commentForm') {
-      e.preventDefault();
-      await submitComment(e.target);
-    }
-  });
-
   imageModalClose.addEventListener('click', function(){
     imageModal.hidden = true;
     imageModalImg.removeAttribute('src');
@@ -2086,6 +4138,7 @@
   });
 
   logoutBtn.addEventListener('click', async function(){
+    resetParentInquiryState();
     var res = await client.auth.signOut();
     if (res.error) {
       showNotice('로그아웃하지 못했습니다', res.error.message);
