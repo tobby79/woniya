@@ -2149,32 +2149,49 @@ function mapRowToData(row, options = {}){
 
   // ── 상단바 / 메뉴 ──
   const c = data.center;
+  const classMiniHref = c.slug === 'sample-sunshine'
+    ? 'sample-class-mini.html?from=sample-sunshine'
+    : 'parent.html';
   const detailQuery = buildDetailQuery(location.search, c.slug);
   const hasAdmissionData = hasAdmissionDisplayData(data.admission);
   const hasDirectionsData = Boolean(cleanDisplayText(c.address) || cleanDisplayText(c.directions_text));
   // 공지·행사일정 섹션은 제거됨 → 메뉴에서 필터. 하루 스토리(#day)는 복원되어 유지.
   // 시설 소개/교육프로그램(인페이지 섹션) + 입학안내/오시는 길(새 페이지) 런타임 주입
   (function(){
+    function menuPathname(href){
+      var value = cleanDisplayText(href);
+      if (!value || value.charAt(0) === '#') return '';
+      try {
+        return new URL(value, location.href).pathname.split('/').pop() || '';
+      } catch (_error) {
+        return value.split(/[?#]/)[0].split('/').pop() || '';
+      }
+    }
+    function isClassMiniDestination(href){
+      var pathname = menuPathname(href);
+      return pathname === 'parent.html' || pathname === 'sample-class-mini.html';
+    }
     c.menu = (c.menu || []).filter(function(m){
       var href = cleanDisplayText(m && m.href);
       return href !== '#notice'
         && href !== '#schedule'
+        && !isClassMiniDestination(href)
         && !/^admissions\.html(?:[?#]|$)/.test(href)
         && !/^directions\.html(?:[?#]|$)/.test(href);
     });
+    var classMiniMenu = { href: classMiniHref, label: '우리 반 미니홈피' };
     var extra = [];
     extra.push({ href:'#facilitiesSec', label:'시설 소개' });
     extra.push({ href:'#programSec', label:'교육프로그램' });
     if (detailQuery && hasAdmissionData) extra.push({ href: 'admissions.html' + detailQuery, label: '입학안내' });
     if (detailQuery && hasDirectionsData) extra.push({ href: 'directions.html' + detailQuery, label: '오시는 길' });
-    extra.push({ href: 'parent.html', label: '우리 반 미니홈피' });
     if (extra.length){
       var m = c.menu.slice();
-      m = m.filter(function(x){ return x.href !== 'parent.html'; });
       var i = m.findIndex(function(x){ return x.cta; });
       if (i < 0) i = m.length;
       c.menu = m.slice(0, i).concat(extra, m.slice(i));
     }
+    c.menu.push(classMiniMenu);
   })();
   WoniyaTopbar.init({ centerName: c.name.replace(/\s*어린이집$/,'') || c.name });
   $('menuPanel').innerHTML = (c.menu || []).map(m =>

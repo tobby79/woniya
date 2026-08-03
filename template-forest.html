@@ -3252,6 +3252,9 @@
       const c = data.center;
       const finaleData = data.finale;
       const isForestTemplatePreview = isPreviewMode && previewTemplateId === 'forest';
+      const classMiniHref = c.slug === 'sample-forest'
+        ? 'sample-class-mini.html?from=sample-forest'
+        : 'parent.html';
       const canConsult = !isPreviewMode && !isReviewMode && !isAdminPreviewMode &&
         hasVisibleText(c.id) && cleanText(c.status) === 'published';
       const facilityItems = cleanItems(c.facilities && c.facilities.items, ['name','desc','photo_url']);
@@ -3280,8 +3283,22 @@
       // 시설 소개/교육프로그램(인페이지 섹션) + 입학안내/오시는 길(새 페이지) 런타임 주입
       (function(){
         var qs = detailQuery;
+        function menuPathname(href){
+          var value = cleanText(href);
+          if (!value || value.charAt(0) === '#') return '';
+          try {
+            return new URL(value, location.href).pathname.split('/').pop() || '';
+          } catch (_error) {
+            return value.split(/[?#]/)[0].split('/').pop() || '';
+          }
+        }
+        function isClassMiniDestination(href){
+          var pathname = menuPathname(href);
+          return pathname === 'parent.html' || pathname === 'sample-class-mini.html';
+        }
         c.menu = (c.menu || []).filter(function(m){
           if (m.href === '#notice' || m.href === '#schedule') return false;
+          if (isClassMiniDestination(m.href)) return false;
           if (!canConsult && (m.cta || m.href === '#finale')) return false;
           if (m.href === '#facilitiesSec' && !facilityItems.length) return false;
           if (m.href === '#programSec' && !programItems.length) return false;
@@ -3289,16 +3306,16 @@
           if (m.href && m.href.charAt(0) === '#' && !document.getElementById(m.href.slice(1))) return false;
           return true;
         });
+        var classMiniMenu = {
+          href: classMiniHref,
+          label: '우리 반 미니홈피',
+          action: isForestTemplatePreview ? 'open-class-mini-preview' : ''
+        };
         var extra = [];
         if (facilityItems.length) extra.push({ href:'#facilitiesSec', label:'시설 소개' });
         if (programItems.length) extra.push({ href:'#programSec', label:'교육프로그램' });
         if (hasAdmissionData) extra.push({ href: 'admissions.html' + qs, label: '입학안내' });
         if (hasDirectionsData) extra.push({ href: 'directions.html' + qs, label: '오시는 길' });
-        extra.push({
-          href: 'parent.html',
-          label: '우리 반 미니홈피',
-          action: isForestTemplatePreview ? 'open-class-mini-preview' : ''
-        });
         if (extra.length){
           var m = c.menu.slice();
           function menuHrefKey(href){
@@ -3309,7 +3326,6 @@
           }
           var uniqueMenuHrefs = new Set();
           m = m.filter(function(x){
-            if (x.href === 'parent.html') return false;
             var key = menuHrefKey(x.href);
             if (!key || uniqueMenuHrefs.has(key)) return false;
             uniqueMenuHrefs.add(key);
@@ -3326,6 +3342,7 @@
           if (i < 0) i = m.length;
           c.menu = m.slice(0, i).concat(extra, m.slice(i));
         }
+        c.menu.push(classMiniMenu);
       })();
 
       const centerName = cleanText(c.name) || '원이야';
@@ -3339,8 +3356,11 @@
       $('menuPanel').innerHTML = (c.menu || []).map(m => `<a href="${esc(m.href)}"${m.cta ? ' class="menu-cta"' : ''}${m.id ? ' id="'+m.id+'"' : ''}${m.action ? ' data-menu-action="'+esc(m.action)+'"' : ''}>${esc(m.label)}</a>`).join('');
 
       const h = c.hero || {};
-      const leafMenu = (c.menu || []).filter(m => !m.cta)
-        .slice(0, 6)
+      const leafMenuItems = (c.menu || []).filter(m => !m.cta);
+      const visibleLeafMenuItems = leafMenuItems.length > 6
+        ? leafMenuItems.slice(0, 5).concat(leafMenuItems.slice(-1))
+        : leafMenuItems;
+      const leafMenu = visibleLeafMenuItems
         .map(m => `<a class="leaf-btn" href="${esc(m.href)}"${m.action ? ' data-menu-action="'+esc(m.action)+'"' : ''}>${esc(m.label)}</a>`).join('');
       const heroPhoto = cleanText(data.heroPhoto);
       $('hero').classList.toggle('hero-no-photo', !heroPhoto);

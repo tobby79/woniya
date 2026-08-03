@@ -76,10 +76,10 @@
 <body>
   <nav class="topbar topbar-compact" aria-label="원이야 샘플 어린이집">
     <div class="wrap">
-      <a class="brand" href="template-forest.html?slug=sample-forest">원이야 샘플 어린이집</a>
+      <a id="sampleOriginBrand" class="brand" href="template-forest.html?slug=sample-forest">초록숲 유치원</a>
       <div class="topbar-actions">
         <span class="topbar-sample-badge">공개 샘플</span>
-        <a class="topbar-home-link" href="template-forest.html?slug=sample-forest">원 홈페이지</a>
+        <a id="sampleOriginHome" class="topbar-home-link" href="template-forest.html?slug=sample-forest">원 홈페이지</a>
       </div>
     </div>
   </nav>
@@ -87,7 +87,7 @@
   <main class="parent-wrap">
     <aside class="sample-strip" aria-labelledby="sampleNoticeTitle">
       <strong id="sampleNoticeTitle">원이야 반 미니홈피 샘플</strong>
-      <p>실제 원과 반에 따라 내용과 사진이 달라집니다. 이 화면의 정보와 문의는 모두 예시입니다.</p>
+      <p>아래는 참고용 예시 화면입니다. 실제 반 미니홈피는 권한이 있는 학부모에게만 노출됩니다.</p>
     </aside>
     <div id="miniRoot" class="mini-shell"></div>
   </main>
@@ -110,12 +110,33 @@
   <footer class="sample-footer">
     <div class="sample-footer-inner">
       <p>이 페이지의 원·반·일정·사진·문의 내용은 모두 공개 샘플을 위한 가상 정보입니다. 입력한 문의와 답장은 저장되거나 전송되지 않습니다.</p>
-      <a href="template-forest.html?slug=sample-forest">원이야 샘플 어린이집으로 돌아가기</a>
+      <a id="sampleOriginFooter" href="template-forest.html?slug=sample-forest">초록숲 유치원으로 돌아가기</a>
     </div>
   </footer>
 
   <script>
     'use strict';
+
+    const SAMPLE_ORIGINS = {
+      'sample-forest': {
+        href: 'template-forest.html?slug=sample-forest',
+        name: '초록숲 유치원'
+      },
+      'sample-sunshine': {
+        href: 'template-sunshine.html?slug=sample-sunshine',
+        name: '햇살가득 어린이집'
+      }
+    };
+    const sampleOriginKey = new URLSearchParams(location.search).get('from');
+    const sampleOrigin = Object.prototype.hasOwnProperty.call(SAMPLE_ORIGINS, sampleOriginKey)
+      ? SAMPLE_ORIGINS[sampleOriginKey]
+      : SAMPLE_ORIGINS['sample-forest'];
+
+    document.getElementById('sampleOriginBrand').href = sampleOrigin.href;
+    document.getElementById('sampleOriginBrand').textContent = sampleOrigin.name;
+    document.getElementById('sampleOriginHome').href = sampleOrigin.href;
+    document.getElementById('sampleOriginFooter').href = sampleOrigin.href;
+    document.getElementById('sampleOriginFooter').textContent = `${sampleOrigin.name}으로 돌아가기`;
 
     const SAMPLE_DATA = {
       center: {
