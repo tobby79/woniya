@@ -192,6 +192,10 @@
   .parent-inquiry-title{min-width:0;font-family:var(--display);font-weight:400;line-height:1.4;word-break:keep-all;overflow-wrap:anywhere}
   .parent-inquiry-title{font-size:1.28rem}
   .parent-inquiry-description{margin-top:7px;color:var(--ink-soft);font-size:.9rem;line-height:1.7;word-break:keep-all;overflow-wrap:anywhere}
+  .parent-inquiry-guide{display:grid;gap:9px;margin-top:14px;padding:15px 16px;border:1.5px solid #f1dfce;border-radius:18px;background:linear-gradient(135deg,#fffaf2,#fff5ed);color:var(--ink-soft);font-size:.86rem;line-height:1.55}
+  .parent-inquiry-guide-item{display:flex;align-items:flex-start;gap:9px;min-width:0}
+  .parent-inquiry-guide-icon{display:inline-flex;align-items:center;justify-content:center;flex:0 0 24px;width:24px;height:24px;border-radius:50%;background:rgba(255,138,107,.13);color:var(--coral-deep);font-size:.76rem;font-weight:800;line-height:1}
+  .parent-inquiry-guide-text{min-width:0;padding-top:1px;word-break:keep-all;overflow-wrap:anywhere}
   .parent-inquiry-title-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-width:0}
   .parent-inquiry-unread-indicator{display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;width:18px;height:18px;border-radius:50%;background:#fff0ea}
   .parent-inquiry-unread-dot{width:8px;height:8px;border-radius:50%;background:var(--coral);box-shadow:0 0 0 3px rgba(255,138,107,.16)}
@@ -206,7 +210,7 @@
   .parent-inquiry-card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;flex-wrap:wrap;min-width:0}
   .parent-inquiry-document,.parent-inquiry-card-subject,.parent-inquiry-detail-document,.parent-inquiry-detail-date{min-width:0;word-break:keep-all;overflow-wrap:anywhere}
   .parent-inquiry-document,.parent-inquiry-detail-document{color:var(--sage);font-size:.78rem;font-weight:800}
-  .parent-inquiry-card-subject{margin-top:5px;color:var(--ink);font-weight:800;line-height:1.45}
+  .parent-inquiry-card-subject{margin-top:5px;color:var(--ink);font-weight:600;line-height:1.55;letter-spacing:-.01em}
   .parent-inquiry-card-meta{display:flex;gap:6px 9px;flex-wrap:wrap;margin-top:8px;color:var(--ink-soft);font-size:.78rem}
   .parent-inquiry-badges{display:flex;gap:6px;flex-wrap:wrap}
   .parent-inquiry-status-badge,.parent-inquiry-unread-badge{display:inline-flex;align-items:center;min-height:24px;padding:3px 9px;border-radius:999px;font-size:.74rem;font-weight:800;line-height:1.3}
@@ -224,7 +228,9 @@
   .parent-inquiry-detail-separator{color:var(--line)}
   .parent-inquiry-detail-badges{display:flex;align-self:flex-start;gap:6px;flex-wrap:wrap}
   .parent-inquiry-visually-hidden{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}
-  .parent-inquiry-message-list{display:flex;flex-direction:column;gap:12px;margin-top:16px;min-width:0}
+  .parent-inquiry-message-list{position:relative;isolation:isolate;display:flex;flex-direction:column;gap:12px;margin-top:16px;min-width:0;padding:18px;border:1.5px solid #f1e3d6;border-radius:22px;overflow:hidden;background-color:#fff}
+  .parent-inquiry-message-list::before{content:"";position:absolute;inset:0;z-index:0;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='130' viewBox='0 0 180 130'%3E%3Cpath d='M18 25c0-7 9-9 13-3 4-6 13-4 13 3 0 7-13 15-13 15S18 32 18 25Z' fill='none' stroke='%23ff8a6b' stroke-opacity='.1' stroke-width='1.4'/%3E%3Cpath d='M112 82c0-9 12-11 17-4 5-7 17-5 17 4 0 9-17 19-17 19s-17-10-17-19Z' fill='none' stroke='%239cb89a' stroke-opacity='.08' stroke-width='1.5'/%3E%3Cpath d='M72 42c0-5 7-7 10-2 3-5 10-3 10 2 0 6-10 12-10 12S72 48 72 42Z' fill='none' stroke='%23f2a37e' stroke-opacity='.07' stroke-width='1.2'/%3E%3C/svg%3E");background-repeat:repeat;pointer-events:none}
+  .parent-inquiry-message-list>*{position:relative;z-index:1}
   .parent-inquiry-message{display:flex;width:100%;min-width:0}
   .parent-inquiry-message--parent{justify-content:flex-end}
   .parent-inquiry-message--teacher,.parent-inquiry-message--owner{justify-content:flex-start}
@@ -240,9 +246,12 @@
   .parent-inquiry-message-meta{margin:5px 6px 0;color:var(--ink-soft);font-size:.72rem}
   .parent-inquiry-message--parent .parent-inquiry-message-meta{text-align:right}
   .parent-inquiry-reply-section{margin-top:22px;padding-top:18px;border-top:1.5px solid var(--line)}
-  .parent-inquiry-closed-notice{margin-top:16px;padding:14px;border-radius:16px;background:#f3eee8;color:var(--ink-soft);font-size:.86rem;line-height:1.6;text-align:center}
-  .parent-inquiry-closed-notice p+p{margin-top:2px}
-  .parent-inquiry-closed-actions{display:flex;justify-content:center;margin-top:12px}
+  .parent-inquiry-closed-notice{margin-top:16px;padding:18px;border:1.5px solid #efdccc;border-radius:20px;background:linear-gradient(135deg,#fffaf3,#f8f3ec);color:var(--ink-soft);font-size:.86rem;line-height:1.65;text-align:center}
+  .parent-inquiry-closed-title{color:var(--ink);font-family:var(--display);font-size:1.04rem;font-weight:700;line-height:1.45}
+  .parent-inquiry-closed-title::before{content:"✓";display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;margin-right:7px;border-radius:50%;background:#eef5ed;color:var(--sage);font-family:var(--body);font-size:.76rem;font-weight:900;vertical-align:middle}
+  .parent-inquiry-closed-description{margin-top:6px}
+  .parent-inquiry-closed-actions{display:flex;justify-content:center;margin-top:14px}
+  .parent-inquiry-closed-actions .btn{max-width:280px}
   .event-calendar-card{background:var(--paper);border:1.5px solid var(--line);border-radius:24px;padding:18px;box-shadow:0 16px 42px -28px rgba(120,80,60,.35)}
   .event-calendar-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}
   .event-calendar-title{font-family:var(--display);font-size:1.16rem;line-height:1.4;font-weight:400}
@@ -318,6 +327,9 @@
     #parentInquiryDetailView .parent-inquiry-detail-nav{margin-bottom:20px}
     .parent-inquiry-detail-head .parent-inquiry-detail-metadata{flex-basis:auto;min-height:0}
     .parent-inquiry-message-content{max-width:88%}
+    .parent-inquiry-guide{padding:14px;gap:8px}
+    .parent-inquiry-message-list{padding:13px;border-radius:18px}
+    .parent-inquiry-message-list::before{background-size:210px 152px}
     .parent-inquiry-form-actions,.parent-inquiry-detail-actions{align-items:stretch}
     .parent-inquiry-form-actions .btn,.parent-inquiry-detail-actions .btn{flex:1 1 180px}
   }
@@ -3596,7 +3608,11 @@
                 '<span class="parent-inquiry-unread-dot" aria-hidden="true"></span>' +
               '</span>' +
             '</div>' +
-            '<p class="parent-inquiry-description">문의는 선생님의 교육 활동 시간 이후 순차적으로 확인됩니다.<br>긴급한 내용은 원으로 전화해 주세요.<br>서로 존중하는 말로 문의를 남겨 주세요.</p>' +
+            '<aside class="parent-inquiry-guide" aria-label="문의 이용 안내">' +
+              '<div class="parent-inquiry-guide-item"><span class="parent-inquiry-guide-icon" aria-hidden="true">◷</span><span class="parent-inquiry-guide-text">문의 확인 및 답변 시간은 오전 9시부터 오후 6시까지예요.</span></div>' +
+              '<div class="parent-inquiry-guide-item"><span class="parent-inquiry-guide-icon" aria-hidden="true">☎</span><span class="parent-inquiry-guide-text">긴급한 내용은 원으로 전화해 주세요.</span></div>' +
+              '<div class="parent-inquiry-guide-item"><span class="parent-inquiry-guide-icon" aria-hidden="true">♡</span><span class="parent-inquiry-guide-text">서로 존중하는 말로 문의를 남겨 주세요.</span></div>' +
+            '</aside>' +
           '</div>' +
         '</div>' +
         '<div class="parent-inquiry-list-actions parent-inquiry-primary-actions">' +
@@ -3618,7 +3634,11 @@
           '<button type="button" class="btn ghost small" id="parentInquiryCreateBackBtn">목록으로 돌아가기</button>' +
         '</div>' +
         '<h2 class="parent-inquiry-title" id="parentInquiryCreateTitle">새 문의 작성</h2>' +
-        '<p class="parent-inquiry-description">문의는 교육 활동 후 순차적으로 확인됩니다.<br>긴급한 내용은 원으로 전화해 주세요.<br>서로 존중하는 말로 문의를 남겨 주세요.</p>' +
+        '<aside class="parent-inquiry-guide" aria-label="문의 이용 안내">' +
+          '<div class="parent-inquiry-guide-item"><span class="parent-inquiry-guide-icon" aria-hidden="true">◷</span><span class="parent-inquiry-guide-text">문의 확인 및 답변 시간은 오전 9시부터 오후 6시까지예요.</span></div>' +
+          '<div class="parent-inquiry-guide-item"><span class="parent-inquiry-guide-icon" aria-hidden="true">☎</span><span class="parent-inquiry-guide-text">긴급한 내용은 원으로 전화해 주세요.</span></div>' +
+          '<div class="parent-inquiry-guide-item"><span class="parent-inquiry-guide-icon" aria-hidden="true">♡</span><span class="parent-inquiry-guide-text">서로 존중하는 말로 문의를 남겨 주세요.</span></div>' +
+        '</aside>' +
         '<form class="parent-inquiry-form" id="parentInquiryCreateForm" aria-busy="false">' +
           '<label for="parentInquiryBody">내용</label>' +
           '<textarea id="parentInquiryBody" maxlength="5000">' + esc(draft.body) + '</textarea>' +
@@ -3660,8 +3680,8 @@
           '</form>' +
         '</section>' +
         '<aside class="parent-inquiry-closed-notice" id="parentInquiryClosedNotice" aria-label="종료된 문의 안내" hidden>' +
-          '<p>이 문의는 종료되었습니다.</p>' +
-          '<p>추가로 전할 내용이 있다면 새 문의를 작성해 주세요.</p>' +
+          '<p class="parent-inquiry-closed-title">이 문의는 종료되었습니다.</p>' +
+          '<p class="parent-inquiry-closed-description">추가로 전할 내용이 있다면 새 문의를 작성해 주세요.</p>' +
           '<div class="parent-inquiry-closed-actions">' +
             '<button type="button" class="btn" id="parentInquiryClosedCreateBtn">새 문의 작성</button>' +
           '</div>' +
