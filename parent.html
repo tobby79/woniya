@@ -278,6 +278,7 @@
   .parent-inquiry-floating:focus-visible{outline:3px solid rgba(255,138,107,.48);outline-offset:3px}
   .parent-inquiry-floating-icon{display:block;flex:0 0 auto;width:22px;height:22px}
   .parent-inquiry-floating-dot{position:absolute;right:4px;top:4px;width:9px;height:9px;border:2px solid #fff;border-radius:50%;background:#d94b38;box-shadow:0 0 0 3px rgba(255,255,255,.2)}
+  .parent-inquiry-realtime-toast{position:fixed;left:50%;bottom:calc(82px + env(safe-area-inset-bottom));z-index:18;max-width:min(360px,calc(100vw - 32px));transform:translateX(-50%);border-radius:999px;padding:11px 17px;background:rgba(64,55,51,.94);color:#fff;font-size:.88rem;line-height:1.45;font-weight:700;text-align:center;box-shadow:0 16px 36px -18px rgba(0,0,0,.65);pointer-events:none}
   @media (max-width:560px){
     .parent-wrap{padding-left:12px;padding-right:12px}
     #topbar.topbar-compact > .wrap{padding-left:12px;padding-right:12px}
@@ -431,6 +432,8 @@
   <span class="parent-inquiry-floating-dot" id="parentInquiryFloatingDot" aria-label="새 메시지 있음" hidden></span>
 </button>
 
+<div class="parent-inquiry-realtime-toast" id="parentInquiryRealtimeToast" role="status" aria-live="polite" aria-atomic="true" hidden></div>
+
 <div class="image-modal" id="imageModal" hidden>
   <div class="image-modal-frame">
     <img id="imageModalImg" alt="">
@@ -441,6 +444,7 @@
 <script src="topbar.js"></script>
 <script src="supabase-config.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="inquiry-realtime.js"></script>
 <script>
 (function(){
   var logoutBtn = document.getElementById('logoutBtn');
@@ -468,6 +472,7 @@
   var miniRoot = document.getElementById('miniRoot');
   var parentInquiryFloatingBtn = document.getElementById('parentInquiryFloatingBtn');
   var parentInquiryFloatingDot = document.getElementById('parentInquiryFloatingDot');
+  var parentInquiryRealtimeToast = document.getElementById('parentInquiryRealtimeToast');
   var imageModal = document.getElementById('imageModal');
   var imageModalImg = document.getElementById('imageModalImg');
   var imageModalClose = document.getElementById('imageModalClose');
@@ -513,6 +518,21 @@
   var selectedEventDate = toDateInput(new Date());
   var miniCache = createMiniCache();
   var parentInquiryState = createParentInquiryState();
+  var parentInquiryRealtimeStatus = 'STOPPED';
+  var parentInquiryRealtimeToastTimer = null;
+
+  var parentInquiryRealtimeManager = window.WoniyaInquiryRealtime.createManager({
+    supabase: client,
+    viewerKind: 'parent',
+    debounceMs: 250,
+    onRefreshNeeded: handleParentInquiryRealtimeRefresh,
+    onStatusChange: function(info){
+      var nextStatus = info && typeof info.status === 'string' ? info.status : '';
+      if (['SUBSCRIBED', 'CHANNEL_ERROR', 'TIMED_OUT', 'CLOSED', 'STOPPED'].indexOf(nextStatus) >= 0) {
+        parentInquiryRealtimeStatus = nextStatus;
+      }
+    }
+  });
   var PARENT_INQUIRY_PAGE_LIMIT = 20;
   var BUCKET = 'center-images';
   var CENTER_TEMPLATE_FILES = {
@@ -583,7 +603,9 @@
       messageOperation: null,
       closeOperation: null,
       listSequence: 0,
+      listRequest: null,
       detailSequence: 0,
+      realtimeThreadSequence: 0,
       mutationThreadSequence: 0,
       unreadSequence: 0,
       unreadExists: false,
@@ -596,7 +618,75 @@
     };
   }
 
+  function parentInquiryRealtimeContextVersion(authVersion, loadVersion){
+    return String(authVersion) + ':' + String(loadVersion);
+  }
+
+  function isParentInquiryRealtimeAvailable(authVersion, loadVersion, classId){
+    return !!parentInquiryRealtimeManager &&
+      !!currentSession && !!currentSession.user && !!currentSession.user.id &&
+      !!currentMiniClass && currentMiniClass.id === classId &&
+      !!currentMini && !miniPanel.hidden &&
+      isCurrentClassLoad(authVersion, loadVersion, classId) &&
+      isApprovedParentInquiryContext() &&
+      enabledModules().some(function(item){ return item.key === 'inquiry'; });
+  }
+
+  function hideParentInquiryRealtimeToast(){
+    if (parentInquiryRealtimeToastTimer !== null) {
+      window.clearTimeout(parentInquiryRealtimeToastTimer);
+      parentInquiryRealtimeToastTimer = null;
+    }
+    if (parentInquiryRealtimeToast) {
+      parentInquiryRealtimeToast.hidden = true;
+      parentInquiryRealtimeToast.textContent = '';
+    }
+  }
+
+  function stopParentInquiryRealtime(){
+    if (parentInquiryRealtimeManager) parentInquiryRealtimeManager.stop();
+    hideParentInquiryRealtimeToast();
+  }
+
+  function syncParentInquiryRealtime(authVersion, loadVersion, classId){
+    if (!isParentInquiryRealtimeAvailable(authVersion, loadVersion, classId)) {
+      stopParentInquiryRealtime();
+      return false;
+    }
+    return parentInquiryRealtimeManager.sync({
+      userId: currentSession.user.id,
+      classId: classId,
+      role: 'parent',
+      contextVersion: parentInquiryRealtimeContextVersion(authVersion, loadVersion)
+    });
+  }
+
+  function isParentInquiryRealtimeBatchCurrent(batch){
+    var context = batch && batch.context;
+    var classId = currentMiniClass && currentMiniClass.id;
+    return !!parentInquiryState && typeof parentInquiryState === 'object' &&
+      !!context &&
+      context.role === 'parent' &&
+      !!currentSession && !!currentSession.user && context.userId === currentSession.user.id &&
+      !!classId && context.classId === classId &&
+      context.contextVersion === parentInquiryRealtimeContextVersion(authTransitionVersion, classLoadVersion) &&
+      isParentInquiryRealtimeAvailable(authTransitionVersion, classLoadVersion, classId);
+  }
+
+  function showParentInquiryRealtimeToast(){
+    if (!parentInquiryRealtimeToast) return;
+    hideParentInquiryRealtimeToast();
+    parentInquiryRealtimeToast.textContent = '문의에 새 메시지가 도착했어요.';
+    parentInquiryRealtimeToast.hidden = false;
+    parentInquiryRealtimeToastTimer = window.setTimeout(function(){
+      parentInquiryRealtimeToastTimer = null;
+      parentInquiryRealtimeToast.hidden = true;
+      parentInquiryRealtimeToast.textContent = '';
+    }, 3200);
+  }
+
   function resetParentInquiryState(){
+    stopParentInquiryRealtime();
     var previous = parentInquiryState || createParentInquiryState();
     var next = createParentInquiryState();
     next.listSequence = Number(previous.listSequence || 0) + 1;
@@ -660,6 +750,7 @@
   }
 
   function clearParentInquiryForUnavailableContext(){
+    stopParentInquiryRealtime();
     parentInquiryState.listSequence += 1;
     parentInquiryState.unreadSequence += 1;
     parentInquiryState.detailSequence += 1;
@@ -1703,6 +1794,7 @@
 
     if (modules.length) renderMiniTab();
     syncParentInquiryFloatingButton();
+    syncParentInquiryRealtime(authVersion, loadVersion, classId);
     if (
       currentMiniView === 'home' &&
       renderCache.teacherProfileStatus === 'ready' &&
@@ -2102,6 +2194,8 @@
       parentInquiryState === context.state &&
       parentInquiryState.view === 'detail' &&
       parentInquiryState.detailSequence === context.requestSequence &&
+      (context.realtimeThreadSequence == null ||
+        parentInquiryState.realtimeThreadSequence === context.realtimeThreadSequence) &&
       parentInquiryState.selectedInquiryId === context.inquiryId &&
       authTransitionVersion === context.authVersion &&
       classLoadVersion === context.classVersion &&
@@ -2433,7 +2527,7 @@
       return;
     }
     var state = parentInquiryState;
-    if (state.isLoading) return;
+    if (state.isLoading) return state.listRequest;
     if (append && (!state.hasMore || !state.cursor)) return;
 
     var requestedCursor = append ? state.cursor : null;
@@ -2457,6 +2551,11 @@
     }
     renderParentInquiryList();
 
+    var resolveListRequest;
+    var listRequest = new Promise(function(resolve){
+      resolveListRequest = resolve;
+    });
+    state.listRequest = listRequest;
     try {
       var res = await client.rpc('get_my_class_inquiries', {
         p_class_id: context.classId,
@@ -2533,18 +2632,23 @@
         state.isLoading = false;
         renderParentInquiryList();
       }
+      if (state.listRequest === listRequest) state.listRequest = null;
+      resolveListRequest();
     }
   }
 
-  async function refreshParentInquiryUnreadIndicator(){
+  async function refreshParentInquiryUnreadIndicator(expectedInquiryIds){
     if (!isApprovedParentInquiryContext()) {
       clearParentInquiryForUnavailableContext();
       if (currentMiniTab === 'inquiry') {
         renderParentInquiryUnavailable(document.getElementById('miniContent'));
       }
-      return;
+      return { ok:false, unreadExists:false, inquiryId:null };
     }
     var state = parentInquiryState;
+    var expectedIds = new Set(Array.isArray(expectedInquiryIds)
+      ? expectedInquiryIds.filter(function(id){ return typeof id === 'string' && !!id.trim(); })
+      : []);
     var context = {
       userId: currentSession.user.id,
       classId: currentMiniClass.id,
@@ -2553,6 +2657,7 @@
       state: state,
       requestSequence: ++state.unreadSequence
     };
+    var previousUnreadExists = state.unreadExists === true;
     try {
       var res = await client.rpc('get_my_class_inquiries', {
         p_class_id: context.classId,
@@ -2560,39 +2665,177 @@
         p_before_has_unread_reply: null,
         p_before_updated_at: null,
         p_before_id: null,
-        p_limit: 1
+        p_limit: expectedIds.size ? 50 : 1
       });
       if (!isParentInquiryUnreadContextCurrent(context)) {
         handleParentInquiryApprovalContextLoss(context);
-        return;
+        return { ok:false, unreadExists:false, inquiryId:null };
       }
       if (res.error) {
         handleParentInquiryAccessError(res.error);
-        return;
+        return { ok:false, unreadExists:false, inquiryId:null };
       }
       if (!Array.isArray(res.data)) {
         state.unreadExists = false;
         syncParentInquiryUnreadIndicators();
-        return;
+        return { ok:false, unreadExists:false, inquiryId:null };
       }
-      var firstRow = res.data.length ? res.data[0] : null;
-      if (firstRow && (
-        firstRow.class_id !== context.classId ||
-        typeof firstRow.has_unread_reply !== 'boolean'
-      )) {
+      var rows = res.data;
+      if (!rows.every(function(row){
+        return !!row && row.class_id === context.classId &&
+          typeof row.inquiry_id === 'string' && !!row.inquiry_id.trim() &&
+          typeof row.has_unread_reply === 'boolean';
+      })) {
         state.unreadExists = false;
         syncParentInquiryUnreadIndicators();
-        return;
+        return { ok:false, unreadExists:false, eventUnreadConfirmed:false };
       }
-      state.unreadExists = !!firstRow && firstRow.has_unread_reply === true;
+      var nextUnreadExists = rows.some(function(row){ return row.has_unread_reply === true; });
+      var unreadBecameTrue = previousUnreadExists === false && nextUnreadExists === true;
+      state.unreadExists = nextUnreadExists;
       syncParentInquiryUnreadIndicators();
+      return {
+        ok:true,
+        unreadExists:state.unreadExists,
+        unreadBecameTrue:unreadBecameTrue,
+        eventUnreadConfirmed:expectedIds.size > 0 && rows.some(function(row){
+          return row.has_unread_reply === true && expectedIds.has(row.inquiry_id);
+        })
+      };
     } catch (err) {
       if (!isParentInquiryUnreadContextCurrent(context)) {
         handleParentInquiryApprovalContextLoss(context);
-        return;
+        return { ok:false, unreadExists:false, inquiryId:null };
       }
-      if (handleParentInquiryAccessError(err)) return;
+      if (handleParentInquiryAccessError(err)) return { ok:false, unreadExists:false, inquiryId:null };
       // 목록과 독립된 보조 표시이므로 일반 오류는 목록 화면에 전파하지 않습니다.
+      return { ok:false, unreadExists:false, inquiryId:null };
+    }
+  }
+
+  async function refreshParentInquiryListForRealtime(batch, state){
+    if (!isParentInquiryRealtimeBatchCurrent(batch) || parentInquiryState !== state ||
+        currentMiniTab !== 'inquiry' || state.view !== 'list') return false;
+
+    while (state.isLoading) {
+      var activeRequest = state.listRequest;
+      if (!activeRequest || typeof activeRequest.then !== 'function') return false;
+      await activeRequest;
+      if (!isParentInquiryRealtimeBatchCurrent(batch) || parentInquiryState !== state ||
+          currentMiniTab !== 'inquiry' || state.view !== 'list') return false;
+    }
+
+    await loadParentInquiryList({ append:false });
+    return isParentInquiryRealtimeBatchCurrent(batch) &&
+      parentInquiryState === state && currentMiniTab === 'inquiry' && state.view === 'list' &&
+      state.hasLoaded === true && state.lastLoadFailed !== true;
+  }
+
+  async function refreshParentInquiryThreadForRealtime(batch, state, inquiryId){
+    if (!isParentInquiryRealtimeBatchCurrent(batch) || parentInquiryState !== state ||
+        currentMiniTab !== 'inquiry' || state.view !== 'detail' ||
+        state.selectedInquiryId !== inquiryId) return false;
+
+    var context = {
+      userId: currentSession.user.id,
+      classId: currentMiniClass.id,
+      authVersion: authTransitionVersion,
+      classVersion: classLoadVersion,
+      state: state,
+      requestSequence: state.detailSequence,
+      realtimeThreadSequence: ++state.realtimeThreadSequence,
+      inquiryId: inquiryId
+    };
+    state.mutationThreadSequence += 1;
+    var res;
+    try {
+      res = await client.rpc('get_class_inquiry_thread', {
+        p_inquiry_id: inquiryId
+      });
+    } catch (err) {
+      if (!isParentInquiryDetailContextCurrent(context) || !isParentInquiryRealtimeBatchCurrent(batch)) {
+        handleParentInquiryApprovalContextLoss(context);
+        return false;
+      }
+      handleParentInquiryDetailAccessError(err, context);
+      return false;
+    }
+
+    if (!isParentInquiryDetailContextCurrent(context) || !isParentInquiryRealtimeBatchCurrent(batch)) {
+      handleParentInquiryApprovalContextLoss(context);
+      return false;
+    }
+    if (res.error) {
+      handleParentInquiryDetailAccessError(res.error, context);
+      return false;
+    }
+    if (!isValidParentInquiryThread(res.data, context)) return false;
+
+    var replyDraft = state.replyDraft;
+    state.thread = res.data;
+    state.isDetailLoading = false;
+    state.detailError = '';
+    state.detailMessageIsError = false;
+    renderParentInquiryDetail(res.data);
+    state.replyDraft = replyDraft;
+    var replyInput = document.getElementById('parentInquiryReplyInput');
+    if (replyInput) replyInput.value = replyDraft;
+
+    if (!isParentInquiryDetailContextCurrent(context) || !isParentInquiryRealtimeBatchCurrent(batch)) return false;
+    await markParentInquiryRead(context, res.data);
+    return isParentInquiryDetailContextCurrent(context) && isParentInquiryRealtimeBatchCurrent(batch);
+  }
+
+  async function handleParentInquiryRealtimeRefresh(batch){
+    if (!isParentInquiryRealtimeBatchCurrent(batch)) return;
+    if (batch.reason !== 'subscribed' && batch.reason !== 'message') return;
+
+    var state = parentInquiryState;
+    var inquiryIds = Array.isArray(batch.inquiryIds)
+      ? batch.inquiryIds.filter(function(id){ return typeof id === 'string' && !!id.trim(); })
+      : [];
+    var isDetailView = currentMiniTab === 'inquiry' && state.view === 'detail' &&
+      typeof state.selectedInquiryId === 'string' && !!state.selectedInquiryId.trim();
+    var isSameDetailMessage = batch.reason === 'message' && isDetailView &&
+      inquiryIds.indexOf(state.selectedInquiryId) >= 0;
+    var unreadResult;
+
+    if (batch.reason === 'subscribed') {
+      if (currentMiniTab === 'inquiry' && state.view === 'list') {
+        var subscribedResults = await Promise.all([
+          refreshParentInquiryListForRealtime(batch, state),
+          refreshParentInquiryUnreadIndicator()
+        ]);
+        unreadResult = subscribedResults[1];
+      } else if (isDetailView) {
+        await refreshParentInquiryThreadForRealtime(batch, state, state.selectedInquiryId);
+        if (!isParentInquiryRealtimeBatchCurrent(batch)) return;
+        unreadResult = await refreshParentInquiryUnreadIndicator();
+      } else {
+        unreadResult = await refreshParentInquiryUnreadIndicator();
+      }
+      return;
+    }
+
+    if (currentMiniTab === 'inquiry' && state.view === 'list') {
+      var messageResults = await Promise.all([
+        refreshParentInquiryListForRealtime(batch, state),
+        refreshParentInquiryUnreadIndicator(inquiryIds)
+      ]);
+      unreadResult = messageResults[1];
+    } else if (isSameDetailMessage) {
+      await refreshParentInquiryThreadForRealtime(batch, state, state.selectedInquiryId);
+      if (!isParentInquiryRealtimeBatchCurrent(batch)) return;
+      unreadResult = await refreshParentInquiryUnreadIndicator();
+    } else {
+      unreadResult = await refreshParentInquiryUnreadIndicator(inquiryIds);
+    }
+
+    if (batch.silent !== true && !isSameDetailMessage &&
+        isParentInquiryRealtimeBatchCurrent(batch) && parentInquiryState === state &&
+        unreadResult && unreadResult.ok === true && parentInquiryState.unreadExists === true &&
+        (unreadResult.eventUnreadConfirmed === true || unreadResult.unreadBecameTrue === true)) {
+      showParentInquiryRealtimeToast();
     }
   }
 
@@ -3524,6 +3767,7 @@
       classVersion: classLoadVersion,
       state: state,
       requestSequence: state.detailSequence,
+      realtimeThreadSequence: state.realtimeThreadSequence,
       inquiryId: inquiryId
     };
     renderParentInquiryDetailLoading();
@@ -3794,7 +4038,9 @@
         approvedClasses = rows;
         if (currentMiniClass && !miniPanel.hidden) {
           var currentClassStillApproved = rows.some(function(row){
-            return row.id === currentMiniClass.id;
+            return row.id === currentMiniClass.id &&
+              !!currentEnrollment && row.enrollment_id === currentEnrollment.id &&
+              currentMiniClass.enrollment_id === currentEnrollment.id;
           });
           if (currentClassStillApproved) return;
           classLoadVersion += 1;
