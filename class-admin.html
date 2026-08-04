@@ -176,6 +176,7 @@
   .inquiry-reply-textarea{min-height:132px}
   .inquiry-reply-actions{display:flex;align-items:center;justify-content:flex-end;gap:8px;flex-wrap:wrap}
   .inquiry-closed-notice{margin-top:14px;padding:12px 14px;border-radius:14px;background:#f3eee8;color:var(--ink-soft);font-size:.86rem;line-height:1.6;text-align:center}
+  .staff-inquiry-realtime-toast{position:fixed;left:50%;bottom:calc(22px + env(safe-area-inset-bottom));z-index:60;max-width:min(380px,calc(100vw - 32px));transform:translateX(-50%);border-radius:999px;padding:11px 17px;background:rgba(64,55,51,.94);color:#fff;font-size:.88rem;line-height:1.45;font-weight:700;text-align:center;box-shadow:0 16px 36px -18px rgba(0,0,0,.65);pointer-events:none}
   @media (max-width:760px){.topbar-inner{gap:10px;align-items:flex-start;flex-wrap:wrap}.topbar-actions{width:100%;gap:7px;justify-content:flex-start;flex-wrap:wrap}.topbar-actions #classNameTop{flex:1 0 100%;max-width:100%;margin-right:0}.topbar-actions .btn{height:36px;padding:0 12px;font-size:12.5px}.topbar-actions #logoutBtn{padding:0 10px}.layout,.split{grid-template-columns:1fr}.album-grid,.photo-grid{grid-template-columns:repeat(2,1fr)}.panel{padding:22px}.day-cell{min-height:62px}.inquiry-toolbar,.inquiry-detail-head{align-items:stretch;flex-direction:column}.inquiry-filter{justify-content:space-between}.inquiry-message-content{max-width:88%}.inquiry-reply-actions{align-items:stretch}.inquiry-reply-actions .btn{flex:1 1 180px}}
   @media (max-width:560px){.teacher-intro-actions{align-items:stretch;flex-direction:column}.teacher-intro-actions .btn{width:100%}.teacher-intro-count{align-self:flex-end}}
   @media (max-width:320px){.inquiry-filter{align-items:stretch;flex-direction:column}.inquiry-filter select{width:100%}.inquiry-card-head,.inquiry-card-badges{justify-content:flex-start}.inquiry-message-content{max-width:94%}.inquiry-reply-actions{flex-direction:column}.inquiry-reply-actions .btn{flex-basis:auto;width:100%}}
@@ -342,7 +343,7 @@
               <select id="inquiryStatusFilter" disabled>
                 <option value="">전체 문의</option>
                 <option value="received">접수</option>
-                <option value="in_progress">확인 중</option>
+                <option value="in_progress">진행 중</option>
                 <option value="answered">답변 완료</option>
                 <option value="closed">종료</option>
               </select>
@@ -366,7 +367,7 @@
             <div class="inquiry-detail-metadata">
               <div class="inquiry-detail-document" id="inquiryDetailDocumentNo">문의번호</div>
               <span class="inquiry-detail-separator" aria-hidden="true">·</span>
-              <div class="inquiry-detail-date" id="inquiryDetailCreatedAt">접수 날짜 확인 중</div>
+              <div class="inquiry-detail-date" id="inquiryDetailCreatedAt">접수 날짜 불러오는 중</div>
             </div>
             <span class="inquiry-status-badge" id="inquiryDetailStatus">상태</span>
           </header>
@@ -450,8 +451,11 @@
   </div>
 </div>
 
+<div class="staff-inquiry-realtime-toast" id="staffInquiryRealtimeToast" role="status" aria-live="polite" aria-atomic="true" hidden></div>
+
 <script src="supabase-config.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="inquiry-realtime.js"></script>
 <script>
 (function(){
   var cfg = window.__SUPABASE_CONFIG__;
@@ -497,6 +501,9 @@
     cursor: null,
     hasMore: false,
     isLoading: false,
+    listRequest: null,
+    realtimeListRefreshPending: false,
+    realtimeListRefreshPromise: null,
     loadSequence: 0,
     unreadExists: false,
     selectedInquiryId: null,
@@ -510,6 +517,7 @@
     errorText: '',
     unreadLoadSequence: 0,
     detailSequence: 0,
+    realtimeThreadSequence: 0,
     replyThreadSequence: 0,
     isDetailLoading: false,
     detailError: ''
@@ -530,6 +538,21 @@
   var classSwitchLink = byId('classSwitchLink');
   var miniHomeLink = byId('miniHomeLink');
   var logoutBtn = byId('logoutBtn');
+  var staffInquiryRealtimeToast = byId('staffInquiryRealtimeToast');
+  var staffInquiryRealtimeToastTimer = null;
+  var staffInquiryRealtimeStatus = 'STOPPED';
+  var staffInquiryRealtimeManager = window.WoniyaInquiryRealtime.createManager({
+    supabase: client,
+    viewerKind: 'staff',
+    debounceMs: 250,
+    onRefreshNeeded: handleStaffInquiryRealtimeRefresh,
+    onStatusChange: function(info){
+      var nextStatus = info && typeof info.status === 'string' ? info.status : '';
+      if (['SUBSCRIBED', 'CHANNEL_ERROR', 'TIMED_OUT', 'CLOSED', 'STOPPED'].indexOf(nextStatus) >= 0) {
+        staffInquiryRealtimeStatus = nextStatus;
+      }
+    }
+  });
 
   function byId(id){ return document.getElementById(id); }
   function esc(s){
@@ -601,12 +624,70 @@
     el.innerHTML = escWithBr(text || '');
     el.className = 'msg' + (isError ? ' error' : '');
   }
+  function staffInquiryRealtimeContextVersion(userId, loadGeneration){
+    return String(userId) + ':' + String(loadGeneration);
+  }
+  function isStaffInquiryRealtimeAvailable(userId, classId, loadGeneration, role){
+    return !!staffInquiryRealtimeManager && !classStaffAccessLost &&
+      (role === 'teacher' || role === 'owner') && role === currentAccessRole &&
+      loadGeneration === classLoadGeneration &&
+      !!currentSession && !!currentSession.user && currentSession.user.id === userId &&
+      !!currentClass && currentClass.id === classId && !appPanel.hidden;
+  }
+  function hideStaffInquiryRealtimeToast(){
+    if (staffInquiryRealtimeToastTimer !== null) {
+      window.clearTimeout(staffInquiryRealtimeToastTimer);
+      staffInquiryRealtimeToastTimer = null;
+    }
+    if (staffInquiryRealtimeToast) {
+      staffInquiryRealtimeToast.hidden = true;
+      staffInquiryRealtimeToast.textContent = '';
+    }
+  }
+  function showStaffInquiryRealtimeToast(){
+    if (!staffInquiryRealtimeToast) return;
+    hideStaffInquiryRealtimeToast();
+    staffInquiryRealtimeToast.textContent = '학부모 문의에 새 메시지가 도착했어요.';
+    staffInquiryRealtimeToast.hidden = false;
+    staffInquiryRealtimeToastTimer = window.setTimeout(function(){
+      staffInquiryRealtimeToastTimer = null;
+      staffInquiryRealtimeToast.hidden = true;
+      staffInquiryRealtimeToast.textContent = '';
+    }, 3000);
+  }
+  function stopStaffInquiryRealtime(){
+    if (staffInquiryRealtimeManager) staffInquiryRealtimeManager.stop();
+    hideStaffInquiryRealtimeToast();
+  }
+  function syncStaffInquiryRealtime(userId, classId, loadGeneration, role){
+    if (!isStaffInquiryRealtimeAvailable(userId, classId, loadGeneration, role)) {
+      stopStaffInquiryRealtime();
+      return false;
+    }
+    return staffInquiryRealtimeManager.sync({
+      userId: userId,
+      classId: classId,
+      role: role,
+      contextVersion: staffInquiryRealtimeContextVersion(userId, loadGeneration)
+    });
+  }
+  function isStaffInquiryRealtimeBatchCurrent(batch){
+    var context = batch && batch.context;
+    var userId = currentSession && currentSession.user ? currentSession.user.id : '';
+    var classId = currentClass ? currentClass.id : '';
+    return !!context &&
+      (context.role === 'teacher' || context.role === 'owner') &&
+      context.role === currentAccessRole &&
+      context.userId === userId && context.classId === classId &&
+      context.contextVersion === staffInquiryRealtimeContextVersion(userId, classLoadGeneration) &&
+      isStaffInquiryRealtimeAvailable(userId, classId, classLoadGeneration, currentAccessRole);
+  }
   function resetInquiryDetailDom(){
     var backBtn = byId('inquiryBackBtn');
     backBtn.disabled = false;
     backBtn.removeAttribute('aria-disabled');
     byId('inquiryDetailDocumentNo').textContent = '문의번호';
-    byId('inquiryDetailCreatedAt').textContent = '접수 날짜 확인 중';
+    byId('inquiryDetailCreatedAt').textContent = '접수 날짜 불러오는 중';
     byId('inquiryDetailStatus').textContent = '상태';
     byId('inquiryMessageList').innerHTML = '';
     byId('inquiryStatusMessageList').innerHTML = '';
@@ -632,6 +713,7 @@
   }
   function clearInquiryDetailState(showList){
     inquiryState.detailSequence += 1;
+    inquiryState.realtimeThreadSequence += 1;
     inquiryState.replyThreadSequence += 1;
     inquiryState.isDetailLoading = false;
     inquiryState.detailError = '';
@@ -647,12 +729,16 @@
     }
   }
   function resetInquiryState(){
+    stopStaffInquiryRealtime();
     inquiryState.loadSequence += 1;
     inquiryState.unreadLoadSequence += 1;
     inquiryState.rows = [];
     inquiryState.cursor = null;
     inquiryState.hasMore = false;
     inquiryState.isLoading = false;
+    inquiryState.listRequest = null;
+    inquiryState.realtimeListRefreshPending = false;
+    inquiryState.realtimeListRefreshPromise = null;
     inquiryState.unreadExists = false;
     inquiryState.filterStatus = '';
     inquiryState.hasLoaded = false;
@@ -1429,6 +1515,7 @@
       classSwitchLink.hidden = true;
     }
     showPanel(appPanel);
+    syncStaffInquiryRealtime(requestedUserId, currentClass.id, loadGeneration, currentAccessRole);
     refreshInquiryUnreadIndicator();
     if (currentAccessRole === 'teacher') {
       refreshClassSwitcherVisibility(session, loadGeneration, requestedUserId);
@@ -2194,11 +2281,20 @@
 
   function inquiryStatusLabel(value){
     return ({
-      received:'접수',
-      in_progress:'확인 중',
+      received:'확인 필요',
+      in_progress:'진행 중',
       answered:'답변 완료',
       closed:'종료'
     })[value] || '상태 확인 필요';
+  }
+
+  function inquiryCardStatusLabel(value){
+    return ({
+      received:'확인 필요',
+      in_progress:'',
+      answered:'답변 완료',
+      closed:'종료'
+    })[value] || '';
   }
 
   function isInquiryListContextCurrent(userId, classId, loadGeneration, requestSequence){
@@ -2232,10 +2328,13 @@
     var listEl = byId('inquiryList');
     listEl.innerHTML = inquiryState.rows.map(function(row){
       var documentNo = formatInquiryNumberForDisplay(row.document_no);
+      var hasUnreadParentMessage = row.has_unread_parent_message === true;
       var unreadLabel = row.status === 'received' ? '새 문의' : '새 메시지';
+      var cardStatusLabel = inquiryCardStatusLabel(row.status);
+      var showRequiresResponse = row.requires_response === true && row.status !== 'received';
       var cardClass = 'inquiry-card';
-      if (row.has_unread_parent_message) cardClass += ' inquiry-card--unread';
-      if (row.requires_response) cardClass += ' inquiry-card--requires-response';
+      if (hasUnreadParentMessage) cardClass += ' inquiry-card--unread';
+      if (showRequiresResponse) cardClass += ' inquiry-card--requires-response';
       return '<article class="' + cardClass + '">' +
         '<button type="button" class="inquiry-card-open" data-open-inquiry="' + esc(row.inquiry_id) + '" aria-label="' + esc('문의번호 ' + documentNo + ' 문의 상세 보기') + '">' +
           '<div class="inquiry-card-head">' +
@@ -2247,9 +2346,9 @@
               '</div>' +
             '</div>' +
             '<div class="inquiry-card-badges">' +
-              '<span class="inquiry-status-badge inquiry-card-status">' + esc(inquiryStatusLabel(row.status)) + '</span>' +
-              (row.has_unread_parent_message ? '<span class="inquiry-unread-mark">' + esc(unreadLabel) + '</span>' : '') +
-              (row.requires_response ? '<span class="inquiry-response-mark">답변 필요</span>' : '') +
+              (hasUnreadParentMessage ? '<span class="inquiry-unread-mark">' + esc(unreadLabel) + '</span>' : '') +
+              (cardStatusLabel ? '<span class="inquiry-status-badge inquiry-card-status">' + esc(cardStatusLabel) + '</span>' : '') +
+              (showRequiresResponse ? '<span class="inquiry-response-mark">답변 필요</span>' : '') +
             '</div>' +
           '</div>' +
         '</button>' +
@@ -2317,7 +2416,7 @@
   async function loadInquiryList(options){
     var append = !!(options && options.append);
     if (!currentSession || !currentSession.user || !currentClass || classStaffAccessLost) return;
-    if (inquiryState.isLoading) return;
+    if (inquiryState.isLoading) return inquiryState.listRequest;
     if (append && (!inquiryState.hasMore || !inquiryState.cursor)) return;
 
     var requestedUserId = currentSession.user.id;
@@ -2337,6 +2436,12 @@
       inquiryState.hasLoaded = false;
     }
     renderInquiryList();
+
+    var resolveListRequest;
+    var listRequest = new Promise(function(resolve){
+      resolveListRequest = resolve;
+    });
+    inquiryState.listRequest = listRequest;
 
     try {
       var res = await client.rpc('get_class_inquiries_for_staff', {
@@ -2434,6 +2539,8 @@
         inquiryState.isLoading = false;
         renderInquiryList();
       }
+      if (inquiryState.listRequest === listRequest) inquiryState.listRequest = null;
+      resolveListRequest();
     }
   }
 
@@ -3577,8 +3684,177 @@
     await markInquiryStaffRead(context, mutationContext, finalThread);
   }
 
-  async function refreshInquiryUnreadIndicator(){
-    if (!currentSession || !currentSession.user || !currentClass || classStaffAccessLost) return;
+  function isInquiryRealtimeListContextCurrent(batch, state){
+    return isStaffInquiryRealtimeBatchCurrent(batch) && inquiryState === state &&
+      activeTab === 'inquiry' && !byId('inquiryListView').hidden;
+  }
+
+  function refreshInquiryListForRealtime(batch, state){
+    if (!isInquiryRealtimeListContextCurrent(batch, state)) return Promise.resolve(false);
+    if (state.realtimeListRefreshPending && state.realtimeListRefreshPromise) {
+      return state.realtimeListRefreshPromise;
+    }
+
+    state.realtimeListRefreshPending = true;
+    var refreshPromise = (async function(){
+      while (state.isLoading) {
+        var activeRequest = state.listRequest;
+        if (!activeRequest || typeof activeRequest.then !== 'function') return false;
+        await activeRequest;
+        if (!isInquiryRealtimeListContextCurrent(batch, state)) return false;
+      }
+
+      restartInquiryList();
+      await loadInquiryList({ append:false });
+      return isInquiryRealtimeListContextCurrent(batch, state) &&
+        state.hasLoaded === true && state.lastLoadFailed !== true;
+    })();
+    state.realtimeListRefreshPromise = refreshPromise;
+
+    var clearPending = function(){
+      if (state.realtimeListRefreshPromise !== refreshPromise) return;
+      state.realtimeListRefreshPending = false;
+      state.realtimeListRefreshPromise = null;
+    };
+    refreshPromise.then(clearPending, clearPending);
+    return refreshPromise;
+  }
+
+  function isInquiryRealtimeDetailContextCurrent(batch, state, context, realtimeSequence){
+    return isStaffInquiryRealtimeBatchCurrent(batch) && inquiryState === state &&
+      realtimeSequence === state.realtimeThreadSequence &&
+      activeTab === 'inquiry' && !byId('inquiryDetailView').hidden &&
+      isInquiryDetailContextCurrent(
+        context.userId,
+        context.classId,
+        context.loadGeneration,
+        context.requestSequence,
+        context.inquiryId
+      );
+  }
+
+  async function markInquiryStaffReadForRealtime(batch, state, context, realtimeSequence){
+    if (!isInquiryRealtimeDetailContextCurrent(batch, state, context, realtimeSequence)) return false;
+    var res;
+    try {
+      res = await client.rpc('mark_class_inquiry_staff_read', {
+        p_inquiry_id: context.inquiryId
+      });
+    } catch (error) {
+      if (!isInquiryRealtimeDetailContextCurrent(batch, state, context, realtimeSequence)) return false;
+      handleInquiryDetailAccessError(error, context);
+      return false;
+    }
+    if (!isInquiryRealtimeDetailContextCurrent(batch, state, context, realtimeSequence)) return false;
+    if (res.error) {
+      handleInquiryDetailAccessError(res.error, context);
+      return false;
+    }
+    if (!Array.isArray(res.data) || !res.data[0] || res.data[0].inquiry_id !== context.inquiryId) return false;
+    restartInquiryList();
+    await loadInquiryList({ append:false });
+    return isInquiryRealtimeDetailContextCurrent(batch, state, context, realtimeSequence);
+  }
+
+  async function refreshInquiryThreadForRealtime(batch, state, inquiryId){
+    if (!isStaffInquiryRealtimeBatchCurrent(batch) || inquiryState !== state ||
+        activeTab !== 'inquiry' || byId('inquiryDetailView').hidden ||
+        state.selectedInquiryId !== inquiryId || state.isDetailLoading ||
+        state.replyOperation || state.closeOperation) return false;
+
+    var context = {
+      userId: currentSession.user.id,
+      classId: currentClass.id,
+      loadGeneration: classLoadGeneration,
+      requestSequence: state.detailSequence,
+      inquiryId: inquiryId
+    };
+    var realtimeSequence = ++state.realtimeThreadSequence;
+    var result = await requestInquiryThread(context);
+    if (!isInquiryRealtimeDetailContextCurrent(batch, state, context, realtimeSequence)) return false;
+    if (result.error) {
+      handleInquiryDetailAccessError(result.error, context);
+      return false;
+    }
+    if (result.denied) {
+      returnToInquiryList({ reload:true });
+      return false;
+    }
+    if (result.stale || result.invalid || !result.thread) return false;
+    if (state.replyOperation || state.closeOperation) return false;
+
+    var replyDraft = state.replyDraft;
+    state.thread = result.thread;
+    state.isDetailLoading = false;
+    renderInquiryDetail(result.thread);
+    if (!isInquiryRealtimeDetailContextCurrent(batch, state, context, realtimeSequence)) return false;
+    state.replyDraft = replyDraft;
+    var replyInput = byId('inquiryReplyInput');
+    if (replyInput) replyInput.value = replyDraft;
+    await markInquiryStaffReadForRealtime(batch, state, context, realtimeSequence);
+    return isInquiryRealtimeDetailContextCurrent(batch, state, context, realtimeSequence);
+  }
+
+  async function handleStaffInquiryRealtimeRefresh(batch){
+    if (!isStaffInquiryRealtimeBatchCurrent(batch)) return;
+    if (batch.reason !== 'subscribed' && batch.reason !== 'message') return;
+
+    var state = inquiryState;
+    var inquiryIds = Array.isArray(batch.inquiryIds)
+      ? batch.inquiryIds.filter(function(id){ return typeof id === 'string' && !!id.trim(); })
+      : [];
+    var isDetailView = activeTab === 'inquiry' && !byId('inquiryDetailView').hidden &&
+      typeof state.selectedInquiryId === 'string' && !!state.selectedInquiryId.trim();
+    var isSameDetailMessage = batch.reason === 'message' && isDetailView &&
+      inquiryIds.indexOf(state.selectedInquiryId) >= 0;
+    var unreadResult;
+
+    if (batch.reason === 'subscribed') {
+      if (activeTab === 'inquiry' && !byId('inquiryListView').hidden) {
+        var subscribedResults = await Promise.all([
+          refreshInquiryListForRealtime(batch, state),
+          refreshInquiryUnreadIndicator()
+        ]);
+        unreadResult = subscribedResults[1];
+      } else if (isDetailView) {
+        await refreshInquiryThreadForRealtime(batch, state, state.selectedInquiryId);
+        if (!isStaffInquiryRealtimeBatchCurrent(batch)) return;
+        unreadResult = await refreshInquiryUnreadIndicator();
+      } else {
+        unreadResult = await refreshInquiryUnreadIndicator();
+      }
+      return;
+    }
+
+    if (activeTab === 'inquiry' && !byId('inquiryListView').hidden) {
+      var messageResults = await Promise.all([
+        refreshInquiryListForRealtime(batch, state),
+        refreshInquiryUnreadIndicator(inquiryIds)
+      ]);
+      unreadResult = messageResults[1];
+    } else if (isSameDetailMessage) {
+      await refreshInquiryThreadForRealtime(batch, state, state.selectedInquiryId);
+      if (!isStaffInquiryRealtimeBatchCurrent(batch)) return;
+      unreadResult = await refreshInquiryUnreadIndicator();
+    } else {
+      unreadResult = await refreshInquiryUnreadIndicator(inquiryIds);
+    }
+
+    if (batch.silent !== true && !isSameDetailMessage &&
+        isStaffInquiryRealtimeBatchCurrent(batch) && inquiryState === state &&
+        unreadResult && unreadResult.ok === true && inquiryState.unreadExists === true &&
+        unreadResult.eventUnreadConfirmed === true) {
+      showStaffInquiryRealtimeToast();
+    }
+  }
+
+  async function refreshInquiryUnreadIndicator(expectedInquiryIds){
+    if (!currentSession || !currentSession.user || !currentClass || classStaffAccessLost) {
+      return { ok:false, unreadExists:false, eventUnreadConfirmed:false };
+    }
+    var expectedIds = new Set(Array.isArray(expectedInquiryIds)
+      ? expectedInquiryIds.filter(function(id){ return typeof id === 'string' && !!id.trim(); })
+      : []);
     var requestedUserId = currentSession.user.id;
     var requestedClassId = currentClass.id;
     var requestedGeneration = classLoadGeneration;
@@ -3593,24 +3869,39 @@
         p_before_requires_response: null,
         p_before_updated_at: null,
         p_before_id: null,
-        p_limit: 1
+        p_limit: expectedIds.size ? 50 : 1
       });
-      if (!isInquiryUnreadContextCurrent(requestedUserId, requestedClassId, requestedGeneration, requestSequence)) return;
+      if (!isInquiryUnreadContextCurrent(requestedUserId, requestedClassId, requestedGeneration, requestSequence)) {
+        return { ok:false, unreadExists:false, eventUnreadConfirmed:false };
+      }
       if (res.error) {
         if (isInquiryNotAuthenticatedError(res.error)) showInquiryAuthenticationRequired();
-        return;
+        return { ok:false, unreadExists:false, eventUnreadConfirmed:false };
       }
-      if (!Array.isArray(res.data)) return;
-      if (res.data.length && (!res.data[0] || res.data[0].class_id !== requestedClassId)) return;
-      inquiryState.unreadExists = res.data.length > 0;
+      if (!Array.isArray(res.data) || !res.data.every(function(row){
+        return !!row && row.class_id === requestedClassId &&
+          typeof row.inquiry_id === 'string' && !!row.inquiry_id.trim() &&
+          typeof row.has_unread_parent_message === 'boolean';
+      })) return { ok:false, unreadExists:false, eventUnreadConfirmed:false };
+      inquiryState.unreadExists = res.data.some(function(row){ return row.has_unread_parent_message === true; });
       byId('inquiryUnreadIndicator').hidden = !inquiryState.unreadExists;
+      return {
+        ok:true,
+        unreadExists:inquiryState.unreadExists,
+        eventUnreadConfirmed:expectedIds.size > 0 && res.data.some(function(row){
+          return row.has_unread_parent_message === true && expectedIds.has(row.inquiry_id);
+        })
+      };
     } catch (err) {
-      if (!isInquiryUnreadContextCurrent(requestedUserId, requestedClassId, requestedGeneration, requestSequence)) return;
+      if (!isInquiryUnreadContextCurrent(requestedUserId, requestedClassId, requestedGeneration, requestSequence)) {
+        return { ok:false, unreadExists:false, eventUnreadConfirmed:false };
+      }
       if (isInquiryNotAuthenticatedError(err)) {
         showInquiryAuthenticationRequired();
-        return;
+        return { ok:false, unreadExists:false, eventUnreadConfirmed:false };
       }
       // 목록 조회와 독립된 보조 표시이므로 실패를 목록 화면에 전파하지 않습니다.
+      return { ok:false, unreadExists:false, eventUnreadConfirmed:false };
     }
   }
 
@@ -3671,6 +3962,10 @@
       e.preventDefault();
       return;
     }
+    if (miniHomeLink.dataset.action === 'open') {
+      stopStaffInquiryRealtime();
+      return;
+    }
     if (miniHomeLink.dataset.action !== 'create') return;
     e.preventDefault();
     createClassMiniForStaff().catch(function(err){
@@ -3684,12 +3979,15 @@
     if (hasUnsavedClassWork() &&
         !confirm('작성 중인 내용이 저장되지 않았습니다. ' + destination + '으로 이동할까요?')) {
       e.preventDefault();
+      return;
     }
+    stopStaffInquiryRealtime();
   });
 
   classSelectList.addEventListener('click', function(e){
     var button = e.target.closest('[data-class-id]');
     if (!button || !classSelectList.contains(button)) return;
+    stopStaffInquiryRealtime();
     location.href = 'class-admin.html?class_id=' + encodeURIComponent(button.dataset.classId);
   });
 
