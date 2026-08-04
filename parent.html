@@ -4,6 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>원이야 - 학부모 로그인</title>
+<link rel="manifest" href="/manifest.webmanifest">
+<meta name="theme-color" content="#FF8A6B">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="원이야">
+<link rel="apple-touch-icon" href="/assets/pwa/apple-touch-icon-180.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Gaegu:wght@700&family=Gowun+Dodum&display=swap" rel="stylesheet">
@@ -447,6 +453,7 @@
 <script src="supabase-config.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="inquiry-realtime.js"></script>
+<script src="/push-subscription.js"></script>
 <script>
 (function(){
   var logoutBtn = document.getElementById('logoutBtn');
@@ -522,6 +529,12 @@
   var parentInquiryState = createParentInquiryState();
   var parentInquiryRealtimeStatus = 'STOPPED';
   var parentInquiryRealtimeToastTimer = null;
+  var parentPwaRegistrationState = {
+    status: 'idle',
+    reason: '',
+    registration: null
+  };
+  var parentPwaRegistrationStarted = false;
 
   var parentInquiryRealtimeManager = window.WoniyaInquiryRealtime.createManager({
     supabase: client,
@@ -544,6 +557,56 @@
     gallery: 'template-gallery.html'
   };
   var directClassId = new URLSearchParams(location.search).get('class_id') || '';
+
+  function startParentPwaRegistration(){
+    if (parentPwaRegistrationStarted) return;
+    parentPwaRegistrationStarted = true;
+    parentPwaRegistrationState.status = 'registering';
+    parentPwaRegistrationState.reason = '';
+    parentPwaRegistrationState.registration = null;
+
+    var helper = window.WoniyaPushSubscription;
+    if (!helper || typeof helper.registerServiceWorker !== 'function') {
+      parentPwaRegistrationState.status = 'failed';
+      parentPwaRegistrationState.reason = 'helper-unavailable';
+      return;
+    }
+
+    var registrationRequest;
+    try {
+      registrationRequest = helper.registerServiceWorker();
+    } catch (_error) {
+      parentPwaRegistrationState.status = 'failed';
+      parentPwaRegistrationState.reason = 'registration-failed';
+      return;
+    }
+
+    Promise.resolve(registrationRequest).then(function(result){
+      if (result && result.ok === true && result.registration) {
+        parentPwaRegistrationState.status = 'registered';
+        parentPwaRegistrationState.reason = '';
+        parentPwaRegistrationState.registration = result.registration;
+        return;
+      }
+      parentPwaRegistrationState.registration = null;
+      if (result && result.reason === 'unsupported') {
+        parentPwaRegistrationState.status = 'unsupported';
+        parentPwaRegistrationState.reason = 'unsupported';
+        return;
+      }
+      if (result && result.reason === 'ios-home-screen-required') {
+        parentPwaRegistrationState.status = 'ios-home-screen-required';
+        parentPwaRegistrationState.reason = 'ios-home-screen-required';
+        return;
+      }
+      parentPwaRegistrationState.status = 'failed';
+      parentPwaRegistrationState.reason = 'registration-failed';
+    }, function(){
+      parentPwaRegistrationState.status = 'failed';
+      parentPwaRegistrationState.reason = 'registration-failed';
+      parentPwaRegistrationState.registration = null;
+    });
+  }
 
   function esc(s){
     return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){
@@ -4702,6 +4765,8 @@
     showPanel(loadingPanel);
     drainAuthTransitions();
   });
+
+  startParentPwaRegistration();
 
   client.auth.getSession().then(function(res){
     var initialSession = resolveInitialAuthSession(res.data ? res.data.session : null);
