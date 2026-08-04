@@ -92,21 +92,38 @@
   body.mini-open .parent-wrap > .lead{display:none}
   .mini-panel{background:transparent;box-shadow:none;padding:0}
   .mini-hero{min-width:0;margin-bottom:14px;padding:16px;border:1.5px solid var(--line);border-radius:30px;background:var(--paper);box-shadow:0 18px 44px -30px rgba(120,80,60,.5)}
-  .parent-pwa-install-card{min-width:0;margin-bottom:14px;padding:17px 18px;border:1.5px solid #e4dccd;border-radius:22px;background:linear-gradient(135deg,rgba(255,255,255,.94),rgba(247,251,244,.92));box-shadow:0 14px 34px -30px rgba(90,112,83,.6)}
-  .parent-pwa-install-title{font-family:var(--display);font-size:1.08rem;line-height:1.4;font-weight:700;color:var(--ink);overflow-wrap:anywhere;word-break:keep-all}
-  .parent-pwa-install-description{margin-top:5px;color:var(--ink-soft);font-size:.88rem;line-height:1.6;overflow-wrap:anywhere;word-break:keep-all}
-  .parent-pwa-install-status{margin-top:10px;color:#6d8469;font-size:.84rem;line-height:1.55;font-weight:700;overflow-wrap:anywhere;word-break:keep-all}
+  .parent-home-screen-area{display:flex;justify-content:flex-end;min-width:0;margin:-4px 0 8px}
+  .parent-home-screen-trigger{display:inline-flex;align-items:center;justify-content:center;gap:6px;width:auto;max-width:100%;min-height:44px;border:1.5px solid #e5d9c9;border-radius:999px;padding:8px 13px;background:#fffaf1;color:var(--ink-soft);font-family:var(--body);font-size:.8rem;line-height:1.25;font-weight:700;box-shadow:none;cursor:pointer}
+  .parent-home-screen-trigger:hover{background:#fffdf8;color:var(--ink);border-color:#d8c8b6}
+  .parent-home-screen-trigger-icon{display:block;flex:0 0 auto;width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round}
+  .parent-home-screen-trigger:focus-visible,.parent-pwa-modal button:focus-visible{outline:3px solid rgba(255,138,107,.4);outline-offset:2px}
+  body.parent-pwa-modal-open{overflow:hidden}
+  .parent-pwa-modal{position:fixed;inset:0;z-index:40;display:flex;align-items:center;justify-content:center;min-width:0;padding:20px;background:rgba(64,55,51,.54);overscroll-behavior:contain}
+  .parent-pwa-modal[hidden]{display:none!important}
+  .parent-pwa-dialog{position:relative;width:min(100%,520px);max-height:calc(100vh - 40px);max-height:calc(100dvh - 40px);overflow-y:auto;border:1px solid rgba(255,255,255,.72);border-radius:26px;padding:24px;background:var(--paper);box-shadow:0 32px 80px -28px rgba(40,30,25,.72);animation:parentPwaDialogIn .2s ease-out}
+  .parent-pwa-dialog-head{display:flex;align-items:flex-start;gap:12px;padding-right:42px}
+  .parent-pwa-dialog-title{font-family:var(--display);font-size:1.25rem;line-height:1.42;font-weight:700;overflow-wrap:anywhere;word-break:keep-all}
+  .parent-pwa-dialog-close{position:absolute;right:16px;top:16px;display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;border:0;border-radius:50%;background:transparent;color:var(--ink-soft);font-family:var(--body);font-size:1.5rem;line-height:1;cursor:pointer}
+  .parent-pwa-dialog-close:hover{background:var(--cream);color:var(--ink)}
+  .parent-pwa-dialog-description{margin-top:9px;color:var(--ink-soft);font-size:.9rem;line-height:1.68;overflow-wrap:anywhere;word-break:keep-all}
+  .parent-pwa-install-status{margin-top:12px;color:#667e62;font-size:.86rem;line-height:1.6;font-weight:700;overflow-wrap:anywhere;word-break:keep-all}
   .parent-pwa-install-status:empty{display:none}
-  .parent-pwa-install-notes{display:grid;gap:4px;margin-top:11px;color:#81756f;font-size:.76rem;line-height:1.55;overflow-wrap:anywhere;word-break:keep-all}
-  .parent-pwa-install-ios-steps{margin-top:12px;padding:13px 14px;border-radius:16px;background:#fff;color:var(--ink-soft);font-size:.82rem;line-height:1.62}
-  .parent-pwa-install-ios-steps p{margin-bottom:7px;color:var(--coral-deep);font-weight:800}
-  .parent-pwa-install-ios-steps ol{padding-left:20px}
-  .parent-pwa-install-ios-steps li+li{margin-top:3px}
-  .parent-pwa-install-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:14px}
-  .parent-pwa-install-actions .btn{width:auto;min-width:0;min-height:44px;padding:10px 16px;box-shadow:none;font-size:.86rem}
-  .parent-pwa-install-actions .parent-pwa-install-later{background:transparent;color:var(--ink-soft);border:1.5px solid #e7dccf}
-  .parent-pwa-install-actions .btn:focus-visible{outline:3px solid rgba(255,138,107,.38);outline-offset:2px}
-  .parent-pwa-install-optional{margin-top:10px;color:#91847d;font-size:.75rem;line-height:1.55;overflow-wrap:anywhere;word-break:keep-all}
+  .parent-pwa-direct-install{margin-top:18px}
+  .parent-pwa-primary,.parent-pwa-secondary,.parent-pwa-complete,.parent-pwa-later{width:100%;min-height:44px;border-radius:999px;padding:10px 15px;font-family:var(--body);font-size:.88rem;font-weight:800;cursor:pointer}
+  .parent-pwa-primary{border:0;background:var(--coral);color:#fff;box-shadow:0 14px 26px -16px var(--coral-deep)}
+  .parent-pwa-primary:disabled{opacity:.55;cursor:not-allowed;box-shadow:none}
+  .parent-pwa-secondary,.parent-pwa-later{border:1.5px solid #e7dccf;background:transparent;color:var(--ink-soft);box-shadow:none}
+  .parent-pwa-manual-toggle{margin-top:10px}
+  .parent-pwa-instructions{min-width:0;margin-top:14px;border-radius:18px;padding:15px 16px;background:#fffaf3;color:var(--ink-soft);font-size:.85rem;line-height:1.68;overflow-wrap:anywhere;word-break:keep-all}
+  .parent-pwa-instructions-title{font-family:var(--display);color:var(--ink);font-size:1rem;line-height:1.45;font-weight:700}
+  .parent-pwa-browser-notice{margin-top:6px;color:var(--coral-deep);font-weight:800}
+  .parent-pwa-instructions ol{margin-top:9px;padding-left:21px}
+  .parent-pwa-instructions li+li{margin-top:5px}
+  .parent-pwa-manual-note{margin-top:10px;color:#81756f;font-size:.8rem;line-height:1.6}
+  .parent-pwa-complete{margin-top:14px;border:1.5px solid #cddcc9;background:#f4f8f1;color:#60775d;box-shadow:none}
+  .parent-pwa-common-notes{display:grid;gap:4px;margin-top:18px;color:#81756f;font-size:.78rem;line-height:1.58;overflow-wrap:anywhere;word-break:keep-all}
+  .parent-pwa-later{margin-top:14px}
+  @keyframes parentPwaDialogIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
   .mini-hero-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px;min-width:0}
   .mini-hero-identity{min-width:0}
   .mini-hero .section-eyebrow{font-size:1.02rem;line-height:1.3;text-align:left}
@@ -312,9 +329,10 @@
     body.mini-open .parent-wrap{padding-top:18px}
     #topbar.topbar-compact #logoutBtn{padding:6px 9px;font-size:.78rem}
     .mini-hero{padding:12px;border-radius:24px}
-    .parent-pwa-install-card{padding:15px 14px;border-radius:20px}
-    .parent-pwa-install-actions{align-items:stretch;flex-direction:column}
-    .parent-pwa-install-actions .btn{width:100%}
+    .parent-home-screen-area{margin-top:-5px;margin-bottom:7px}
+    .parent-pwa-modal{align-items:flex-end;padding:0}
+    .parent-pwa-dialog{width:100%;max-height:calc(100vh - 24px);max-height:calc(100dvh - 24px);border-radius:24px 24px 0 0;padding:22px 16px calc(18px + env(safe-area-inset-bottom));animation-name:parentPwaSheetIn}
+    .parent-pwa-dialog-close{right:10px;top:10px}
     .mini-hero-head{align-items:flex-start;flex-direction:column;gap:10px;margin-bottom:12px}
     .mini-hero-actions{justify-content:flex-start;width:100%}
     .mini-hero-actions .btn{padding:8px 14px}
@@ -361,6 +379,8 @@
     .parent-inquiry-form-actions .btn,.parent-inquiry-detail-actions .btn{flex:1 1 180px}
   }
   @media (max-width:320px){
+    .parent-pwa-dialog{padding-left:12px;padding-right:12px}
+    .parent-pwa-instructions{padding:13px 12px}
     .parent-inquiry-panel{padding:16px}
     .parent-inquiry-message-content{max-width:94%}
     .parent-inquiry-form-actions,.parent-inquiry-detail-actions{flex-direction:column}
@@ -370,6 +390,10 @@
   @media (min-width:768px){
     .mini-summary-grid.has-cards{grid-template-columns:repeat(auto-fit,minmax(220px,1fr));align-items:stretch}
     .mini-summary-grid.has-cards .notice-alert,.mini-summary-grid.has-cards .event-teaser{height:100%}
+  }
+  @keyframes parentPwaSheetIn{from{opacity:0;transform:translateY(28px)}to{opacity:1;transform:translateY(0)}}
+  @media (prefers-reduced-motion:reduce){
+    .parent-pwa-dialog{animation-duration:.01ms;animation-iteration-count:1}
   }
 </style>
 </head>
@@ -467,6 +491,48 @@
   </div>
 </div>
 
+<div class="parent-pwa-modal" id="parentPwaInstallModal" role="dialog" aria-modal="true" aria-labelledby="parentPwaInstallTitle" hidden>
+  <div class="parent-pwa-dialog">
+    <div class="parent-pwa-dialog-head">
+      <h2 class="parent-pwa-dialog-title" id="parentPwaInstallTitle">원이야를 홈 화면에 추가할까요?</h2>
+    </div>
+    <button type="button" class="parent-pwa-dialog-close" id="parentPwaInstallCloseBtn" aria-label="홈 화면 추가 안내 닫기">×</button>
+    <p class="parent-pwa-dialog-description">다음부터 브라우저를 찾지 않고 우리 반 미니홈피를 바로 열 수 있어요.</p>
+    <p class="parent-pwa-install-status" id="parentPwaInstallStatus" role="status" aria-live="polite" aria-atomic="true"></p>
+    <div class="parent-pwa-direct-install" id="parentPwaDirectInstall" hidden>
+      <button type="button" class="parent-pwa-primary" id="parentPwaInstallActionBtn">원이야 앱 설치하기</button>
+    </div>
+    <div class="parent-pwa-manual-toggle" id="parentPwaManualToggleWrap" hidden>
+      <button type="button" class="parent-pwa-secondary" id="parentPwaManualToggleBtn" aria-expanded="false" aria-controls="parentPwaAndroidInstructions">홈 화면 바로가기 추가 방법</button>
+    </div>
+    <div class="parent-pwa-instructions" id="parentPwaAndroidInstructions" hidden>
+      <h3 class="parent-pwa-instructions-title">홈 화면 바로가기 추가 방법</h3>
+      <ol>
+        <li>브라우저 오른쪽 위의 <strong>⋮</strong> 메뉴를 열어 주세요.</li>
+        <li><strong>홈 화면에 추가</strong>, <strong>바로가기 추가</strong> 또는 <strong>앱 설치</strong>를 선택해 주세요.</li>
+        <li>해당 메뉴가 없으면 <strong>다른 브라우저로 열기</strong>를 선택한 뒤 Chrome에서 진행해 주세요.</li>
+      </ol>
+      <p class="parent-pwa-manual-note">카카오톡이나 일부 브라우저에서는 먼저 외부 브라우저로 열어야 할 수 있어요.</p>
+      <button type="button" class="parent-pwa-complete" data-parent-pwa-complete>홈 화면에 추가했어요</button>
+    </div>
+    <div class="parent-pwa-instructions" id="parentPwaIosInstructions" hidden>
+      <p class="parent-pwa-browser-notice" id="parentPwaIosSafariNotice" hidden>먼저 Safari에서 원이야를 열어 주세요.</p>
+      <ol>
+        <li>Safari의 공유 버튼을 눌러 주세요.</li>
+        <li><strong>홈 화면에 추가</strong>를 선택해 주세요.</li>
+        <li><strong>웹 앱으로 열기</strong>가 보이면 켜 주세요.</li>
+        <li>오른쪽 위의 <strong>추가</strong>를 눌러 주세요.</li>
+      </ol>
+      <button type="button" class="parent-pwa-complete" data-parent-pwa-complete>홈 화면에 추가했어요</button>
+    </div>
+    <div class="parent-pwa-common-notes">
+      <p>앱 설치는 네트워크와 기기 상태에 따라 조금 더 걸릴 수 있어요.</p>
+      <p>설치하거나 바로가기를 추가하지 않아도 브라우저에서 계속 이용할 수 있어요.</p>
+    </div>
+    <button type="button" class="parent-pwa-later" id="parentPwaInstallLaterBtn">나중에</button>
+  </div>
+</div>
+
 <script src="topbar.js"></script>
 <script src="supabase-config.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -503,6 +569,17 @@
   var imageModal = document.getElementById('imageModal');
   var imageModalImg = document.getElementById('imageModalImg');
   var imageModalClose = document.getElementById('imageModalClose');
+  var parentPwaInstallModal = document.getElementById('parentPwaInstallModal');
+  var parentPwaInstallCloseBtn = document.getElementById('parentPwaInstallCloseBtn');
+  var parentPwaInstallStatusText = document.getElementById('parentPwaInstallStatus');
+  var parentPwaDirectInstall = document.getElementById('parentPwaDirectInstall');
+  var parentPwaInstallActionBtn = document.getElementById('parentPwaInstallActionBtn');
+  var parentPwaManualToggleWrap = document.getElementById('parentPwaManualToggleWrap');
+  var parentPwaManualToggleBtn = document.getElementById('parentPwaManualToggleBtn');
+  var parentPwaAndroidInstructions = document.getElementById('parentPwaAndroidInstructions');
+  var parentPwaIosInstructions = document.getElementById('parentPwaIosInstructions');
+  var parentPwaIosSafariNotice = document.getElementById('parentPwaIosSafariNotice');
+  var parentPwaInstallLaterBtn = document.getElementById('parentPwaInstallLaterBtn');
 
   var authForm = document.getElementById('authForm');
   var authEmail = document.getElementById('authEmail');
@@ -564,12 +641,15 @@
   };
   var parentPwaInstallSubscriptionStarted = false;
   var parentPwaInstallUnsubscribe = null;
-  var parentPwaInstallDismissedUserId = '';
+  var PARENT_HOME_SCREEN_STORAGE_KEY = 'woniya_home_screen_added_v1';
+  var parentPwaHomeScreenAdded = readParentPwaHomeScreenAdded();
+  var parentPwaInstallLaterForPage = false;
   var parentPwaInstallPhase = 'idle';
   var parentPwaInstallMessage = '';
   var parentPwaInstallActionContext = null;
-  var parentPwaIosInstructionsExpanded = false;
-  var parentPwaIosInstructionsContext = null;
+  var parentPwaInstallModalContext = null;
+  var parentPwaManualInstructionsExpanded = false;
+  var parentPwaInstallReturnFocus = null;
 
   var parentInquiryRealtimeManager = window.WoniyaInquiryRealtime.createManager({
     supabase: client,
@@ -708,92 +788,130 @@
       isApprovedParentInquiryContext();
   }
 
-  function parentPwaInstallCardHtml(){
-    return '<section class="parent-pwa-install-card" id="parentPwaInstallCard" aria-labelledby="parentPwaInstallTitle" hidden>' +
-      '<h2 class="parent-pwa-install-title" id="parentPwaInstallTitle">원이야를 홈 화면에 추가해 보세요</h2>' +
-      '<p class="parent-pwa-install-description">다음부터 브라우저를 찾지 않고 우리 반 미니홈피를 바로 열 수 있어요.</p>' +
-      '<p class="parent-pwa-install-status" id="parentPwaInstallStatus" role="status" aria-live="polite" aria-atomic="true"></p>' +
-      '<div class="parent-pwa-install-notes" id="parentPwaInstallAndroidNotes" hidden>' +
-        '<p>보통 잠시 걸리며, 네트워크나 기기 상태에 따라 시간이 더 걸릴 수 있어요. 설치 중에는 화면을 닫지 않는 것이 좋아요.</p>' +
-        '<p>설치가 오래 걸리면 Wi-Fi 연결이나 Chrome의 모바일 데이터 사용 설정을 확인해 주세요.</p>' +
-      '</div>' +
-      '<div class="parent-pwa-install-ios-steps" id="parentPwaInstallIosSteps" hidden>' +
-        '<p id="parentPwaInstallIosSafariNotice" hidden>먼저 Safari에서 원이야를 열어 주세요.</p>' +
-        '<ol>' +
-          '<li>Safari 아래쪽의 공유 버튼을 눌러 주세요.</li>' +
-          '<li><strong>홈 화면에 추가</strong>를 선택해 주세요.</li>' +
-          '<li><strong>웹 앱으로 열기</strong>가 보이면 켜 주세요.</li>' +
-          '<li>오른쪽 위의 <strong>추가</strong>를 눌러 주세요.</li>' +
-        '</ol>' +
-      '</div>' +
-      '<div class="parent-pwa-install-actions">' +
-        '<button type="button" class="btn parent-pwa-install-action" id="parentPwaInstallActionBtn"></button>' +
-        '<button type="button" class="btn parent-pwa-install-later" id="parentPwaInstallLaterBtn">나중에</button>' +
-      '</div>' +
-      '<p class="parent-pwa-install-optional">설치하지 않아도 지금처럼 브라우저에서 계속 이용할 수 있어요.</p>' +
-    '</section>';
+  function readParentPwaHomeScreenAdded(){
+    try {
+      return window.localStorage.getItem(PARENT_HOME_SCREEN_STORAGE_KEY) === '1';
+    } catch (_error) {
+      return false;
+    }
   }
 
-  function shouldShowParentPwaInstallCard(status, context){
+  function storeParentPwaHomeScreenAdded(){
+    parentPwaHomeScreenAdded = true;
+    try {
+      window.localStorage.setItem(PARENT_HOME_SCREEN_STORAGE_KEY, '1');
+    } catch (_error) {
+      // The in-memory completion state still prevents repeated guidance on this page.
+    }
+  }
+
+  function parentPwaHomeScreenButtonHtml(){
+    return '<div class="parent-home-screen-area" id="parentHomeScreenArea" hidden>' +
+      '<button type="button" class="parent-home-screen-trigger" id="parentHomeScreenBtn" aria-haspopup="dialog" aria-controls="parentPwaInstallModal">' +
+        '<svg class="parent-home-screen-trigger-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">' +
+          '<path d="M3.75 10.5 12 3.75l8.25 6.75"></path>' +
+          '<path d="M5.75 9.25v10h8.5"></path>' +
+          '<path d="M9.25 19.25v-5.5h5.5"></path>' +
+          '<path d="M18.25 14v6.5M15 17.25h6.5"></path>' +
+        '</svg>' +
+        '<span>홈 화면 추가</span>' +
+      '</button>' +
+    '</div>';
+  }
+
+  function shouldShowParentPwaInstallUi(status, context){
     if (!isParentPwaInstallContextCurrent(context)) return false;
-    if (parentPwaInstallDismissedUserId === context.userId) return false;
+    if (parentPwaHomeScreenAdded || parentPwaInstallLaterForPage) return false;
     if (status.isStandalone || status.installed) return false;
-    if (status.isIos) return true;
-    if (!status.isAndroid) return false;
-    if (status.canPrompt) return true;
-    return parentPwaInstallContextsMatch(parentPwaInstallActionContext, context) &&
-      ['installing', 'accepted', 'failed'].indexOf(parentPwaInstallPhase) >= 0;
+    return status.isAndroid || status.isIos;
   }
 
-  function syncParentPwaInstallCard(expectedAuthVersion, expectedClassVersion, expectedClassId){
-    var card = document.getElementById('parentPwaInstallCard');
-    if (!card) return;
+  function closeParentPwaInstallModal(restoreFocus){
+    if (parentPwaInstallModal.hidden) return;
+    parentPwaInstallModal.hidden = true;
+    document.body.classList.remove('parent-pwa-modal-open');
+    parentPwaInstallModalContext = null;
+    parentPwaManualInstructionsExpanded = false;
+    syncParentInquiryFloatingButton();
+    if (restoreFocus) {
+      var focusTarget = parentPwaInstallReturnFocus && parentPwaInstallReturnFocus.isConnected
+        ? parentPwaInstallReturnFocus
+        : document.getElementById('parentHomeScreenBtn');
+      if (focusTarget && !focusTarget.hidden) focusTarget.focus();
+    }
+    parentPwaInstallReturnFocus = null;
+  }
 
+  function renderParentPwaInstallModal(context){
+    if (parentPwaInstallModal.hidden || !parentPwaInstallContextsMatch(parentPwaInstallModalContext, context)) return;
+    var isAndroid = parentPwaInstallStatus.isAndroid;
+    var isIos = parentPwaInstallStatus.isIos;
+    var directInstallAvailable = isAndroid && parentPwaInstallStatus.canPrompt && parentPwaInstallPhase !== 'unavailable';
+    var showAndroidInstructions = isAndroid && (
+      !directInstallAvailable ||
+      parentPwaManualInstructionsExpanded ||
+      parentPwaInstallPhase === 'failed'
+    );
+
+    parentPwaInstallStatusText.textContent = isIos ? '' : parentPwaInstallMessage;
+    parentPwaDirectInstall.hidden = !directInstallAvailable;
+    parentPwaInstallActionBtn.disabled = parentPwaInstallPhase === 'installing' || parentPwaInstallPhase === 'accepted';
+    parentPwaInstallActionBtn.textContent = ['installing', 'accepted'].indexOf(parentPwaInstallPhase) >= 0
+      ? '설치 처리 중'
+      : '원이야 앱 설치하기';
+    parentPwaManualToggleWrap.hidden = !directInstallAvailable;
+    parentPwaManualToggleBtn.setAttribute('aria-expanded', showAndroidInstructions ? 'true' : 'false');
+    parentPwaAndroidInstructions.hidden = !showAndroidInstructions;
+    parentPwaIosInstructions.hidden = !isIos;
+    parentPwaIosSafariNotice.hidden = !isIos || parentPwaInstallStatus.isIosSafari;
+  }
+
+  function syncParentPwaInstallUi(expectedAuthVersion, expectedClassVersion, expectedClassId){
+    var area = document.getElementById('parentHomeScreenArea');
     parentPwaInstallStatus = readParentPwaInstallStatus();
     var context = createParentPwaInstallContext();
-    if (expectedAuthVersion != null && (
-      context.authVersion !== expectedAuthVersion ||
-      context.classVersion !== expectedClassVersion ||
-      context.classId !== expectedClassId
-    )) {
-      card.hidden = true;
+    var expectedContextMatches = expectedAuthVersion == null || (
+      context.authVersion === expectedAuthVersion &&
+      context.classVersion === expectedClassVersion &&
+      context.classId === expectedClassId
+    );
+    var shouldShow = expectedContextMatches && shouldShowParentPwaInstallUi(parentPwaInstallStatus, context);
+
+    if (area) area.hidden = !shouldShow;
+    if (!shouldShow) {
+      closeParentPwaInstallModal(false);
       return;
     }
-    if (!shouldShowParentPwaInstallCard(parentPwaInstallStatus, context)) {
-      card.hidden = true;
+    renderParentPwaInstallModal(context);
+  }
+
+  function openParentPwaInstallModal(trigger){
+    var context = createParentPwaInstallContext();
+    parentPwaInstallStatus = readParentPwaInstallStatus();
+    if (!shouldShowParentPwaInstallUi(parentPwaInstallStatus, context)) {
+      syncParentPwaInstallUi();
       return;
     }
+    var blockingModal = document.querySelector('.image-modal:not([hidden]),[role="dialog"]:not([hidden]):not(#parentPwaInstallModal),dialog[open]');
+    if (blockingModal) return;
 
-    var actionButton = document.getElementById('parentPwaInstallActionBtn');
-    var statusText = document.getElementById('parentPwaInstallStatus');
-    var androidNotes = document.getElementById('parentPwaInstallAndroidNotes');
-    var iosSteps = document.getElementById('parentPwaInstallIosSteps');
-    var iosSafariNotice = document.getElementById('parentPwaInstallIosSafariNotice');
-    var isIos = parentPwaInstallStatus.isIos;
-    var instructionsExpanded = isIos && parentPwaIosInstructionsExpanded &&
-      parentPwaInstallContextsMatch(parentPwaIosInstructionsContext, context);
+    parentPwaInstallReturnFocus = trigger;
+    parentPwaInstallModalContext = context;
+    parentPwaManualInstructionsExpanded = parentPwaInstallStatus.isAndroid && !parentPwaInstallStatus.canPrompt;
+    parentPwaInstallModal.hidden = false;
+    document.body.classList.add('parent-pwa-modal-open');
+    renderParentPwaInstallModal(context);
+    syncParentInquiryFloatingButton();
+    parentPwaInstallCloseBtn.focus();
+  }
 
-    card.hidden = false;
-    statusText.textContent = isIos ? '' : parentPwaInstallMessage;
-    androidNotes.hidden = isIos;
-    iosSteps.hidden = !instructionsExpanded;
-    iosSafariNotice.hidden = parentPwaInstallStatus.isIosSafari;
-    actionButton.hidden = !isIos && (parentPwaInstallPhase === 'accepted' || parentPwaInstallPhase === 'failed');
-    actionButton.disabled = !isIos && parentPwaInstallPhase === 'installing';
-
-    if (isIos) {
-      actionButton.textContent = instructionsExpanded
-        ? '홈 화면 추가 방법 접기'
-        : '홈 화면 추가 방법 보기';
-      actionButton.setAttribute('aria-label', actionButton.textContent);
-      actionButton.setAttribute('aria-controls', 'parentPwaInstallIosSteps');
-      actionButton.setAttribute('aria-expanded', instructionsExpanded ? 'true' : 'false');
-    } else {
-      actionButton.textContent = parentPwaInstallPhase === 'installing' ? '설치 처리 중' : '원이야 설치하기';
-      actionButton.setAttribute('aria-label', actionButton.textContent);
-      actionButton.removeAttribute('aria-controls');
-      actionButton.removeAttribute('aria-expanded');
-    }
+  function completeParentPwaHomeScreenGuidance(){
+    storeParentPwaHomeScreenAdded();
+    parentPwaInstallPhase = 'idle';
+    parentPwaInstallMessage = '';
+    parentPwaInstallActionContext = null;
+    closeParentPwaInstallModal(false);
+    syncParentPwaInstallUi();
   }
 
   function startParentPwaInstallStatusSubscription(){
@@ -807,14 +925,22 @@
       var unsubscribe = helper.subscribeInstallStatus(function(status){
         try {
           parentPwaInstallStatus = normalizeParentPwaInstallStatus(status);
+          var callbackContext = createParentPwaInstallContext();
+          var callbackContextIsCurrent = isParentPwaInstallContextCurrent(callbackContext);
+          if (parentPwaInstallStatus.installed && !parentPwaInstallStatus.isStandalone) {
+            storeParentPwaHomeScreenAdded();
+          }
           if (parentPwaInstallStatus.installed || parentPwaInstallStatus.isStandalone) {
             parentPwaInstallPhase = 'idle';
             parentPwaInstallMessage = '';
             parentPwaInstallActionContext = null;
-            parentPwaIosInstructionsExpanded = false;
-            parentPwaIosInstructionsContext = null;
+            closeParentPwaInstallModal(false);
+          } else if (parentPwaInstallStatus.canPrompt && parentPwaInstallPhase === 'unavailable') {
+            parentPwaInstallPhase = 'idle';
           }
-          syncParentPwaInstallCard();
+          if (callbackContextIsCurrent || parentPwaInstallStatus.installed || parentPwaInstallStatus.isStandalone) {
+            syncParentPwaInstallUi();
+          }
         } catch (_error) {
           // Installation guidance must never interrupt the parent page.
         }
@@ -828,38 +954,36 @@
   async function handleParentPwaInstallAction(){
     var context = createParentPwaInstallContext();
     if (!isParentPwaInstallContextCurrent(context)) {
-      syncParentPwaInstallCard();
+      syncParentPwaInstallUi();
       return;
     }
 
     parentPwaInstallStatus = readParentPwaInstallStatus();
-    if (parentPwaInstallStatus.isIos) {
-      var sameInstructionsContext = parentPwaInstallContextsMatch(parentPwaIosInstructionsContext, context);
-      parentPwaIosInstructionsExpanded = sameInstructionsContext
-        ? !parentPwaIosInstructionsExpanded
-        : true;
-      parentPwaIosInstructionsContext = parentPwaIosInstructionsExpanded ? context : null;
-      syncParentPwaInstallCard();
-      return;
-    }
-
-    if (!parentPwaInstallStatus.isAndroid || !parentPwaInstallStatus.canPrompt || parentPwaInstallPhase === 'installing') {
-      syncParentPwaInstallCard();
+    if (
+      parentPwaInstallModal.hidden ||
+      !parentPwaInstallContextsMatch(parentPwaInstallModalContext, context) ||
+      !parentPwaInstallStatus.isAndroid ||
+      !parentPwaInstallStatus.canPrompt ||
+      parentPwaInstallPhase === 'installing' ||
+      parentPwaInstallPhase === 'accepted'
+    ) {
+      syncParentPwaInstallUi();
       return;
     }
 
     var helper = window.WoniyaPushSubscription;
     if (!helper || typeof helper.promptInstall !== 'function') {
-      parentPwaInstallPhase = 'idle';
+      parentPwaInstallPhase = 'unavailable';
       parentPwaInstallMessage = '';
-      syncParentPwaInstallCard();
+      parentPwaManualInstructionsExpanded = true;
+      syncParentPwaInstallUi();
       return;
     }
 
     parentPwaInstallActionContext = context;
     parentPwaInstallPhase = 'installing';
     parentPwaInstallMessage = '원이야를 설치하고 있어요. 기기에 따라 잠시 걸릴 수 있어요.';
-    syncParentPwaInstallCard();
+    syncParentPwaInstallUi();
 
     var result;
     try {
@@ -874,16 +998,17 @@
         parentPwaInstallMessage = '';
         parentPwaInstallActionContext = null;
       }
-      syncParentPwaInstallCard();
+      syncParentPwaInstallUi();
       return;
     }
 
     parentPwaInstallStatus = readParentPwaInstallStatus();
     if (parentPwaInstallStatus.installed || parentPwaInstallStatus.isStandalone) {
+      if (parentPwaInstallStatus.installed && !parentPwaInstallStatus.isStandalone) storeParentPwaHomeScreenAdded();
       parentPwaInstallPhase = 'idle';
       parentPwaInstallMessage = '';
       parentPwaInstallActionContext = null;
-      syncParentPwaInstallCard();
+      syncParentPwaInstallUi();
       return;
     }
 
@@ -891,40 +1016,46 @@
       parentPwaInstallPhase = 'accepted';
       parentPwaInstallMessage = '설치를 진행하고 있어요. 완료되면 홈 화면이나 앱 목록에서 원이야를 열 수 있어요.';
     } else if (result && result.reason === 'dismissed') {
-      parentPwaInstallDismissedUserId = context.userId;
+      parentPwaInstallLaterForPage = true;
       parentPwaInstallPhase = 'idle';
       parentPwaInstallMessage = '';
       parentPwaInstallActionContext = null;
-    } else if (result && (result.reason === 'already-installed' || result.reason === 'unavailable')) {
-      parentPwaInstallPhase = 'idle';
+      closeParentPwaInstallModal(false);
+    } else if (result && result.reason === 'already-installed') {
+      completeParentPwaHomeScreenGuidance();
+      return;
+    } else if (result && result.reason === 'unavailable') {
+      parentPwaInstallPhase = 'unavailable';
       parentPwaInstallMessage = '';
       parentPwaInstallActionContext = null;
+      parentPwaManualInstructionsExpanded = true;
     } else {
       parentPwaInstallPhase = 'failed';
-      parentPwaInstallMessage = '설치를 완료하지 못했어요. 브라우저 메뉴에서 다시 설치할 수 있어요.';
+      parentPwaInstallMessage = '설치를 완료하지 못했어요. 아래 방법으로 홈 화면 바로가기를 추가할 수 있어요.';
+      parentPwaManualInstructionsExpanded = true;
     }
-    syncParentPwaInstallCard();
+    syncParentPwaInstallUi();
   }
 
-  function hideParentPwaInstallCardForPage(){
+  function hideParentPwaInstallUiForPage(){
     var context = createParentPwaInstallContext();
     if (!isParentPwaInstallContextCurrent(context)) return;
-    parentPwaInstallDismissedUserId = context.userId;
+    parentPwaInstallLaterForPage = true;
     parentPwaInstallPhase = 'idle';
     parentPwaInstallMessage = '';
     parentPwaInstallActionContext = null;
-    parentPwaIosInstructionsExpanded = false;
-    parentPwaIosInstructionsContext = null;
-    syncParentPwaInstallCard();
+    closeParentPwaInstallModal(false);
+    syncParentPwaInstallUi();
   }
 
   function showPanel(panel){
+    if (panel !== miniPanel) closeParentPwaInstallModal(false);
     [loadingPanel, authPanel, invitePanel, pendingPanel, classesPanel, miniPanel, noticePanel].forEach(function(item){
       item.hidden = item !== panel;
     });
     document.body.classList.toggle('mini-open', panel === miniPanel);
     syncParentInquiryFloatingButton();
-    syncParentPwaInstallCard();
+    syncParentPwaInstallUi();
   }
 
   function createMiniCache(){
@@ -1173,6 +1304,7 @@
     selectedAlbumKey = null;
     miniCache = createMiniCache();
     resetCenterBrand();
+    closeParentPwaInstallModal(false);
     imageModal.hidden = true;
     imageModalImg.removeAttribute('src');
   }
@@ -2141,7 +2273,7 @@
           '</div>' +
         '</div>' +
       '</section>' +
-      parentPwaInstallCardHtml() +
+      parentPwaHomeScreenButtonHtml() +
       (summaryCards.length ? '<div class="mini-summary-grid has-cards">' +
         summaryCards.map(function(card){
           var isNotice = card.kind === 'notice';
@@ -2174,7 +2306,7 @@
         ? '<div class="mini-content" id="miniContent"></div>'
         : '<div class="empty-mini">아직 준비 중이에요.</div>');
 
-    syncParentPwaInstallCard(authVersion, loadVersion, classId);
+    syncParentPwaInstallUi(authVersion, loadVersion, classId);
     if (modules.length) renderMiniTab();
     syncParentInquiryFloatingButton();
     syncParentInquiryRealtime(authVersion, loadVersion, classId);
@@ -4815,16 +4947,10 @@
   });
 
   miniRoot.addEventListener('click', async function(e){
-    var pwaInstallActionButton = e.target.closest('#parentPwaInstallActionBtn');
-    if (pwaInstallActionButton) {
+    var homeScreenButton = e.target.closest('#parentHomeScreenBtn');
+    if (homeScreenButton) {
       e.preventDefault();
-      await handleParentPwaInstallAction();
-      return;
-    }
-    var pwaInstallLaterButton = e.target.closest('#parentPwaInstallLaterBtn');
-    if (pwaInstallLaterButton) {
-      e.preventDefault();
-      hideParentPwaInstallCardForPage();
+      openParentPwaInstallModal(homeScreenButton);
       return;
     }
     var miniBackButton = e.target.closest('#miniBackBtn');
@@ -5001,9 +5127,71 @@
     }
     var imageBtn = e.target.closest('[data-open-image]');
     if (imageBtn) {
+      closeParentPwaInstallModal(false);
       imageModalImg.src = imageBtn.dataset.openImage;
       imageModal.hidden = false;
       syncParentInquiryFloatingButton();
+    }
+  });
+
+  parentPwaInstallCloseBtn.addEventListener('click', function(){
+    closeParentPwaInstallModal(true);
+  });
+
+  parentPwaInstallModal.addEventListener('click', function(e){
+    if (e.target === parentPwaInstallModal) closeParentPwaInstallModal(true);
+  });
+
+  parentPwaInstallActionBtn.addEventListener('click', async function(){
+    await handleParentPwaInstallAction();
+  });
+
+  parentPwaManualToggleBtn.addEventListener('click', function(){
+    var context = createParentPwaInstallContext();
+    if (!isParentPwaInstallContextCurrent(context) || !parentPwaInstallContextsMatch(parentPwaInstallModalContext, context)) {
+      syncParentPwaInstallUi();
+      return;
+    }
+    parentPwaManualInstructionsExpanded = !parentPwaManualInstructionsExpanded;
+    renderParentPwaInstallModal(context);
+  });
+
+  parentPwaInstallModal.querySelectorAll('[data-parent-pwa-complete]').forEach(function(button){
+    button.addEventListener('click', function(){
+      var context = createParentPwaInstallContext();
+      if (!isParentPwaInstallContextCurrent(context) || !parentPwaInstallContextsMatch(parentPwaInstallModalContext, context)) {
+        syncParentPwaInstallUi();
+        return;
+      }
+      completeParentPwaHomeScreenGuidance();
+    });
+  });
+
+  parentPwaInstallLaterBtn.addEventListener('click', function(){
+    hideParentPwaInstallUiForPage();
+  });
+
+  document.addEventListener('keydown', function(e){
+    if (parentPwaInstallModal.hidden) return;
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      closeParentPwaInstallModal(true);
+      return;
+    }
+    if (e.key !== 'Tab') return;
+    var focusable = Array.prototype.filter.call(
+      parentPwaInstallModal.querySelectorAll('button:not([disabled]),a[href],input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])'),
+      function(element){ return element.getClientRects().length > 0; }
+    );
+    if (!focusable.length) return;
+    var first = focusable[0];
+    var last = focusable[focusable.length - 1];
+    if (e.shiftKey && document.activeElement === first) {
+      e.preventDefault();
+      last.focus();
+    } else if (!e.shiftKey && document.activeElement === last) {
+      e.preventDefault();
+      first.focus();
     }
   });
 
