@@ -3,7 +3,7 @@
   "short_name": "원이야",
   "description": "유치원과 어린이집을 위한 원이야 서비스",
   "id": "/",
-  "start_url": "/",
+  "start_url": "/app-start.html",
   "scope": "/",
   "display": "standalone",
   "background_color": "#FBF6EE",

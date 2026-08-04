@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>원이야 - 시작</title>
+<meta name="theme-color" content="#FF8A6B">
+<style>
+  :root{
+    --cream:#FBF6EE;
+    --paper:#FFFDF9;
+    --coral:#FF8A6B;
+    --coral-deep:#E96F55;
+    --ink:#403733;
+    --ink-soft:#7D716A;
+    --line:#E9DED3;
+    --sage:#78947C;
+  }
+  *{box-sizing:border-box}
+  html,body{min-height:100%;margin:0}
+  body{
+    min-width:0;
+    overflow-x:hidden;
+    background:
+      radial-gradient(circle at 16% 12%,rgba(255,138,107,.13),transparent 30%),
+      radial-gradient(circle at 88% 88%,rgba(120,148,124,.12),transparent 32%),
+      var(--cream);
+    color:var(--ink);
+    font-family:"Apple SD Gothic Neo","Noto Sans KR","Malgun Gothic",sans-serif;
+  }
+  main{
+    min-height:100vh;
+    min-height:100dvh;
+    display:grid;
+    place-items:center;
+    padding:calc(24px + env(safe-area-inset-top)) 18px calc(24px + env(safe-area-inset-bottom));
+  }
+  .start-card{
+    width:min(100%,430px);
+    padding:34px 26px 28px;
+    border:1px solid rgba(233,222,211,.9);
+    border-radius:28px;
+    background:rgba(255,253,249,.94);
+    box-shadow:0 24px 60px -38px rgba(82,58,48,.58);
+    text-align:center;
+  }
+  .brand-logo{
+    display:block;
+    width:auto;
+    height:auto;
+    max-width:min(220px,100%);
+    margin:0 auto;
+    object-fit:contain;
+  }
+  .brand-note{
+    margin:7px 0 0;
+    color:var(--sage);
+    font-size:.82rem;
+    font-weight:800;
+    letter-spacing:.02em;
+  }
+  .status-area{
+    min-height:112px;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    margin-top:24px;
+  }
+  .status-area[hidden]{display:none}
+  .status-title{
+    margin:0;
+    font-size:1.22rem;
+    line-height:1.45;
+    letter-spacing:-.025em;
+  }
+  .status-message{
+    margin:9px auto 0;
+    max-width:330px;
+    color:var(--ink-soft);
+    font-size:.92rem;
+    line-height:1.65;
+    overflow-wrap:anywhere;
+  }
+  .loading-mark{
+    width:28px;
+    height:28px;
+    margin:0 auto 14px;
+    border:3px solid #F3DED5;
+    border-top-color:var(--coral);
+    border-radius:50%;
+    animation:spin .8s linear infinite;
+  }
+  .actions{
+    display:grid;
+    gap:10px;
+    margin-top:22px;
+  }
+  .actions.login-actions{margin-top:36px}
+  .action-button{
+    width:100%;
+    min-height:48px;
+    border:0;
+    border-radius:16px;
+    padding:12px 16px;
+    background:var(--coral);
+    color:#fff;
+    font:inherit;
+    font-size:.95rem;
+    font-weight:800;
+    line-height:1.35;
+    cursor:pointer;
+    box-shadow:0 12px 24px -16px var(--coral-deep);
+  }
+  .action-button.secondary{
+    border:1px solid var(--line);
+    background:#fff;
+    color:var(--ink);
+    box-shadow:none;
+  }
+  .action-button.subtle{
+    background:#F3EEE8;
+    color:var(--ink-soft);
+    box-shadow:none;
+  }
+  .action-button:hover{filter:brightness(.98)}
+  .action-button:focus-visible{outline:3px solid rgba(255,138,107,.32);outline-offset:3px}
+  .action-button:disabled{cursor:default;opacity:.58}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  @media (max-width:360px){
+    main{padding-left:12px;padding-right:12px}
+    .start-card{padding:30px 18px 24px;border-radius:24px}
+    .brand-logo{max-width:min(200px,100%)}
+  }
+  @media (prefers-reduced-motion:reduce){
+    .loading-mark{animation-duration:1.6s}
+  }
+</style>
+</head>
+<body>
+<main>
+  <section class="start-card" aria-labelledby="startBrand">
+    <img class="brand-logo" id="startBrand" src="/assets/woniya-logo.png" alt="원이야">
+    <p class="brand-note">우리 원과 반을 잇는 따뜻한 공간</p>
+    <div class="status-area" id="statusArea" role="status" aria-live="polite" aria-atomic="true"></div>
+    <div class="actions" id="actionArea"></div>
+  </section>
+</main>
+
+<script src="/supabase-config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+(function(){
+  'use strict';
+
+  var UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+  var ROUTES = Object.freeze({
+    parent: '/parent.html',
+    staff: '/class-admin.html',
+    owner: '/admin.html',
+    teacherOnboarding: '/teacher-onboarding.html'
+  });
+  var statusArea = document.getElementById('statusArea');
+  var actionArea = document.getElementById('actionArea');
+  var requestGeneration = 0;
+  var currentSession = null;
+  var currentUserId = '';
+  var roleCheckUserId = '';
+  var navigationStarted = false;
+  var logoutInFlight = false;
+  var client = null;
+
+  function isValidUuid(value){
+    return typeof value === 'string' && UUID_PATTERN.test(value);
+  }
+
+  function sessionUserId(session){
+    return session && session.user && typeof session.user.id === 'string'
+      ? session.user.id
+      : '';
+  }
+
+  function isCurrentRequest(generation, userId){
+    return generation === requestGeneration &&
+      !!userId &&
+      currentUserId === userId &&
+      sessionUserId(currentSession) === userId &&
+      !navigationStarted;
+  }
+
+  function clearActions(){
+    while (actionArea.firstChild) actionArea.removeChild(actionArea.firstChild);
+  }
+
+  function renderState(title, message, options){
+    var config = options || {};
+    statusArea.hidden = config.hideStatus === true;
+    actionArea.classList.toggle('login-actions', config.hideStatus === true);
+    statusArea.setAttribute('aria-busy', config.loading ? 'true' : 'false');
+    statusArea.textContent = '';
+    clearActions();
+
+    if (config.loading) {
+      var loading = document.createElement('div');
+      loading.className = 'loading-mark';
+      loading.setAttribute('aria-hidden', 'true');
+      statusArea.appendChild(loading);
+    }
+
+    var heading = document.createElement('h2');
+    heading.className = 'status-title';
+    heading.textContent = title;
+    statusArea.appendChild(heading);
+
+    if (message) {
+      var description = document.createElement('p');
+      description.className = 'status-message';
+      description.textContent = message;
+      statusArea.appendChild(description);
+    }
+  }
+
+  function addAction(label, handler, tone){
+    var button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'action-button' + (tone ? ' ' + tone : '');
+    button.textContent = label;
+    button.addEventListener('click', handler);
+    actionArea.appendChild(button);
+    return button;
+  }
+
+  function buildInternalTarget(routeName, options){
+    if (!Object.prototype.hasOwnProperty.call(ROUTES, routeName)) return null;
+    var target = new URL(ROUTES[routeName], window.location.origin);
+    var config = options || {};
+
+    if (routeName === 'staff' && config.classId != null) {
+      if (!isValidUuid(config.classId)) return null;
+      target.searchParams.set('class_id', config.classId);
+    }
+    if (routeName === 'teacherOnboarding') {
+      target.searchParams.set('flow', 'existing');
+    }
+
+    if (target.origin !== window.location.origin) return null;
+    if (target.pathname !== ROUTES[routeName]) return null;
+    return target.pathname + target.search;
+  }
+
+  function navigateTo(routeName, options){
+    if (navigationStarted) return;
+    var target = buildInternalTarget(routeName, options);
+    if (!target) {
+      showConnectionError();
+      return;
+    }
+    navigationStarted = true;
+    requestGeneration += 1;
+    renderState('이동 중', '연결된 원이야 화면을 열고 있어요.', { loading:true });
+    window.location.replace(target);
+  }
+
+  function showLoginRequired(){
+    requestGeneration += 1;
+    currentSession = null;
+    currentUserId = '';
+    roleCheckUserId = '';
+    navigationStarted = false;
+    logoutInFlight = false;
+    renderState('', '', { hideStatus:true });
+    addAction('학부모로 시작', function(){ navigateTo('parent'); });
+    addAction('교직원으로 시작', function(){ navigateTo('staff'); }, 'secondary');
+    addAction('원장으로 시작', function(){ navigateTo('owner'); }, 'secondary');
+  }
+
+  function showConnectionError(){
+    navigationStarted = false;
+    renderState('연결 정보를 확인하지 못했어요.', '네트워크 연결을 확인한 뒤 다시 시도해 주세요.');
+    addAction('다시 확인하기', beginSessionCheck);
+  }
+
+  function showNoRole(message){
+    navigationStarted = false;
+    renderState('현재 연결된 원이나 반을 찾지 못했어요.', message || '초대 또는 학부모 연결 상태를 확인해 주세요.');
+    addAction('학부모 연결 확인', function(){ navigateTo('parent'); });
+    addAction('교사 초대 확인', function(){ navigateTo('teacherOnboarding'); }, 'secondary');
+    addAction('로그아웃', signOutCurrentUser, 'subtle');
+  }
+
+  function normalizeUuidArray(value){
+    if (!Array.isArray(value)) throw new Error('invalid-role-response');
+    var seen = new Set();
+    var normalized = [];
+    value.forEach(function(item){
+      if (!isValidUuid(item)) throw new Error('invalid-role-response');
+      var id = item.toLowerCase();
+      if (seen.has(id)) return;
+      seen.add(id);
+      normalized.push(id);
+    });
+    return normalized;
+  }
+
+  function normalizeParentSummaries(value){
+    if (!Array.isArray(value)) throw new Error('invalid-role-response');
+    var seen = new Set();
+    var normalized = [];
+    value.forEach(function(item){
+      if (!item || typeof item !== 'object' || Array.isArray(item) || !isValidUuid(item.id)) {
+        throw new Error('invalid-role-response');
+      }
+      var id = item.id.toLowerCase();
+      if (seen.has(id)) return;
+      seen.add(id);
+      normalized.push(id);
+    });
+    return normalized;
+  }
+
+  function normalizeRoleResults(results){
+    if (!Array.isArray(results) || results.length !== 3) throw new Error('invalid-role-response');
+    if (results.some(function(result){ return !result || result.error; })) {
+      throw new Error('role-request-failed');
+    }
+    return {
+      parentClassIds: normalizeParentSummaries(results[0].data),
+      teacherClassIds: normalizeUuidArray(results[1].data),
+      ownerCenterIds: normalizeUuidArray(results[2].data)
+    };
+  }
+
+  function roleCount(roles){
+    var count = 0;
+    if (roles.parentClassIds.length) count += 1;
+    if (roles.teacherClassIds.length) count += 1;
+    if (roles.ownerCenterIds.length) count += 1;
+    return count;
+  }
+
+  function staffRouteOptions(roles){
+    return roles.teacherClassIds.length === 1
+      ? { classId:roles.teacherClassIds[0] }
+      : {};
+  }
+
+  function showRoleChoices(roles){
+    renderState('사용할 역할을 선택해 주세요', '연결된 역할이 여러 개 있어요. 이번에 사용할 화면을 선택해 주세요.');
+    if (roles.ownerCenterIds.length) {
+      addAction('원장으로 시작', function(){ navigateTo('owner'); });
+    }
+    if (roles.teacherClassIds.length) {
+      addAction('교직원으로 시작', function(){ navigateTo('staff', staffRouteOptions(roles)); }, 'secondary');
+    }
+    if (roles.parentClassIds.length) {
+      addAction('학부모로 시작', function(){ navigateTo('parent'); }, 'secondary');
+    }
+  }
+
+  function applyRoleResult(roles){
+    var count = roleCount(roles);
+    if (count === 0) {
+      showNoRole();
+      return;
+    }
+    if (count > 1) {
+      showRoleChoices(roles);
+      return;
+    }
+    if (roles.ownerCenterIds.length) {
+      navigateTo('owner');
+      return;
+    }
+    if (roles.teacherClassIds.length) {
+      navigateTo('staff', staffRouteOptions(roles));
+      return;
+    }
+    navigateTo('parent');
+  }
+
+  function startRoleCheck(session, force){
+    var userId = sessionUserId(session);
+    if (!userId || !isValidUuid(userId)) {
+      showConnectionError();
+      return;
+    }
+    if (!force && currentUserId === userId && roleCheckUserId === userId) return;
+
+    var generation = ++requestGeneration;
+    currentSession = session;
+    currentUserId = userId;
+    roleCheckUserId = userId;
+    navigationStarted = false;
+    renderState('역할 확인 중', '연결된 원과 반을 확인하고 있어요.', { loading:true });
+
+    Promise.all([
+      client.rpc('get_my_approved_class_summaries'),
+      client.rpc('my_teaching_class_ids'),
+      client.rpc('my_owned_center_ids')
+    ]).then(function(results){
+      if (!isCurrentRequest(generation, userId)) return;
+      var roles;
+      try {
+        roles = normalizeRoleResults(results);
+      } catch (_error) {
+        showConnectionError();
+        return;
+      }
+      if (!isCurrentRequest(generation, userId)) return;
+      applyRoleResult(roles);
+    }).catch(function(){
+      if (!isCurrentRequest(generation, userId)) return;
+      showConnectionError();
+    });
+  }
+
+  function beginSessionCheck(){
+    if (!client) {
+      showConnectionError();
+      return;
+    }
+    var generation = ++requestGeneration;
+    navigationStarted = false;
+    roleCheckUserId = '';
+    renderState('세션 확인 중', '로그인 상태를 안전하게 확인하고 있어요.', { loading:true });
+
+    client.auth.getSession().then(function(result){
+      if (generation !== requestGeneration || navigationStarted) return;
+      if (!result || result.error) {
+        showConnectionError();
+        return;
+      }
+      var session = result.data ? result.data.session : null;
+      if (!session || !session.user) {
+        showLoginRequired();
+        return;
+      }
+      startRoleCheck(session, true);
+    }).catch(function(){
+      if (generation !== requestGeneration || navigationStarted) return;
+      showConnectionError();
+    });
+  }
+
+  function signOutCurrentUser(){
+    if (logoutInFlight || !client) return;
+    logoutInFlight = true;
+    var userId = currentUserId;
+    var generation = ++requestGeneration;
+    renderState('이동 중', '안전하게 로그아웃하고 있어요.', { loading:true });
+
+    client.auth.signOut().then(function(result){
+      if (generation !== requestGeneration) return;
+      logoutInFlight = false;
+      if (!result || result.error) {
+        if (currentUserId !== userId) return;
+        showNoRole('로그아웃하지 못했어요. 잠시 후 다시 시도해 주세요.');
+        return;
+      }
+      showLoginRequired();
+    }).catch(function(){
+      if (generation !== requestGeneration || currentUserId !== userId) return;
+      logoutInFlight = false;
+      showNoRole('로그아웃하지 못했어요. 잠시 후 다시 시도해 주세요.');
+    });
+  }
+
+  function handleAuthChange(event, session){
+    if (event === 'SIGNED_OUT' || !session || !session.user) {
+      showLoginRequired();
+      return;
+    }
+
+    var nextUserId = sessionUserId(session);
+    if (!nextUserId || !isValidUuid(nextUserId)) {
+      requestGeneration += 1;
+      currentSession = null;
+      currentUserId = '';
+      roleCheckUserId = '';
+      showConnectionError();
+      return;
+    }
+
+    if (event === 'TOKEN_REFRESHED' && currentUserId === nextUserId) {
+      currentSession = session;
+      return;
+    }
+
+    if (currentUserId === nextUserId && roleCheckUserId === nextUserId) {
+      currentSession = session;
+      return;
+    }
+
+    startRoleCheck(session, true);
+  }
+
+  renderState('세션 확인 중', '로그인 상태를 안전하게 확인하고 있어요.', { loading:true });
+
+  try {
+    var config = window.__SUPABASE_CONFIG__;
+    if (!config || !config.url || !config.anonKey || !window.supabase || typeof window.supabase.createClient !== 'function') {
+      throw new Error('configuration-unavailable');
+    }
+    client = window.supabase.createClient(config.url, config.anonKey);
+    client.auth.onAuthStateChange(function(event, session){
+      window.setTimeout(function(){ handleAuthChange(event, session); }, 0);
+    });
+    beginSessionCheck();
+  } catch (_error) {
+    client = null;
+    showConnectionError();
+  }
+})();
+</script>
+</body>
+</html>
