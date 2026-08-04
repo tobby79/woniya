@@ -13,6 +13,11 @@
     TIMED_OUT: true,
     CLOSED: true
   };
+  var TERMINAL_STATUSES = {
+    CHANNEL_ERROR: true,
+    TIMED_OUT: true,
+    CLOSED: true
+  };
 
   function isPresent(value) {
     return value !== null && value !== undefined && String(value).trim() !== '';
@@ -123,13 +128,19 @@
     var currentContext = null;
     var currentChannelKey = null;
     var currentChannel = null;
+    var currentChannelUsable = false;
+    var currentChannelStatus = 'STOPPED';
     var channelSequence = 0;
+    var channelsScheduledForRemoval = new WeakSet();
 
     var debounceTimer = null;
     var pendingInquiryIds = new Set();
     var pendingMessage = false;
     var pendingSubscribed = false;
-    var refreshInFlight = false;
+    var pendingContextToken = null;
+    var pendingChannelKey = null;
+    var currentRefreshRun = null;
+    var refreshRunSequence = 0;
     var recentMessageIds = new Map();
 
     function hasPendingRefresh() {
@@ -148,17 +159,25 @@
       pendingInquiryIds.clear();
       pendingMessage = false;
       pendingSubscribed = false;
+      pendingContextToken = null;
+      pendingChannelKey = null;
     }
 
     function resetContextWork() {
       clearPendingRefresh();
       recentMessageIds.clear();
+      currentRefreshRun = null;
     }
 
     function safelyRemoveChannel(channelToRemove) {
       if (!channelToRemove) {
         return;
       }
+
+      if (channelsScheduledForRemoval.has(channelToRemove)) {
+        return;
+      }
+      channelsScheduledForRemoval.add(channelToRemove);
 
       try {
         var removal = supabase.removeChannel(channelToRemove);
@@ -168,6 +187,31 @@
       } catch (ignoredError) {
         // Channel cleanup failures must not expose data or stop later cleanup.
       }
+    }
+
+    function retireCurrentChannel(
+      status,
+      expectedToken,
+      expectedChannelKey,
+      expectedChannel
+    ) {
+      if (
+        !TERMINAL_STATUSES[status] ||
+        expectedToken !== contextToken ||
+        expectedChannelKey !== currentChannelKey ||
+        expectedChannel !== currentChannel
+      ) {
+        return false;
+      }
+
+      currentChannelUsable = false;
+      currentChannelStatus = status;
+      contextToken += 1;
+      resetContextWork();
+      currentChannel = null;
+      safelyRemoveChannel(expectedChannel);
+      notifyStatus(status);
+      return true;
     }
 
     function notifyStatus(status) {
@@ -200,9 +244,45 @@
       return true;
     }
 
-    function settleRefresh() {
-      refreshInFlight = false;
-      if (hasPendingRefresh()) {
+    function pendingRefreshBelongsTo(token, channelKey) {
+      return pendingContextToken === token &&
+        pendingChannelKey === channelKey &&
+        hasPendingRefresh();
+    }
+
+    function preparePendingRefresh(expectedToken, expectedChannelKey) {
+      if (
+        expectedToken !== contextToken ||
+        expectedChannelKey !== currentChannelKey ||
+        !currentContext
+      ) {
+        return false;
+      }
+
+      if (
+        pendingContextToken !== null &&
+        (pendingContextToken !== expectedToken ||
+          pendingChannelKey !== expectedChannelKey)
+      ) {
+        clearPendingRefresh();
+      }
+
+      pendingContextToken = expectedToken;
+      pendingChannelKey = expectedChannelKey;
+      return true;
+    }
+
+    function settleRefresh(run) {
+      if (
+        currentRefreshRun !== run ||
+        run.token !== contextToken ||
+        run.channelKey !== currentChannelKey
+      ) {
+        return;
+      }
+
+      currentRefreshRun = null;
+      if (pendingRefreshBelongsTo(run.token, run.channelKey)) {
         flushPending();
       }
     }
@@ -210,32 +290,70 @@
     function flushPending() {
       clearDebounceTimer();
 
-      if (refreshInFlight || !currentContext || !hasPendingRefresh()) {
+      if (!currentContext || !hasPendingRefresh()) {
         return false;
       }
 
+      var capturedToken = contextToken;
+      var capturedChannelKey = currentChannelKey;
+      if (!pendingRefreshBelongsTo(capturedToken, capturedChannelKey)) {
+        clearPendingRefresh();
+        return false;
+      }
+
+      if (currentRefreshRun) {
+        if (
+          currentRefreshRun.token === capturedToken &&
+          currentRefreshRun.channelKey === capturedChannelKey
+        ) {
+          return false;
+        }
+        currentRefreshRun = null;
+      }
+
       var batchHasMessage = pendingMessage;
+      var capturedContext = copyContext(currentContext);
       var batch = {
         inquiryIds: Array.from(pendingInquiryIds),
         silent: !batchHasMessage,
         reason: batchHasMessage ? 'message' : 'subscribed',
-        context: copyContext(currentContext)
+        context: capturedContext
       };
 
-      pendingInquiryIds.clear();
-      pendingMessage = false;
-      pendingSubscribed = false;
-      refreshInFlight = true;
+      clearPendingRefresh();
+      var run = {
+        token: capturedToken,
+        channelKey: capturedChannelKey,
+        runId: ++refreshRunSequence,
+        context: capturedContext,
+        batch: batch,
+        promise: null
+      };
+      currentRefreshRun = run;
+
+      if (
+        run.token !== contextToken ||
+        run.channelKey !== currentChannelKey ||
+        !currentContext ||
+        currentRefreshRun !== run
+      ) {
+        settleRefresh(run);
+        return false;
+      }
 
       var refreshResult;
       try {
         refreshResult = onRefreshNeeded(batch);
       } catch (ignoredError) {
-        settleRefresh();
+        settleRefresh(run);
         return true;
       }
 
-      Promise.resolve(refreshResult).then(settleRefresh, settleRefresh);
+      run.promise = Promise.resolve(refreshResult);
+      run.promise.then(
+        function () { settleRefresh(run); },
+        function () { settleRefresh(run); }
+      );
       return true;
     }
 
@@ -254,6 +372,9 @@
     }
 
     function queueSubscribedRefresh(expectedToken, expectedChannelKey) {
+      if (!preparePendingRefresh(expectedToken, expectedChannelKey)) {
+        return;
+      }
       pendingSubscribed = true;
       scheduleFlush(expectedToken, expectedChannelKey);
     }
@@ -263,6 +384,9 @@
       expectedToken,
       expectedChannelKey
     ) {
+      if (!preparePendingRefresh(expectedToken, expectedChannelKey)) {
+        return;
+      }
       pendingInquiryIds.add(inquiryId);
       pendingMessage = true;
       scheduleFlush(expectedToken, expectedChannelKey);
@@ -343,6 +467,8 @@
       try {
         nextChannel = supabase.channel(channelName);
         currentChannel = nextChannel;
+        currentChannelUsable = true;
+        currentChannelStatus = 'CONNECTING';
 
         nextChannel.on(
           'postgres_changes',
@@ -374,6 +500,18 @@
             return;
           }
 
+          if (TERMINAL_STATUSES[status]) {
+            retireCurrentChannel(
+              status,
+              expectedToken,
+              expectedChannelKey,
+              nextChannel
+            );
+            return;
+          }
+
+          currentChannelUsable = true;
+          currentChannelStatus = status;
           notifyStatus(status);
           if (status === 'SUBSCRIBED' && !subscribedRefreshQueued) {
             subscribedRefreshQueued = true;
@@ -381,12 +519,12 @@
           }
         });
       } catch (ignoredError) {
-        if (nextChannel === currentChannel) {
-          currentChannel = null;
-        }
-        currentChannelKey = null;
-        safelyRemoveChannel(nextChannel);
-        notifyStatus('CHANNEL_ERROR');
+        retireCurrentChannel(
+          'CHANNEL_ERROR',
+          expectedToken,
+          expectedChannelKey,
+          nextChannel
+        );
       }
     }
 
@@ -399,6 +537,8 @@
 
         var invalidContextChannel = currentChannel;
         currentChannel = null;
+        currentChannelUsable = false;
+        currentChannelStatus = 'STOPPED';
         currentChannelKey = null;
         currentContext = null;
         safelyRemoveChannel(invalidContextChannel);
@@ -407,7 +547,12 @@
       }
 
       var nextChannelKey = makeChannelKey(viewerKind, nextContext);
-      if (nextChannelKey === currentChannelKey && currentChannel) {
+      if (
+        nextChannelKey === currentChannelKey &&
+        currentChannel &&
+        currentChannelUsable &&
+        !TERMINAL_STATUSES[currentChannelStatus]
+      ) {
         currentContext = nextContext;
         return true;
       }
@@ -417,6 +562,8 @@
 
       var previousChannel = currentChannel;
       currentChannel = null;
+      currentChannelUsable = false;
+      currentChannelStatus = 'STOPPED';
       currentChannelKey = null;
       currentContext = null;
       safelyRemoveChannel(previousChannel);
@@ -433,6 +580,8 @@
 
       var channelToRemove = currentChannel;
       currentChannel = null;
+      currentChannelUsable = false;
+      currentChannelStatus = 'STOPPED';
       currentChannelKey = null;
       currentContext = null;
       safelyRemoveChannel(channelToRemove);

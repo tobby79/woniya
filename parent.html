@@ -606,8 +606,16 @@
       closeOperation: null,
       listSequence: 0,
       listRequest: null,
+      realtimeListRefreshPending: false,
+      realtimeListRefreshPromise: null,
+      realtimeListRefreshNeeded: false,
       detailSequence: 0,
       realtimeThreadSequence: 0,
+      realtimeThreadRefreshPending: false,
+      realtimeThreadRefreshInquiryId: null,
+      realtimeThreadRefreshBatch: null,
+      realtimeThreadRefreshPromise: null,
+      detailMutationExecutionCount: 0,
       mutationThreadSequence: 0,
       unreadSequence: 0,
       unreadExists: false,
@@ -704,6 +712,8 @@
   function leaveParentInquirySubview(){
     if (!parentInquiryState || parentInquiryState.view === 'list') return;
     parentInquiryState.detailSequence += 1;
+    clearParentInquiryRealtimeThreadRefresh(parentInquiryState);
+    parentInquiryState.detailMutationExecutionCount = 0;
     parentInquiryState.mutationThreadSequence += 1;
     parentInquiryState.view = 'list';
     parentInquiryState.isDetailLoading = false;
@@ -756,6 +766,8 @@
     parentInquiryState.listSequence += 1;
     parentInquiryState.unreadSequence += 1;
     parentInquiryState.detailSequence += 1;
+    clearParentInquiryRealtimeThreadRefresh(parentInquiryState);
+    parentInquiryState.detailMutationExecutionCount = 0;
     parentInquiryState.mutationThreadSequence += 1;
     parentInquiryState.view = 'list';
     parentInquiryState.isDetailLoading = false;
@@ -764,6 +776,9 @@
     parentInquiryState.hasMore = false;
     parentInquiryState.hasLoaded = false;
     parentInquiryState.isLoading = false;
+    parentInquiryState.realtimeListRefreshPending = false;
+    parentInquiryState.realtimeListRefreshPromise = null;
+    parentInquiryState.realtimeListRefreshNeeded = false;
     parentInquiryState.lastLoadFailed = false;
     parentInquiryState.selectedInquiryId = null;
     parentInquiryState.thread = null;
@@ -2545,6 +2560,7 @@
     state.errorText = '';
     state.lastLoadFailed = false;
     if (!append) {
+      state.realtimeListRefreshNeeded = false;
       state.noticeText = '';
       state.rows = [];
       state.cursor = null;
@@ -2715,28 +2731,122 @@
     }
   }
 
-  async function refreshParentInquiryListForRealtime(batch, state){
-    if (!isParentInquiryRealtimeBatchCurrent(batch) || parentInquiryState !== state ||
-        currentMiniTab !== 'inquiry' || state.view !== 'list') return false;
+  function markParentInquiryListStaleForRealtime(state){
+    if (parentInquiryState !== state) return false;
+    state.realtimeListRefreshNeeded = true;
+    return true;
+  }
 
-    while (state.isLoading) {
-      var activeRequest = state.listRequest;
-      if (!activeRequest || typeof activeRequest.then !== 'function') return false;
-      await activeRequest;
-      if (!isParentInquiryRealtimeBatchCurrent(batch) || parentInquiryState !== state ||
-          currentMiniTab !== 'inquiry' || state.view !== 'list') return false;
+  function refreshParentInquiryListForRealtime(batch, state){
+    if (!isParentInquiryRealtimeBatchCurrent(batch) || parentInquiryState !== state ||
+        currentMiniTab !== 'inquiry' || state.view !== 'list') return Promise.resolve(false);
+    markParentInquiryListStaleForRealtime(state);
+    if (state.realtimeListRefreshPending && state.realtimeListRefreshPromise) {
+      return state.realtimeListRefreshPromise;
     }
 
-    await loadParentInquiryList({ append:false });
-    return isParentInquiryRealtimeBatchCurrent(batch) &&
-      parentInquiryState === state && currentMiniTab === 'inquiry' && state.view === 'list' &&
-      state.hasLoaded === true && state.lastLoadFailed !== true;
+    state.realtimeListRefreshPending = true;
+    var refreshPromise = (async function(){
+      while (state.isLoading) {
+        var activeRequest = state.listRequest;
+        if (!activeRequest || typeof activeRequest.then !== 'function') return false;
+        await activeRequest;
+        if (!isParentInquiryRealtimeBatchCurrent(batch) || parentInquiryState !== state ||
+            currentMiniTab !== 'inquiry' || state.view !== 'list') return false;
+      }
+
+      await loadParentInquiryList({ append:false });
+      return isParentInquiryRealtimeBatchCurrent(batch) &&
+        parentInquiryState === state && currentMiniTab === 'inquiry' && state.view === 'list' &&
+        state.hasLoaded === true && state.lastLoadFailed !== true;
+    })();
+    state.realtimeListRefreshPromise = refreshPromise;
+
+    var clearPending = function(){
+      if (state.realtimeListRefreshPromise !== refreshPromise) return;
+      state.realtimeListRefreshPending = false;
+      state.realtimeListRefreshPromise = null;
+    };
+    refreshPromise.then(clearPending, clearPending);
+    return refreshPromise;
+  }
+
+  function isParentInquiryMutationOperationInFlight(operation){
+    return !!operation &&
+      (operation.status === 'submitting' || operation.realtimeResultCheckInFlight === true);
+  }
+
+  function isParentInquiryDetailMutationInFlight(state){
+    return !!state && (
+      Number(state.detailMutationExecutionCount || 0) > 0 ||
+      isParentInquiryMutationOperationInFlight(state.messageOperation) ||
+      isParentInquiryMutationOperationInFlight(state.closeOperation)
+    );
+  }
+
+  function copyParentInquiryRealtimeThreadBatch(batch, inquiryId){
+    var context = batch && batch.context;
+    if (!context) return null;
+    return {
+      inquiryIds: [inquiryId],
+      silent: batch.silent === true,
+      reason: batch.reason,
+      context: {
+        userId: context.userId,
+        classId: context.classId,
+        role: context.role,
+        contextVersion: context.contextVersion
+      }
+    };
+  }
+
+  function clearParentInquiryRealtimeThreadRefresh(state){
+    if (!state) return;
+    state.realtimeThreadSequence += 1;
+    state.realtimeThreadRefreshPending = false;
+    state.realtimeThreadRefreshInquiryId = null;
+    state.realtimeThreadRefreshBatch = null;
+    state.realtimeThreadRefreshPromise = null;
+  }
+
+  function queueParentInquiryRealtimeThreadRefresh(batch, state, inquiryId){
+    if (!isParentInquiryRealtimeBatchCurrent(batch) || parentInquiryState !== state ||
+        currentMiniTab !== 'inquiry' || state.view !== 'detail' ||
+        state.selectedInquiryId !== inquiryId) return false;
+    var safeBatch = copyParentInquiryRealtimeThreadBatch(batch, inquiryId);
+    if (!safeBatch) return false;
+    state.realtimeThreadRefreshPending = true;
+    state.realtimeThreadRefreshInquiryId = inquiryId;
+    state.realtimeThreadRefreshBatch = safeBatch;
+    return true;
+  }
+
+  async function drainParentInquiryRealtimeThreadRefresh(state){
+    if (parentInquiryState !== state || !state || !state.realtimeThreadRefreshPending ||
+        state.realtimeThreadRefreshPromise || isParentInquiryDetailMutationInFlight(state)) return false;
+    var inquiryId = state.realtimeThreadRefreshInquiryId;
+    var batch = state.realtimeThreadRefreshBatch;
+    if (!isParentInquiryRealtimeBatchCurrent(batch) || currentMiniTab !== 'inquiry' ||
+        state.view !== 'detail' || state.selectedInquiryId !== inquiryId) {
+      state.realtimeThreadRefreshPending = false;
+      state.realtimeThreadRefreshInquiryId = null;
+      state.realtimeThreadRefreshBatch = null;
+      return false;
+    }
+    state.realtimeThreadRefreshPending = false;
+    state.realtimeThreadRefreshInquiryId = null;
+    state.realtimeThreadRefreshBatch = null;
+    return refreshParentInquiryThreadForRealtime(batch, state, inquiryId);
   }
 
   async function refreshParentInquiryThreadForRealtime(batch, state, inquiryId){
     if (!isParentInquiryRealtimeBatchCurrent(batch) || parentInquiryState !== state ||
         currentMiniTab !== 'inquiry' || state.view !== 'detail' ||
         state.selectedInquiryId !== inquiryId) return false;
+    if (isParentInquiryDetailMutationInFlight(state) || state.realtimeThreadRefreshPromise) {
+      queueParentInquiryRealtimeThreadRefresh(batch, state, inquiryId);
+      return state.realtimeThreadRefreshPromise || false;
+    }
 
     var context = {
       userId: currentSession.user.id,
@@ -2748,44 +2858,71 @@
       realtimeThreadSequence: ++state.realtimeThreadSequence,
       inquiryId: inquiryId
     };
-    state.mutationThreadSequence += 1;
-    var res;
-    try {
-      res = await client.rpc('get_class_inquiry_thread', {
-        p_inquiry_id: inquiryId
-      });
-    } catch (err) {
+    var refreshPromise = (async function(){
+      var res;
+      try {
+        res = await client.rpc('get_class_inquiry_thread', {
+          p_inquiry_id: inquiryId
+        });
+      } catch (err) {
+        if (!isParentInquiryDetailContextCurrent(context) || !isParentInquiryRealtimeBatchCurrent(batch)) {
+          handleParentInquiryApprovalContextLoss(context);
+          return false;
+        }
+        if (isParentInquiryDetailMutationInFlight(state)) {
+          queueParentInquiryRealtimeThreadRefresh(batch, state, inquiryId);
+          return false;
+        }
+        handleParentInquiryDetailAccessError(err, context);
+        return false;
+      }
+
       if (!isParentInquiryDetailContextCurrent(context) || !isParentInquiryRealtimeBatchCurrent(batch)) {
         handleParentInquiryApprovalContextLoss(context);
         return false;
       }
-      handleParentInquiryDetailAccessError(err, context);
-      return false;
-    }
+      if (isParentInquiryDetailMutationInFlight(state)) {
+        queueParentInquiryRealtimeThreadRefresh(batch, state, inquiryId);
+        return false;
+      }
+      if (res.error) {
+        handleParentInquiryDetailAccessError(res.error, context);
+        return false;
+      }
+      if (!isValidParentInquiryThread(res.data, context)) return false;
 
-    if (!isParentInquiryDetailContextCurrent(context) || !isParentInquiryRealtimeBatchCurrent(batch)) {
-      handleParentInquiryApprovalContextLoss(context);
-      return false;
-    }
-    if (res.error) {
-      handleParentInquiryDetailAccessError(res.error, context);
-      return false;
-    }
-    if (!isValidParentInquiryThread(res.data, context)) return false;
+      var replyDraft = state.replyDraft;
+      state.thread = res.data;
+      state.isDetailLoading = false;
+      state.detailError = '';
+      state.detailMessageIsError = false;
+      renderParentInquiryDetail(res.data);
+      state.replyDraft = replyDraft;
+      var replyInput = document.getElementById('parentInquiryReplyInput');
+      if (replyInput) replyInput.value = replyDraft;
 
-    var replyDraft = state.replyDraft;
-    state.thread = res.data;
-    state.isDetailLoading = false;
-    state.detailError = '';
-    state.detailMessageIsError = false;
-    renderParentInquiryDetail(res.data);
-    state.replyDraft = replyDraft;
-    var replyInput = document.getElementById('parentInquiryReplyInput');
-    if (replyInput) replyInput.value = replyDraft;
-
-    if (!isParentInquiryDetailContextCurrent(context) || !isParentInquiryRealtimeBatchCurrent(batch)) return false;
-    await markParentInquiryRead(context, res.data);
-    return isParentInquiryDetailContextCurrent(context) && isParentInquiryRealtimeBatchCurrent(batch);
+      if (!isParentInquiryDetailContextCurrent(context) || !isParentInquiryRealtimeBatchCurrent(batch) ||
+          isParentInquiryDetailMutationInFlight(state)) {
+        if (isParentInquiryDetailMutationInFlight(state)) {
+          queueParentInquiryRealtimeThreadRefresh(batch, state, inquiryId);
+        }
+        return false;
+      }
+      await markParentInquiryRead(context, res.data);
+      return isParentInquiryDetailContextCurrent(context) && isParentInquiryRealtimeBatchCurrent(batch);
+    })();
+    state.realtimeThreadRefreshPromise = refreshPromise;
+    try {
+      return await refreshPromise;
+    } finally {
+      if (state.realtimeThreadRefreshPromise === refreshPromise) {
+        state.realtimeThreadRefreshPromise = null;
+      }
+      if (parentInquiryState === state && state.realtimeThreadRefreshPending &&
+          !isParentInquiryDetailMutationInFlight(state)) {
+        await drainParentInquiryRealtimeThreadRefresh(state);
+      }
+    }
   }
 
   async function handleParentInquiryRealtimeRefresh(batch){
@@ -2814,6 +2951,7 @@
         if (!isParentInquiryRealtimeBatchCurrent(batch)) return;
         unreadResult = await refreshParentInquiryUnreadIndicator();
       } else {
+        markParentInquiryListStaleForRealtime(state);
         unreadResult = await refreshParentInquiryUnreadIndicator();
       }
       return;
@@ -2830,6 +2968,7 @@
       if (!isParentInquiryRealtimeBatchCurrent(batch)) return;
       unreadResult = await refreshParentInquiryUnreadIndicator();
     } else {
+      markParentInquiryListStaleForRealtime(state);
       unreadResult = await refreshParentInquiryUnreadIndicator(inquiryIds);
     }
 
@@ -3290,12 +3429,15 @@
     } else {
       operation.status = 'submitting';
     }
+    operation.realtimeResultCheckInFlight = true;
+    state.detailMutationExecutionCount += 1;
     context.mutationSequence = ++state.mutationThreadSequence;
     context.operation = operation;
     context.requestKey = operation.requestKey;
     setParentInquiryDetailMessage('', false);
     syncParentInquiryReplyUi();
 
+    try {
     var mutationContext = parentInquiryDetailMutationContext(context);
     var res;
     try {
@@ -3432,6 +3574,11 @@
       setParentInquiryDetailMessage('메시지는 전송되었지만 최신 내용을 다시 불러오지 못했습니다.', true);
     }
     syncParentInquiryReplyUi();
+    } finally {
+      operation.realtimeResultCheckInFlight = false;
+      state.detailMutationExecutionCount = Math.max(0, state.detailMutationExecutionCount - 1);
+      await drainParentInquiryRealtimeThreadRefresh(state);
+    }
   }
 
   async function handleParentInquiryCloseUncertain(context, operation){
@@ -3522,11 +3669,14 @@
     } else {
       operation.status = 'submitting';
     }
+    operation.realtimeResultCheckInFlight = true;
+    state.detailMutationExecutionCount += 1;
     context.mutationSequence = ++state.mutationThreadSequence;
     context.operation = operation;
     setParentInquiryDetailMessage('', false);
     syncParentInquiryReplyUi();
 
+    try {
     var mutationContext = parentInquiryDetailMutationContext(context);
     var res;
     try {
@@ -3638,6 +3788,11 @@
       setParentInquiryDetailMessage('문의는 종료되었지만 최신 내용을 다시 불러오지 못했습니다.', true);
     }
     syncParentInquiryReplyUi();
+    } finally {
+      operation.realtimeResultCheckInFlight = false;
+      state.detailMutationExecutionCount = Math.max(0, state.detailMutationExecutionCount - 1);
+      await drainParentInquiryRealtimeThreadRefresh(state);
+    }
   }
 
   function returnParentInquiryDetailToList(context, refreshList){
@@ -3838,7 +3993,8 @@
     }
     renderParentInquiryListView(content);
     renderParentInquiryList();
-    if ((!parentInquiryState.hasLoaded || parentInquiryState.lastLoadFailed) && !parentInquiryState.isLoading) {
+    if ((!parentInquiryState.hasLoaded || parentInquiryState.lastLoadFailed ||
+        parentInquiryState.realtimeListRefreshNeeded) && !parentInquiryState.isLoading) {
       loadParentInquiryList({ append:false });
     }
   }
@@ -4347,6 +4503,8 @@
         return;
       }
       parentInquiryState.detailSequence += 1;
+      clearParentInquiryRealtimeThreadRefresh(parentInquiryState);
+      parentInquiryState.detailMutationExecutionCount = 0;
       parentInquiryState.mutationThreadSequence += 1;
       parentInquiryState.view = 'create';
       parentInquiryState.selectedInquiryId = null;
