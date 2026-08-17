@@ -676,16 +676,29 @@
   var PARENT_INQUIRY_DEEP_LINK_STORAGE_VERSION = 1;
   var PARENT_INQUIRY_DEEP_LINK_OAUTH_FLOW = 'kakao_oauth_pending';
   var PARENT_INQUIRY_DEEP_LINK_OAUTH_TTL_MS = 10 * 60 * 1000;
+  var PARENT_DIRECT_CLASS_STORAGE_KEY = 'woniya_parent_direct_class_v1';
+  var PARENT_DIRECT_CLASS_STORAGE_VERSION = 1;
+  var PARENT_DIRECT_CLASS_OAUTH_FLOW = 'kakao_oauth_class_pending';
+  var PARENT_DIRECT_CLASS_OAUTH_TTL_MS = PARENT_INQUIRY_DEEP_LINK_OAUTH_TTL_MS;
   var currentSearchParams = new URLSearchParams(location.search);
   var directClassId = currentSearchParams.get('class_id') || '';
+  var restoredParentDirectClassId = '';
   var parentInquiryDeepLink = parseParentInquiryDeepLink(currentSearchParams, false);
   if (parentInquiryDeepLink.requested) {
     clearStoredParentInquiryDeepLink();
+    clearStoredParentDirectClass();
   } else if (parentInquiryOAuthReturnKind(currentSearchParams, location.hash) === 'success') {
     var storedParentInquiryDeepLink = consumeStoredParentInquiryDeepLink();
-    if (storedParentInquiryDeepLink) parentInquiryDeepLink = storedParentInquiryDeepLink;
+    if (storedParentInquiryDeepLink) {
+      parentInquiryDeepLink = storedParentInquiryDeepLink;
+      clearStoredParentDirectClass();
+    } else {
+      restoredParentDirectClassId = consumeStoredParentDirectClass();
+      if (restoredParentDirectClassId) directClassId = restoredParentDirectClassId;
+    }
   } else {
     clearStoredParentInquiryDeepLink();
+    clearStoredParentDirectClass();
   }
 
   function startParentPwaRegistration(){
@@ -856,15 +869,72 @@
     } catch (_error) {}
   }
 
-  function parentOAuthRedirectUrl(){
-    var redirectSearchParams = new URLSearchParams(window.location.search);
-    var classValues = redirectSearchParams.getAll('class_id');
-    var classId = classValues.length === 1 ? String(classValues[0] || '').trim() : '';
-    var path = '/parent.html';
-    if (!parseParentInquiryDeepLink(redirectSearchParams, false).requested && isUuid(classId)) {
-      path += '?class_id=' + encodeURIComponent(classId);
+  function consumeStoredParentDirectClass(){
+    try {
+      var storedValue = window.sessionStorage.getItem(PARENT_DIRECT_CLASS_STORAGE_KEY);
+      if (!storedValue) return '';
+      var storedRecord = JSON.parse(storedValue);
+      var now = Date.now();
+      if (!storedRecord || typeof storedRecord !== 'object' || Array.isArray(storedRecord) ||
+          storedRecord.version !== PARENT_DIRECT_CLASS_STORAGE_VERSION ||
+          storedRecord.flow !== PARENT_DIRECT_CLASS_OAUTH_FLOW ||
+          !isUuid(storedRecord.classId) ||
+          typeof storedRecord.createdAt !== 'number' || !Number.isFinite(storedRecord.createdAt) ||
+          storedRecord.createdAt <= 0 || storedRecord.createdAt > now ||
+          now - storedRecord.createdAt > PARENT_DIRECT_CLASS_OAUTH_TTL_MS) return '';
+      return String(storedRecord.classId).trim();
+    } catch (_error) {
+      return '';
+    } finally {
+      clearStoredParentDirectClass();
     }
-    return window.location.origin + path;
+  }
+
+  function storeParentDirectClassForOAuth(){
+    var searchParams = new URLSearchParams(window.location.search);
+    if (parseParentInquiryDeepLink(searchParams, false).requested) return false;
+    var classValues = searchParams.getAll('class_id');
+    var classId = classValues.length === 1 ? String(classValues[0] || '').trim() : '';
+    if (!isUuid(classId)) return false;
+    try {
+      window.sessionStorage.setItem(
+        PARENT_DIRECT_CLASS_STORAGE_KEY,
+        JSON.stringify({
+          version: PARENT_DIRECT_CLASS_STORAGE_VERSION,
+          flow: PARENT_DIRECT_CLASS_OAUTH_FLOW,
+          classId: classId,
+          createdAt: Date.now()
+        })
+      );
+      return true;
+    } catch (_error) {
+      return false;
+    }
+  }
+
+  function clearStoredParentDirectClass(){
+    try {
+      window.sessionStorage.removeItem(PARENT_DIRECT_CLASS_STORAGE_KEY);
+    } catch (_error) {}
+  }
+
+  function storeParentOAuthReturnState(){
+    clearStoredParentInquiryDeepLink();
+    clearStoredParentDirectClass();
+    if (parentInquiryDeepLink.requested) {
+      storeParentInquiryDeepLinkForOAuth();
+      return;
+    }
+    storeParentDirectClassForOAuth();
+  }
+
+  function clearStoredParentOAuthReturnState(){
+    clearStoredParentInquiryDeepLink();
+    clearStoredParentDirectClass();
+  }
+
+  function parentOAuthRedirectUrl(){
+    return window.location.origin + '/parent.html';
   }
 
   function finalizeStoredParentInquiryDeepLink(){
@@ -872,6 +942,19 @@
     window.history.replaceState(window.history.state, '', parentInquiryDeepLink.returnPath);
     parentInquiryDeepLink.fromStorage = false;
     clearStoredParentInquiryDeepLink();
+  }
+
+  function finalizeStoredParentDirectClass(){
+    var classId = restoredParentDirectClassId;
+    restoredParentDirectClassId = '';
+    if (!isUuid(classId) || directClassId !== classId) return false;
+    window.history.replaceState(
+      window.history.state,
+      '',
+      '/parent.html?class_id=' + encodeURIComponent(classId)
+    );
+    clearStoredParentDirectClass();
+    return true;
   }
 
   function finishApprovedParentInquiryDeepLinkForClassList(){
@@ -5204,6 +5287,7 @@
         if (inquiryDeepLinkHandled) return;
       }
       if (directClassId || new URLSearchParams(window.location.search).has('class_id')) {
+        finalizeStoredParentDirectClass();
         var directHandled;
         try {
           directHandled = await loadDirectClassMini(session, authVersion);
@@ -5331,7 +5415,7 @@
   kakaoLoginBtn.addEventListener('click', async function(){
     authMsg.textContent = '';
     kakaoLoginBtn.disabled = true;
-    storeParentInquiryDeepLinkForOAuth();
+    storeParentOAuthReturnState();
 
     try {
       var res = await client.auth.signInWithOAuth({
@@ -5342,7 +5426,7 @@
       });
       if (res.error) throw res.error;
     } catch (err) {
-      clearStoredParentInquiryDeepLink();
+      clearStoredParentOAuthReturnState();
       authMsg.innerHTML = escWithBr(err && err.message ? err.message : String(err));
       authMsg.className = 'msg error';
       kakaoLoginBtn.disabled = false;
