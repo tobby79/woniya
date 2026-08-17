@@ -37,6 +37,7 @@
   }
 
   *{margin:0;padding:0;box-sizing:border-box}
+  [hidden]{display:none!important}
   html,body{width:100%;overflow-x:hidden}
   body{
     font-family:var(--body);
@@ -65,9 +66,10 @@
   .hero-wrap{position:relative;padding:0 22px}
 
   /* ── 검색 헤더 ── */
-  .search-head{display:flex;align-items:center;justify-content:space-between;padding:12px 0 4px}
+  .search-head{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;padding:12px 0 4px}
   .search-head .logo{display:flex;align-items:center;min-width:0}
   .search-head .logo img{display:block;height:48px;width:auto;max-width:220px;object-fit:contain}
+  .head-actions{display:flex;align-items:center;justify-content:flex-end;gap:8px;min-width:0;margin-left:auto}
   .search-head .reg{
     font-family:var(--body);font-weight:700;font-size:.88rem;
     color:var(--coral-deep);text-decoration:none;
@@ -77,6 +79,16 @@
     transition:background .2s ease,color .2s ease;
   }
   .search-head .reg:hover{background:var(--coral-deep);color:#fff}
+  .search-head .auth-start{background:var(--coral-deep);color:#fff}
+  .search-head .auth-start:hover{background:#C95A46;color:#fff}
+  .header-auth{display:flex;align-items:center;gap:7px;min-width:0}
+  .header-logout{
+    min-height:40px;border:1.5px solid rgba(219,107,84,.38);border-radius:50px;
+    padding:7px 14px;background:rgba(255,255,255,.68);color:var(--coral-deep);
+    font-family:var(--body);font-size:.84rem;font-weight:700;cursor:pointer
+  }
+  .header-logout:hover{background:#fff}
+  .header-logout:disabled{cursor:wait;opacity:.58}
 
   /* ── 히어로 ── */
   .search-hero{text-align:center;padding:24px 0 6px}
@@ -84,6 +96,36 @@
   .search-hero h1{font-family:var(--display);font-weight:400;font-size:1.8rem;line-height:1.32;letter-spacing:-.5px}
   .search-hero h1 .hl{color:var(--coral-deep)}
   .search-hero p{margin-top:12px;color:var(--ink-soft);font-size:.93rem}
+
+  /* ── 로그인 사용자 시작 화면 ── */
+  .personal-wrap{max-width:1100px;margin:0 auto;padding:18px 40px 0;position:relative}
+  .personal-start{
+    border:1px solid rgba(219,107,84,.16);border-radius:26px;padding:24px;
+    background:rgba(255,255,255,.82);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+    box-shadow:0 18px 42px -28px rgba(150,90,80,.55)
+  }
+  .personal-kicker{font-family:var(--hand);font-size:1.05rem;font-weight:700;color:var(--coral-deep)}
+  .personal-title{font-family:var(--display);font-weight:400;font-size:1.45rem;line-height:1.35;margin-top:2px}
+  .personal-lead{margin-top:5px;color:var(--ink-soft);font-size:.88rem}
+  .personal-content{margin-top:18px}
+  .personal-state{padding:22px 16px;border-radius:18px;background:var(--base);text-align:center;color:var(--ink-soft)}
+  .personal-state strong{display:block;color:var(--ink);font-size:.98rem;margin-bottom:3px}
+  .personal-state.error{background:#FFF0EC;color:#875D55}
+  .personal-state-link{display:inline-flex;align-items:center;justify-content:center;min-height:44px;margin-top:14px;padding:9px 16px;border-radius:13px;background:#fff;color:var(--coral-deep);font-weight:700;text-decoration:none;border:1px solid rgba(219,107,84,.25)}
+  .personal-role-list{display:flex;flex-direction:column;gap:18px}
+  .personal-role{min-width:0}
+  .personal-role-head{display:flex;align-items:baseline;gap:8px;margin-bottom:9px}
+  .personal-role-title{font-family:var(--display);font-size:1.08rem;font-weight:400;color:var(--ink)}
+  .personal-role-count{font-size:.75rem;color:var(--coral-deep);font-weight:700}
+  .personal-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px}
+  .personal-card{display:flex;flex-direction:column;min-width:0;padding:16px;border:1px solid rgba(63,42,44,.09);border-radius:18px;background:#fff}
+  .personal-card-name{font-family:var(--display);font-size:1.05rem;line-height:1.4;overflow-wrap:anywhere}
+  .personal-card-meta{min-height:1.45em;margin-top:3px;color:var(--ink-soft);font-size:.8rem;overflow-wrap:anywhere}
+  .personal-card-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:auto;padding-top:13px}
+  .personal-action{display:inline-flex;flex:1 1 112px;align-items:center;justify-content:center;min-height:44px;padding:9px 11px;border-radius:13px;text-align:center;text-decoration:none;font-size:.84rem;font-weight:700}
+  .personal-action.primary{background:var(--coral-deep);color:#fff}
+  .personal-action.secondary{background:var(--base);color:var(--coral-deep);border:1px solid rgba(219,107,84,.2)}
+  .personal-role-error{padding:14px 16px;border-radius:16px;background:#FFF0EC;color:#875D55;font-size:.84rem}
 
   /* ── 검색바 ── */
   .search-bar{display:flex;gap:8px;background:var(--paper);border-radius:18px;padding:8px 8px 8px 16px;margin:28px 0 0;box-shadow:0 16px 36px -20px rgba(150,90,80,.5);align-items:center}
@@ -132,7 +174,7 @@
 
   .empty{text-align:center;color:var(--ink-soft);padding:60px 0;font-size:.96rem}
 
-  a:focus-visible,.ocard:focus-visible{outline:3px solid var(--coral);outline-offset:3px;border-radius:8px}
+  a:focus-visible,button:focus-visible,.ocard:focus-visible{outline:3px solid var(--coral);outline-offset:3px;border-radius:8px}
 
   .center-intro-overlay{
     position:fixed;
@@ -184,9 +226,18 @@
   }
 
   @media (max-width:480px){
-    .search-head{padding:10px 0 4px}
-    .search-head .logo img{height:44px;max-width:170px}
-    .search-head .reg{font-size:.82rem;padding:7px 14px}
+    .head-wrap{padding:0 14px}
+    .search-head{padding:10px 0 4px;gap:8px}
+    .search-head .logo img{height:42px;max-width:132px}
+    .head-actions{gap:5px}
+    .search-head .reg{font-size:.74rem;padding:7px 9px;white-space:nowrap}
+    .header-auth{gap:5px}
+    .header-logout{min-height:38px;font-size:.76rem;padding:6px 10px}
+    .personal-wrap{padding:15px 14px 0}
+    .personal-start{padding:19px 15px;border-radius:22px}
+    .personal-title{font-size:1.3rem}
+    .personal-grid{grid-template-columns:minmax(0,1fr)}
+    .personal-action{flex-basis:100px}
   }
 
 </style>
@@ -203,7 +254,13 @@
 <div class="head-wrap">
   <div class="search-head">
     <div class="logo"><img src="assets/woniya-logo.png" alt="원이야"></div>
-    <a class="reg" href="register.html">어린이집 등록</a>
+    <div class="head-actions">
+      <a class="reg" href="register.html">어린이집 등록</a>
+      <a class="reg auth-start" id="authStartLink" href="/app-start.html">내 원이야 시작</a>
+      <div class="header-auth" id="headerAuth" hidden>
+        <button type="button" class="header-logout" id="headerLogoutBtn" hidden>로그아웃</button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -222,6 +279,15 @@
   </div>
 </section>
 
+<section class="personal-wrap" id="personalStart" aria-labelledby="personalStartTitle" hidden>
+  <div class="personal-start">
+    <div class="personal-kicker">내 원이야</div>
+    <h2 class="personal-title" id="personalStartTitle">연결된 우리 원과 우리 반</h2>
+    <p class="personal-lead">로그인한 계정으로 바로 갈 수 있는 공간을 모았어요.</p>
+    <div class="personal-content" id="personalContent" aria-live="polite"></div>
+  </div>
+</section>
+
 <div class="wrap">
   <div class="results-head" id="resultsHead"></div>
   <div class="cardlist" id="cardList"></div>
@@ -230,6 +296,7 @@
 
 <script src="supabase-config.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="woniya-start-auth.js"></script>
 <script>
 (async function(){
   // 사실 배지(badges)의 내부 key → 화면 표시 라벨. 있다/없다만 표시, 등급·점수 없음.
@@ -280,10 +347,23 @@
   const chipsEl   = document.getElementById('chips');
   const input     = document.getElementById('regionInput');
   const searchBtn = document.getElementById('searchBtn');
+  const authStartLink = document.getElementById('authStartLink');
+  const headerAuth = document.getElementById('headerAuth');
+  const headerLogoutBtn = document.getElementById('headerLogoutBtn');
+  const personalStart = document.getElementById('personalStart');
+  const personalContent = document.getElementById('personalContent');
   const pageCache = window.__WONIYA_INDEX_CACHE || (window.__WONIYA_INDEX_CACHE = {
     centers: null,
     signedUrls: new Map()
   });
+  const cfg = window.__SUPABASE_CONFIG__;
+  const client = supabase.createClient(cfg.url, cfg.anonKey);
+  const startAuth = window.WoniyaStartAuth;
+  let authController = null;
+  let personalUiGeneration = 0;
+  let initialAuthResolved = false;
+  let hasPendingInitialAuth = false;
+  let pendingInitialSession = null;
 
   function escapeHtml(s){
     return String(s == null ? '' : s).replace(/[&<>"']/g, function(ch){
@@ -291,13 +371,278 @@
     });
   }
 
+  function renderHeaderSession(session){
+    var isLoggedIn = !!(session && session.user && session.user.id);
+    authStartLink.hidden = isLoggedIn;
+    headerAuth.hidden = !isLoggedIn;
+    headerLogoutBtn.hidden = !isLoggedIn;
+    headerLogoutBtn.disabled = false;
+    headerLogoutBtn.textContent = '로그아웃';
+  }
+
+  function showPersonalLoading(){
+    personalStart.hidden = false;
+    personalContent.innerHTML = '<div class="personal-state"><strong>연결 정보를 확인하고 있어요.</strong>잠시만 기다려 주세요.</div>';
+  }
+
+  function showPersonalEmpty(){
+    personalContent.innerHTML =
+      '<div class="personal-state">' +
+        '<strong>현재 연결된 우리 원 또는 우리 반이 없습니다.</strong>' +
+        '초대나 연결 상태는 역할별 시작 화면에서 확인할 수 있어요.' +
+        '<a class="personal-state-link" href="/app-start.html">시작 화면에서 확인하기</a>' +
+      '</div>';
+  }
+
+  function showPersonalError(){
+    personalContent.innerHTML =
+      '<div class="personal-state error">' +
+        '<strong>연결 정보를 불러오지 못했어요.</strong>' +
+        '잠시 후 새로고침하거나 역할별 시작 화면에서 다시 확인해 주세요.' +
+        '<a class="personal-state-link" href="/app-start.html">시작 화면으로 가기</a>' +
+      '</div>';
+  }
+
+  function roleHeading(title, count){
+    return '<div class="personal-role-head">' +
+      '<h3 class="personal-role-title">' + escapeHtml(title) + '</h3>' +
+      '<span class="personal-role-count">' + count + '개 연결</span>' +
+    '</div>';
+  }
+
+  function roleErrorMarkup(title, count){
+    return '<section class="personal-role">' + roleHeading(title, count) +
+      '<div class="personal-role-error">이 역할의 연결 정보를 불러오지 못했어요.</div>' +
+    '</section>';
+  }
+
+  function ownerStatusLabel(status){
+    if (status === 'published') return '홈페이지 공개 중';
+    if (status === 'archived') return '보관된 원';
+    return '홈페이지 비공개';
+  }
+
+  async function loadOwnedCenters(ownerCenterIds, userId){
+    var expectedIds = new Set(ownerCenterIds);
+    var res = await client.from('centers')
+      .select('id,name,slug,template,status')
+      .in('id', ownerCenterIds)
+      .eq('owner_id', userId)
+      .order('name', { ascending:true });
+    if (res.error || !Array.isArray(res.data)) throw res.error || new Error('invalid-owner-details');
+
+    var seen = new Set();
+    var rows = res.data.map(function(row){
+      var id = row && typeof row.id === 'string' ? row.id.toLowerCase() : '';
+      if (!expectedIds.has(id) || seen.has(id) || typeof row.name !== 'string') {
+        throw new Error('invalid-owner-detail-row');
+      }
+      seen.add(id);
+      return {
+        id:id,
+        name:row.name,
+        status:row.status,
+        manageUrl:startAuth.buildInternalUrl('centerAdmin', { slug:row.slug }),
+        homepageUrl:startAuth.buildInternalUrl('centerHomepage', { template:row.template, slug:row.slug })
+      };
+    });
+    if (seen.size !== expectedIds.size) throw new Error('owner-detail-mismatch');
+    return rows;
+  }
+
+  async function loadTeacherClasses(teacherClassIds, userId){
+    var expectedIds = new Set(teacherClassIds);
+    var res = await client.from('classes')
+      .select('id,name,age_label')
+      .in('id', teacherClassIds)
+      .eq('teacher_id', userId)
+      .order('name', { ascending:true });
+    if (res.error || !Array.isArray(res.data)) throw res.error || new Error('invalid-teacher-details');
+
+    var seen = new Set();
+    var rows = res.data.map(function(row){
+      var id = row && typeof row.id === 'string' ? row.id.toLowerCase() : '';
+      if (!expectedIds.has(id) || seen.has(id) || typeof row.name !== 'string' ||
+          (row.age_label != null && typeof row.age_label !== 'string')) {
+        throw new Error('invalid-teacher-detail-row');
+      }
+      seen.add(id);
+      return {
+        id:id,
+        name:row.name,
+        ageLabel:row.age_label || '',
+        manageUrl:startAuth.buildInternalUrl('classAdmin', { classId:id })
+      };
+    });
+    if (seen.size !== expectedIds.size) throw new Error('teacher-detail-mismatch');
+    return rows;
+  }
+
+  function ownerSectionMarkup(rows){
+    return '<section class="personal-role">' + roleHeading('원장 · 우리 원', rows.length) +
+      '<div class="personal-grid">' + rows.map(function(row){
+        return '<article class="personal-card">' +
+          '<div class="personal-card-name">' + escapeHtml(row.name) + '</div>' +
+          '<div class="personal-card-meta">' + escapeHtml(ownerStatusLabel(row.status)) + '</div>' +
+          '<div class="personal-card-actions">' +
+            '<a class="personal-action primary" href="' + escapeHtml(row.manageUrl) + '">우리 원 관리</a>' +
+            '<a class="personal-action secondary" href="' + escapeHtml(row.homepageUrl) + '">우리 원 홈페이지</a>' +
+          '</div>' +
+        '</article>';
+      }).join('') + '</div></section>';
+  }
+
+  function teacherSectionMarkup(rows){
+    return '<section class="personal-role">' + roleHeading('교사 · 우리 반', rows.length) +
+      '<div class="personal-grid">' + rows.map(function(row){
+        return '<article class="personal-card">' +
+          '<div class="personal-card-name">' + escapeHtml(row.name) + '</div>' +
+          '<div class="personal-card-meta">' + escapeHtml(row.ageLabel || '담당 반') + '</div>' +
+          '<div class="personal-card-actions">' +
+            '<a class="personal-action primary" href="' + escapeHtml(row.manageUrl) + '">우리 반 관리</a>' +
+          '</div>' +
+        '</article>';
+      }).join('') + '</div></section>';
+  }
+
+  function parentSectionMarkup(rows){
+    return '<section class="personal-role">' + roleHeading('학부모 · 우리 반', rows.length) +
+      '<div class="personal-grid">' + rows.map(function(row){
+        var miniUrl = startAuth.buildInternalUrl('parentClass', { classId:row.id });
+        return '<article class="personal-card">' +
+          '<div class="personal-card-name">' + escapeHtml(row.name || '이름 없는 반') + '</div>' +
+          '<div class="personal-card-meta">' + escapeHtml(row.age_label || '승인된 우리 반') + '</div>' +
+          '<div class="personal-card-actions">' +
+            '<a class="personal-action primary" href="' + escapeHtml(miniUrl) + '">우리 반 미니홈피</a>' +
+          '</div>' +
+        '</article>';
+      }).join('') + '</div></section>';
+  }
+
+  async function renderPersonalSession(session){
+    var generation = ++personalUiGeneration;
+    renderHeaderSession(session);
+
+    if (!session || !session.user) {
+      personalStart.hidden = true;
+      personalContent.innerHTML = '';
+      return;
+    }
+
+    showPersonalLoading();
+    try {
+      var connections = await authController.loadConnections();
+      if (generation !== personalUiGeneration) return;
+
+      var hasOwner = connections.ownerCenterIds.length > 0;
+      var hasTeacher = connections.teacherClassIds.length > 0;
+      var hasParent = connections.parentClassSummaries.length > 0;
+      if (!hasOwner && !hasTeacher && !hasParent) {
+        showPersonalEmpty();
+        return;
+      }
+
+      var detailResults = await Promise.allSettled([
+        hasOwner
+          ? loadOwnedCenters(connections.ownerCenterIds, connections.userId)
+          : Promise.resolve([]),
+        hasTeacher
+          ? loadTeacherClasses(connections.teacherClassIds, connections.userId)
+          : Promise.resolve([])
+      ]);
+      if (generation !== personalUiGeneration) return;
+
+      var sections = [];
+      if (hasOwner) {
+        if (detailResults[0].status === 'fulfilled') sections.push(ownerSectionMarkup(detailResults[0].value));
+        else {
+          console.error('owned centers load failed', detailResults[0].reason);
+          sections.push(roleErrorMarkup('원장 · 우리 원', connections.ownerCenterIds.length));
+        }
+      }
+      if (hasTeacher) {
+        if (detailResults[1].status === 'fulfilled') sections.push(teacherSectionMarkup(detailResults[1].value));
+        else {
+          console.error('teacher classes load failed', detailResults[1].reason);
+          sections.push(roleErrorMarkup('교사 · 우리 반', connections.teacherClassIds.length));
+        }
+      }
+      if (hasParent) sections.push(parentSectionMarkup(connections.parentClassSummaries));
+      personalContent.innerHTML = '<div class="personal-role-list">' + sections.join('') + '</div>';
+    } catch (error) {
+      if (generation !== personalUiGeneration || (error && error.code === 'STALE_REQUEST')) return;
+      console.error('personal start load failed', error);
+      showPersonalError();
+    }
+  }
+
+  function schedulePersonalSession(session){
+    window.setTimeout(function(){ renderPersonalSession(session); }, 0);
+  }
+
+  function initializePersonalStart(){
+    if (!startAuth || typeof startAuth.createController !== 'function') {
+      console.error('WoniyaStartAuth helper is unavailable');
+      renderHeaderSession(null);
+      return;
+    }
+
+    try {
+      authController = startAuth.createController(client);
+      authController.subscribe(function(event, session){
+        if (!initialAuthResolved) {
+          hasPendingInitialAuth = true;
+          pendingInitialSession = session;
+          return;
+        }
+        if (event === 'TOKEN_REFRESHED') return;
+        personalUiGeneration += 1;
+        schedulePersonalSession(session);
+      });
+    } catch (error) {
+      console.error('personal auth setup failed', error);
+      renderHeaderSession(null);
+      return;
+    }
+
+    authController.getSession().then(function(session){
+      initialAuthResolved = true;
+      renderPersonalSession(hasPendingInitialAuth ? pendingInitialSession : session);
+      hasPendingInitialAuth = false;
+      pendingInitialSession = null;
+    }).catch(function(error){
+      initialAuthResolved = true;
+      console.error('initial session load failed', error);
+      renderHeaderSession(null);
+      personalStart.hidden = true;
+    });
+  }
+
+  headerLogoutBtn.addEventListener('click', async function(){
+    if (headerLogoutBtn.disabled) return;
+    headerLogoutBtn.disabled = true;
+    headerLogoutBtn.textContent = '로그아웃 중';
+    if (authController) authController.invalidate();
+    personalUiGeneration += 1;
+    try {
+      var res = await client.auth.signOut();
+      if (res.error) throw res.error;
+    } catch (error) {
+      console.error('logout failed', error);
+      headerLogoutBtn.disabled = false;
+      headerLogoutBtn.textContent = '로그아웃';
+      return;
+    }
+    renderPersonalSession(null);
+  });
+
+  initializePersonalStart();
+
   let centers = [];
   try {
     if (pageCache.centers) {
       centers = pageCache.centers;
     } else {
-      const cfg = window.__SUPABASE_CONFIG__;
-      const client = supabase.createClient(cfg.url, cfg.anonKey);
       const { data, error } = await client
         .from('centers')
         .select('id, slug, name, region, address, lat, lng, badges, tags, director, template, card_image, admissions(id)')

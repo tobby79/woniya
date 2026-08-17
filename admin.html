@@ -108,7 +108,22 @@
   .msg.error{color:#D9534F}
   .msg.ok{color:var(--sage)}
 
-  .no-center{padding:30px 0;text-align:center;color:var(--ink-soft);font-size:.92rem}
+  .no-center{padding:30px 0;text-align:center;color:var(--ink-soft);font-size:.92rem;white-space:pre-line}
+  .owner-center-choices{
+    margin-bottom:22px;padding:24px;background:rgba(255,255,255,.86);
+    border:1.5px solid rgba(241,233,224,.95);border-radius:22px;box-shadow:var(--shadow-soft);
+  }
+  .owner-center-choices-title{font-family:var(--display);font-size:1.2rem;color:var(--ink);margin-bottom:6px}
+  .owner-center-choices-copy{color:var(--ink-soft);font-size:.9rem;line-height:1.6;margin-bottom:16px}
+  .owner-center-choice-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
+  .owner-center-choice{
+    min-width:0;display:flex;align-items:center;justify-content:space-between;gap:14px;
+    padding:16px;background:var(--cream);border:1.5px solid #f1e9e0;border-radius:18px;
+  }
+  .owner-center-choice-info{min-width:0}
+  .owner-center-choice-name{font-weight:900;color:var(--ink);line-height:1.45;overflow-wrap:anywhere}
+  .owner-center-choice-slug{margin-top:3px;color:var(--ink-soft);font-size:.78rem;overflow-wrap:anywhere}
+  .owner-center-choice-action.btn{width:auto;min-width:96px;min-height:44px;padding:10px 16px;flex:0 0 auto;text-decoration:none}
 
   .consult-list{list-style:none}
   .consult-item{padding:14px 4px;border-bottom:1px solid #f1e9e0}
@@ -422,6 +437,10 @@
   @media (max-width:560px){
     .class-teacher-profile-controls{grid-template-columns:1fr}
     .class-teacher-profile-save{width:100%;min-width:0}
+    .owner-center-choices{padding:18px}
+    .owner-center-choice-list{grid-template-columns:1fr}
+    .owner-center-choice{align-items:stretch;flex-direction:column}
+    .owner-center-choice-action.btn{width:100%}
   }
   @media (max-width:360px){
     .class-teacher-profile-preview{gap:11px;padding:12px}
@@ -565,6 +584,12 @@
     <div class="no-center" id="noCenter" hidden>
       이 계정에 연결된 원이 아직 없어요.<br>관리자에게 문의해주세요.
     </div>
+
+    <section class="owner-center-choices" id="ownerCenterChoices" aria-labelledby="ownerCenterChoicesTitle" hidden>
+      <h2 class="owner-center-choices-title" id="ownerCenterChoicesTitle">관리할 원을 선택해 주세요</h2>
+      <p class="owner-center-choices-copy">이 계정에 여러 원이 연결되어 있습니다.</p>
+      <div class="owner-center-choice-list" id="ownerCenterChoiceList"></div>
+    </section>
 
     <div class="admin-shell">
       <!-- 탭 바 -->
@@ -1080,6 +1105,8 @@
   var loginError   = document.getElementById('loginError');
   var logoutBtn    = document.getElementById('logoutBtn');
   var noCenter     = document.getElementById('noCenter');
+  var ownerCenterChoices = document.getElementById('ownerCenterChoices');
+  var ownerCenterChoiceList = document.getElementById('ownerCenterChoiceList');
   var centerPanel  = document.getElementById('centerPanel');
   var saveForm     = document.getElementById('saveForm');
   var saveStatus   = document.getElementById('saveStatus');
@@ -6147,6 +6174,7 @@
   function showLoggedOut(){
     invalidateEditableTargetLoads();
     initializedAuthIdentityKey = null;
+    resetOwnerCenterChoiceUi();
     loginView.hidden = false;
     adminView.hidden = true;
     whoBox.hidden = true;
@@ -6165,6 +6193,7 @@
 
   function showLoggedIn(session){
     currentAdminSession = session;
+    resetOwnerCenterChoiceUi();
     loginView.hidden = true;
     adminView.hidden = false;
     whoBox.hidden = false;
@@ -6175,26 +6204,124 @@
     else loadCenter(session.user.id, initializedAuthIdentityKey);
   }
 
+  var OWNER_NO_CENTER_MESSAGE = '이 계정에 연결된 원이 아직 없어요.\n관리자에게 문의해주세요.';
+  var OWNER_UNAVAILABLE_MESSAGE = '이 계정으로 관리할 수 없는 원이거나 존재하지 않는 원입니다.';
+
+  function resetOwnerCenterChoiceUi(){
+    if (ownerCenterChoices) ownerCenterChoices.hidden = true;
+    if (ownerCenterChoiceList) ownerCenterChoiceList.innerHTML = '';
+    noCenter.textContent = OWNER_NO_CENTER_MESSAGE;
+    noCenter.hidden = true;
+  }
+
+  function hideOwnerManagementPanels(){
+    tabBar.hidden = true;
+    centerPanel.hidden = true;
+    photoSection.hidden = true;
+    consultSection.hidden = true;
+    centerLinks.hidden = true;
+    if (editTargetBar) editTargetBar.hidden = true;
+  }
+
+  function showOwnerCenterMessage(message){
+    currentCenter = null;
+    currentOwnedCenter = null;
+    currentEditTarget = null;
+    hideOwnerManagementPanels();
+    noCenter.textContent = message;
+    noCenter.hidden = false;
+  }
+
+  function renderOwnerCenterChoices(rows){
+    hideOwnerManagementPanels();
+    noCenter.hidden = true;
+    ownerCenterChoiceList.innerHTML = '';
+
+    rows.forEach(function(row){
+      var card = document.createElement('article');
+      card.className = 'owner-center-choice';
+
+      var info = document.createElement('div');
+      info.className = 'owner-center-choice-info';
+
+      var name = document.createElement('div');
+      name.className = 'owner-center-choice-name';
+      name.textContent = typeof row.name === 'string' && row.name.trim() ? row.name.trim() : '이름 없는 원';
+
+      var slug = document.createElement('div');
+      slug.className = 'owner-center-choice-slug';
+      slug.textContent = row.slug;
+
+      var targetUrl = new URL('/admin.html', window.location.origin);
+      targetUrl.searchParams.set('slug', row.slug);
+      var action = document.createElement('a');
+      action.className = 'btn owner-center-choice-action';
+      action.href = targetUrl.pathname + targetUrl.search;
+      action.textContent = '관리하기';
+
+      info.appendChild(name);
+      info.appendChild(slug);
+      card.appendChild(info);
+      card.appendChild(action);
+      ownerCenterChoiceList.appendChild(card);
+    });
+
+    ownerCenterChoices.hidden = false;
+  }
+
   async function loadCenter(userId, authIdentityKey){
     if (!isCurrentAdminIdentity(authIdentityKey)) return;
     saveStatus.textContent = '';
-    var res = await client.from('centers').select('*').eq('owner_id', userId).single();
-    if (!isCurrentAdminIdentity(authIdentityKey)) return;
-    if (res.error || !res.data){
-      if (res.error) logAdminError('loadCenter', res.error);
-      currentCenter = null;
-      noCenter.hidden = false;
-      tabBar.hidden = true;
-      centerPanel.hidden = true;
-      photoSection.hidden = true;
-      consultSection.hidden = true;
-      centerLinks.hidden = true;
-      if (editTargetBar) editTargetBar.hidden = true;
+    resetOwnerCenterChoiceUi();
+    hideOwnerManagementPanels();
+    currentCenter = null;
+    currentOwnedCenter = null;
+    currentEditTarget = null;
+    editTargetOptions = [];
+
+    if (ADMIN_INITIAL_SLUG) {
+      var requestedRes = await client.from('centers')
+        .select('id')
+        .eq('slug', ADMIN_INITIAL_SLUG)
+        .eq('owner_id', userId)
+        .maybeSingle();
+      if (!isCurrentAdminIdentity(authIdentityKey)) return;
+      if (requestedRes.error || !requestedRes.data) {
+        if (requestedRes.error) logAdminError('loadCenter/requested', requestedRes.error);
+        showOwnerCenterMessage(OWNER_UNAVAILABLE_MESSAGE);
+        return;
+      }
+
+      noCenter.hidden = true;
+      await loadEditableTarget({ type:'center', id:requestedRes.data.id });
       return;
     }
+
+    var ownedRes = await client.from('centers')
+      .select('id,name,slug')
+      .eq('owner_id', userId)
+      .order('name', { ascending:true });
+    if (!isCurrentAdminIdentity(authIdentityKey)) return;
+    if (ownedRes.error || !Array.isArray(ownedRes.data)) {
+      if (ownedRes.error) logAdminError('loadCenter/owned', ownedRes.error);
+      showOwnerCenterMessage(OWNER_NO_CENTER_MESSAGE);
+      return;
+    }
+
+    var ownedCenters = ownedRes.data;
+    if (ownedCenters.length === 0) {
+      showOwnerCenterMessage(OWNER_NO_CENTER_MESSAGE);
+      return;
+    }
+
+    if (ownedCenters.length > 1) {
+      renderOwnerCenterChoices(ownedCenters);
+      return;
+    }
+
     isSuperAdmin = false;
-    if (editTargetBar) editTargetBar.hidden = true;
-    await loadEditableTarget({ type:'center', id:res.data.id });
+    noCenter.hidden = true;
+    await loadEditableTarget({ type:'center', id:ownedCenters[0].id });
   }
 
   client.auth.onAuthStateChange(function(event, session){
