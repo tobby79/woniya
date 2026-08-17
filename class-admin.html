@@ -483,7 +483,10 @@
   };
   var staffPwaRegistrationStarted = false;
   var activeTab = 'diary';
-  var requestedClassId = new URLSearchParams(location.search).get('class_id') || '';
+  var currentSearchParams = new URLSearchParams(location.search);
+  var requestedClassId = currentSearchParams.get('class_id') || '';
+  var staffInquiryDeepLink = parseStaffInquiryDeepLink(currentSearchParams);
+  var staffInquiryDeepLinkAccessMode = '';
   var calendarDate = firstOfMonth(new Date());
   var selectedDate = toDateInput(new Date());
   var monthEvents = [];
@@ -624,6 +627,29 @@
     });
   }
   function escWithBr(s){ return esc(s).replace(/\r?\n/g, '<br>'); }
+  function isUuid(value){
+    return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(value || '').trim());
+  }
+  function parseStaffInquiryDeepLink(params){
+    var viewValues = params.getAll('view');
+    var classValues = params.getAll('class_id');
+    var inquiryValues = params.getAll('inquiry_id');
+    var isInquiryView = viewValues.length === 1 && viewValues[0] === 'inquiry';
+    var requested = viewValues.length > 1 || isInquiryView || inquiryValues.length > 0;
+    if (!requested) {
+      return { requested:false, valid:false, classId:'', inquiryId:'' };
+    }
+    var classId = classValues.length === 1 ? String(classValues[0] || '').trim() : '';
+    var inquiryId = inquiryValues.length === 1 ? String(inquiryValues[0] || '').trim() : '';
+    var valid = isInquiryView && classValues.length === 1 && inquiryValues.length === 1 &&
+      isUuid(classId) && isUuid(inquiryId);
+    return {
+      requested:true,
+      valid:valid,
+      classId:valid ? classId : '',
+      inquiryId:valid ? inquiryId : ''
+    };
+  }
   function formSnapshot(ids){
     return JSON.stringify(ids.map(function(id){ return byId(id).value; }));
   }
@@ -826,6 +852,7 @@
   function showInquiryAuthenticationRequired(){
     classLoadGeneration += 1;
     resetInquiryState();
+    staffInquiryDeepLinkAccessMode = '';
     currentSession = null;
     currentClass = null;
     currentAccessRole = '';
@@ -912,6 +939,43 @@
     noticeHomeBtn.hidden = true;
     pageNotice.innerHTML = '<strong>' + esc(title) + '</strong><br>' + esc(description);
     showPanel(noticePanel);
+  }
+
+  function showStaffInquiryDeepLinkAccessError(){
+    classLoadGeneration += 1;
+    staffInquiryDeepLinkAccessMode = '';
+    classNameTop.textContent = '';
+    leadText.textContent = '문의 접근 권한을 확인해 주세요.';
+    showClassAccessNotice(
+      '문의를 찾을 수 없거나 접근 권한이 없습니다.',
+      '문의 주소와 현재 로그인 계정을 확인해 주세요.'
+    );
+  }
+
+  function isStaffInquiryDeepLinkLoadCurrent(context){
+    return !!context && staffInquiryDeepLink.requested && staffInquiryDeepLink.valid &&
+      context.classId === staffInquiryDeepLink.classId &&
+      context.inquiryId === staffInquiryDeepLink.inquiryId &&
+      (context.role === 'teacher' || context.role === 'owner') &&
+      context.role === currentAccessRole &&
+      isCurrentClassLoad(context.loadGeneration, context.userId, context.session) &&
+      !!currentClass && currentClass.id === context.classId;
+  }
+
+  function finishStaffInquiryDeepLinkForInquiryList(){
+    var classId = currentClass && currentClass.id;
+    if (staffInquiryDeepLinkAccessMode !== 'staff' ||
+        !staffInquiryDeepLink.requested || !staffInquiryDeepLink.valid ||
+        !isUuid(classId) || staffInquiryDeepLink.classId !== classId) return false;
+    staffInquiryDeepLinkAccessMode = '';
+    staffInquiryDeepLink = parseStaffInquiryDeepLink(new URLSearchParams());
+    requestedClassId = classId;
+    window.history.replaceState(
+      window.history.state,
+      '',
+      '/class-admin.html?class_id=' + encodeURIComponent(classId)
+    );
+    return true;
   }
 
   function isCurrentClassLoad(loadGeneration, requestedUserId, session){
@@ -1380,17 +1444,27 @@
     var loadGeneration = ++classLoadGeneration;
     resetTeacherIntroState();
     resetInquiryState();
+    staffInquiryDeepLinkAccessMode = '';
     var requestedUserId = session && session.user ? session.user.id : null;
     var ownerConsoleSlug = '';
     classSwitchLink.hidden = true;
     classSwitchLink.removeAttribute('href');
     if (!isCurrentClassLoad(loadGeneration, requestedUserId, session)) return;
+    if (staffInquiryDeepLink.requested && !staffInquiryDeepLink.valid) {
+      showStaffInquiryDeepLinkAccessError();
+      return;
+    }
+    if (staffInquiryDeepLink.valid) requestedClassId = staffInquiryDeepLink.classId;
     if (requestedClassId) {
       var staffRes = await client.rpc('is_class_staff', {
         p_class_id: requestedClassId
       });
       if (!isCurrentClassLoad(loadGeneration, requestedUserId, session)) return;
       if (staffRes.error) {
+        if (staffInquiryDeepLink.valid) {
+          showStaffInquiryDeepLinkAccessError();
+          return;
+        }
         showClassAccessNotice(
           '권한 정보를 확인하지 못했습니다.',
           '반 주소와 로그인 계정을 확인한 뒤 다시 시도해 주세요.'
@@ -1398,6 +1472,10 @@
         return;
       }
       if (staffRes.data !== true) {
+        if (staffInquiryDeepLink.valid) {
+          showStaffInquiryDeepLinkAccessError();
+          return;
+        }
         var endedAssignmentRes = await client.rpc('has_ended_class_teacher_assignment', {
           p_class_id: requestedClassId
         });
@@ -1426,6 +1504,10 @@
       });
       if (!isCurrentClassLoad(loadGeneration, requestedUserId, session)) return;
       if (ownerRes.error || (ownerRes.data !== true && ownerRes.data !== false)) {
+        if (staffInquiryDeepLink.valid) {
+          showStaffInquiryDeepLinkAccessError();
+          return;
+        }
         showClassAccessNotice(
           '권한 정보를 확인하지 못했습니다.',
           '반 주소와 로그인 계정을 확인한 뒤 다시 시도해 주세요.'
@@ -1439,6 +1521,10 @@
         .maybeSingle();
       if (!isCurrentClassLoad(loadGeneration, requestedUserId, session)) return;
       if (requestedRes.error) {
+        if (staffInquiryDeepLink.valid) {
+          showStaffInquiryDeepLinkAccessError();
+          return;
+        }
         showClassAccessNotice(
           '반 정보를 불러오지 못했습니다.',
           '잠시 후 새로고침해 다시 시도해 주세요.'
@@ -1446,6 +1532,10 @@
         return;
       }
       if (!requestedRes.data) {
+        if (staffInquiryDeepLink.valid) {
+          showStaffInquiryDeepLinkAccessError();
+          return;
+        }
         showClassAccessNotice(
           '반 정보를 확인할 수 없습니다.',
           '반 주소와 로그인 계정을 다시 확인해 주세요.'
@@ -1560,6 +1650,10 @@
       await refreshMiniHomeState();
     } catch (err) {
       if (!isCurrentClassLoad(loadGeneration, requestedUserId, session)) return;
+      if (staffInquiryDeepLink.valid) {
+        showStaffInquiryDeepLinkAccessError();
+        return;
+      }
       throw err;
     }
     if (!isCurrentClassLoad(loadGeneration, requestedUserId, session)) return;
@@ -1582,6 +1676,11 @@
     refreshInquiryUnreadIndicator();
     if (currentAccessRole === 'teacher') {
       refreshClassSwitcherVisibility(session, loadGeneration, requestedUserId);
+    }
+    if (staffInquiryDeepLink.requested && staffInquiryDeepLink.valid) {
+      var inquiryDeepLinkHandled = await loadStaffInquiryDeepLink(session, loadGeneration);
+      if (!isCurrentClassLoad(loadGeneration, requestedUserId, session)) return;
+      if (inquiryDeepLinkHandled) return;
     }
     try {
       await loadActiveTab();
@@ -2688,6 +2787,70 @@
     return thread.messages.every(isValidStaffInquiryMessage);
   }
 
+  async function loadStaffInquiryDeepLink(session, loadGeneration){
+    if (!staffInquiryDeepLink.requested || !staffInquiryDeepLink.valid) return false;
+    var context = {
+      session:session,
+      userId:session && session.user ? session.user.id : '',
+      classId:staffInquiryDeepLink.classId,
+      inquiryId:staffInquiryDeepLink.inquiryId,
+      role:currentAccessRole,
+      loadGeneration:loadGeneration
+    };
+    if (!isStaffInquiryDeepLinkLoadCurrent(context)) {
+      showStaffInquiryDeepLinkAccessError();
+      return true;
+    }
+
+    var staffRes;
+    try {
+      staffRes = await client.rpc('is_class_staff', { p_class_id:context.classId });
+    } catch (_error) {
+      if (isStaffInquiryDeepLinkLoadCurrent(context)) showStaffInquiryDeepLinkAccessError();
+      return true;
+    }
+    if (!isStaffInquiryDeepLinkLoadCurrent(context)) return true;
+    if (staffRes.error || staffRes.data !== true) {
+      showStaffInquiryDeepLinkAccessError();
+      return true;
+    }
+
+    var threadRes;
+    try {
+      threadRes = await client.rpc('get_class_inquiry_thread', {
+        p_inquiry_id:context.inquiryId
+      });
+    } catch (_error) {
+      if (isStaffInquiryDeepLinkLoadCurrent(context)) showStaffInquiryDeepLinkAccessError();
+      return true;
+    }
+    if (!isStaffInquiryDeepLinkLoadCurrent(context)) return true;
+    if (threadRes.error ||
+        !isValidStaffInquiryThread(threadRes.data, context.inquiryId, context.classId) ||
+        threadRes.data.viewer_role !== context.role) {
+      showStaffInquiryDeepLinkAccessError();
+      return true;
+    }
+
+    if (!activateClassAdminTab('inquiry')) {
+      showStaffInquiryDeepLinkAccessError();
+      return true;
+    }
+    if ((!inquiryState.hasLoaded || inquiryState.lastLoadFailed) && !inquiryState.isLoading) {
+      loadInquiryList({ append:false });
+    }
+    staffInquiryDeepLinkAccessMode = 'staff';
+    var opened = await openInquiry(context.inquiryId, {
+      allowUnlisted:true,
+      verifiedThread:threadRes.data,
+      expectedViewerRole:context.role,
+      isDeepLink:true
+    });
+    if (!isStaffInquiryDeepLinkLoadCurrent(context)) return true;
+    if (!opened) showStaffInquiryDeepLinkAccessError();
+    return true;
+  }
+
   function inquirySenderLabel(role){
     return ({
       parent:'학부모',
@@ -2879,6 +3042,10 @@
       showInquiryAuthenticationRequired();
       return true;
     }
+    if (context.isDeepLink === true) {
+      showStaffInquiryDeepLinkAccessError();
+      return true;
+    }
     if (token === 'inquiry_not_found_or_denied') {
       returnToInquiryList({ reload:true });
       return true;
@@ -2896,6 +3063,12 @@
     var token = inquiryErrorToken(error);
     if (token === 'not_authenticated') {
       showInquiryAuthenticationRequired();
+      return true;
+    }
+    if (detailContext && detailContext.isDeepLink === true &&
+        (token === 'inquiry_not_found_or_denied' || token === 'class_access_denied' ||
+         isClassAuthorizationError(error))) {
+      showStaffInquiryDeepLinkAccessError();
       return true;
     }
     if (token === 'inquiry_not_found_or_denied') {
@@ -2932,7 +3105,8 @@
       if (res.data && res.data.inquiry &&
           res.data.inquiry.id === context.inquiryId &&
           res.data.inquiry.class_id === context.classId &&
-          res.data.viewer_role !== 'teacher' && res.data.viewer_role !== 'owner') {
+          ((res.data.viewer_role !== 'teacher' && res.data.viewer_role !== 'owner') ||
+           (context.expectedViewerRole && res.data.viewer_role !== context.expectedViewerRole))) {
         return { denied:true };
       }
       if (!isValidStaffInquiryThread(res.data, context.inquiryId, context.classId)) return { invalid:true };
@@ -3637,9 +3811,20 @@
     }
   }
 
-  async function openInquiry(inquiryId){
-    if (!currentSession || !currentSession.user || !currentClass || classStaffAccessLost) return;
-    if (!inquiryId || !inquiryState.rows.some(function(row){ return row.inquiry_id === inquiryId; })) return;
+  async function openInquiry(inquiryId, options){
+    options = options && typeof options === 'object' ? options : {};
+    if (!currentSession || !currentSession.user || !currentClass || classStaffAccessLost) return false;
+    var expectedViewerRole = options.expectedViewerRole === 'owner' ? 'owner' :
+      (options.expectedViewerRole === 'teacher' ? 'teacher' : '');
+    var verifiedThread = options.verifiedThread;
+    var canUseVerifiedThread = options.allowUnlisted === true && options.isDeepLink === true &&
+      staffInquiryDeepLinkAccessMode === 'staff' && staffInquiryDeepLink.valid &&
+      staffInquiryDeepLink.classId === currentClass.id && staffInquiryDeepLink.inquiryId === inquiryId &&
+      expectedViewerRole === currentAccessRole &&
+      isValidStaffInquiryThread(verifiedThread, inquiryId, currentClass.id) &&
+      verifiedThread.viewer_role === expectedViewerRole;
+    if (!inquiryId || (!canUseVerifiedThread &&
+        !inquiryState.rows.some(function(row){ return row.inquiry_id === inquiryId; }))) return false;
 
     inquiryState.replyThreadSequence += 1;
     inquiryState.selectedInquiryId = inquiryId;
@@ -3654,7 +3839,9 @@
       classId: currentClass.id,
       loadGeneration: classLoadGeneration,
       requestSequence: ++inquiryState.detailSequence,
-      inquiryId: inquiryId
+      inquiryId: inquiryId,
+      isDeepLink: canUseVerifiedThread,
+      expectedViewerRole: canUseVerifiedThread ? expectedViewerRole : ''
     };
     var mutationContext = {
       userId: context.userId,
@@ -3663,20 +3850,24 @@
     };
     showInquiryDetailLoading();
 
-    var initialResult = await requestInquiryThread(context);
-    if (initialResult.stale) return;
+    var initialResult = canUseVerifiedThread
+      ? { thread:verifiedThread }
+      : await requestInquiryThread(context);
+    if (initialResult.stale) return false;
     if (initialResult.error) {
       if (handleInquiryDetailAccessError(initialResult.error, context)) return;
       showInquiryDetailLoadError();
-      return;
+      return false;
     }
     if (initialResult.denied) {
-      returnToInquiryList({ reload:true });
-      return;
+      if (context.isDeepLink) showStaffInquiryDeepLinkAccessError();
+      else returnToInquiryList({ reload:true });
+      return false;
     }
     if (initialResult.invalid) {
-      showInvalidStaffInquiryThread();
-      return;
+      if (context.isDeepLink) showStaffInquiryDeepLinkAccessError();
+      else showInvalidStaffInquiryThread();
+      return false;
     }
 
     var finalThread = initialResult.thread;
@@ -3718,16 +3909,18 @@
         }
         // changed 여부와 관계없이 경쟁 상태를 반영하기 위해 thread를 다시 조회합니다.
         var refreshedResult = await requestInquiryThread(context);
-        if (refreshedResult.stale) return;
+        if (refreshedResult.stale) return false;
         if (refreshedResult.error) {
           if (handleInquiryDetailAccessError(refreshedResult.error, context)) return;
           appendInquiryDetailError('문의 최신 상태를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.');
         } else if (refreshedResult.denied) {
-          returnToInquiryList({ reload:true });
-          return;
+          if (context.isDeepLink) showStaffInquiryDeepLinkAccessError();
+          else returnToInquiryList({ reload:true });
+          return false;
         } else if (refreshedResult.invalid) {
-          showInvalidStaffInquiryThread();
-          return;
+          if (context.isDeepLink) showStaffInquiryDeepLinkAccessError();
+          else showInvalidStaffInquiryThread();
+          return false;
         } else {
           finalThread = refreshedResult.thread;
         }
@@ -3744,7 +3937,10 @@
     inquiryState.thread = finalThread;
     inquiryState.isDetailLoading = false;
     renderInquiryDetail(finalThread);
+    var detailView = byId('inquiryDetailView');
+    if (!detailView || detailView.hidden || detailView.getAttribute('aria-busy') !== 'false') return false;
     await markInquiryStaffRead(context, mutationContext, finalThread);
+    return true;
   }
 
   function isInquiryRealtimeListContextCurrent(batch, state){
@@ -3968,6 +4164,24 @@
     }
   }
 
+  function activateClassAdminTab(tabName){
+    var targetButton = Array.prototype.find.call(
+      byId('tabBar').querySelectorAll('.tab-btn'),
+      function(item){ return item.dataset.tab === tabName; }
+    );
+    var targetPanel = Array.prototype.find.call(
+      document.querySelectorAll('.tab-panel'),
+      function(item){ return item.dataset.panel === tabName; }
+    );
+    if (!targetButton || !targetPanel) return false;
+    activeTab = tabName;
+    byId('tabBar').querySelectorAll('.tab-btn').forEach(function(item){ item.classList.remove('active'); });
+    document.querySelectorAll('.tab-panel').forEach(function(item){ item.classList.remove('active'); });
+    targetButton.classList.add('active');
+    targetPanel.classList.add('active');
+    return true;
+  }
+
   async function loadActiveTab(){
     if (!currentClass) return;
     if (!await ensureCurrentClassStaffAccess()) return;
@@ -4074,11 +4288,7 @@
       teacherIntroDraftValue = teacherIntroOriginalValue || '';
       setTeacherIntroStatus('', '');
     }
-    activeTab = btn.dataset.tab;
-    byId('tabBar').querySelectorAll('.tab-btn').forEach(function(item){ item.classList.remove('active'); });
-    document.querySelectorAll('.tab-panel').forEach(function(item){ item.classList.remove('active'); });
-    btn.classList.add('active');
-    document.querySelector('.tab-panel[data-panel="' + activeTab + '"]').classList.add('active');
+    if (!activateClassAdminTab(btn.dataset.tab)) return;
     await loadActiveTab();
   });
 
@@ -4096,7 +4306,7 @@
 
   byId('inquiryBackBtn').addEventListener('click', function(e){
     e.preventDefault();
-    returnToInquiryListFromDetail();
+    if (returnToInquiryListFromDetail()) finishStaffInquiryDeepLinkForInquiryList();
   });
 
   byId('inquiryReplyInput').addEventListener('input', function(e){
@@ -4236,6 +4446,7 @@
     if (event === 'SIGNED_OUT') {
       classLoadGeneration += 1;
       resetInquiryState();
+      staffInquiryDeepLinkAccessMode = '';
       currentSession = null;
       currentClass = null;
       currentAccessRole = '';
