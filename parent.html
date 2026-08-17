@@ -622,6 +622,7 @@
   var selectedEventDate = toDateInput(new Date());
   var miniCache = createMiniCache();
   var parentInquiryState = createParentInquiryState();
+  var parentInquiryDeepLinkAccessMode = '';
   var parentInquiryRealtimeStatus = 'STOPPED';
   var parentInquiryRealtimeToastTimer = null;
   var parentPwaRegistrationState = {
@@ -671,7 +672,21 @@
     carnival: 'template-carnival.html',
     gallery: 'template-gallery.html'
   };
-  var directClassId = new URLSearchParams(location.search).get('class_id') || '';
+  var PARENT_INQUIRY_DEEP_LINK_STORAGE_KEY = 'woniya_parent_inquiry_deep_link_v1';
+  var PARENT_INQUIRY_DEEP_LINK_STORAGE_VERSION = 1;
+  var PARENT_INQUIRY_DEEP_LINK_OAUTH_FLOW = 'kakao_oauth_pending';
+  var PARENT_INQUIRY_DEEP_LINK_OAUTH_TTL_MS = 10 * 60 * 1000;
+  var currentSearchParams = new URLSearchParams(location.search);
+  var directClassId = currentSearchParams.get('class_id') || '';
+  var parentInquiryDeepLink = parseParentInquiryDeepLink(currentSearchParams, false);
+  if (parentInquiryDeepLink.requested) {
+    clearStoredParentInquiryDeepLink();
+  } else if (parentInquiryOAuthReturnKind(currentSearchParams, location.hash) === 'success') {
+    var storedParentInquiryDeepLink = consumeStoredParentInquiryDeepLink();
+    if (storedParentInquiryDeepLink) parentInquiryDeepLink = storedParentInquiryDeepLink;
+  } else {
+    clearStoredParentInquiryDeepLink();
+  }
 
   function startParentPwaRegistration(){
     if (parentPwaRegistrationStarted) return;
@@ -731,6 +746,161 @@
 
   function escWithBr(s){
     return esc(s).replace(/\r?\n/g, '<br>');
+  }
+
+  function isUuid(value){
+    return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(value || '').trim());
+  }
+
+  function parseParentInquiryDeepLink(params, fromStorage){
+    var viewValues = params.getAll('view');
+    var inquiryValues = params.getAll('inquiry_id');
+    var isInquiryView = viewValues.length === 1 && viewValues[0] === 'inquiry';
+    var requested = viewValues.length > 1 || isInquiryView || inquiryValues.length > 0;
+    if (!requested) {
+      return {
+        requested: false,
+        valid: false,
+        classId: '',
+        inquiryId: '',
+        returnPath: '',
+        fromStorage: false
+      };
+    }
+
+    var classValues = params.getAll('class_id');
+    var classId = classValues.length === 1 ? String(classValues[0] || '').trim() : '';
+    var inquiryId = inquiryValues.length === 1 ? String(inquiryValues[0] || '').trim() : '';
+    var valid = isInquiryView && isUuid(classId) && isUuid(inquiryId);
+    return {
+      requested: true,
+      valid: valid,
+      classId: valid ? classId : '',
+      inquiryId: valid ? inquiryId : '',
+      returnPath: valid
+        ? '/parent.html?class_id=' + encodeURIComponent(classId) + '&view=inquiry&inquiry_id=' + encodeURIComponent(inquiryId)
+        : '',
+      fromStorage: valid && fromStorage === true
+    };
+  }
+
+  function parentInquiryOAuthReturnKind(searchParams, hashValue){
+    var hashParams;
+    try {
+      hashParams = new URLSearchParams(String(hashValue || '').replace(/^#/, ''));
+    } catch (_error) {
+      hashParams = new URLSearchParams();
+    }
+    var hasOAuthError = ['error', 'error_code', 'error_description'].some(function(key){
+      return searchParams.has(key) || hashParams.has(key);
+    });
+    if (hasOAuthError) return 'error';
+
+    var codeValues = searchParams.getAll('code');
+    var hasAuthorizationCode = codeValues.length === 1 && !!String(codeValues[0] || '').trim();
+    var accessTokenValues = hashParams.getAll('access_token');
+    var refreshTokenValues = hashParams.getAll('refresh_token');
+    var hasImplicitTokens = accessTokenValues.length === 1 && refreshTokenValues.length === 1 &&
+      !!String(accessTokenValues[0] || '').trim() && !!String(refreshTokenValues[0] || '').trim();
+    return hasAuthorizationCode || hasImplicitTokens ? 'success' : 'none';
+  }
+
+  function consumeStoredParentInquiryDeepLink(){
+    try {
+      var storedValue = window.sessionStorage.getItem(PARENT_INQUIRY_DEEP_LINK_STORAGE_KEY);
+      if (!storedValue) return null;
+      var storedRecord = JSON.parse(storedValue);
+      var now = Date.now();
+      if (!storedRecord || typeof storedRecord !== 'object' || Array.isArray(storedRecord) ||
+          storedRecord.version !== PARENT_INQUIRY_DEEP_LINK_STORAGE_VERSION ||
+          storedRecord.flow !== PARENT_INQUIRY_DEEP_LINK_OAUTH_FLOW ||
+          typeof storedRecord.path !== 'string' ||
+          typeof storedRecord.createdAt !== 'number' || !Number.isFinite(storedRecord.createdAt) ||
+          storedRecord.createdAt <= 0 || storedRecord.createdAt > now ||
+          now - storedRecord.createdAt > PARENT_INQUIRY_DEEP_LINK_OAUTH_TTL_MS) return null;
+
+      var storedUrl = new URL(storedRecord.path, window.location.origin);
+      if (storedUrl.origin !== window.location.origin || storedUrl.pathname !== '/parent.html') {
+        return null;
+      }
+      var parsed = parseParentInquiryDeepLink(storedUrl.searchParams, true);
+      if (!parsed.valid || parsed.returnPath !== storedUrl.pathname + storedUrl.search) {
+        return null;
+      }
+      return parsed;
+    } catch (_error) {
+      return null;
+    } finally {
+      clearStoredParentInquiryDeepLink();
+    }
+  }
+
+  function storeParentInquiryDeepLinkForOAuth(){
+    if (!parentInquiryDeepLink.requested || !parentInquiryDeepLink.valid || !parentInquiryDeepLink.returnPath) return;
+    try {
+      window.sessionStorage.setItem(
+        PARENT_INQUIRY_DEEP_LINK_STORAGE_KEY,
+        JSON.stringify({
+          version: PARENT_INQUIRY_DEEP_LINK_STORAGE_VERSION,
+          flow: PARENT_INQUIRY_DEEP_LINK_OAUTH_FLOW,
+          path: parentInquiryDeepLink.returnPath,
+          createdAt: Date.now()
+        })
+      );
+    } catch (_error) {}
+  }
+
+  function clearStoredParentInquiryDeepLink(){
+    try {
+      window.sessionStorage.removeItem(PARENT_INQUIRY_DEEP_LINK_STORAGE_KEY);
+    } catch (_error) {}
+  }
+
+  function parentOAuthRedirectUrl(){
+    var redirectSearchParams = new URLSearchParams(window.location.search);
+    var classValues = redirectSearchParams.getAll('class_id');
+    var classId = classValues.length === 1 ? String(classValues[0] || '').trim() : '';
+    var path = '/parent.html';
+    if (!parseParentInquiryDeepLink(redirectSearchParams, false).requested && isUuid(classId)) {
+      path += '?class_id=' + encodeURIComponent(classId);
+    }
+    return window.location.origin + path;
+  }
+
+  function finalizeStoredParentInquiryDeepLink(){
+    if (!parentInquiryDeepLink.fromStorage || !parentInquiryDeepLink.valid) return;
+    window.history.replaceState(window.history.state, '', parentInquiryDeepLink.returnPath);
+    parentInquiryDeepLink.fromStorage = false;
+    clearStoredParentInquiryDeepLink();
+  }
+
+  function finishApprovedParentInquiryDeepLinkForClassList(){
+    if (parentInquiryDeepLinkAccessMode !== 'approved') return false;
+    parentInquiryDeepLinkAccessMode = '';
+    parentInquiryDeepLink = parseParentInquiryDeepLink(new URLSearchParams(), false);
+    directClassId = '';
+    clearStoredParentInquiryDeepLink();
+    if (window.location.pathname === '/parent.html') {
+      window.history.replaceState(window.history.state, '', '/parent.html');
+    }
+    return true;
+  }
+
+  function finishApprovedParentInquiryDeepLinkForInquiryList(){
+    var classId = currentMiniClass && currentMiniClass.id;
+    if (parentInquiryDeepLinkAccessMode !== 'approved' ||
+        !parentInquiryDeepLink.requested || !parentInquiryDeepLink.valid ||
+        !isUuid(classId) || parentInquiryDeepLink.classId !== classId) return false;
+    parentInquiryDeepLinkAccessMode = '';
+    parentInquiryDeepLink = parseParentInquiryDeepLink(new URLSearchParams(), false);
+    directClassId = classId;
+    clearStoredParentInquiryDeepLink();
+    window.history.replaceState(
+      window.history.state,
+      '',
+      '/parent.html?class_id=' + encodeURIComponent(classId)
+    );
+    return true;
   }
 
   function normalizeParentPwaInstallStatus(value){
@@ -1237,6 +1407,17 @@
     });
   }
 
+  function isRestrictedParentInquiryContext(context){
+    var expectedUserId = context && context.userId ? context.userId : authSessionUserId(currentSession);
+    var expectedClassId = context && context.classId ? context.classId : (currentMiniClass && currentMiniClass.id);
+    return parentInquiryDeepLinkAccessMode === 'restricted' &&
+      parentInquiryDeepLink.requested && parentInquiryDeepLink.valid &&
+      parentInquiryDeepLink.classId === expectedClassId &&
+      !!expectedUserId && authSessionUserId(currentSession) === expectedUserId &&
+      !!currentMiniClass && currentMiniClass.id === expectedClassId &&
+      !currentEnrollment && !currentMini && !miniPanel.hidden;
+  }
+
   function syncParentInquiryFloatingButton(){
     if (!parentInquiryFloatingBtn) return;
     var inquiryEnabled = !!currentMini && enabledModules().some(function(item){
@@ -1295,6 +1476,7 @@
   function resetMiniStateForAuthChange(){
     classLoadVersion += 1;
     resetParentInquiryState();
+    parentInquiryDeepLinkAccessMode = '';
     approvedClasses = [];
     currentMiniClass = null;
     currentEnrollment = null;
@@ -1472,6 +1654,24 @@
     noticeTitle.textContent = title || '';
     noticeDesc.innerHTML = escWithBr(desc || '');
     showPanel(noticePanel);
+  }
+
+  function showParentInquiryDeepLinkAccessError(){
+    classLoadVersion += 1;
+    resetParentInquiryState();
+    parentInquiryDeepLinkAccessMode = '';
+    approvedClasses = [];
+    currentMiniClass = null;
+    currentEnrollment = null;
+    currentMini = null;
+    currentMiniTab = 'diary';
+    currentMiniView = 'home';
+    selectedAlbumKey = null;
+    miniCache = createMiniCache();
+    miniRoot.innerHTML = '';
+    resetCenterBrand();
+    leadText.textContent = '문의 접근 권한을 확인해 주세요.';
+    showNotice('문의에 접근할 수 없습니다.', '문의를 찾을 수 없거나 접근 권한이 없습니다.');
   }
 
   function setAuthMode(mode){
@@ -1903,7 +2103,11 @@
       { key:'notice', label:'공지' }
     ];
     return modules.filter(function(item){
-      return enabled[item.enabledKey || item.key] !== false &&
+      var enabledForApprovedDeepLink = item.key === 'inquiry' &&
+        parentInquiryDeepLinkAccessMode === 'approved' &&
+        parentInquiryDeepLink.valid && !!currentMiniClass &&
+        currentMiniClass.id === parentInquiryDeepLink.classId;
+      return (enabled[item.enabledKey || item.key] !== false || enabledForApprovedDeepLink) &&
         (item.key !== 'inquiry' || isApprovedParentInquiryContext());
     });
   }
@@ -2026,12 +2230,14 @@
     });
   }
 
-  async function openClassMini(classId, authVersion){
+  async function openClassMini(classId, authVersion, options){
+    options = options && typeof options === 'object' ? options : {};
     var startedAuthVersion = authVersion == null ? authTransitionVersion : authVersion;
     if (!isCurrentAuthTransition(startedAuthVersion)) return;
     var targetClassId = classId;
     var startedClassLoadVersion = ++classLoadVersion;
     resetParentInquiryState();
+    parentInquiryDeepLinkAccessMode = '';
     var row = approvedClasses.find(function(item){ return item.id === targetClassId; });
     if (!row) return;
     currentMiniClass = row;
@@ -2112,17 +2318,75 @@
     } catch (err) {
       if (!isCurrentClassLoad(startedAuthVersion, startedClassLoadVersion, targetClassId)) return;
       resetParentInquiryState();
-      miniRoot.innerHTML = '<div class="empty-mini">' + escWithBr(err && err.message ? err.message : String(err)) + '</div>';
+      miniRoot.innerHTML = options.useGenericInquiryError
+        ? '<div class="empty-mini">문의를 찾을 수 없거나 접근 권한이 없습니다.</div>'
+        : '<div class="empty-mini">' + escWithBr(err && err.message ? err.message : String(err)) + '</div>';
     }
   }
 
+  function showDirectClassMiniAccessError(){
+    resetParentInquiryState();
+    showNotice('미니홈피를 열 수 없습니다', '이 반에 접근할 권한이 없거나 확인할 수 없습니다.');
+  }
+
   async function loadDirectClassMini(session, authVersion){
+    var directClassValues = new URLSearchParams(window.location.search).getAll('class_id');
+    var requestedDirectClassId = directClassValues.length === 1
+      ? String(directClassValues[0] || '').trim()
+      : '';
+    var directUserId = session && session.user ? session.user.id : '';
+    if (directClassValues.length !== 1 || !isUuid(requestedDirectClassId) || !directUserId) {
+      if (isCurrentAuthTransition(authVersion)) showDirectClassMiniAccessError();
+      return true;
+    }
+    directClassId = requestedDirectClassId;
+
+    var summariesRes = await client.rpc('get_my_approved_class_summaries');
+    if (!isCurrentAuthTransition(authVersion)) return true;
+    if (summariesRes.error || !Array.isArray(summariesRes.data)) {
+      showDirectClassMiniAccessError();
+      return true;
+    }
+
+    var enrollmentRes = await client.from('class_enrollments')
+      .select('id,status,class_id,last_notice_read_at')
+      .eq('parent_id', directUserId)
+      .eq('status', 'approved');
+    if (!isCurrentAuthTransition(authVersion)) return true;
+    if (enrollmentRes.error || !Array.isArray(enrollmentRes.data)) {
+      showDirectClassMiniAccessError();
+      return true;
+    }
+
+    var approvedClassRows = mergeApprovedClassSummariesWithEnrollments(
+      summariesRes.data,
+      enrollmentRes.data
+    );
+    var approvedClass = approvedClassRows.find(function(row){
+      return row && row.id === directClassId && isUuid(row.enrollment_id);
+    }) || null;
+    if (approvedClass) {
+      parentInquiryDeepLinkAccessMode = '';
+      parentInquiryDeepLink = parseParentInquiryDeepLink(new URLSearchParams(), false);
+      clearStoredParentInquiryDeepLink();
+      approvedClasses = approvedClassRows.map(function(row){ return Object.assign({}, row); });
+      classList.innerHTML = approvedClasses.map(renderClassCard).join('');
+      extraInviteBox.hidden = true;
+      extraInviteMsg.textContent = '';
+      extraInviteCode.value = '';
+      await openClassMini(directClassId, authVersion);
+      return true;
+    }
+
     var classRes = await client.from('classes')
       .select('id,name,age_label,teacher_id,center_id')
       .eq('id', directClassId)
       .maybeSingle();
     if (!isCurrentAuthTransition(authVersion)) return true;
-    if (classRes.error) throw classRes.error;
+    if (classRes.error) {
+      showDirectClassMiniAccessError();
+      return true;
+    }
 
     var classRow = classRes.data || null;
     var isTeacher = !!(classRow && classRow.teacher_id === session.user.id);
@@ -2134,20 +2398,25 @@
         .eq('id', classRow.center_id)
         .maybeSingle();
       if (!isCurrentAuthTransition(authVersion)) return true;
-      if (centerRes.error) throw centerRes.error;
+      if (centerRes.error) {
+        showDirectClassMiniAccessError();
+        return true;
+      }
       isCenterOwner = !!(centerRes.data && centerRes.data.owner_id === session.user.id);
     }
 
     if (!classRow || (!isTeacher && !isCenterOwner)) {
       if (!isCurrentAuthTransition(authVersion)) return true;
-      resetParentInquiryState();
-      showNotice('미니홈피를 열 수 없습니다', '해당 반의 담임 선생님 또는 원장님만 직접 접근할 수 있어요.');
+      showDirectClassMiniAccessError();
       return true;
     }
 
     var miniRes = await client.from('class_mini').select('id').eq('class_id', directClassId).maybeSingle();
     if (!isCurrentAuthTransition(authVersion)) return true;
-    if (miniRes.error) throw miniRes.error;
+    if (miniRes.error) {
+      showDirectClassMiniAccessError();
+      return true;
+    }
     if (!miniRes.data) {
       resetParentInquiryState();
       showNotice('아직 미니홈피가 준비되지 않았어요', '담임 선생님이 미니홈피를 준비한 뒤 다시 확인해주세요.');
@@ -2704,8 +2973,11 @@
   }
 
   function isParentInquiryDetailContextCurrent(context){
+    var accessContextIsCurrent = context && context.accessMode === 'restricted'
+      ? isRestrictedParentInquiryContext(context)
+      : isApprovedParentInquiryContext();
     return !!context &&
-      isApprovedParentInquiryContext() &&
+      accessContextIsCurrent &&
       parentInquiryState === context.state &&
       parentInquiryState.view === 'detail' &&
       parentInquiryState.detailSequence === context.requestSequence &&
@@ -2908,6 +3180,7 @@
         : '<div class="parent-inquiry-empty">아직 표시할 문의 내용이 없습니다.</div>';
     }
 
+    var isRestrictedDeepLink = isRestrictedParentInquiryContext();
     var isClosed = inquiry.status === 'closed';
     var canAddMessage = thread.viewer_role === 'parent' &&
       thread.permissions.can_add_parent_message === true && !isClosed;
@@ -2930,7 +3203,7 @@
       closeButton.hidden = !canClose;
       closeButton.disabled = true;
     }
-    if (replySection) replySection.hidden = isClosed;
+    if (replySection) replySection.hidden = isClosed || isRestrictedDeepLink;
     if (closedNotice) closedNotice.hidden = !isClosed;
     var detailView = document.getElementById('parentInquiryDetailView');
     if (detailView) detailView.setAttribute('aria-busy', 'false');
@@ -4306,6 +4579,10 @@
       showParentInquiryAuthenticationRequired();
       return true;
     }
+    if (context && (context.isDeepLink === true || context.accessMode === 'restricted')) {
+      showParentInquiryDeepLinkAccessError();
+      return true;
+    }
     if (token === 'parent_not_approved') {
       handleParentInquiryApprovalContextLoss(context, true);
       showParentInquiryApprovalRequired();
@@ -4323,34 +4600,48 @@
     if (!isParentInquiryDetailContextCurrent(context) ||
         thread.viewer_role !== 'parent' ||
         thread.permissions.can_mark_read !== true) return;
+    var isRestrictedRead = context.accessMode === 'restricted';
     var mutationContext = parentInquiryDetailMutationContext(context);
     var mutationSequence = ++context.state.mutationThreadSequence;
+    function isReadContextCurrent(){
+      return isRestrictedRead
+        ? isParentInquiryReadContextCurrent(context, mutationSequence)
+        : isParentInquiryMutationContextCurrent(mutationContext);
+    }
+    function refreshAfterRead(){
+      if (!isRestrictedRead) refreshParentInquiryListAfterMutation(mutationContext);
+    }
     var res;
     try {
       res = await client.rpc('mark_class_inquiry_parent_read', {
         p_inquiry_id: context.inquiryId
       });
     } catch (err) {
-      if (!isParentInquiryMutationContextCurrent(mutationContext)) {
-        handleParentInquiryApprovalContextLoss(context);
+      if (!isReadContextCurrent()) {
+        if (!isRestrictedRead) handleParentInquiryApprovalContextLoss(context);
         return;
       }
       if (handleParentInquiryDetailAccessError(err, context, mutationSequence)) return;
-      refreshParentInquiryListAfterMutation(mutationContext);
+      refreshAfterRead();
       if (isParentInquiryReadContextCurrent(context, mutationSequence)) {
         setParentInquiryDetailMessage('메시지 읽음 상태를 갱신하지 못했습니다. 잠시 후 다시 확인해 주세요.', true);
       }
       return;
     }
 
-    if (!isParentInquiryMutationContextCurrent(mutationContext)) {
-      handleParentInquiryApprovalContextLoss(context);
+    if (!isReadContextCurrent()) {
+      if (!isRestrictedRead) handleParentInquiryApprovalContextLoss(context);
       return;
     }
     if (res.error) {
       var token = parentInquiryErrorToken(res.error);
       if (token === 'not_authenticated') {
         showParentInquiryAuthenticationRequired();
+        return;
+      }
+      if (context.isDeepLink === true &&
+          (token === 'parent_not_approved' || token === 'inquiry_not_found_or_denied')) {
+        showParentInquiryDeepLinkAccessError();
         return;
       }
       if (token === 'parent_not_approved') {
@@ -4365,7 +4656,7 @@
         }
         return;
       }
-      refreshParentInquiryListAfterMutation(mutationContext);
+      refreshAfterRead();
       if (isParentInquiryReadContextCurrent(context, mutationSequence)) {
         setParentInquiryDetailMessage('메시지 읽음 상태를 갱신하지 못했습니다. 잠시 후 다시 확인해 주세요.', true);
       }
@@ -4377,7 +4668,7 @@
       result.inquiry_id === context.inquiryId &&
       typeof result.parent_last_read_at === 'string' &&
       !!result.parent_last_read_at.trim();
-    refreshParentInquiryListAfterMutation(mutationContext);
+    refreshAfterRead();
     if (validResult && isParentInquiryReadContextCurrent(context, mutationSequence)) {
       var currentThread = context.state.thread;
       if (currentThread && currentThread.inquiry && currentThread.inquiry.id === context.inquiryId) {
@@ -4394,15 +4685,17 @@
     }
   }
 
-  async function openParentInquiry(inquiryId){
-    if (!isApprovedParentInquiryContext()) {
+  async function openParentInquiry(inquiryId, options){
+    options = options && typeof options === 'object' ? options : {};
+    var isRestrictedOpen = options.accessMode === 'restricted' && isRestrictedParentInquiryContext();
+    if (!isApprovedParentInquiryContext() && !isRestrictedOpen) {
       clearParentInquiryForUnavailableContext();
       renderParentInquiryUnavailable(document.getElementById('miniContent'));
-      return;
+      return false;
     }
-    if (typeof inquiryId !== 'string' || !inquiryId.trim()) return;
+    if (typeof inquiryId !== 'string' || !inquiryId.trim()) return false;
     var state = parentInquiryState;
-    if (!state.rows.some(function(row){ return row.inquiry_id === inquiryId; })) return;
+    if (!options.allowUnlisted && !state.rows.some(function(row){ return row.inquiry_id === inquiryId; })) return false;
 
     state.detailSequence += 1;
     state.mutationThreadSequence += 1;
@@ -4423,9 +4716,26 @@
       state: state,
       requestSequence: state.detailSequence,
       realtimeThreadSequence: state.realtimeThreadSequence,
-      inquiryId: inquiryId
+      inquiryId: inquiryId,
+      accessMode: isRestrictedOpen ? 'restricted' : 'approved',
+      isDeepLink: options.isDeepLink === true
     };
     renderParentInquiryDetailLoading();
+
+    if (options.verifiedThread) {
+      if (!isValidParentInquiryThread(options.verifiedThread, context)) {
+        state.isDetailLoading = false;
+        return false;
+      }
+      state.thread = options.verifiedThread;
+      state.isDetailLoading = false;
+      state.detailError = '';
+      state.detailMessageIsError = false;
+      renderParentInquiryDetail(options.verifiedThread);
+      if (!document.getElementById('parentInquiryDetailView')) return false;
+      await markParentInquiryRead(context, options.verifiedThread);
+      return true;
+    }
 
     var res;
     try {
@@ -4434,29 +4744,29 @@
       });
     } catch (err) {
       if (!isParentInquiryDetailContextCurrent(context)) {
-        handleParentInquiryApprovalContextLoss(context);
-        return;
+        if (context.accessMode !== 'restricted') handleParentInquiryApprovalContextLoss(context);
+        return false;
       }
       state.isDetailLoading = false;
       if (handleParentInquiryDetailAccessError(err, context)) return;
       renderParentInquiryDetailFailure('문의 내용을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.');
-      return;
+      return false;
     }
 
     if (!isParentInquiryDetailContextCurrent(context)) {
-      handleParentInquiryApprovalContextLoss(context);
-      return;
+      if (context.accessMode !== 'restricted') handleParentInquiryApprovalContextLoss(context);
+      return false;
     }
     if (res.error) {
       state.isDetailLoading = false;
       if (handleParentInquiryDetailAccessError(res.error, context)) return;
       renderParentInquiryDetailFailure('문의 내용을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.');
-      return;
+      return false;
     }
     if (!isValidParentInquiryThread(res.data, context)) {
       state.isDetailLoading = false;
       renderParentInquiryDetailFailure('문의 상세 정보를 확인하지 못했습니다.');
-      return;
+      return false;
     }
 
     state.thread = res.data;
@@ -4464,13 +4774,20 @@
     state.detailError = '';
     state.detailMessageIsError = false;
     renderParentInquiryDetail(res.data);
+    if (!document.getElementById('parentInquiryDetailView')) return false;
     await markParentInquiryRead(context, res.data);
+    return true;
   }
 
   function renderParentInquiryTab(content){
-    if (!isApprovedParentInquiryContext()) {
+    var isRestrictedDeepLink = isRestrictedParentInquiryContext();
+    if (!isApprovedParentInquiryContext() && !isRestrictedDeepLink) {
       clearParentInquiryForUnavailableContext();
       renderParentInquiryUnavailable(content);
+      return;
+    }
+    if (isRestrictedDeepLink && parentInquiryState.view !== 'detail') {
+      showParentInquiryDeepLinkAccessError();
       return;
     }
     if (parentInquiryState.view === 'create') {
@@ -4552,6 +4869,7 @@
   }
 
   function renderParentInquiryDetailView(content){
+    var isRestrictedDeepLink = isRestrictedParentInquiryContext();
     content.innerHTML =
       '<section class="parent-inquiry-view parent-inquiry-panel" id="parentInquiryDetailView" aria-labelledby="parentInquiryDetailTitle" aria-busy="false">' +
         '<div class="parent-inquiry-detail-nav">' +
@@ -4588,6 +4906,12 @@
         '</aside>' +
         '<div class="msg" id="parentInquiryDetailMsg" role="status" aria-live="polite"></div>' +
       '</section>';
+    if (isRestrictedDeepLink) {
+      var detailNav = content.querySelector('.parent-inquiry-detail-nav');
+      var closedActions = content.querySelector('.parent-inquiry-closed-actions');
+      if (detailNav) detailNav.remove();
+      if (closedActions) closedActions.remove();
+    }
   }
 
   function renderNoticeTab(content){
@@ -4647,8 +4971,213 @@
     }
   }
 
+  function isParentInquiryDeepLinkLoadCurrent(authVersion, userId){
+    return isCurrentAuthTransition(authVersion) &&
+      parentInquiryDeepLink.requested && parentInquiryDeepLink.valid &&
+      authSessionUserId(currentSession) === userId;
+  }
+
+  function mergeApprovedClassSummariesWithEnrollments(summaries, enrollments){
+    if (!Array.isArray(summaries) || !Array.isArray(enrollments)) return [];
+    var enrollmentByClassId = new Map();
+    enrollments.forEach(function(enrollment){
+      if (!enrollment || enrollment.status !== 'approved' ||
+          !isUuid(enrollment.id) || !isUuid(enrollment.class_id) ||
+          enrollmentByClassId.has(enrollment.class_id)) return;
+      enrollmentByClassId.set(enrollment.class_id, enrollment);
+    });
+
+    var seenClassIds = new Set();
+    return summaries.reduce(function(rows, summary){
+      if (!summary || !isUuid(summary.id) || seenClassIds.has(summary.id)) return rows;
+      var enrollment = enrollmentByClassId.get(summary.id);
+      if (!enrollment) return rows;
+      seenClassIds.add(summary.id);
+      rows.push(Object.assign({}, summary, {
+        enrollment_id: enrollment.id,
+        last_notice_read_at: enrollment.last_notice_read_at || null
+      }));
+      return rows;
+    }, []);
+  }
+
+  async function showApprovedParentInquiryDeepLink(session, authVersion, classRows, thread){
+    if (!isParentInquiryDeepLinkLoadCurrent(authVersion, session.user.id)) return false;
+    var targetClass = Array.isArray(classRows) ? classRows.find(function(row){
+      return row && row.id === parentInquiryDeepLink.classId && isUuid(row.enrollment_id);
+    }) : null;
+    if (!targetClass) return false;
+
+    approvedClasses = classRows.map(function(row){ return Object.assign({}, row); });
+    classList.innerHTML = approvedClasses.map(renderClassCard).join('');
+    extraInviteBox.hidden = true;
+    extraInviteMsg.textContent = '';
+    extraInviteCode.value = '';
+
+    await openClassMini(parentInquiryDeepLink.classId, authVersion, { useGenericInquiryError:true });
+    if (!isParentInquiryDeepLinkLoadCurrent(authVersion, session.user.id) ||
+        !currentMiniClass || currentMiniClass.id !== parentInquiryDeepLink.classId ||
+        !currentEnrollment || currentEnrollment.id !== targetClass.enrollment_id || !currentMini) return false;
+
+    parentInquiryDeepLinkAccessMode = 'approved';
+    currentMiniView = 'section';
+    currentMiniTab = 'inquiry';
+    selectedAlbumKey = null;
+    var deepLinkClassVersion = classLoadVersion;
+    await renderMiniHome(authVersion, deepLinkClassVersion, parentInquiryDeepLink.classId);
+    if (!isCurrentClassLoad(authVersion, deepLinkClassVersion, parentInquiryDeepLink.classId) ||
+        !isApprovedParentInquiryContext()) return false;
+
+    var opened = await openParentInquiry(parentInquiryDeepLink.inquiryId, {
+      allowUnlisted: true,
+      verifiedThread: thread,
+      accessMode: 'approved',
+      isDeepLink: true
+    });
+    if (opened) {
+      var inquiryContent = document.getElementById('miniContent');
+      if (inquiryContent) inquiryContent.scrollIntoView({ behavior:'smooth', block:'start' });
+    }
+    return opened;
+  }
+
+  async function showRestrictedParentInquiryDeepLink(session, authVersion, thread){
+    if (!isParentInquiryDeepLinkLoadCurrent(authVersion, session.user.id)) return false;
+    classLoadVersion += 1;
+    resetParentInquiryState();
+    parentInquiryDeepLinkAccessMode = 'restricted';
+    approvedClasses = [];
+    currentMiniClass = {
+      id: parentInquiryDeepLink.classId,
+      enrollment_id: null
+    };
+    currentEnrollment = null;
+    currentMini = null;
+    currentMiniTab = 'inquiry';
+    currentMiniView = 'section';
+    selectedAlbumKey = null;
+    miniCache = createMiniCache();
+    resetCenterBrand();
+    miniRoot.innerHTML = '<div class="mini-content" id="miniContent"></div>';
+    leadText.textContent = '문의 상세 내용을 확인하고 있습니다.';
+    showPanel(miniPanel);
+
+    var opened = await openParentInquiry(parentInquiryDeepLink.inquiryId, {
+      allowUnlisted: true,
+      verifiedThread: thread,
+      accessMode: 'restricted',
+      isDeepLink: true
+    });
+    if (opened) {
+      var inquiryContent = document.getElementById('miniContent');
+      if (inquiryContent) inquiryContent.scrollIntoView({ behavior:'smooth', block:'start' });
+    }
+    return opened;
+  }
+
+  async function loadParentInquiryDeepLink(session, authVersion){
+    var userId = session && session.user ? session.user.id : '';
+    if (!userId || !parentInquiryDeepLink.valid) return false;
+    finalizeStoredParentInquiryDeepLink();
+
+    var threadContext = {
+      userId: userId,
+      classId: parentInquiryDeepLink.classId,
+      inquiryId: parentInquiryDeepLink.inquiryId
+    };
+    var threadRes;
+    try {
+      threadRes = await client.rpc('get_class_inquiry_thread', {
+        p_inquiry_id: parentInquiryDeepLink.inquiryId
+      });
+    } catch (_error) {
+      if (isParentInquiryDeepLinkLoadCurrent(authVersion, userId)) showParentInquiryDeepLinkAccessError();
+      return true;
+    }
+    if (!isParentInquiryDeepLinkLoadCurrent(authVersion, userId)) return true;
+    if (threadRes.error || !isValidParentInquiryThread(threadRes.data, threadContext)) {
+      showParentInquiryDeepLinkAccessError();
+      return true;
+    }
+
+    var summariesRes;
+    try {
+      summariesRes = await client.rpc('get_my_approved_class_summaries');
+    } catch (_error) {
+      if (isParentInquiryDeepLinkLoadCurrent(authVersion, userId)) showParentInquiryDeepLinkAccessError();
+      return true;
+    }
+    if (!isParentInquiryDeepLinkLoadCurrent(authVersion, userId)) return true;
+    if (summariesRes.error || !Array.isArray(summariesRes.data)) {
+      showParentInquiryDeepLinkAccessError();
+      return true;
+    }
+
+    var approvedSummary = summariesRes.data.find(function(row){
+      return row && row.id === parentInquiryDeepLink.classId;
+    }) || null;
+    if (!approvedSummary) {
+      var restrictedOpened = await showRestrictedParentInquiryDeepLink(session, authVersion, threadRes.data);
+      if (!restrictedOpened && isParentInquiryDeepLinkLoadCurrent(authVersion, userId)) {
+        showParentInquiryDeepLinkAccessError();
+      }
+      return true;
+    }
+
+    var enrollmentRes;
+    try {
+      enrollmentRes = await client.from('class_enrollments')
+        .select('id,status,class_id,last_notice_read_at')
+        .eq('parent_id', userId)
+        .eq('status', 'approved');
+    } catch (_error) {
+      if (isParentInquiryDeepLinkLoadCurrent(authVersion, userId)) showParentInquiryDeepLinkAccessError();
+      return true;
+    }
+    if (!isParentInquiryDeepLinkLoadCurrent(authVersion, userId)) return true;
+    if (!enrollmentRes || enrollmentRes.error || !Array.isArray(enrollmentRes.data)) {
+      showParentInquiryDeepLinkAccessError();
+      return true;
+    }
+    var approvedClassRows = mergeApprovedClassSummariesWithEnrollments(
+      summariesRes.data,
+      enrollmentRes.data
+    );
+    var targetApprovedClass = approvedClassRows.find(function(row){
+      return row.id === parentInquiryDeepLink.classId;
+    }) || null;
+    if (!targetApprovedClass) {
+      var enrollmentChangedRestrictedOpened = await showRestrictedParentInquiryDeepLink(
+        session,
+        authVersion,
+        threadRes.data
+      );
+      if (!enrollmentChangedRestrictedOpened && isParentInquiryDeepLinkLoadCurrent(authVersion, userId)) {
+        showParentInquiryDeepLinkAccessError();
+      }
+      return true;
+    }
+
+    var approvedOpened = await showApprovedParentInquiryDeepLink(
+      session,
+      authVersion,
+      approvedClassRows,
+      threadRes.data
+    );
+    if (!approvedOpened && isParentInquiryDeepLinkLoadCurrent(authVersion, userId)) {
+      showParentInquiryDeepLinkAccessError();
+    }
+    return true;
+  }
+
   async function loadParentState(session, authVersion){
     if (!isCurrentAuthTransition(authVersion)) return;
+    if (parentInquiryDeepLink.requested && !parentInquiryDeepLink.valid) {
+      if (!isCurrentAuthTransition(authVersion)) return;
+      logoutBtn.hidden = !(session && session.user);
+      showParentInquiryDeepLinkAccessError();
+      return;
+    }
     if (!session || !session.user) {
       if (!isCurrentAuthTransition(authVersion)) return;
       logoutBtn.hidden = true;
@@ -4663,8 +5192,25 @@
     showPanel(loadingPanel);
 
     try {
-      if (directClassId) {
-        var directHandled = await loadDirectClassMini(session, authVersion);
+      if (parentInquiryDeepLink.requested && parentInquiryDeepLink.valid) {
+        var inquiryDeepLinkHandled;
+        try {
+          inquiryDeepLinkHandled = await loadParentInquiryDeepLink(session, authVersion);
+        } catch (_error) {
+          if (isCurrentAuthTransition(authVersion)) showParentInquiryDeepLinkAccessError();
+          return;
+        }
+        if (!isCurrentAuthTransition(authVersion)) return;
+        if (inquiryDeepLinkHandled) return;
+      }
+      if (directClassId || new URLSearchParams(window.location.search).has('class_id')) {
+        var directHandled;
+        try {
+          directHandled = await loadDirectClassMini(session, authVersion);
+        } catch (_error) {
+          if (isCurrentAuthTransition(authVersion)) showDirectClassMiniAccessError();
+          return;
+        }
         if (!isCurrentAuthTransition(authVersion)) return;
         if (directHandled) return;
       }
@@ -4785,16 +5331,18 @@
   kakaoLoginBtn.addEventListener('click', async function(){
     authMsg.textContent = '';
     kakaoLoginBtn.disabled = true;
+    storeParentInquiryDeepLinkForOAuth();
 
     try {
       var res = await client.auth.signInWithOAuth({
         provider: 'kakao',
         options: {
-          redirectTo: window.location.origin + '/parent.html'
+          redirectTo: parentOAuthRedirectUrl()
         }
       });
       if (res.error) throw res.error;
     } catch (err) {
+      clearStoredParentInquiryDeepLink();
       authMsg.innerHTML = escWithBr(err && err.message ? err.message : String(err));
       authMsg.className = 'msg error';
       kakaoLoginBtn.disabled = false;
@@ -4955,8 +5503,19 @@
     }
     var miniBackButton = e.target.closest('#miniBackBtn');
     if (miniBackButton) {
+      var finishedApprovedDeepLink = finishApprovedParentInquiryDeepLinkForClassList();
       classLoadVersion += 1;
       resetParentInquiryState();
+      if (finishedApprovedDeepLink) {
+        currentMiniClass = null;
+        currentEnrollment = null;
+        currentMini = null;
+        currentMiniTab = 'diary';
+        currentMiniView = 'home';
+        selectedAlbumKey = null;
+        miniCache = createMiniCache();
+        classList.innerHTML = approvedClasses.map(renderClassCard).join('');
+      }
       miniRoot.innerHTML = '';
       resetCenterBrand();
       leadText.textContent = '승인된 반 미니홈피 목록입니다.';
@@ -5055,6 +5614,9 @@
         }
       }
       leaveParentInquirySubview();
+      if (inquiryBackBtn.id === 'parentInquiryDetailBackBtn') {
+        finishApprovedParentInquiryDeepLinkForInquiryList();
+      }
       renderParentInquiryTab(document.getElementById('miniContent'));
       return;
     }
