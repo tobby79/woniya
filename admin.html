@@ -3729,6 +3729,8 @@
     if (row.capacity != null) parts.push('정원 ' + row.capacity + '명');
     if (row.enrolled != null) parts.push('재원 ' + row.enrolled + '명');
     if (row.waiting != null) parts.push('대기 ' + row.waiting + '명');
+    var approvedCount = parentEnrollmentsForClass(row.id).filter(function(e){ return e.status === 'approved'; }).length;
+    parts.push('앱 연결 ' + approvedCount + '명');
     if (row.status) parts.push('상태 ' + row.status);
     return parts.join(' · ');
   }
@@ -3956,7 +3958,7 @@
     return '<div class="invite-history-card">' +
       '<div class="invite-history-row">' +
         '<div>' +
-          '<div class="parent-id">학부모 ID: ' + esc(row.parent_id) + '</div>' +
+          '<div class="parent-id">' + (row.child_name ? esc(row.child_name) + ' 학부모' : '이름 미입력 (학부모 ID: ' + esc(row.parent_id) + ')') + '</div>' +
           '<div class="invite-history-meta">' + esc(when) + '</div>' +
         '</div>' +
         '<div class="class-card-actions">' +
@@ -4540,7 +4542,7 @@
       parentInviteRows = parentInviteRes.data || [];
 
       var enrollmentRes = await client.from('class_enrollments')
-        .select('id,class_id,parent_id,status,requested_at,approved_at')
+        .select('id,class_id,parent_id,status,requested_at,approved_at,child_name')
         .in('class_id', ids)
         .order('requested_at', { ascending: false });
 

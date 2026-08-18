@@ -422,6 +422,10 @@
         <label for="inviteCode">초대 코드</label>
         <input type="text" id="inviteCode" required autocomplete="one-time-code" placeholder="선생님이 알려준 초대 코드">
       </div>
+      <div class="field">
+        <label for="inviteChildName">아이 이름</label>
+        <input type="text" id="inviteChildName" required autocomplete="off" placeholder="반에 다니는 아이 이름">
+      </div>
       <button type="submit" class="btn" id="inviteSubmit">연결 신청</button>
       <div class="msg error" id="inviteMsg"></div>
     </form>
@@ -443,6 +447,10 @@
           <div class="field">
             <label for="extraInviteCode">초대 코드</label>
             <input type="text" id="extraInviteCode" required autocomplete="one-time-code">
+          </div>
+          <div class="field">
+            <label for="extraInviteChildName">아이 이름</label>
+            <input type="text" id="extraInviteChildName" required autocomplete="off">
           </div>
           <button type="submit" class="btn" id="extraInviteSubmit">연결 신청</button>
           <div class="msg error" id="extraInviteMsg"></div>
@@ -599,6 +607,7 @@
 
   var inviteForm = document.getElementById('inviteForm');
   var inviteCode = document.getElementById('inviteCode');
+  var inviteChildName = document.getElementById('inviteChildName');
   var inviteSubmit = document.getElementById('inviteSubmit');
   var inviteMsg = document.getElementById('inviteMsg');
 
@@ -607,6 +616,7 @@
   var extraInviteBox = document.getElementById('extraInviteBox');
   var extraInviteForm = document.getElementById('extraInviteForm');
   var extraInviteCode = document.getElementById('extraInviteCode');
+  var extraInviteChildName = document.getElementById('extraInviteChildName');
   var extraInviteSubmit = document.getElementById('extraInviteSubmit');
   var extraInviteMsg = document.getElementById('extraInviteMsg');
 
@@ -5403,11 +5413,12 @@
     }
   }
 
-  async function redeemInvite(code, msgEl, submitBtn){
+  async function redeemInvite(code, childName, msgEl, submitBtn){
     var startedAuthVersion = authTransitionVersion;
     var targetUserId = currentSession && currentSession.user ? currentSession.user.id : '';
     var targetCode = String(code || '').trim();
-    if (!targetUserId || !targetCode) return;
+    var targetChildName = String(childName || '').trim();
+    if (!targetUserId || !targetCode || !targetChildName) return;
     function isCurrentInviteRequest(){
       var currentUserId = currentSession && currentSession.user ? currentSession.user.id : '';
       return startedAuthVersion === authTransitionVersion &&
@@ -5421,7 +5432,7 @@
 
     var res;
     try {
-      res = await client.rpc('redeem_class_invite', { p_code: targetCode });
+      res = await client.rpc('redeem_class_invite', { p_code: targetCode, p_child_name: targetChildName });
     } catch (err) {
       if (!isCurrentInviteRequest()) return;
       submitBtn.disabled = false;
@@ -5468,7 +5479,7 @@
 
   inviteForm.addEventListener('submit', async function(e){
     e.preventDefault();
-    await redeemInvite(inviteCode.value.trim(), inviteMsg, inviteSubmit);
+    await redeemInvite(inviteCode.value.trim(), inviteChildName.value.trim(), inviteMsg, inviteSubmit);
   });
 
   showExtraInviteBtn.addEventListener('click', function(){
@@ -5478,7 +5489,7 @@
 
   extraInviteForm.addEventListener('submit', async function(e){
     e.preventDefault();
-    await redeemInvite(extraInviteCode.value.trim(), extraInviteMsg, extraInviteSubmit);
+    await redeemInvite(extraInviteCode.value.trim(), extraInviteChildName.value.trim(), extraInviteMsg, extraInviteSubmit);
   });
 
   classList.addEventListener('click', function(e){
