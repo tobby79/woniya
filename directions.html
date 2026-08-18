@@ -451,8 +451,8 @@
         <fieldset class="csl-kind">
           <legend class="csl-kind-label">상담 유형</legend>
           <div class="csl-kind-options">
-            <label><input type="radio" name="kind" value="입소 상담" checked>입소 상담</label>
-            <label><input type="radio" name="kind" value="방문 상담">방문 상담</label>
+            <label><input type="radio" name="kind" value="consult" checked>입소 상담</label>
+            <label><input type="radio" name="kind" value="visit">방문 상담</label>
           </div>
         </fieldset>
         <div class="csl-field">
@@ -465,7 +465,7 @@
         </div>
         <label class="csl-consent">
           <input id="cslConsent" type="checkbox" required>
-          <span>상담 신청을 위한 개인정보 수집 및 이용에 동의합니다.</span>
+          <span>상담 신청을 위한 개인정보 수집 및 이용에 동의합니다. <a href="/privacy.html" target="_blank" rel="noopener">개인정보처리방침</a></span>
         </label>
         <p class="csl-error" id="cslError" aria-live="polite"></p>
         <button type="submit" class="btn-big csl-submit">신청 내용 보내기</button>
@@ -688,11 +688,12 @@ function loadKakaoMap(address, containerId){
       var fd = new FormData(form);
       var className = (fd.get('className') || '').trim();
       var time = (fd.get('time') || '').trim();
+      var kind = (fd.get('kind') || '').trim();
       var payload = {
         center_id: centerId,
         parent_name: (fd.get('name') || '').trim(),
         phone: (fd.get('phone') || '').trim(),
-        kind: 'consult',
+        kind: kind,
         wish_class: className || null,
         wish_time: time || null,
         consent_at: new Date().toISOString()
