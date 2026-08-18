@@ -174,6 +174,70 @@
 
   .empty{text-align:center;color:var(--ink-soft);padding:60px 0;font-size:.96rem}
 
+  .official-footer{
+    position:relative;
+    z-index:0;
+    margin-top:108px;
+    background:
+      radial-gradient(circle at 88% 100%,rgba(251,224,217,.62),transparent 19rem),
+      linear-gradient(180deg,rgba(255,255,255,.95),rgba(255,250,248,.98));
+    backdrop-filter:blur(12px);
+    -webkit-backdrop-filter:blur(12px);
+    color:var(--ink-soft);
+  }
+  .official-footer::before{
+    content:"";
+    position:absolute;
+    z-index:0;
+    top:-18px;
+    left:0;
+    width:100%;
+    height:24px;
+    border-radius:50% 50% 0 0/100% 100% 0 0;
+    background:rgba(255,252,249,.92);
+    box-shadow:0 -8px 24px -22px rgba(219,107,84,.48);
+    pointer-events:none;
+  }
+  .official-footer-inner{position:relative;z-index:1;max-width:1100px;margin:0 auto;padding:36px 22px 28px;min-width:0}
+  .official-footer-main{display:grid;gap:26px;min-width:0}
+  .official-footer-brand,.official-footer-business{min-width:0}
+  .official-footer-logo{display:block;width:auto;height:54px;max-width:190px;object-fit:contain}
+  .official-footer-heading{
+    margin:0 0 10px;
+    color:#5F4748;
+    font-size:.82rem;
+    font-weight:800;
+    letter-spacing:.02em;
+  }
+  .official-footer-business-list{display:grid;gap:8px;margin:0;min-width:0}
+  .official-footer-business-row{display:flex;align-items:baseline;gap:8px;margin:0;min-width:0;font-size:.82rem;line-height:1.65}
+  .official-footer-business-row dt{flex:none;color:#5F4748;font-weight:700}
+  .official-footer-business-row dd{margin:0;min-width:0;color:#806D69;overflow-wrap:anywhere}
+  .official-footer-email{display:inline-flex;align-items:center;min-height:44px;color:#806D69;font-weight:600;text-decoration:none;overflow-wrap:anywhere}
+  .official-footer-email:hover{color:#6F5B58;text-decoration:none}
+  .official-footer-bottom{
+    display:flex;
+    flex-direction:column;
+    align-items:flex-start;
+    gap:10px;
+    margin-top:24px;
+    padding-top:16px;
+    border-top:1px solid rgba(63,42,44,.1);
+    min-width:0;
+  }
+  .official-footer-links{display:flex;flex-wrap:wrap;gap:4px 16px}
+  .official-footer-link{
+    display:inline-flex;
+    align-items:center;
+    min-height:44px;
+    color:var(--ink);
+    font-size:.9rem;
+    font-weight:600;
+    text-decoration:none;
+  }
+  .official-footer-link:hover{color:#5F4748;text-decoration:none}
+  .official-footer-copyright{margin:0;color:var(--ink-soft);font-size:.8rem;line-height:1.6}
+
   a:focus-visible,button:focus-visible,.ocard:focus-visible{outline:3px solid var(--coral);outline-offset:3px;border-radius:8px}
 
   .center-intro-overlay{
@@ -218,11 +282,18 @@
     .results-head{padding:36px 0 14px}
     .cardlist{display:grid;grid-template-columns:repeat(3,1fr);gap:22px}
     .search-foot{padding:24px 0 44px}
+    .official-footer{margin-top:120px}
+    .official-footer-inner{padding:42px 40px 32px}
+    .official-footer-main{grid-template-columns:180px minmax(0,1fr);align-items:start;gap:48px}
+    .official-footer-logo{height:58px;max-width:190px}
+    .official-footer-bottom{flex-direction:row;align-items:center;justify-content:space-between;gap:24px}
   }
 
   @media (min-width:1024px){
     .hero-wrap{min-height:40vh}
     .search-hero{padding-top:12px}
+    .official-footer-main{grid-template-columns:190px minmax(0,1fr);gap:56px}
+    .official-footer-business-list{grid-template-columns:repeat(2,minmax(0,1fr));column-gap:32px}
   }
 
   @media (max-width:480px){
@@ -238,6 +309,14 @@
     .personal-title{font-size:1.3rem}
     .personal-grid{grid-template-columns:minmax(0,1fr)}
     .personal-action{flex-basis:100px}
+    .official-footer{margin-top:84px}
+    .official-footer::before{top:-14px;height:20px}
+    .official-footer-inner{padding:30px 16px 26px}
+    .official-footer-main{gap:24px}
+    .official-footer-logo{height:48px;max-width:170px}
+    .official-footer-business-row{display:block}
+    .official-footer-business-row dt{margin-bottom:1px}
+    .official-footer-bottom{margin-top:22px;padding-top:14px}
   }
 
 </style>
@@ -293,6 +372,36 @@
   <div class="cardlist" id="cardList"></div>
 
 </div>
+
+<footer class="official-footer">
+  <div class="official-footer-inner">
+    <div class="official-footer-main">
+      <div class="official-footer-brand">
+        <img class="official-footer-logo" src="assets/woniya-logo.png" alt="원이야">
+      </div>
+
+      <section class="official-footer-business" aria-labelledby="footerBusinessTitle">
+        <p class="official-footer-heading" id="footerBusinessTitle">사업자 정보</p>
+        <dl class="official-footer-business-list">
+          <div class="official-footer-business-row"><dt>운영</dt><dd>아트잇다</dd></div>
+          <div class="official-footer-business-row"><dt>대표</dt><dd>정광운</dd></div>
+          <div class="official-footer-business-row"><dt>사업자등록번호</dt><dd>157-29-01214</dd></div>
+          <div class="official-footer-business-row"><dt>통신판매업 신고번호</dt><dd>2021-인천서구-3119</dd></div>
+          <div class="official-footer-business-row email"><dt>이메일</dt><dd><a class="official-footer-email" href="mailto:artitdda@naver.com">artitdda@naver.com</a></dd></div>
+          <div class="official-footer-business-row address"><dt>주소</dt><dd>인천시 서구 심곡로 55번길 5, 201-04</dd></div>
+        </dl>
+      </section>
+    </div>
+
+    <div class="official-footer-bottom">
+      <nav class="official-footer-links" aria-label="정책 문서">
+        <a class="official-footer-link" href="/terms.html">이용약관</a>
+        <a class="official-footer-link" href="/privacy.html">개인정보처리방침</a>
+      </nav>
+      <p class="official-footer-copyright">© 2026 원이야. All rights reserved.</p>
+    </div>
+  </div>
+</footer>
 
 <script src="supabase-config.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>

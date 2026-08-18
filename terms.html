@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="원이야 베타 서비스 이용약관">
+  <title>원이야 이용약관</title>
+  <style>
+    :root {
+      --base: #fff7f3;
+      --paper: #ffffff;
+      --ink: #3f2a2c;
+      --ink-soft: #786563;
+      --coral: #db6b54;
+      --coral-soft: #fbe0d9;
+      --line: #eadbd6;
+      --notice: #fff1ec;
+      --shadow: 0 18px 48px -34px rgba(112, 62, 53, 0.48);
+    }
+
+    * { box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      margin: 0;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 12% 4%, rgba(255, 217, 176, 0.58), transparent 23rem),
+        linear-gradient(180deg, #fde8e0 0, var(--base) 22rem, var(--base) 100%);
+      font-family: Pretendard, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+      font-size: 16px;
+      line-height: 1.75;
+      word-break: keep-all;
+      overflow-wrap: break-word;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    a { color: var(--coral); }
+
+    a:focus-visible {
+      outline: 3px solid rgba(219, 107, 84, 0.4);
+      outline-offset: 3px;
+      border-radius: 5px;
+    }
+
+    .site-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      width: min(100% - 32px, 880px);
+      margin: 0 auto;
+      padding: 18px 0 10px;
+    }
+
+    .header-link {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 44px;
+      padding: 8px 14px;
+      border: 1px solid rgba(219, 107, 84, 0.24);
+      border-radius: 999px;
+      color: var(--coral);
+      background: rgba(255, 255, 255, 0.72);
+      font-size: 0.9rem;
+      font-weight: 750;
+      text-decoration: none;
+      box-shadow: 0 10px 26px -22px rgba(112, 62, 53, 0.55);
+    }
+
+    .home-link::before {
+      content: "←";
+      margin-right: 9px;
+      font-size: 1.08rem;
+    }
+
+    main {
+      width: min(100% - 32px, 880px);
+      margin: 0 auto 36px;
+    }
+
+    .hero {
+      padding: 42px 4px 34px;
+      text-align: center;
+    }
+
+    .eyebrow {
+      margin: 0 0 8px;
+      color: var(--coral);
+      font-size: 0.88rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(2rem, 8vw, 3.25rem);
+      line-height: 1.25;
+      letter-spacing: -0.045em;
+    }
+
+    .effective-date {
+      display: inline-block;
+      margin-top: 18px;
+      padding: 7px 13px;
+      border-radius: 999px;
+      background: var(--coral-soft);
+      color: #7c4238;
+      font-size: 0.84rem;
+      font-weight: 700;
+    }
+
+    .terms {
+      padding: 8px 20px 28px;
+      border: 1px solid rgba(219, 107, 84, 0.13);
+      border-radius: 26px;
+      background: rgba(255, 255, 255, 0.9);
+      box-shadow: var(--shadow);
+    }
+
+    .terms-section {
+      padding: 30px 0;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .terms-section:last-child { border-bottom: 0; }
+
+    h2 {
+      margin: 0 0 14px;
+      font-size: clamp(1.18rem, 4.8vw, 1.45rem);
+      line-height: 1.45;
+      letter-spacing: -0.025em;
+    }
+
+    h3 {
+      margin: 22px 0 8px;
+      font-size: 1rem;
+      line-height: 1.5;
+    }
+
+    p { margin: 0 0 12px; }
+    p:last-child { margin-bottom: 0; }
+
+    ul, ol {
+      margin: 10px 0 0;
+      padding-left: 1.3rem;
+    }
+
+    li + li { margin-top: 7px; }
+
+    .definition-list {
+      display: grid;
+      gap: 10px;
+      margin: 18px 0 0;
+    }
+
+    .definition-item {
+      display: grid;
+      gap: 4px;
+      margin: 0;
+      padding: 14px 15px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: #fffaf8;
+    }
+
+    .definition-item dt {
+      font-weight: 800;
+      line-height: 1.5;
+    }
+
+    .definition-item dd {
+      margin: 0;
+      color: var(--ink-soft);
+    }
+
+    .notice-box {
+      margin-top: 16px;
+      padding: 16px;
+      border-radius: 16px;
+      background: var(--notice);
+      color: #654743;
+    }
+
+    .operator-card {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 0;
+      margin-top: 18px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      overflow: hidden;
+    }
+
+    .operator-row {
+      display: grid;
+      grid-template-columns: 8.25rem 1fr;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .operator-row:last-child { border-bottom: 0; }
+
+    .operator-row dt,
+    .operator-row dd {
+      margin: 0;
+      padding: 11px 13px;
+    }
+
+    .operator-row dt {
+      background: #fff5f1;
+      font-weight: 800;
+    }
+
+    .operator-row dd { background: var(--paper); }
+
+    .site-footer {
+      padding: 30px 16px 42px;
+      color: var(--ink-soft);
+      text-align: center;
+      font-size: 0.82rem;
+    }
+
+    .site-footer p { margin: 4px 0; }
+
+    @media (min-width: 700px) {
+      .site-header { padding-top: 26px; }
+      .hero { padding: 62px 8px 44px; }
+      .terms { padding: 16px 48px 38px; border-radius: 32px; }
+      .terms-section { padding: 38px 0; }
+      .definition-item { grid-template-columns: minmax(8.5rem, 0.35fr) 1fr; gap: 22px; }
+    }
+
+    @media (max-width: 480px) {
+      body { font-size: 15px; }
+      .site-header, main { width: min(100% - 24px, 880px); }
+      .site-header { align-items: stretch; flex-direction: column; }
+      .header-link { width: 100%; }
+      .hero { padding: 34px 2px 28px; }
+      .terms { padding: 4px 16px 22px; border-radius: 22px; }
+      .terms-section { padding: 26px 0; }
+      .operator-row { grid-template-columns: 1fr; }
+      .operator-row dt { padding-bottom: 4px; }
+      .operator-row dd { padding-top: 5px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+    }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <a class="header-link home-link" href="/" aria-label="원이야 홈으로 돌아가기">홈으로</a>
+    <a class="header-link" href="/privacy.html">개인정보처리방침</a>
+  </header>
+
+  <main>
+    <header class="hero">
+      <p class="eyebrow">WONIYA TERMS</p>
+      <h1>원이야 이용약관</h1>
+      <p class="effective-date">시행일: 2026년 8월 18일</p>
+    </header>
+
+    <article class="terms">
+      <section class="terms-section" aria-labelledby="terms-1">
+        <h2 id="terms-1">1. 목적</h2>
+        <p>이 약관은 아트잇다(이하 “회사”)가 제공하는 원이야 서비스의 이용과 관련하여 회사와 이용자의 권리, 의무 및 책임사항과 그 밖에 필요한 사항을 정하는 것을 목적으로 합니다.</p>
+      </section>
+
+      <section class="terms-section" aria-labelledby="terms-2">
+        <h2 id="terms-2">2. 용어의 정의</h2>
+        <p>이 약관에서 사용하는 용어의 뜻은 다음과 같습니다.</p>
+        <dl class="definition-list">
+          <div class="definition-item"><dt>회사</dt><dd>원이야 서비스를 운영하는 아트잇다를 말합니다.</dd></div>
+          <div class="definition-item"><dt>서비스</dt><dd>원이야가 제공하는 원 홈페이지 제작·운영, 반 미니홈피, 원·반 관리, 문의 및 이에 부수하는 기능을 말합니다.</dd></div>
+          <div class="definition-item"><dt>이용자</dt><dd>이 약관에 따라 서비스를 이용하는 원장, 교사, 학부모와 공개된 원 홈페이지를 방문하는 사람을 말합니다.</dd></div>
+          <div class="definition-item"><dt>원</dt><dd>서비스에 등록을 신청하거나 등록된 어린이집, 유치원 등 영유아 교육·보육기관을 말합니다.</dd></div>
+          <div class="definition-item"><dt>원장</dt><dd>원을 대표하여 원 등록을 신청하거나 승인받아 원 홈페이지와 원·반 관련 관리 기능을 이용하는 사람을 말합니다.</dd></div>
+          <div class="definition-item"><dt>교사</dt><dd>원장의 초대 또는 배정을 받아 담당 반의 게시물, 앨범, 문의 등 반 관리 기능을 이용하는 사람을 말합니다.</dd></div>
+          <div class="definition-item"><dt>학부모</dt><dd>초대코드 입력과 승인 절차 등을 거쳐 특정 반에 연결되어 해당 반의 미니홈피와 문의 기능을 이용하는 보호자를 말합니다.</dd></div>
+          <div class="definition-item"><dt>반 미니홈피</dt><dd>승인된 학부모와 권한 있는 원장·교사를 중심으로 반의 게시물, 앨범과 문의 기능 등을 제공하는 공간을 말합니다.</dd></div>
+          <div class="definition-item"><dt>콘텐츠</dt><dd>이용자가 서비스에 등록하거나 전송하는 글, 사진, 이미지, 소개, 댓글, 문의 및 그 밖의 자료를 말합니다.</dd></div>
+        </dl>
+      </section>
+
+      <section class="terms-section" aria-labelledby="terms-3">
+        <h2 id="terms-3">3. 약관의 게시 및 변경</h2>
+        <ol>
+          <li>회사는 이용자가 이 약관을 쉽게 확인할 수 있도록 서비스 화면에 게시합니다.</li>
+          <li>회사는 관계 법령을 위반하지 않는 범위에서 법령 또는 서비스의 변경 등을 반영하여 이 약관을 개정할 수 있습니다.</li>
+          <li>이용자의 권리나 의무에 중요한 영향을 미치는 변경은 시행 전에 서비스 화면 등 이용자가 확인할 수 있는 방법으로 안내합니다.</li>
+          <li>약관 변경에 관하여 법률상 별도의 동의 절차가 필요한 경우 회사는 해당 절차를 따릅니다.</li>
+        </ol>
+      </section>
+
+      <section class="terms-section" aria-labelledby="terms-4">
+        <h2 id="terms-4">4. 서비스 이용 및 계정</h2>
+        <ol>
+          <li>원장과 교사는 현재 이메일 기반 인증을 이용할 수 있으며, 학부모는 현재 Kakao OAuth를 통해 로그인합니다. 이용자는 자신의 역할에 맞는 인증 및 승인 절차를 거쳐 서비스를 이용해야 합니다.</li>
+          <li>이용자는 계정, 인증정보와 초대정보를 안전하게 관리해야 하며 이를 다른 사람이 무단으로 사용하도록 해서는 안 됩니다.</li>
+          <li>다른 사람의 계정을 도용하거나 허락 없이 사용해서는 안 됩니다.</li>
+          <li>원장·교사·학부모의 역할과 원·반 연결은 실제 관계와 회사 또는 권한 있는 원 관계자의 승인정보를 기준으로 합니다.</li>
+          <li>관리 화면 또는 콘텐츠의 URL을 알고 있다는 사실만으로 원이나 반에 대한 열람·관리 권한이 생기지 않습니다.</li>
+          <li>계정 도용이나 인증정보의 유출을 알게 된 경우 이용자는 지체 없이 회사에 알리고 안내에 협조해야 합니다.</li>
+        </ol>
+      </section>
+
+      <section class="terms-section" aria-labelledby="terms-5">
+        <h2 id="terms-5">5. 원 등록 및 서비스 제공</h2>
+        <ol>
+          <li>원은 서비스 화면을 통해 원 등록을 신청할 수 있습니다.</li>
+          <li>회사는 신청 내용과 서비스 제공 가능 여부를 검토하고, 필요한 경우 신청자에게 추가 정보 또는 확인을 요청할 수 있습니다.</li>
+          <li>회사는 신청자와 온보딩을 진행하며, 원이 제공한 기본정보, 사진, 소개 문구 및 요청사항을 바탕으로 원 홈페이지를 제작할 수 있습니다.</li>
+          <li>제작된 홈페이지는 원의 확인, 필요한 설정과 원장 계정 연결 등을 거쳐 공개될 수 있습니다.</li>
+          <li>원 등록 신청만으로 서비스 제공, 홈페이지 제작 또는 공개가 즉시 확정되거나 보장되는 것은 아닙니다. 구체적인 제공 범위와 일정은 검토 및 상담 과정에서 정합니다.</li>
+        </ol>
+      </section>
+
+      <section class="terms-section" aria-labelledby="terms-6">
+        <h2 id="terms-6">6. 원장 및 교직원의 의무</h2>
+        <p>원장과 교사는 다음 사항을 준수해야 합니다.</p>
+        <ul>
+          <li>원, 교직원과 반에 관한 정보를 정확하고 적법하게 등록할 것</li>
+          <li>원 홈페이지와 반에 등록된 콘텐츠 및 공개 상태를 적절히 관리할 것</li>
+          <li>아동의 이름·사진을 포함한 개인정보와 초상, 타인의 저작물을 등록하기 전에 보호자 동의 등 필요한 권리와 적법한 근거를 확보할 것</li>
+          <li>타인의 개인정보, 저작권, 초상권 또는 그 밖의 권리를 침해하는 자료를 등록하지 않을 것</li>
+          <li>계정, 인증정보, 교사·학부모 초대 링크와 초대코드가 권한 없는 사람에게 노출되지 않도록 관리할 것</li>
+          <li>실제 원 운영과 관련이 없거나 이용자를 오인하게 하는 허위정보를 등록하지 않을 것</li>
+          <li>소속 또는 담당 관계가 종료되거나 변경된 경우 관련 권한과 정보를 적절히 정리하고 회사의 확인 요청에 협조할 것</li>
+        </ul>
+      </section>
+
+      <section class="terms-section" aria-labelledby="terms-7">
+        <h2 id="terms-7">7. 학부모 이용</h2>
+        <ol>
+          <li>학부모는 유효한 초대코드를 입력하고 원장 또는 교사 등의 승인 절차를 거쳐 연결된 반에 한하여 반 미니홈피와 문의 기능을 이용할 수 있습니다.</li>
+          <li>학부모는 자신에게 연결되지 않은 반 또는 다른 이용자의 정보에 접근하거나 접근을 시도해서는 안 됩니다.</li>
+          <li>초대코드는 본인에게 허용된 목적에 맞게 사용하고, 권한 없는 사람에게 공유해서는 안 됩니다.</li>
+          <li>문의 기능은 원과 반의 운영 및 아동의 생활과 관련된 소통 목적에 맞게 이용해야 하며, 상대방의 권리를 침해하거나 서비스 운영을 방해하는 방식으로 이용해서는 안 됩니다.</li>
+        </ol>
+        <p class="notice-box">문의 내용에는 주민등록번호, 진단서, 상세한 질병·투약정보 등 서비스 이용에 불필요한 민감정보를 입력하지 마세요. 필요한 건강 관련 소통은 해당 원이 안내하는 적절한 방법을 이용해 주세요.</p>
+      </section>
+
+      <section class="terms-section" aria-labelledby="terms-8">
+        <h2 id="terms-8">8. 콘텐츠의 등록과 이용</h2>
+        <ol>
+          <li>이용자가 등록한 콘텐츠의 저작권과 그 밖의 권리는 원칙적으로 해당 권리자에게 있습니다. 회사는 이용자의 콘텐츠 소유권을 취득하지 않습니다.</li>
+          <li>이용자는 서비스 제공·운영에 필요한 범위에서 회사가 콘텐츠를 저장, 전송, 표시하고 장애 대응과 복구를 위해 백업할 수 있도록 허용합니다. 이러한 허용은 서비스 제공 목적에 필요한 비독점적 범위로 제한되며, 회사에 저작권을 양도하는 것이 아닙니다.</li>
+          <li>원 홈페이지의 공개 영역에 등록된 콘텐츠는 일반 방문자에게 공개될 수 있습니다. 반 콘텐츠는 현재 연결 및 승인된 이용자를 중심으로 제공되며, 이용자는 공개 또는 공유 범위를 확인하여 콘텐츠를 등록해야 합니다.</li>
+          <li>회사는 콘텐츠가 법령이나 이 약관을 위반하거나 타인의 권리를 침해하고, 서비스 보안 또는 운영을 해칠 우려가 있는 경우 필요한 범위에서 게시 제한, 접근 차단 또는 삭제 조치를 할 수 있습니다.</li>
+          <li>회사는 권리침해 신고나 콘텐츠 제한을 처리할 때 관련 법령과 실제 사정을 고려하며, 가능한 경우 해당 이용자에게 조치 사유와 이의 제기 방법을 안내합니다.</li>
+        </ol>
+      </section>
+
+      <section class="terms-section" aria-labelledby="terms-9">
+        <h2 id="terms-9">9. 금지행위</h2>
+        <p>이용자는 다음 행위를 해서는 안 됩니다.</p>
+        <ul>
+          <li>타인의 계정, 인증정보, 초대 링크 또는 초대코드를 도용하거나 무단 사용하는 행위</li>
+          <li>권한이 없는 원·반·관리 화면·콘텐츠에 접근하거나 접근을 시도하는 행위</li>
+          <li>허위 또는 오해를 일으키는 정보를 등록하는 행위</li>
+          <li>접근통제 등 서비스의 보안조치를 우회, 무력화하거나 취약점을 악용하는 행위</li>
+          <li>악성코드를 전송하거나 비정상적인 자동접속, 크롤링 또는 과도한 요청을 통해 서비스에 부담을 주는 행위</li>
+          <li>타인의 개인정보, 저작권, 초상권, 명예 또는 그 밖의 권리를 침해하는 행위</li>
+          <li>서비스의 정상적인 운영이나 다른 이용자의 이용을 방해하는 행위</li>
+          <li>법령, 이 약관 또는 공서양속에 반하는 방식으로 서비스를 이용하는 행위</li>
+        </ul>
+      </section>
+
+      <section class="terms-section" aria-labelledby="terms-10">
+        <h2 id="terms-10">10. 서비스의 변경·중단</h2>
+        <ol>
+          <li>회사는 서비스의 품질 향상, 기능 개선 또는 운영상 필요에 따라 서비스의 전부 또는 일부를 변경할 수 있습니다. 이용자에게 중요한 영향을 미치는 변경은 가능한 범위에서 서비스 화면 등을 통해 안내합니다.</li>
+          <li>점검·유지보수, 시스템 장애, 통신 또는 외부 인프라 장애, 보안 문제, 법령상 조치 등으로 일부 또는 전체 서비스가 일시적으로 중단될 수 있습니다.</li>
+          <li>회사는 예측 가능한 중단을 가능한 범위에서 미리 안내하고 복구를 위해 합리적인 노력을 기울입니다. 다만, 천재지변과 같은 불가항력 또는 긴급한 장애·보안조치의 경우 사전 안내가 어려울 수 있습니다.</li>
+        </ol>
+      </section>
+
+      <section class="terms-section" aria-labelledby="terms-11">
+        <h2 id="terms-11">11. 베타 서비스</h2>
+        <ol>
+          <li>현재 원이야는 베타 서비스로 운영되고 있으며, 안정성 확인과 이용 경험 개선을 위해 기능, 화면, 제공 범위와 운영 방식이 개선되거나 변경될 수 있습니다.</li>
+          <li>시험 운영 중 일부 기능의 제공 범위가 제한되거나 일시적으로 이용하기 어려울 수 있으며, 회사는 확인된 문제를 개선하기 위해 합리적인 조치를 취합니다.</li>
+          <li>회사는 이용자가 제공한 의견과 피드백을 서비스 개선에 반영할 수 있습니다.</li>
+          <li>현재 Push 자동 알림 기능은 활성화되어 있지 않습니다. 향후 새로운 기능을 제공하거나 이용에 중요한 변경이 있는 경우 서비스 화면 등을 통해 안내합니다.</li>
+        </ol>
+      </section>
+
+      <section class="terms-section" aria-labelledby="terms-12">
+        <h2 id="terms-12">12. 이용요금 및 유료서비스</h2>
+        <ol>
+          <li>일부 서비스는 무료 또는 베타 형태로 제공될 수 있으며, 반 미니홈피는 필요한 원에 선택형 유료 서비스로 추가될 수 있습니다.</li>
+          <li>베타 기간의 홈페이지 제작비와 이용 조건은 상담을 통해 안내합니다.</li>
+          <li>유료 기능 또는 유료 서비스를 제공하는 경우 이용요금, 결제조건, 제공 범위, 환불·해지 조건 등은 신청 또는 계약 과정에서 별도로 안내합니다.</li>
+          <li>법령상 필요한 청약철회, 계약 해지 또는 환불 등의 권리는 관계 법령과 별도로 안내한 거래조건에 따릅니다.</li>
+        </ol>
+      </section>
+
+      <section class="terms-section" aria-labelledby="terms-13">
+        <h2 id="terms-13">13. 이용 제한 및 계약 종료</h2>
+        <ol>
+          <li>회사는 이용자가 이 약관을 위반하거나 권한을 오남용하고, 불법행위를 하거나 서비스 보안을 위협하는 경우 위반 정도와 위험을 고려하여 경고, 콘텐츠 제한, 권한 회수, 계정 또는 서비스 이용 제한 등 필요한 조치를 할 수 있습니다.</li>
+          <li>회사는 긴급한 보안 위험 또는 피해 확산 우려가 없는 한 이용 제한의 사유와 범위를 알리고 이용자가 의견을 제시할 수 있도록 노력합니다.</li>
+          <li>이용자는 서비스 이용 종료 또는 개인정보·계정 삭제를 <a href="mailto:artitdda@naver.com">artitdda@naver.com</a>으로 요청할 수 있습니다.</li>
+          <li>원 홈페이지 또는 반 미니홈피 등 원 단위 서비스의 종료와 개별 이용자의 계정 삭제는 서로 다른 절차와 효력을 가질 수 있습니다. 원 서비스 종료를 요청할 때에는 원의 대표 권한과 관련 이용자에 미치는 영향을 확인할 수 있습니다.</li>
+          <li>서비스 종료와 계정 삭제에 따른 개인정보의 보관 및 파기는 개인정보처리방침과 관계 법령에 따릅니다.</li>
+        </ol>
+      </section>
+
+      <section class="terms-section" aria-labelledby="terms-14">
+        <h2 id="terms-14">14. 개인정보 보호</h2>
+        <p>회사는 서비스 제공 과정에서 처리하는 개인정보를 관계 법령과 <a href="/privacy.html">원이야 개인정보처리방침</a>에 따라 보호합니다. 개인정보의 처리 목적, 항목, 보유기간과 이용자의 권리 행사 방법 등 자세한 내용은 개인정보처리방침에서 확인할 수 있습니다.</p>
+      </section>
+
+      <section class="terms-section" aria-labelledby="terms-15">
+        <h2 id="terms-15">15. 회사의 책임</h2>
+        <ol>
+          <li>회사는 안정적인 서비스 제공과 개인정보 보호를 위해 서비스 규모와 위험에 맞는 합리적인 기술적·관리적 조치를 취합니다.</li>
+          <li>회사의 고의 또는 과실로 이용자에게 손해가 발생한 경우 회사는 관계 법령에 따라 책임을 부담합니다.</li>
+          <li>이용자의 귀책사유, 이용자가 등록한 콘텐츠, 제3자가 제공하는 통신·인증·호스팅 등 외부 서비스의 장애와 관련된 책임은 발생 원인, 회사의 관여와 고의·과실 여부 등 실제 책임 범위에 따라 판단합니다.</li>
+          <li>회사는 장애 또는 권리침해 문제가 발생한 경우 피해 방지와 복구를 위해 합리적인 범위에서 협조합니다.</li>
+        </ol>
+      </section>
+
+      <section class="terms-section" aria-labelledby="terms-16">
+        <h2 id="terms-16">16. 이용자의 책임</h2>
+        <ol>
+          <li>이용자는 본인의 계정과 인증정보를 안전하게 관리하고, 자신이 등록한 정보와 콘텐츠가 정확하고 적법하도록 관리해야 합니다.</li>
+          <li>이용자는 콘텐츠 등록과 공개에 필요한 개인정보 보호 근거, 저작권, 초상권 및 보호자 동의 등 필요한 권리와 동의를 확보해야 합니다.</li>
+          <li>이용자는 서비스 이용 과정에서 이 약관과 관계 법령을 준수하고, 본인의 귀책사유로 회사 또는 다른 이용자에게 손해를 발생시킨 경우 관계 법령에 따른 책임을 부담할 수 있습니다.</li>
+          <li>이용자는 계정의 무단 사용, 권리침해 또는 서비스 보안 문제를 발견한 경우 피해가 확대되지 않도록 회사에 알리고 필요한 조치에 협조해야 합니다.</li>
+        </ol>
+      </section>
+
+      <section class="terms-section" aria-labelledby="terms-17">
+        <h2 id="terms-17">17. 분쟁 및 준거</h2>
+        <ol>
+          <li>이 약관과 서비스 이용에는 대한민국 법령을 적용합니다.</li>
+          <li>회사와 이용자는 서비스 이용과 관련하여 분쟁이 발생한 경우 원만한 해결을 위해 우선 성실히 협의합니다.</li>
+          <li>협의로 해결되지 않는 분쟁은 관계 법령이 정하는 분쟁 해결 절차와 관할에 따릅니다.</li>
+        </ol>
+      </section>
+
+      <section class="terms-section" aria-labelledby="terms-18">
+        <h2 id="terms-18">18. 운영자 정보</h2>
+        <dl class="operator-card">
+          <div class="operator-row"><dt>서비스명</dt><dd>원이야</dd></div>
+          <div class="operator-row"><dt>상호명</dt><dd>아트잇다</dd></div>
+          <div class="operator-row"><dt>대표자</dt><dd>정광운</dd></div>
+          <div class="operator-row"><dt>사업자등록번호</dt><dd>157-29-01214</dd></div>
+          <div class="operator-row"><dt>통신판매업 신고번호</dt><dd>2021-인천서구-3119</dd></div>
+          <div class="operator-row"><dt>사업장 주소</dt><dd>인천시 서구 심곡로 55번길 5, 201-04</dd></div>
+          <div class="operator-row"><dt>이메일</dt><dd><a href="mailto:artitdda@naver.com">artitdda@naver.com</a></dd></div>
+        </dl>
+      </section>
+
+      <section class="terms-section" aria-labelledby="terms-19">
+        <h2 id="terms-19">19. 시행일</h2>
+        <p>이 약관은 2026년 8월 18일부터 시행합니다.</p>
+      </section>
+    </article>
+  </main>
+
+  <footer class="site-footer">
+    <p>아트잇다 · 대표 정광운 · 사업자등록번호 157-29-01214</p>
+    <p>통신판매업 신고번호 2021-인천서구-3119</p>
+    <p>인천시 서구 심곡로 55번길 5, 201-04 · <a href="mailto:artitdda@naver.com">artitdda@naver.com</a></p>
+    <p><a href="/privacy.html">개인정보처리방침</a></p>
+    <p>© 2026 원이야</p>
+  </footer>
+</body>
+</html>

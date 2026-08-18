@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="원이야 베타 서비스 개인정보처리방침">
+  <title>원이야 개인정보처리방침</title>
+  <style>
+    :root {
+      --base: #fff7f3;
+      --paper: #ffffff;
+      --ink: #3f2a2c;
+      --ink-soft: #786563;
+      --coral: #db6b54;
+      --coral-soft: #fbe0d9;
+      --line: #eadbd6;
+      --notice: #fff1ec;
+      --shadow: 0 18px 48px -34px rgba(112, 62, 53, 0.48);
+    }
+
+    * { box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      margin: 0;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 12% 4%, rgba(255, 217, 176, 0.58), transparent 23rem),
+        linear-gradient(180deg, #fde8e0 0, var(--base) 22rem, var(--base) 100%);
+      font-family: Pretendard, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+      font-size: 16px;
+      line-height: 1.75;
+      word-break: keep-all;
+      overflow-wrap: break-word;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    a { color: var(--coral); }
+
+    a:focus-visible {
+      outline: 3px solid rgba(219, 107, 84, 0.4);
+      outline-offset: 3px;
+      border-radius: 5px;
+    }
+
+    .site-header {
+      width: min(100% - 32px, 880px);
+      margin: 0 auto;
+      padding: 18px 0 10px;
+    }
+
+    .home-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      min-height: 44px;
+      padding: 8px 14px;
+      border: 1px solid rgba(219, 107, 84, 0.24);
+      border-radius: 999px;
+      color: var(--coral);
+      background: rgba(255, 255, 255, 0.72);
+      font-weight: 750;
+      text-decoration: none;
+      box-shadow: 0 10px 26px -22px rgba(112, 62, 53, 0.55);
+    }
+
+    .home-link::before {
+      content: "←";
+      font-size: 1.08rem;
+    }
+
+    main {
+      width: min(100% - 32px, 880px);
+      margin: 0 auto 36px;
+    }
+
+    .hero {
+      padding: 42px 4px 34px;
+      text-align: center;
+    }
+
+    .eyebrow {
+      margin: 0 0 8px;
+      color: var(--coral);
+      font-size: 0.88rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(2rem, 8vw, 3.25rem);
+      line-height: 1.25;
+      letter-spacing: -0.045em;
+    }
+
+    .hero-description {
+      max-width: 650px;
+      margin: 16px auto 0;
+      color: var(--ink-soft);
+      font-size: 0.98rem;
+    }
+
+    .effective-date {
+      display: inline-block;
+      margin-top: 18px;
+      padding: 7px 13px;
+      border-radius: 999px;
+      background: var(--coral-soft);
+      color: #7c4238;
+      font-size: 0.84rem;
+      font-weight: 700;
+    }
+
+    .policy {
+      padding: 8px 20px 28px;
+      border: 1px solid rgba(219, 107, 84, 0.13);
+      border-radius: 26px;
+      background: rgba(255, 255, 255, 0.9);
+      box-shadow: var(--shadow);
+    }
+
+    .policy-section {
+      padding: 30px 0;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .policy-section:last-child { border-bottom: 0; }
+
+    h2 {
+      margin: 0 0 14px;
+      font-size: clamp(1.18rem, 4.8vw, 1.45rem);
+      line-height: 1.45;
+      letter-spacing: -0.025em;
+    }
+
+    h3 {
+      margin: 22px 0 8px;
+      font-size: 1rem;
+      line-height: 1.5;
+    }
+
+    p { margin: 0 0 12px; }
+    p:last-child { margin-bottom: 0; }
+
+    ul, ol {
+      margin: 10px 0 0;
+      padding-left: 1.3rem;
+    }
+
+    li + li { margin-top: 7px; }
+
+    .summary-box,
+    .notice-box {
+      margin-top: 16px;
+      padding: 16px;
+      border-radius: 16px;
+      background: var(--notice);
+      color: #654743;
+    }
+
+    .retention-list {
+      display: grid;
+      gap: 10px;
+      margin: 18px 0 0;
+    }
+
+    .retention-item {
+      display: grid;
+      gap: 4px;
+      margin: 0;
+      padding: 14px 15px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: #fffaf8;
+    }
+
+    .retention-item dt {
+      font-weight: 800;
+      line-height: 1.5;
+    }
+
+    .retention-item dd {
+      margin: 0;
+      color: var(--ink-soft);
+    }
+
+    .operator-card {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 0;
+      margin-top: 18px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      overflow: hidden;
+    }
+
+    .operator-row {
+      display: grid;
+      grid-template-columns: 8.25rem 1fr;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .operator-row:last-child { border-bottom: 0; }
+
+    .operator-row dt,
+    .operator-row dd {
+      margin: 0;
+      padding: 11px 13px;
+    }
+
+    .operator-row dt {
+      background: #fff5f1;
+      font-weight: 800;
+    }
+
+    .operator-row dd { background: var(--paper); }
+
+    .site-footer {
+      padding: 30px 16px 42px;
+      color: var(--ink-soft);
+      text-align: center;
+      font-size: 0.82rem;
+    }
+
+    .site-footer p { margin: 4px 0; }
+
+    @media (min-width: 700px) {
+      .site-header { padding-top: 26px; }
+      .hero { padding: 62px 8px 44px; }
+      .policy { padding: 16px 48px 38px; border-radius: 32px; }
+      .policy-section { padding: 38px 0; }
+      .retention-item { grid-template-columns: minmax(13rem, 0.85fr) 1.15fr; gap: 22px; }
+    }
+
+    @media (max-width: 480px) {
+      body { font-size: 15px; }
+      .site-header, main { width: min(100% - 24px, 880px); }
+      .hero { padding: 34px 2px 28px; }
+      .policy { padding: 4px 16px 22px; border-radius: 22px; }
+      .policy-section { padding: 26px 0; }
+      .operator-row { grid-template-columns: 1fr; }
+      .operator-row dt { padding-bottom: 4px; }
+      .operator-row dd { padding-top: 5px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+    }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <a class="home-link" href="/" aria-label="원이야 홈으로 돌아가기">홈으로</a>
+  </header>
+
+  <main>
+    <header class="hero">
+      <p class="eyebrow">WONIYA PRIVACY</p>
+      <h1>원이야 개인정보처리방침</h1>
+      <p class="effective-date">시행일: 2026년 8월 18일</p>
+    </header>
+
+    <article class="policy">
+      <section class="policy-section" aria-labelledby="policy-1">
+        <h2 id="policy-1">1. 개인정보처리방침 소개</h2>
+        <p>아트잇다(이하 “운영자”)는 원이야 서비스(이하 “서비스”)를 운영하며, 서비스 제공에 필요한 범위에서 개인정보를 처리합니다. 이 방침은 현재 베타 서비스의 기능과 운영 기준을 바탕으로 개인정보의 처리 목적, 항목, 보유기간과 이용자의 권리를 설명합니다.</p>
+        <p>운영자는 개인정보 보호 관련 법령을 준수하고, 서비스 기능 또는 개인정보 처리 방식이 변경되는 경우 이 방침을 통해 안내합니다.</p>
+      </section>
+
+      <section class="policy-section" aria-labelledby="policy-2">
+        <h2 id="policy-2">2. 개인정보의 처리 목적</h2>
+        <p>운영자는 다음 목적을 위해 개인정보를 처리합니다.</p>
+        <ul>
+          <li>회원 식별, 본인 확인, 로그인과 계정 관리</li>
+          <li>원 등록 신청 접수, 확인과 처리 결과 안내</li>
+          <li>원 홈페이지 제작을 위한 자료 접수와 서비스 제공</li>
+          <li>입소상담 접수, 상담 진행과 답변</li>
+          <li>원장·교사 초대, 역할 확인과 반 배정</li>
+          <li>학부모와 반의 연결 및 연결 상태 관리</li>
+          <li>반 게시물·앨범 제공과 관련 콘텐츠 관리</li>
+          <li>공개 원장·교사 프로필 제공</li>
+          <li>1:1 문의 접수, 답변, 분쟁 대응과 서비스 개선</li>
+          <li>서비스 안정성 확보, 오류 확인과 부정 이용 방지</li>
+        </ul>
+      </section>
+
+      <section class="policy-section" aria-labelledby="policy-3">
+        <h2 id="policy-3">3. 처리하는 개인정보 항목</h2>
+        <p>서비스 이용 과정에서 이용자의 선택과 역할에 따라 다음 정보가 처리될 수 있습니다.</p>
+
+        <h3>회원계정 및 인증</h3>
+        <ul>
+          <li>원장·교사: 이메일 주소, 인증 및 로그인에 필요한 계정 식별정보</li>
+          <li>학부모: Kakao OAuth 로그인 과정에서 제공되는 계정 식별정보와 서비스 연결에 필요한 정보</li>
+        </ul>
+
+        <h3>서비스 신청 및 운영</h3>
+        <ul>
+          <li>원 등록 신청: 신청자 이름, 연락처, 이메일 주소, 원 이름·주소 등 신청 처리에 필요한 정보</li>
+          <li>홈페이지 제작 온보딩: 담당자 연락정보, 원 소개, 운영정보, 이미지와 이용자가 제출한 제작 자료</li>
+          <li>입소상담: 보호자 이름과 연락처, 상담 대상 및 문의 내용 등 상담을 위해 제출한 정보</li>
+          <li>원장·교사 초대 및 배정: 이름, 이메일 주소, 소속 원, 역할과 반 배정정보</li>
+          <li>학부모 반 연결: 학부모 계정 식별정보, 연결된 원·반과 연결 상태</li>
+          <li>반 게시물·앨범: 게시글 내용, 사진, 작성자 및 등록·수정 시각. 원 또는 교사가 등록하는 콘텐츠에 아동의 이름이나 사진이 포함될 수 있습니다.</li>
+          <li>공개 원장·교사 프로필: 이름, 소개, 소속·경력 등 원에서 공개하도록 등록한 정보</li>
+          <li>1:1 문의: 이름, 연락처 또는 이메일 주소, 문의 내용과 답변</li>
+        </ul>
+
+        <p class="notice-box">서비스는 현재 구조화된 아동 프로필, 주민등록번호, 상세 건강·질병·투약정보를 직접 수집하는 기능을 제공하지 않습니다. 1:1 문의에도 주민등록번호, 진단서, 상세 질병·투약정보 등 서비스 이용에 불필요한 민감정보를 작성하지 마세요.</p>
+      </section>
+
+      <section class="policy-section" aria-labelledby="policy-4">
+        <h2 id="policy-4">4. 개인정보의 처리 및 보유기간</h2>
+        <p>운영자는 개인정보를 아래 기간 동안 보관한 뒤 지체 없이 파기합니다. 다만, 관계 법령에 따라 보존할 의무가 있거나 분쟁 처리 등 정당한 사유가 있는 경우에는 해당 기간 동안 별도로 보관할 수 있습니다.</p>
+
+        <dl class="retention-list">
+          <div class="retention-item"><dt>회원계정 및 인증정보</dt><dd>회원 탈퇴 시까지</dd></div>
+          <div class="retention-item"><dt>원 등록 신청정보</dt><dd>처리 완료 후 1년</dd></div>
+          <div class="retention-item"><dt>홈페이지 제작 온보딩 자료</dt><dd>서비스 이용 중 보관 후 서비스 종료 30일</dd></div>
+          <div class="retention-item"><dt>입소상담 정보</dt><dd>접수일로부터 1년</dd></div>
+          <div class="retention-item"><dt>원장·교사 초대 및 배정정보</dt><dd>관계 종료 후 1년</dd></div>
+          <div class="retention-item"><dt>학부모 반 연결정보</dt><dd>연결 해제 또는 탈퇴 후 30일</dd></div>
+          <div class="retention-item"><dt>반 게시물·앨범 및 관련 사진</dt><dd>원/교사가 삭제하거나 서비스 이용 중 보관 후 서비스 종료 30일</dd></div>
+          <div class="retention-item"><dt>1:1 문의 및 답변</dt><dd>문의 종료 후 1년</dd></div>
+          <div class="retention-item"><dt>공개 원장·교사 프로필</dt><dd>원에서 삭제하거나 서비스 종료 시까지</dd></div>
+        </dl>
+      </section>
+
+      <section class="policy-section" aria-labelledby="policy-5">
+        <h2 id="policy-5">5. 개인정보의 제3자 제공 및 서비스 내 정보 공유</h2>
+        <p>운영자는 이용자의 동의가 있거나 법령에 특별한 근거가 있는 경우를 제외하고 개인정보를 제3자에게 제공하지 않습니다.</p>
+        <p>다만, 서비스의 역할과 연결 관계에 따라 필요한 정보가 서비스 안에서 공유될 수 있습니다. 예를 들어 원장·교사는 담당 원과 반의 운영정보, 연결된 학부모 정보, 반 게시물·앨범을 업무에 필요한 범위에서 확인할 수 있으며, 학부모는 자신이 연결된 반에서 제공되는 게시물·앨범과 공개 프로필을 확인할 수 있습니다. 공개 프로필은 서비스 이용자 또는 방문자에게 공개될 수 있습니다.</p>
+        <p>각 원과 이용자는 서비스 내에서 확인한 정보를 권한과 목적의 범위를 넘어 이용하거나 다른 사람에게 제공해서는 안 됩니다.</p>
+      </section>
+
+      <section class="policy-section" aria-labelledby="policy-6">
+        <h2 id="policy-6">6. 개인정보 처리업무 위탁 및 외부 서비스 이용</h2>
+        <p>운영자는 서비스 제공을 위해 데이터 저장·인증 기반의 Supabase, 웹사이트 호스팅·배포 기반의 Vercel, 학부모 로그인 인증을 위한 Kakao 등 외부 서비스를 이용합니다. 이 과정에서 서비스 운영, 저장, 인증과 전송에 필요한 정보가 해당 외부 서비스를 통해 처리될 수 있습니다.</p>
+        <p>운영자는 외부 서비스를 이용할 때 개인정보가 안전하게 처리되도록 필요한 사항을 확인하고 관리합니다. 외부 서비스 또는 처리업체와 관련된 사항이 변경되는 경우 본 방침을 통해 안내합니다.</p>
+      </section>
+
+      <section class="policy-section" aria-labelledby="policy-7">
+        <h2 id="policy-7">7. 만 14세 미만 아동 관련 개인정보 처리</h2>
+        <p>서비스에는 구조화된 아동 프로필을 직접 생성하는 기능이 없지만, 원 또는 교사가 반 게시물·앨범에 아동의 이름이나 사진을 등록할 수 있습니다.</p>
+        <p>각 원은 아동의 이름, 사진 등 개인정보를 등록하기 전에 보호자 동의를 비롯하여 필요한 적법한 근거를 확보해야 하며, 서비스 이용 목적에 필요한 최소한의 자료만 등록해야 합니다. 보호자는 해당 원 또는 운영자에게 아동 관련 콘텐츠의 열람, 수정이나 삭제를 요청할 수 있습니다.</p>
+      </section>
+
+      <section class="policy-section" aria-labelledby="policy-8">
+        <h2 id="policy-8">8. 개인정보 파기 절차 및 방법</h2>
+        <p>보유기간이 끝났거나 처리 목적이 달성된 개인정보는 별도 보관 필요 여부를 확인한 뒤 지체 없이 파기합니다. 법령에 따라 일정 기간 보관해야 하는 정보는 다른 개인정보와 분리하여 보관하고 해당 기간이 끝나면 파기합니다.</p>
+        <ul>
+          <li>전자적 파일: 복구하거나 재생하기 어렵도록 안전한 방식으로 삭제</li>
+          <li>종이 문서: 분쇄하거나 소각하는 방식으로 파기</li>
+        </ul>
+      </section>
+
+      <section class="policy-section" aria-labelledby="policy-9">
+        <h2 id="policy-9">9. 정보주체의 권리와 행사방법</h2>
+        <p>이용자는 자신의 개인정보에 대해 열람, 정정, 삭제, 처리정지, 동의 철회와 회원 탈퇴를 요청할 수 있습니다. 만 14세 미만 아동의 법정대리인도 아동의 개인정보에 대해 필요한 권리를 행사할 수 있습니다.</p>
+        <p>개인정보 또는 계정 삭제 요청은 <a href="mailto:artitdda@naver.com">artitdda@naver.com</a>으로 보내주세요. 운영자는 요청자의 본인 확인을 위해 필요한 정보를 요청할 수 있으며, 본인 확인 완료 후 10영업일 이내 처리를 내부 운영 목표로 합니다. 법령상 제한 사유가 있는 경우에는 그 사유와 처리 결과를 안내합니다.</p>
+      </section>
+
+      <section class="policy-section" aria-labelledby="policy-10">
+        <h2 id="policy-10">10. 개인정보 안전성 확보조치</h2>
+        <p>운영자는 개인정보의 분실, 도난, 유출, 위조, 변조 또는 훼손을 방지하기 위해 서비스의 규모와 위험 수준에 맞추어 다음과 같은 보호조치를 시행합니다.</p>
+        <ul>
+          <li>개인정보 접근 권한을 업무상 필요한 범위로 제한하고 계정을 관리</li>
+          <li>인증과 접근통제를 통해 비인가 접근을 방지</li>
+          <li>전송 과정에서 안전한 통신 방식 적용</li>
+          <li>서비스와 개인정보 처리 과정의 취약점 및 이상 징후 점검</li>
+          <li>개인정보 취급 시 준수할 내부 원칙 마련과 관련자 안내</li>
+        </ul>
+      </section>
+
+      <section class="policy-section" aria-labelledby="policy-11">
+        <h2 id="policy-11">11. 자동으로 생성되거나 저장될 수 있는 정보</h2>
+        <p>서비스 이용 과정에서 접속 기록, IP 주소, 브라우저 및 기기 정보, 오류 기록, 쿠키 또는 인증 상태 유지에 필요한 정보가 자동으로 생성되거나 저장될 수 있습니다. 이러한 정보는 로그인 상태 유지, 보안, 장애 대응과 서비스 품질 개선을 위해 이용될 수 있습니다.</p>
+        <p>현재 별도의 광고 또는 행동추적 SDK를 사용하지 않으며, Push 구독 및 자동 Push 발송 기능은 활성화되어 있지 않습니다. 브라우저 설정에서 쿠키 저장을 제한할 수 있으나, 이 경우 로그인 등 일부 기능 이용에 영향을 줄 수 있습니다.</p>
+      </section>
+
+      <section class="policy-section" aria-labelledby="policy-12">
+        <h2 id="policy-12">12. 개인정보 관련 문의</h2>
+        <p>개인정보 처리, 권리 행사 또는 불편 사항은 아래 담당자에게 문의해 주세요.</p>
+
+        <dl class="operator-card">
+          <div class="operator-row"><dt>서비스명</dt><dd>원이야</dd></div>
+          <div class="operator-row"><dt>상호명</dt><dd>아트잇다</dd></div>
+          <div class="operator-row"><dt>대표자</dt><dd>정광운</dd></div>
+          <div class="operator-row"><dt>사업자등록번호</dt><dd>157-29-01214</dd></div>
+          <div class="operator-row"><dt>통신판매업 신고번호</dt><dd>2021-인천서구-3119</dd></div>
+          <div class="operator-row"><dt>사업장 주소</dt><dd>인천시 서구 심곡로 55번길 5, 201-04</dd></div>
+          <div class="operator-row"><dt>개인정보 관련 문의 담당자</dt><dd>이연주</dd></div>
+          <div class="operator-row"><dt>문의 이메일</dt><dd><a href="mailto:artitdda@naver.com">artitdda@naver.com</a></dd></div>
+        </dl>
+      </section>
+
+      <section class="policy-section" aria-labelledby="policy-13">
+        <h2 id="policy-13">13. 개인정보처리방침 변경 안내</h2>
+        <p>이 방침은 2026년 8월 18일부터 적용됩니다. 서비스 기능, 개인정보 처리 방식 또는 관련 기준이 변경되어 방침의 내용이 추가·삭제·수정되는 경우 서비스 내 공지 또는 이 페이지를 통해 안내합니다.</p>
+      </section>
+    </article>
+  </main>
+
+  <footer class="site-footer">
+    <p>아트잇다 · 대표 정광운 · 사업자등록번호 157-29-01214</p>
+    <p>인천시 서구 심곡로 55번길 5, 201-04 · <a href="mailto:artitdda@naver.com">artitdda@naver.com</a></p>
+    <p>© 2026 원이야</p>
+  </footer>
+</body>
+</html>
