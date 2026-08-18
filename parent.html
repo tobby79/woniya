@@ -103,6 +103,7 @@
   .parent-pwa-dialog-close{position:absolute;right:16px;top:16px;display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;border:0;border-radius:50%;background:transparent;color:var(--ink-soft);font-family:var(--body);font-size:1.5rem;line-height:1;cursor:pointer}
   .parent-pwa-dialog-close:hover{background:var(--cream);color:var(--ink)}
   .parent-pwa-dialog-description{margin-top:9px;color:var(--ink-soft);font-size:.9rem;line-height:1.68;overflow-wrap:anywhere;word-break:keep-all}
+  .confirm-desc{white-space:pre-line}
   .parent-pwa-install-status{margin-top:12px;color:#667e62;font-size:.86rem;line-height:1.6;font-weight:700;overflow-wrap:anywhere;word-break:keep-all}
   .parent-pwa-install-status:empty{display:none}
   .parent-pwa-direct-install{margin-top:18px}
@@ -517,6 +518,20 @@
   </div>
 </div>
 
+<div class="parent-pwa-modal" id="customConfirmModal" role="dialog" aria-modal="true" aria-labelledby="customConfirmTitle" hidden>
+  <div class="parent-pwa-dialog">
+    <div class="parent-pwa-dialog-head">
+      <h2 class="parent-pwa-dialog-title" id="customConfirmTitle">확인</h2>
+    </div>
+    <button type="button" class="parent-pwa-dialog-close" id="customConfirmCloseBtn" aria-label="닫기">×</button>
+    <p class="parent-pwa-dialog-description confirm-desc" id="customConfirmDesc"></p>
+    <div class="parent-pwa-direct-install">
+      <button type="button" class="parent-pwa-primary" id="customConfirmOkBtn">확인</button>
+    </div>
+    <button type="button" class="parent-pwa-later" id="customConfirmCancelBtn">취소</button>
+  </div>
+</div>
+
 <script src="topbar.js"></script>
 <script src="supabase-config.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -564,6 +579,15 @@
   var parentPwaIosInstructions = document.getElementById('parentPwaIosInstructions');
   var parentPwaIosSafariNotice = document.getElementById('parentPwaIosSafariNotice');
   var parentPwaInstallLaterBtn = document.getElementById('parentPwaInstallLaterBtn');
+
+  var customConfirmModal = document.getElementById('customConfirmModal');
+  var customConfirmTitle = document.getElementById('customConfirmTitle');
+  var customConfirmDesc = document.getElementById('customConfirmDesc');
+  var customConfirmOkBtn = document.getElementById('customConfirmOkBtn');
+  var customConfirmCancelBtn = document.getElementById('customConfirmCancelBtn');
+  var customConfirmCloseBtn = document.getElementById('customConfirmCloseBtn');
+  var customConfirmResolve = null;
+  var customConfirmReturnFocus = null;
 
   var authMsg = document.getElementById('authMsg');
   var kakaoLoginBtn = document.getElementById('kakaoLoginBtn');
@@ -1133,6 +1157,40 @@
     renderParentPwaInstallModal(context);
     syncParentInquiryFloatingButton();
     parentPwaInstallCloseBtn.focus();
+  }
+
+  function openCustomConfirmModal(message, options){
+    return new Promise(function(resolve){
+      var blockingModal = document.querySelector('.image-modal:not([hidden]),[role="dialog"]:not([hidden]):not(#customConfirmModal),dialog[open]');
+      if (blockingModal) { resolve(false); return; }
+      options = options || {};
+      customConfirmResolve = resolve;
+      customConfirmReturnFocus = document.activeElement;
+      customConfirmTitle.textContent = options.title || '확인';
+      customConfirmDesc.textContent = message;
+      customConfirmOkBtn.textContent = options.okLabel || '확인';
+      customConfirmCancelBtn.textContent = options.cancelLabel || '취소';
+      customConfirmModal.hidden = false;
+      document.body.classList.add('parent-pwa-modal-open');
+      customConfirmCancelBtn.focus();
+    });
+  }
+
+  function closeCustomConfirmModal(result){
+    if (customConfirmModal.hidden) return;
+    customConfirmModal.hidden = true;
+    document.body.classList.remove('parent-pwa-modal-open');
+    if (customConfirmReturnFocus && customConfirmReturnFocus.isConnected) {
+      customConfirmReturnFocus.focus();
+    }
+    customConfirmReturnFocus = null;
+    var resolve = customConfirmResolve;
+    customConfirmResolve = null;
+    if (resolve) resolve(result);
+  }
+
+  function customConfirm(message, options){
+    return openCustomConfirmModal(message, options);
   }
 
   function completeParentPwaHomeScreenGuidance(){
@@ -4456,7 +4514,7 @@
     var closeConfirmMessage = hasReplyDraft
       ? '이 문의를 종료하시겠어요?\n작성 중인 메시지는 삭제되며, 종료 후에는 새 메시지를 보낼 수 없습니다.'
       : '이 문의를 종료하시겠어요?\n종료 후에는 새 메시지를 보낼 수 없습니다.';
-    var confirmed = window.confirm(closeConfirmMessage);
+    var confirmed = await customConfirm(closeConfirmMessage);
     if (!confirmed) return;
 
     var operation = state.closeOperation;
@@ -5606,7 +5664,7 @@
         var createDraft = parentInquiryState.createDraft || {};
         var hasCreateDraft = !!String(createDraft.body || '').trim();
         if ((createOperation && createOperation.status === 'uncertain') || hasCreateDraft) {
-          var leaveConfirmed = window.confirm('작성 중인 문의 내용과 재시도 정보가 사라집니다. 목록으로 돌아가시겠습니까?');
+          var leaveConfirmed = await customConfirm('작성 중인 문의 내용과 재시도 정보가 사라집니다. 목록으로 돌아가시겠습니까?');
           if (!leaveConfirmed) return;
         }
       } else {
@@ -5616,13 +5674,13 @@
             (closeOperation && closeOperation.status === 'submitting')) return;
         var hasReplyDraft = !!String(parentInquiryState.replyDraft || '');
         if (closeOperation && closeOperation.status === 'uncertain') {
-          var leaveUncertainCloseConfirmed = window.confirm(
+          var leaveUncertainCloseConfirmed = await customConfirm(
             '종료 처리 결과가 아직 확인되지 않았습니다.\n' +
             '이 화면을 나가면 같은 요청으로 다시 확인할 수 없으며 작성 중인 내용도 사라집니다. 목록으로 돌아가시겠어요?'
           );
           if (!leaveUncertainCloseConfirmed) return;
         } else if ((messageOperation && messageOperation.status === 'uncertain') || hasReplyDraft) {
-          var leaveDetailConfirmed = window.confirm('작성 중인 메시지와 재시도 정보가 사라집니다. 목록으로 돌아가시겠습니까?');
+          var leaveDetailConfirmed = await customConfirm('작성 중인 메시지와 재시도 정보가 사라집니다. 목록으로 돌아가시겠습니까?');
           if (!leaveDetailConfirmed) return;
         }
       }
@@ -5746,6 +5804,19 @@
     hideParentPwaInstallUiForPage();
   });
 
+  customConfirmOkBtn.addEventListener('click', function(){
+    closeCustomConfirmModal(true);
+  });
+  customConfirmCancelBtn.addEventListener('click', function(){
+    closeCustomConfirmModal(false);
+  });
+  customConfirmCloseBtn.addEventListener('click', function(){
+    closeCustomConfirmModal(false);
+  });
+  customConfirmModal.addEventListener('click', function(e){
+    if (e.target === customConfirmModal) closeCustomConfirmModal(false);
+  });
+
   document.addEventListener('keydown', function(e){
     if (parentPwaInstallModal.hidden) return;
     if (e.key === 'Escape') {
@@ -5756,6 +5827,30 @@
     if (e.key !== 'Tab') return;
     var focusable = Array.prototype.filter.call(
       parentPwaInstallModal.querySelectorAll('button:not([disabled]),a[href],input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])'),
+      function(element){ return element.getClientRects().length > 0; }
+    );
+    if (!focusable.length) return;
+    var first = focusable[0];
+    var last = focusable[focusable.length - 1];
+    if (e.shiftKey && document.activeElement === first) {
+      e.preventDefault();
+      last.focus();
+    } else if (!e.shiftKey && document.activeElement === last) {
+      e.preventDefault();
+      first.focus();
+    }
+  });
+
+  document.addEventListener('keydown', function(e){
+    if (customConfirmModal.hidden) return;
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      closeCustomConfirmModal(false);
+      return;
+    }
+    if (e.key !== 'Tab') return;
+    var focusable = Array.prototype.filter.call(
+      customConfirmModal.querySelectorAll('button:not([disabled]),a[href],input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])'),
       function(element){ return element.getClientRects().length > 0; }
     );
     if (!focusable.length) return;
