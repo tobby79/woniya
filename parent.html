@@ -430,6 +430,7 @@
   <section class="panel" id="pendingPanel" hidden>
     <div class="result-title">승인 대기 중입니다</div>
     <p class="result-desc">연결 신청이 접수되었습니다. 선생님 또는 원장님 승인 후 우리 반 미니홈피를 볼 수 있어요.</p>
+    <button type="button" class="btn" id="pendingRecheckBtn">상태 다시 확인</button>
   </section>
 
   <section class="panel" id="classesPanel" hidden>
@@ -457,6 +458,7 @@
   <section class="panel" id="noticePanel" hidden>
     <div class="result-title" id="noticeTitle"></div>
     <p class="result-desc" id="noticeDesc"></p>
+    <button type="button" class="btn" id="noticeHomeBtn">상태 확인하기</button>
   </section>
 </main>
 
@@ -591,6 +593,9 @@
 
   var authMsg = document.getElementById('authMsg');
   var kakaoLoginBtn = document.getElementById('kakaoLoginBtn');
+
+  var pendingRecheckBtn = document.getElementById('pendingRecheckBtn');
+  var noticeHomeBtn = document.getElementById('noticeHomeBtn');
 
   var inviteForm = document.getElementById('inviteForm');
   var inviteCode = document.getElementById('inviteCode');
@@ -1765,6 +1770,16 @@
     } finally {
       authTransitionRunning = false;
       if (pendingAuthTransition) drainAuthTransitions();
+    }
+  }
+
+  async function retryParentStateCheck(triggerBtn){
+    if (triggerBtn) triggerBtn.disabled = true;
+    try {
+      queueAuthTransition(currentSession);
+      await drainAuthTransitions();
+    } finally {
+      if (triggerBtn) triggerBtn.disabled = false;
     }
   }
 
@@ -5877,6 +5892,13 @@
       imageModalImg.removeAttribute('src');
       syncParentInquiryFloatingButton();
     }
+  });
+
+  pendingRecheckBtn.addEventListener('click', function(){
+    retryParentStateCheck(pendingRecheckBtn);
+  });
+  noticeHomeBtn.addEventListener('click', function(){
+    retryParentStateCheck(noticeHomeBtn);
   });
 
   logoutBtn.addEventListener('click', async function(){
