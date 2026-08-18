@@ -50,6 +50,7 @@
   .section-eyebrow{font-family:var(--hand);font-size:1.15rem;color:var(--sage);font-weight:700;text-align:center}
   .section-title{font-family:var(--display);font-size:1.72rem;margin:8px 0 22px;letter-spacing:-.5px;line-height:1.38;text-align:center}
   .lead{color:var(--ink-soft);font-size:.95rem;text-align:center;margin-bottom:24px}
+  .lead:empty{display:none}
   .panel{background:var(--paper);border-radius:24px;padding:26px;box-shadow:0 18px 44px -22px rgba(120,80,60,.35)}
   .field{margin-bottom:16px}
   label{display:block;font-size:.86rem;font-weight:700;color:var(--ink-soft);margin-bottom:6px}
@@ -71,10 +72,6 @@
   .btn.ghost{background:transparent;color:var(--ink-soft);box-shadow:none;border:1.5px solid #e7dccf}
   .btn.kakao{background:#FEE500;color:#191919;box-shadow:0 14px 28px -12px rgba(60,45,0,.35)}
   .btn.small{width:auto;padding:8px 16px;font-size:.84rem;box-shadow:none}
-  .auth-divider{display:flex;align-items:center;gap:12px;margin:18px 0;color:var(--ink-soft);font-size:.82rem}
-  .auth-divider::before,.auth-divider::after{content:"";flex:1;height:1px;background:var(--line)}
-  .switch-link{margin-top:16px;text-align:center;font-size:.9rem;color:var(--ink-soft)}
-  .switch-link button{border:none;background:transparent;color:var(--coral-deep);font-weight:800;cursor:pointer;font-family:var(--body)}
   .msg{margin-top:14px;font-size:.88rem;text-align:center;color:var(--ink-soft)}
   .msg.error{color:#D9534F}
   .msg.ok{color:var(--sage)}
@@ -404,7 +401,7 @@
 <main class="parent-wrap">
   <div class="section-eyebrow">학부모 공간</div>
   <h1 class="section-title">우리 반 소식을<br>안전하게 확인해요</h1>
-  <p class="lead" id="leadText">로그인 후 초대 코드를 입력해주세요.</p>
+  <p class="lead" id="leadText"></p>
 
   <section class="panel" id="loadingPanel">
     <p class="msg">세션을 확인하고 있어요.</p>
@@ -412,23 +409,7 @@
 
   <section class="panel" id="authPanel" hidden>
     <button type="button" class="btn kakao" id="kakaoLoginBtn">카카오로 3초만에 시작하기</button>
-    <div class="auth-divider" aria-hidden="true">또는</div>
-    <form id="authForm">
-      <div class="field">
-        <label for="authEmail">이메일</label>
-        <input type="email" id="authEmail" required autocomplete="email">
-      </div>
-      <div class="field">
-        <label for="authPassword">비밀번호</label>
-        <input type="password" id="authPassword" required minlength="6" autocomplete="current-password">
-      </div>
-      <button type="submit" class="btn" id="authSubmit">로그인</button>
-      <div class="msg error" id="authMsg"></div>
-    </form>
-    <div class="switch-link">
-      <span id="authSwitchText">처음이신가요?</span>
-      <button type="button" id="authModeBtn">회원가입</button>
-    </div>
+    <div class="msg error" id="authMsg"></div>
   </section>
 
   <section class="panel" id="invitePanel" hidden>
@@ -581,13 +562,7 @@
   var parentPwaIosSafariNotice = document.getElementById('parentPwaIosSafariNotice');
   var parentPwaInstallLaterBtn = document.getElementById('parentPwaInstallLaterBtn');
 
-  var authForm = document.getElementById('authForm');
-  var authEmail = document.getElementById('authEmail');
-  var authPassword = document.getElementById('authPassword');
-  var authSubmit = document.getElementById('authSubmit');
   var authMsg = document.getElementById('authMsg');
-  var authSwitchText = document.getElementById('authSwitchText');
-  var authModeBtn = document.getElementById('authModeBtn');
   var kakaoLoginBtn = document.getElementById('kakaoLoginBtn');
 
   var inviteForm = document.getElementById('inviteForm');
@@ -604,7 +579,6 @@
   var extraInviteMsg = document.getElementById('extraInviteMsg');
 
   var currentSession = null;
-  var authMode = 'login';
   var initialAuthLoaded = false;
   var authTransitionVersion = 0;
   var authTransitionRunning = false;
@@ -1757,22 +1731,6 @@
     showNotice('문의에 접근할 수 없습니다.', '문의를 찾을 수 없거나 접근 권한이 없습니다.');
   }
 
-  function setAuthMode(mode){
-    authMode = mode;
-    authMsg.textContent = '';
-    if (mode === 'signup') {
-      authSubmit.textContent = '회원가입';
-      authSwitchText.textContent = '이미 계정이 있으신가요?';
-      authModeBtn.textContent = '로그인';
-      authPassword.setAttribute('autocomplete', 'new-password');
-    } else {
-      authSubmit.textContent = '로그인';
-      authSwitchText.textContent = '처음이신가요?';
-      authModeBtn.textContent = '회원가입';
-      authPassword.setAttribute('autocomplete', 'current-password');
-    }
-  }
-
   function classTitle(row){
     if (!row) return '이름 없는 반';
     if (row.name && row.age_label) return row.name + ' · ' + row.age_label;
@@ -2917,8 +2875,8 @@
     currentSession = null;
     resetMiniStateForAuthChange();
     logoutBtn.hidden = true;
-    setAuthMode('login');
-    leadText.textContent = '로그인 후 초대 코드를 입력해주세요.';
+    authMsg.textContent = '';
+    leadText.textContent = '';
     showPanel(authPanel);
     drainAuthTransitions();
   }
@@ -5264,7 +5222,7 @@
     if (!session || !session.user) {
       if (!isCurrentAuthTransition(authVersion)) return;
       logoutBtn.hidden = true;
-      leadText.textContent = '로그인 후 초대 코드를 입력해주세요.';
+      leadText.textContent = '';
       showPanel(authPanel);
       return;
     }
@@ -5408,10 +5366,6 @@
     showNotice('연결 신청이 완료되었습니다', '선생님 또는 원장님 승인을 기다려주세요.');
   }
 
-  authModeBtn.addEventListener('click', function(){
-    setAuthMode(authMode === 'login' ? 'signup' : 'login');
-  });
-
   kakaoLoginBtn.addEventListener('click', async function(){
     authMsg.textContent = '';
     kakaoLoginBtn.disabled = true;
@@ -5430,37 +5384,6 @@
       authMsg.innerHTML = escWithBr(err && err.message ? err.message : String(err));
       authMsg.className = 'msg error';
       kakaoLoginBtn.disabled = false;
-    }
-  });
-
-  authForm.addEventListener('submit', async function(e){
-    e.preventDefault();
-    authMsg.textContent = '';
-    authSubmit.disabled = true;
-
-    try {
-      if (authMode === 'signup') {
-        var signUpRes = await client.auth.signUp({
-          email: authEmail.value.trim(),
-          password: authPassword.value
-        });
-        if (signUpRes.error) throw signUpRes.error;
-        if (!(signUpRes.data && signUpRes.data.session)) {
-          leadText.textContent = '이메일 확인이 필요합니다.';
-          showNotice('이메일을 확인해주세요', '가입 확인 메일을 열어 인증을 완료한 뒤 다시 로그인해주세요.');
-        }
-      } else {
-        var loginRes = await client.auth.signInWithPassword({
-          email: authEmail.value.trim(),
-          password: authPassword.value
-        });
-        if (loginRes.error) throw loginRes.error;
-      }
-    } catch (err) {
-      authMsg.innerHTML = escWithBr(err && err.message ? err.message : String(err));
-      authMsg.className = 'msg error';
-    } finally {
-      authSubmit.disabled = false;
     }
   });
 
@@ -5865,8 +5788,8 @@
     currentSession = null;
     resetMiniStateForAuthChange();
     logoutBtn.hidden = true;
-    setAuthMode('login');
-    leadText.textContent = '로그인 후 초대 코드를 입력해주세요.';
+    authMsg.textContent = '';
+    leadText.textContent = '';
     showPanel(authPanel);
   });
 
@@ -5899,7 +5822,7 @@
       queueAuthTransition(null);
       resetMiniStateForAuthChange();
       logoutBtn.hidden = true;
-      leadText.textContent = '로그인 후 초대 코드를 입력해주세요.';
+      leadText.textContent = '';
       showPanel(authPanel);
       drainAuthTransitions();
       return;
@@ -5933,8 +5856,6 @@
     queueAuthTransition(initialSession);
     return drainAuthTransitions();
   });
-
-  setAuthMode('login');
 })();
 </script>
 </body>
