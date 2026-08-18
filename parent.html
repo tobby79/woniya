@@ -117,6 +117,8 @@
   .parent-pwa-instructions ol{margin-top:9px;padding-left:21px}
   .parent-pwa-instructions li+li{margin-top:5px}
   .parent-pwa-manual-note{margin-top:10px;color:#81756f;font-size:.8rem;line-height:1.6}
+  .auth-consent{margin-top:10px;color:#81756f;font-size:.8rem;line-height:1.6;text-align:center}
+  .auth-consent a{color:var(--coral-deep);font-weight:700;text-decoration:underline}
   .parent-pwa-complete{margin-top:14px;border:1.5px solid #cddcc9;background:#f4f8f1;color:#60775d;box-shadow:none}
   .parent-pwa-common-notes{display:grid;gap:4px;margin-top:18px;color:#81756f;font-size:.78rem;line-height:1.58;overflow-wrap:anywhere;word-break:keep-all}
   .parent-pwa-later{margin-top:14px}
@@ -409,6 +411,7 @@
 
   <section class="panel" id="authPanel" hidden>
     <button type="button" class="btn kakao" id="kakaoLoginBtn">카카오로 3초만에 시작하기</button>
+    <p class="auth-consent">카카오 로그인 시 <a href="/privacy.html" target="_blank" rel="noopener">개인정보처리방침</a>에 따라 정보가 수집·이용됩니다.</p>
     <div class="msg error" id="authMsg"></div>
   </section>
 
