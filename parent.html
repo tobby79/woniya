@@ -2364,7 +2364,7 @@
       resetParentInquiryState();
       miniRoot.innerHTML = options.useGenericInquiryError
         ? '<div class="empty-mini">문의를 찾을 수 없거나 접근 권한이 없습니다.</div>'
-        : '<div class="empty-mini">' + escWithBr(err && err.message ? err.message : String(err)) + '</div>';
+        : '<div class="empty-mini">반 정보를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.</div>';
     }
   }
 
@@ -5326,7 +5326,7 @@
     } catch (err) {
       if (!isCurrentAuthTransition(authVersion)) return;
       resetParentInquiryState();
-      showNotice('상태를 불러오지 못했습니다', err && err.message ? err.message : String(err));
+      showNotice('상태를 불러오지 못했습니다', '네트워크 상태를 확인하고 다시 시도해주세요.');
     }
   }
 
@@ -5352,7 +5352,7 @@
     } catch (err) {
       if (!isCurrentInviteRequest()) return;
       submitBtn.disabled = false;
-      msgEl.innerHTML = escWithBr(err && err.message ? err.message : String(err));
+      msgEl.innerHTML = '초대 코드 확인 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.';
       msgEl.className = 'msg error';
       return;
     }
@@ -5360,7 +5360,10 @@
 
     submitBtn.disabled = false;
     if (res.error) {
-      msgEl.innerHTML = escWithBr(res.error.message);
+      var knownSafeMessages = ['유효하지 않거나 만료된 초대 코드입니다'];
+      msgEl.innerHTML = knownSafeMessages.indexOf(res.error.message) !== -1
+        ? escWithBr(res.error.message)
+        : '초대 코드 처리 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.';
       msgEl.className = 'msg error';
       return;
     }
