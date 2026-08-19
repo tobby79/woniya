@@ -31,8 +31,6 @@
     background:var(--base);
     color:var(--ink);
     font-family:"Apple SD Gothic Neo","Noto Sans KR","Malgun Gothic",sans-serif;
-    display:flex;
-    flex-direction:column;
     min-height:100vh;
     min-height:100dvh;
   }
@@ -51,7 +49,7 @@
 
   /* ── 헤더 ── */
   .app-header{
-    flex:none;
+    position:fixed;top:0;left:0;right:0;z-index:10;
     display:flex;
     align-items:center;
     justify-content:center;
@@ -61,10 +59,11 @@
   .app-header .brand img{display:block;height:40px;width:auto;max-width:170px;object-fit:contain}
 
   main{
-    flex:1;
+    min-height:100vh;
+    min-height:100dvh;
     display:grid;
     place-items:center;
-    padding:12px 18px calc(24px + env(safe-area-inset-bottom));
+    padding:calc(24px + env(safe-area-inset-top)) 18px calc(24px + env(safe-area-inset-bottom));
   }
   .start-card{
     width:min(100%,430px);
