@@ -78,10 +78,11 @@
   }
   .topbar::after{
     content:"";
-    position:absolute;left:8%;right:8%;bottom:-10px;height:20px;
+    position:absolute;left:8%;right:8%;bottom:-16px;height:30px;
     border-radius:0 0 50% 50% / 0 0 100% 100%;
-    background:rgba(255,252,249,.92);
-    box-shadow:0 10px 22px -20px rgba(219,107,84,.4);
+    background:radial-gradient(closest-side,rgba(255,252,249,.8),transparent);
+    backdrop-filter:blur(9px);-webkit-backdrop-filter:blur(9px);
+    box-shadow:0 24px 48px -8px rgba(219,107,84,.18);
     opacity:0;transition:opacity .25s ease;pointer-events:none;
   }
   .topbar.is-scrolled{
