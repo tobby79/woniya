@@ -66,23 +66,30 @@
   a{color:inherit}
   a:focus-visible,button:focus-visible,input:focus-visible{outline:3px solid var(--coral);outline-offset:3px;border-radius:8px}
 
-  /* ── 상단바 (topbar.js 미사용, 자체 간단 바) ── */
+  /* ── 상단바: 떠 있는 유리 알약 헤더 (파일럿) ── */
   .topbar{
-    position:fixed;top:0;left:0;right:0;z-index:50;
-    padding:10px 0;background:transparent;
+    position:fixed;top:14px;left:14px;right:14px;z-index:50;
+    padding:10px 0;
+    border-radius:14px 14px 28px 28px;
+    background:rgba(255,255,255,0);
     box-shadow:none;
-    transition:background .22s ease,box-shadow .22s ease,backdrop-filter .22s ease,-webkit-backdrop-filter .22s ease;
+    transition:background .25s ease,box-shadow .25s ease,backdrop-filter .25s ease,-webkit-backdrop-filter .25s ease;
   }
   .topbar::after{
     content:"";
-    position:absolute;bottom:0;left:0;right:0;height:2px;
-    background:linear-gradient(90deg,var(--coral-deep),var(--coral),var(--lilac));
-    opacity:0;transition:opacity .22s ease;pointer-events:none;
+    position:absolute;left:8%;right:8%;bottom:-10px;height:20px;
+    border-radius:0 0 50% 50% / 0 0 100% 100%;
+    background:rgba(255,252,249,.92);
+    box-shadow:0 10px 22px -20px rgba(219,107,84,.4);
+    opacity:0;transition:opacity .25s ease;pointer-events:none;
   }
   .topbar.is-scrolled{
-    background:rgba(255,255,255,.82);
-    backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
-    box-shadow:0 12px 30px -24px rgba(180,140,130,.3);
+    background:
+      radial-gradient(160px 90px at 50% 30%,var(--sun-glow),transparent 72%),
+      radial-gradient(360px 200px at 50% 120%,rgba(251,224,217,.62),transparent 75%),
+      rgba(255,255,255,.82);
+    backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+    box-shadow:0 14px 32px -22px rgba(180,140,130,.32);
   }
   .topbar.is-scrolled::after{opacity:1}
   .topbar-inner{max-width:560px;margin:0 auto;padding:0 22px;display:flex;align-items:center;justify-content:center}
@@ -148,7 +155,8 @@
 
   /* ── 신청 폼 ── */
   .apply-section{text-align:center}
-  .apply-section > .section-title{text-align:center}
+  .apply-section .section-title{text-align:center}
+  .apply-card{background:var(--paper);border-radius:24px;padding:36px 28px;box-shadow:0 16px 36px -22px rgba(150,90,80,.4)}
   .apply-desc{margin:-14px 0 24px;color:var(--ink-soft);font-size:.92rem;line-height:1.7;text-align:center;word-break:keep-all}
   .apply-section .cta{padding:18px 48px;font-size:1.05rem;max-width:100%}
   .panel{background:var(--paper);border-radius:24px;padding:26px;box-shadow:0 18px 44px -22px rgba(150,90,80,.4)}
@@ -325,10 +333,11 @@
   }
 
   @media (max-width:480px){
-    .topbar{padding:8px 0}
+    .topbar{top:10px;left:10px;right:10px;padding:8px 0;border-radius:12px 12px 22px 22px}
     .topbar .brand img{height:40px;max-width:170px}
     .hero{padding-top:86px}
     .modal-overlay{padding:24px 12px}
+    .apply-card{padding:30px 20px}
     .official-footer{margin-top:84px}
     .official-footer::before{top:-14px;height:20px}
     .official-footer-inner{padding:30px 16px 26px}
@@ -451,9 +460,11 @@
 </section>
 
 <section class="wrap block apply-section">
-  <h2 class="section-title">원이야 베타 서비스 신청하기</h2>
-  <p class="apply-desc">신청 내용을 확인한 후 담당자가 연락드려<br>홈페이지 구성과 제작 과정, 이용 조건을 안내해드립니다.</p>
-  <button type="button" class="cta" id="applyOpenBtn">베타 서비스 신청하기</button>
+  <div class="apply-card">
+    <h2 class="section-title">원이야 베타 서비스 신청하기</h2>
+    <p class="apply-desc">신청 내용을 확인한 후 담당자가 연락드려<br>홈페이지 구성과 제작 과정, 이용 조건을 안내해드립니다.</p>
+    <button type="button" class="cta" id="applyOpenBtn">베타 서비스 신청하기</button>
+  </div>
 </section>
 </div>
 
