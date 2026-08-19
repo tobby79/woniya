@@ -104,6 +104,10 @@
     background:rgba(255,255,255,.82);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
     box-shadow:0 18px 42px -28px rgba(150,90,80,.55)
   }
+  .personal-toggle{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;background:none;border:none;padding:0;margin:0;cursor:pointer;font-family:var(--body);text-align:left}
+  .personal-toggle-text{font-weight:700;font-size:.96rem;color:var(--ink)}
+  .personal-toggle-arrow{flex:none;font-size:1rem;line-height:1;color:var(--coral-deep);transition:transform .25s ease}
+  .personal-collapsible{max-height:0;overflow:hidden;transition:max-height .3s ease;padding-top:16px}
   .personal-kicker{font-family:var(--hand);font-size:1.05rem;font-weight:700;color:var(--coral-deep)}
   .personal-title{font-family:var(--display);font-weight:400;font-size:1.45rem;line-height:1.35;margin-top:2px}
   .personal-lead{margin-top:5px;color:var(--ink-soft);font-size:.88rem}
@@ -134,8 +138,9 @@
   .search-bar button{flex:none;background:var(--coral-deep);color:#fff;border:none;border-radius:13px;padding:11px 18px;font-family:var(--body);font-weight:700;font-size:.95rem;cursor:pointer}
 
   /* ── 필터 칩 ── */
-  .chips{display:flex;gap:8px;flex-wrap:wrap;padding:14px 0 0}
-  .chip{background:var(--paper);border:.5px solid rgba(63,42,44,.12);color:var(--ink);font-size:.84rem;padding:8px 14px;border-radius:30px;cursor:pointer}
+  .chips{display:flex;gap:8px;flex-wrap:nowrap;justify-content:flex-start;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;-ms-overflow-style:none;padding:8px 0 0}
+  .chips::-webkit-scrollbar{display:none}
+  .chip{flex:0 0 auto;background:var(--paper);border:.5px solid rgba(63,42,44,.12);color:var(--ink);font-size:.84rem;padding:8px 14px;border-radius:30px;cursor:pointer}
   .chip.on{background:var(--blush);border-color:transparent;color:var(--coral-deep);font-weight:700}
 
   /* ── 결과 헤더 ── */
@@ -276,7 +281,7 @@
     .search-hero h1{font-size:2.4rem}
     .search-hero p{font-size:1rem}
     .search-bar{margin:34px auto 0;max-width:480px}
-    .chips{justify-content:center;margin:0 auto}
+    .chips{max-width:480px;margin:0 auto}
 
     .wrap{max-width:1100px;padding:0 40px}
     .results-head{padding:36px 0 14px}
@@ -359,11 +364,17 @@
 </section>
 
 <section class="personal-wrap" id="personalStart" aria-labelledby="personalStartTitle" hidden>
-  <div class="personal-start">
-    <div class="personal-kicker">내 원이야</div>
-    <h2 class="personal-title" id="personalStartTitle">연결된 우리 원과 우리 반</h2>
-    <p class="personal-lead">로그인한 계정으로 바로 갈 수 있는 공간을 모았어요.</p>
-    <div class="personal-content" id="personalContent" aria-live="polite"></div>
+  <div class="personal-start" id="personalStartCard">
+    <button type="button" class="personal-toggle" id="personalToggle" aria-expanded="false" aria-controls="personalCollapsible">
+      <span class="personal-toggle-text" id="personalToggleText">내 원이야</span>
+      <span class="personal-toggle-arrow" id="personalToggleArrow" aria-hidden="true">▾</span>
+    </button>
+    <div class="personal-collapsible" id="personalCollapsible">
+      <div class="personal-kicker">내 원이야</div>
+      <h2 class="personal-title" id="personalStartTitle">연결된 우리 원과 우리 반</h2>
+      <p class="personal-lead">로그인한 계정으로 바로 갈 수 있는 공간을 모았어요.</p>
+      <div class="personal-content" id="personalContent" aria-live="polite"></div>
+    </div>
   </div>
 </section>
 
@@ -460,7 +471,13 @@
   const headerAuth = document.getElementById('headerAuth');
   const headerLogoutBtn = document.getElementById('headerLogoutBtn');
   const personalStart = document.getElementById('personalStart');
+  const personalStartCard = document.getElementById('personalStartCard');
+  const personalToggle = document.getElementById('personalToggle');
+  const personalToggleText = document.getElementById('personalToggleText');
+  const personalToggleArrow = document.getElementById('personalToggleArrow');
+  const personalCollapsible = document.getElementById('personalCollapsible');
   const personalContent = document.getElementById('personalContent');
+  let personalExpanded = false;
   const pageCache = window.__WONIYA_INDEX_CACHE || (window.__WONIYA_INDEX_CACHE = {
     centers: null,
     signedUrls: new Map()
@@ -489,27 +506,57 @@
     headerLogoutBtn.textContent = '로그아웃';
   }
 
+  function syncPersonalCollapsibleHeight(){
+    personalCollapsible.style.maxHeight = personalExpanded ? (personalCollapsible.scrollHeight + 'px') : '0px';
+  }
+
+  function setPersonalExpanded(expanded){
+    personalExpanded = expanded;
+    personalStartCard.classList.toggle('is-expanded', expanded);
+    personalToggle.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+    personalToggleArrow.textContent = expanded ? '▴' : '▾';
+    syncPersonalCollapsibleHeight();
+  }
+
+  function updatePersonalToggleSummary(hasOwner, ownerCount, hasParent, parentCount){
+    var parts = [];
+    if (hasOwner) parts.push('원 ' + ownerCount + '개');
+    if (hasParent) parts.push('반 ' + parentCount + '개');
+    personalToggleText.textContent = parts.length ? ('내 원이야 · ' + parts.join(', ') + ' 연결됨') : '내 원이야';
+  }
+
+  personalToggle.addEventListener('click', function(){
+    setPersonalExpanded(!personalExpanded);
+  });
+
   function showPersonalLoading(){
     personalStart.hidden = false;
+    setPersonalExpanded(false);
+    updatePersonalToggleSummary(false, 0, false, 0);
     personalContent.innerHTML = '<div class="personal-state"><strong>연결 정보를 확인하고 있어요.</strong>잠시만 기다려 주세요.</div>';
+    syncPersonalCollapsibleHeight();
   }
 
   function showPersonalEmpty(){
+    updatePersonalToggleSummary(false, 0, false, 0);
     personalContent.innerHTML =
       '<div class="personal-state">' +
         '<strong>현재 연결된 우리 원 또는 우리 반이 없습니다.</strong>' +
         '초대나 연결 상태는 역할별 시작 화면에서 확인할 수 있어요.' +
         '<a class="personal-state-link" href="/app-start.html">시작 화면에서 확인하기</a>' +
       '</div>';
+    syncPersonalCollapsibleHeight();
   }
 
   function showPersonalError(){
+    updatePersonalToggleSummary(false, 0, false, 0);
     personalContent.innerHTML =
       '<div class="personal-state error">' +
         '<strong>연결 정보를 불러오지 못했어요.</strong>' +
         '잠시 후 새로고침하거나 역할별 시작 화면에서 다시 확인해 주세요.' +
         '<a class="personal-state-link" href="/app-start.html">시작 화면으로 가기</a>' +
       '</div>';
+    syncPersonalCollapsibleHeight();
   }
 
   function roleHeading(title, count){
@@ -635,6 +682,7 @@
     if (!session || !session.user) {
       personalStart.hidden = true;
       personalContent.innerHTML = '';
+      setPersonalExpanded(false);
       return;
     }
 
@@ -650,6 +698,7 @@
         showPersonalEmpty();
         return;
       }
+      updatePersonalToggleSummary(hasOwner, connections.ownerCenterIds.length, hasParent, connections.parentClassSummaries.length);
 
       var detailResults = await Promise.allSettled([
         hasOwner
@@ -678,6 +727,7 @@
       }
       if (hasParent) sections.push(parentSectionMarkup(connections.parentClassSummaries));
       personalContent.innerHTML = '<div class="personal-role-list">' + sections.join('') + '</div>';
+      syncPersonalCollapsibleHeight();
     } catch (error) {
       if (generation !== personalUiGeneration || (error && error.code === 'STALE_REQUEST')) return;
       console.error('personal start load failed', error);
