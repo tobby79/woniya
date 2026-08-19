@@ -71,9 +71,13 @@
     position:fixed;top:0;left:0;right:0;z-index:50;
     padding:10px 0;background:transparent;
     box-shadow:none;
-    transition:background .22s ease,box-shadow .22s ease;
+    transition:background .22s ease,box-shadow .22s ease,backdrop-filter .22s ease,-webkit-backdrop-filter .22s ease;
   }
-  .topbar.is-scrolled{background:#fff;box-shadow:0 1px 0 rgba(180,140,130,.14)}
+  .topbar.is-scrolled{
+    background:rgba(255,255,255,.82);
+    backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+    box-shadow:0 12px 30px -24px rgba(180,140,130,.3);
+  }
   .topbar-inner{max-width:560px;margin:0 auto;padding:0 22px;display:flex;align-items:center;justify-content:center}
   .topbar .brand{display:flex;align-items:center;justify-content:center;text-decoration:none;min-width:0}
   .topbar .brand img{display:block;height:44px;width:auto;max-width:190px;object-fit:contain}
@@ -83,12 +87,15 @@
   .hero .eyebrow{font-family:var(--hand);font-weight:700;color:var(--coral-deep);font-size:1.2rem;margin-bottom:10px}
   .hero h1{font-family:var(--display);font-weight:400;font-size:2.2rem;line-height:1.32;letter-spacing:-.5px}
   .hero p{margin-top:16px;color:var(--ink-soft);font-size:.96rem;line-height:1.7}
-  .hero .cta{
-    display:inline-block;margin-top:28px;background:var(--coral-deep);color:#fff;
+  .cta{
+    display:inline-flex;align-items:center;justify-content:center;border:none;cursor:pointer;
+    font-family:var(--body);background:var(--coral-deep);color:#fff;
     font-weight:700;font-size:1rem;padding:16px 36px;border-radius:50px;text-decoration:none;
     box-shadow:0 16px 34px -10px rgba(219,107,84,.55);transition:transform .2s ease;
   }
-  .hero .cta:hover{transform:translateY(-2px)}
+  .cta:hover{transform:translateY(-2px)}
+  .hero .cta{margin-top:28px}
+  .apply-section .cta{margin-top:6px}
 
   /* ── 공통 섹션 ── */
   .block{padding-top:80px;padding-bottom:80px}
@@ -130,7 +137,7 @@
   .price-card .price-label{font-family:var(--hand);font-weight:700;color:var(--coral-deep);font-size:1.05rem;margin-bottom:8px}
   .price-card .price-value{font-family:var(--display);font-size:1.3rem;letter-spacing:-.3px}
   .price-card .price-desc{margin-top:10px;color:var(--ink-soft);font-size:.88rem;line-height:1.65}
-  .price-note{text-align:center;margin-top:18px;color:var(--coral-deep);font-weight:700;font-size:.95rem;line-height:1.7}
+  .price-note{text-align:center;margin-top:18px;color:var(--ink-soft);font-weight:500;font-size:.88rem;line-height:1.7}
 
   /* ── 신청 폼 ── */
   .apply-section > .section-title{text-align:center}
@@ -166,6 +173,27 @@
   .btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
   .msg{margin-top:14px;font-size:.86rem;text-align:center}
   .msg.error{color:#D9534F}
+
+  /* ── 신청 모달 ── */
+  .modal-overlay{
+    position:fixed;inset:0;z-index:100;
+    background:rgba(63,42,44,.42);
+    display:flex;align-items:flex-start;justify-content:center;
+    padding:40px 16px;overflow-y:auto;-webkit-overflow-scrolling:touch;
+  }
+  .modal-overlay[hidden]{display:none}
+  .modal-panel{position:relative;width:min(100%,560px)}
+  .panel.modal-panel{padding-top:56px}
+  .modal-close{
+    position:absolute;top:14px;right:14px;
+    display:inline-flex;align-items:center;justify-content:center;
+    width:40px;height:40px;border:none;border-radius:50%;
+    background:rgba(63,42,44,.06);color:var(--ink-soft);
+    font-size:1.3rem;line-height:1;cursor:pointer;
+    transition:background .2s ease,color .2s ease;
+  }
+  .modal-close:hover{background:rgba(63,42,44,.12);color:var(--ink)}
+  body.modal-open{overflow:hidden}
   .application-success{
     min-height:calc(100vh - 82px);padding:72px 24px 96px;
     display:flex;align-items:flex-start;justify-content:center;text-align:center;
@@ -222,6 +250,7 @@
     .topbar{padding:8px 0}
     .topbar .brand img{height:40px;max-width:170px}
     .hero{padding-top:86px}
+    .modal-overlay{padding:24px 12px}
   }
 
 </style>
@@ -247,7 +276,7 @@
   <div class="eyebrow">어린이집 원장님께</div>
   <h1>우리 원의 이야기를 담은<br>따뜻한 홈페이지를 만들어보세요</h1>
   <p>부담을 낮춘 제작 방식으로<br>우리 원에 꼭 맞는 홈페이지를 만들어드려요.</p>
-  <a class="cta" href="#applyForm">베타 서비스 신청하기</a>
+  <a class="cta" href="#applyForm" id="heroApplyTrigger">베타 서비스 신청하기</a>
 </section>
 
 <section class="wrap block pain-section">
@@ -338,7 +367,13 @@
 <section class="wrap block apply-section">
   <h2 class="section-title">원이야 베타 서비스 신청하기</h2>
   <p class="apply-desc">신청 내용을 확인한 후 담당자가 연락드려<br>홈페이지 구성과 제작 과정, 이용 조건을 안내해드립니다.</p>
-  <div class="panel">
+  <button type="button" class="cta" id="applyOpenBtn">베타 서비스 신청하기</button>
+</section>
+</div>
+
+<div class="modal-overlay" id="applyModalOverlay" hidden>
+  <div class="panel modal-panel" id="applyModalPanel" role="dialog" aria-modal="true" aria-label="원이야 베타 서비스 신청하기" tabindex="-1">
+    <button type="button" class="modal-close" id="applyModalClose" aria-label="닫기">×</button>
     <form id="applyForm">
       <div class="field">
         <label for="ap-center">원 이름 *</label>
@@ -381,7 +416,6 @@
       <div class="msg error" id="applyError"></div>
     </form>
   </div>
-</section>
 </div>
 
 <main class="application-success" id="applicationSuccess" tabindex="-1" hidden>
@@ -412,6 +446,62 @@
 })();
 
 (function(){
+  var overlay    = document.getElementById('applyModalOverlay');
+  var panel      = document.getElementById('applyModalPanel');
+  var closeBtn   = document.getElementById('applyModalClose');
+  var heroTrigger    = document.getElementById('heroApplyTrigger');
+  var sectionTrigger = document.getElementById('applyOpenBtn');
+  if (!overlay || !panel || !closeBtn) return;
+
+  var isOpen = false;
+  var lastTrigger = null;
+
+  function open(trigger){
+    lastTrigger = trigger || null;
+    overlay.hidden = false;
+    document.body.classList.add('modal-open');
+    isOpen = true;
+    window.requestAnimationFrame(function(){
+      var firstField = document.getElementById('ap-center');
+      (firstField || panel).focus({ preventScroll:true });
+    });
+  }
+
+  function close(options){
+    if (!isOpen) return;
+    isOpen = false;
+    overlay.hidden = true;
+    document.body.classList.remove('modal-open');
+    var skipFocusReturn = !!(options && options.skipFocusReturn);
+    if (!skipFocusReturn && lastTrigger && typeof lastTrigger.focus === 'function') {
+      lastTrigger.focus();
+    }
+    lastTrigger = null;
+  }
+
+  if (heroTrigger) {
+    heroTrigger.addEventListener('click', function(e){
+      e.preventDefault();
+      open(heroTrigger);
+    });
+  }
+  if (sectionTrigger) {
+    sectionTrigger.addEventListener('click', function(){
+      open(sectionTrigger);
+    });
+  }
+  closeBtn.addEventListener('click', function(){ close(); });
+  overlay.addEventListener('click', function(e){
+    if (e.target === overlay) close();
+  });
+  document.addEventListener('keydown', function(e){
+    if (isOpen && e.key === 'Escape') close();
+  });
+
+  window.WoniyaApplyModal = { close: close };
+})();
+
+(function(){
   var cfg = window.__SUPABASE_CONFIG__;
   var client = supabase.createClient(cfg.url, cfg.anonKey);
 
@@ -424,6 +514,7 @@
   var submissionSucceeded = false;
 
   function showApplicationSuccess(){
+    if (window.WoniyaApplyModal) window.WoniyaApplyModal.close({ skipFocusReturn:true });
     applicationContent.hidden = true;
     applicationSuccess.hidden = false;
     applicationSuccess.focus({ preventScroll:true });
