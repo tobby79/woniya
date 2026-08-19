@@ -15,25 +15,56 @@
     --ink-soft:#7D716A;
     --line:#E9DED3;
     --sage:#78947C;
+    --base:#FFF5F1;
+    --sky-top:#FDE3DA;
+    --sky-bottom:#FFF5F1;
+    --sun-x:18%;
+    --sun-y:14%;
+    --sun-color:#FFD9B0;
+    --sun-glow:rgba(255,200,170,.5);
   }
   *{box-sizing:border-box}
   html,body{min-height:100%;margin:0}
   body{
     min-width:0;
     overflow-x:hidden;
-    background:
-      radial-gradient(circle at 16% 12%,rgba(255,138,107,.13),transparent 30%),
-      radial-gradient(circle at 88% 88%,rgba(120,148,124,.12),transparent 32%),
-      var(--cream);
+    background:var(--base);
     color:var(--ink);
     font-family:"Apple SD Gothic Neo","Noto Sans KR","Malgun Gothic",sans-serif;
-  }
-  main{
+    display:flex;
+    flex-direction:column;
     min-height:100vh;
     min-height:100dvh;
+  }
+
+  /* ── 빛의 흐름 배경: index.html과 통일 ── */
+  .stage{position:fixed;inset:0;overflow:hidden;z-index:-1}
+  .sky{position:absolute;inset:0;background:linear-gradient(180deg,var(--sky-top) 0%,var(--sky-bottom) 70%)}
+  .sun{
+    position:absolute;width:220px;height:220px;border-radius:50%;
+    left:var(--sun-x);top:var(--sun-y);transform:translate(-50%,-50%);
+    background:radial-gradient(circle at 50% 50%,var(--sun-color) 0%,var(--sun-color) 38%,transparent 70%);
+    box-shadow:0 0 110px 60px var(--sun-glow);pointer-events:none;
+  }
+  .cloud{position:absolute;pointer-events:none;color:#fff;opacity:.75;filter:drop-shadow(0 6px 14px rgba(0,0,0,.04))}
+  .cloud svg{display:block}
+
+  /* ── 헤더 ── */
+  .app-header{
+    flex:none;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:calc(14px + env(safe-area-inset-top)) 18px 10px;
+  }
+  .app-header .brand{display:inline-flex;align-items:center;text-decoration:none}
+  .app-header .brand img{display:block;height:40px;width:auto;max-width:170px;object-fit:contain}
+
+  main{
+    flex:1;
     display:grid;
     place-items:center;
-    padding:calc(24px + env(safe-area-inset-top)) 18px calc(24px + env(safe-area-inset-bottom));
+    padding:12px 18px calc(24px + env(safe-area-inset-bottom));
   }
   .start-card{
     width:min(100%,430px);
@@ -126,6 +157,9 @@
   .action-button:focus-visible{outline:3px solid rgba(255,138,107,.32);outline-offset:3px}
   .action-button:disabled{cursor:default;opacity:.58}
   @keyframes spin{to{transform:rotate(360deg)}}
+  @media (min-width:768px){
+    .sun{width:340px;height:340px}
+  }
   @media (max-width:360px){
     main{padding-left:12px;padding-right:12px}
     .start-card{padding:30px 18px 24px;border-radius:24px}
@@ -137,6 +171,18 @@
 </style>
 </head>
 <body>
+
+<div class="stage" aria-hidden="true">
+  <div class="sky"></div>
+  <div class="sun"></div>
+  <div class="cloud" style="top:13%;left:70%"><svg width="110" height="46" viewBox="0 0 120 50"><ellipse cx="40" cy="32" rx="34" ry="18" fill="white"/><ellipse cx="72" cy="26" rx="26" ry="20" fill="white"/><ellipse cx="92" cy="34" rx="22" ry="14" fill="white"/></svg></div>
+  <div class="cloud" style="top:38%;left:6%"><svg width="84" height="38" viewBox="0 0 90 40"><ellipse cx="30" cy="26" rx="26" ry="13" fill="white"/><ellipse cx="56" cy="20" rx="20" ry="15" fill="white"/></svg></div>
+</div>
+
+<header class="app-header">
+  <a class="brand" href="/index.html"><img src="/assets/woniya-logo.png" alt="원이야"></a>
+</header>
+
 <main>
   <section class="start-card" aria-labelledby="startBrand">
     <img class="brand-logo" id="startBrand" src="/assets/woniya-logo.png" alt="원이야">
