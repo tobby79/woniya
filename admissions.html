@@ -853,7 +853,7 @@
       </form>
     </div>
 
-    <div id="cslDoneWrap" hidden>
+    <div id="cslDoneWrap" hidden tabindex="-1" aria-live="polite">
       <p class="csl-done">접수되었습니다.<br>곧 연락드릴게요.</p>
     </div>
   </div>
@@ -1029,6 +1029,8 @@ var TEMPLATE_FILES = { sunshine:'template-sunshine.html', forest:'template-fores
       doneWrap.hidden = true;
       form.reset();
       errorEl.textContent = '';
+      var firstField = document.getElementById('csl-name');
+      if (firstField) firstField.focus();
     }
     function closeModal(){
       overlay.classList.remove('open');
@@ -1069,9 +1071,22 @@ var TEMPLATE_FILES = { sunshine:'template-sunshine.html', forest:'template-fores
       };
 
       var submitBtn = form.querySelector('.csl-submit');
+      var originalBtnText = submitBtn.textContent;
       submitBtn.disabled = true;
-      var result = await client.from('consultations').insert(payload);
+      submitBtn.textContent = '접수하는 중...';
+
+      var result;
+      try {
+        result = await client.from('consultations').insert(payload);
+      } catch (err) {
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalBtnText;
+        errorEl.textContent = '접수 중 문제가 생겼어요. 다시 시도해주세요.';
+        return;
+      }
+
       submitBtn.disabled = false;
+      submitBtn.textContent = originalBtnText;
 
       if (result.error){
         console.error(result.error);
@@ -1081,6 +1096,7 @@ var TEMPLATE_FILES = { sunshine:'template-sunshine.html', forest:'template-fores
 
       formWrap.hidden = true;
       doneWrap.hidden = false;
+      doneWrap.focus();
     });
   }
 
