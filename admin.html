@@ -90,6 +90,11 @@
   input:focus,textarea:focus{border-color:var(--coral)}
   textarea{resize:vertical;min-height:90px;line-height:1.6}
 
+  .password-field-wrap{position:relative}
+  .password-field-wrap input{padding-right:44px}
+  .password-toggle-btn{position:absolute;top:50%;right:12px;transform:translateY(-50%);background:none;border:none;padding:4px;cursor:pointer;color:var(--ink-soft);display:flex;align-items:center;justify-content:center}
+  .password-toggle-btn:hover{color:var(--ink)}
+
   .btn{
     display:inline-flex;align-items:center;justify-content:center;
     width:100%;min-height:46px;border:none;border-radius:999px;padding:13px 18px;
@@ -554,7 +559,13 @@
         </div>
         <div class="field">
           <label for="password">비밀번호</label>
-          <input type="password" id="password" required autocomplete="current-password">
+          <div class="password-field-wrap">
+            <input type="password" id="password" required autocomplete="current-password">
+            <button type="button" class="password-toggle-btn" id="passwordToggleBtn" aria-label="비밀번호 표시">
+              <svg id="passwordToggleIconShow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              <svg id="passwordToggleIconHide" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" hidden><path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8a18.5 18.5 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+            </button>
+          </div>
         </div>
         <button type="submit" class="btn">로그인</button>
         <div class="msg error" id="loginError"></div>
@@ -582,7 +593,7 @@
     </div>
 
     <div class="no-center" id="noCenter" hidden>
-      이 계정에 연결된 원이 아직 없어요.<br>관리자에게 문의해주세요.
+      이 계정에 연결된 원이 아직 없어요.<br>온보딩이 아직 진행 중이거나 계정 연결에 문제가 있을 수 있어요.<br>드림파파(운영팀)에게 문의해주세요.
     </div>
 
     <section class="owner-center-choices" id="ownerCenterChoices" aria-labelledby="ownerCenterChoicesTitle" hidden>
@@ -1103,6 +1114,18 @@
   var currentTemplateBadge = document.getElementById('currentTemplateBadge');
   var loginForm    = document.getElementById('loginForm');
   var loginError   = document.getElementById('loginError');
+  var passwordToggleBtn = document.getElementById('passwordToggleBtn');
+  var passwordToggleIconShow = document.getElementById('passwordToggleIconShow');
+  var passwordToggleIconHide = document.getElementById('passwordToggleIconHide');
+  var passwordInputEl = document.getElementById('password');
+
+  passwordToggleBtn.addEventListener('click', function(){
+    var isPassword = passwordInputEl.type === 'password';
+    passwordInputEl.type = isPassword ? 'text' : 'password';
+    passwordToggleIconShow.hidden = isPassword;
+    passwordToggleIconHide.hidden = !isPassword;
+    passwordToggleBtn.setAttribute('aria-label', isPassword ? '비밀번호 숨기기' : '비밀번호 표시');
+  });
   var logoutBtn    = document.getElementById('logoutBtn');
   var noCenter     = document.getElementById('noCenter');
   var ownerCenterChoices = document.getElementById('ownerCenterChoices');
@@ -6206,7 +6229,7 @@
     else loadCenter(session.user.id, initializedAuthIdentityKey);
   }
 
-  var OWNER_NO_CENTER_MESSAGE = '이 계정에 연결된 원이 아직 없어요.\n관리자에게 문의해주세요.';
+  var OWNER_NO_CENTER_MESSAGE = '이 계정에 연결된 원이 아직 없어요.\n온보딩이 아직 진행 중이거나 계정 연결에 문제가 있을 수 있어요.\n드림파파(운영팀)에게 문의해주세요.';
   var OWNER_UNAVAILABLE_MESSAGE = '이 계정으로 관리할 수 없는 원이거나 존재하지 않는 원입니다.';
 
   function resetOwnerCenterChoiceUi(){
@@ -6353,10 +6376,17 @@
     loginError.textContent = '';
     var email    = document.getElementById('email').value;
     var password = document.getElementById('password').value;
-    var res = await client.auth.signInWithPassword({ email:email, password:password });
+    var res;
+    try {
+      res = await client.auth.signInWithPassword({ email:email, password:password });
+    } catch (err) {
+      logAdminError('login', err);
+      loginError.textContent = '로그인 중 문제가 생겼어요. 잠시 후 다시 시도해주세요.';
+      return;
+    }
     if (res.error){
       logAdminError('login', res.error);
-      loginError.textContent = '로그인에 실패했어요: ' + res.error.message;
+      loginError.textContent = '이메일 또는 비밀번호를 확인해주세요.';
     }
   });
 
