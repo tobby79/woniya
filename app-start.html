@@ -66,14 +66,15 @@
   }
   .back-link{
     position:absolute;top:10px;left:10px;
-    display:inline-flex;align-items:center;justify-content:center;
-    width:40px;height:40px;
-    border-radius:50%;
+    display:inline-flex;align-items:center;gap:6px;
+    padding:8px 14px 8px 10px;
+    border-radius:999px;
     color:var(--ink-soft);
     text-decoration:none;
     transition:background .2s ease,color .2s ease;
   }
-  .back-link svg{width:22px;height:22px;display:block}
+  .back-link svg{width:22px;height:22px;display:block;flex:none}
+  .back-link span{font-size:.85rem;font-weight:700;line-height:1.2}
   .back-link:hover{background:rgba(64,55,51,.07);color:var(--ink)}
   .back-link:focus-visible{outline:3px solid rgba(255,138,107,.32);outline-offset:2px;background:rgba(64,55,51,.07)}
   .brand-logo{
@@ -183,7 +184,7 @@
 <main>
   <section class="start-card" aria-labelledby="startBrand">
     <a class="back-link" href="/index.html" aria-label="홈으로 돌아가기">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 6 9 12 15 18"></polyline></svg>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 6 9 12 15 18"></polyline></svg><span>홈으로</span>
     </a>
     <img class="brand-logo" id="startBrand" src="/assets/woniya-logo.png" alt="원이야">
     <p class="brand-note">우리 원과 반을 잇는 따뜻한 공간</p>
