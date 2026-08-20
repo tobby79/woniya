@@ -37,9 +37,12 @@
     line-height:1.6;
     -webkit-font-smoothing:antialiased;
     min-height:100vh;
+    display:flex;
+    flex-direction:column;
   }
 
   .topbar{
+    flex:none;
     position:sticky;top:0;left:0;right:0;z-index:40;
     padding:12px 0;
     background:linear-gradient(180deg,rgba(255,255,255,.8) 0%,rgba(255,247,241,.68) 100%);
@@ -74,6 +77,7 @@
   .topbar-link i{font-size:1rem;line-height:1}
 
   .wrap{max-width:1180px;margin:0 auto;padding:34px 24px 68px}
+  body.login-open .wrap{flex:1;display:flex;flex-direction:column;justify-content:center}
 
   [hidden]{display:none!important}
 
@@ -552,7 +556,7 @@
 
 </style>
 </head>
-<body>
+<body class="login-open">
 
 <nav class="topbar">
   <div class="topbar-inner">
@@ -6233,6 +6237,7 @@
     resetOwnerCenterChoiceUi();
     loginView.hidden = false;
     adminView.hidden = true;
+    document.body.classList.add('login-open');
     whoBox.hidden = true;
     centerLinks.hidden = true;
     if (topbarTitleEl) topbarTitleEl.textContent = '우리 원 관리';
@@ -6252,6 +6257,7 @@
     resetOwnerCenterChoiceUi();
     loginView.hidden = true;
     adminView.hidden = false;
+    document.body.classList.remove('login-open');
     whoBox.hidden = false;
     if (topbarTitleEl) topbarTitleEl.textContent = '우리 원 관리';
     userEmailEl.textContent = session.user.email;
