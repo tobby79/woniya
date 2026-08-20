@@ -62,10 +62,20 @@
   .cloud svg{display:block}
 
   #topbar{flex:none}
-  #topbar.topbar-compact{position:sticky;top:0;z-index:20;background:rgba(255,255,255,.72);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);box-shadow:0 8px 20px -16px rgba(120,80,60,.25)}
-  #topbar.topbar-compact > .wrap{width:100%;max-width:480px;margin:0 auto;padding-left:22px;padding-right:22px}
+  #topbar.topbar-compact{
+    position:sticky;top:0;z-index:20;
+    background:linear-gradient(180deg,rgba(255,255,255,.8) 0%,rgba(255,247,241,.68) 100%);
+    backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+    box-shadow:0 12px 24px -18px rgba(219,107,84,.22);
+  }
+  #topbar.topbar-compact > .wrap{position:relative;width:100%;max-width:480px;margin:0 auto;padding-left:22px;padding-right:22px}
   body.mini-open #topbar.topbar-compact > .wrap{max-width:760px}
-  #topbar.topbar-compact .brand{font-family:var(--display);color:var(--ink);text-decoration:none;letter-spacing:-.5px;text-align:center}
+  #topbar.topbar-compact .brand{
+    position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+    max-width:min(60%,220px);
+    font-family:var(--display);color:var(--ink);text-decoration:none;letter-spacing:-.5px;text-align:center;
+  }
+  #topbar.topbar-compact .topbar-actions{margin-left:auto}
   #topbar.topbar-compact #logoutBtn{flex:0 0 auto;padding:7px 12px;white-space:nowrap}
 
   .parent-wrap{max-width:480px;margin:0 auto;padding:38px 22px 70px}
