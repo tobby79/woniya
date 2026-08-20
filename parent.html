@@ -27,6 +27,13 @@
     --display:'Gowun Dodum',sans-serif;
     --hand:'Gaegu',cursive;
     --body:'Pretendard',sans-serif;
+    --base:#FFF5F1;
+    --sky-top:#FDE3DA;
+    --sky-bottom:#FFF5F1;
+    --sun-x:18%;
+    --sun-y:14%;
+    --sun-color:#FFD9B0;
+    --sun-glow:rgba(255,200,170,.5);
   }
 
   *{margin:0;padding:0;box-sizing:border-box}
@@ -34,12 +41,27 @@
     min-height:100vh;
     font-family:var(--body);
     color:var(--ink);
-    background:var(--cream);
+    background:var(--base);
     line-height:1.6;
     -webkit-font-smoothing:antialiased;
+    display:flex;
+    flex-direction:column;
   }
   [hidden]{display:none!important}
 
+  /* ── 빛의 흐름 배경: index.html과 통일 ── */
+  .stage{position:fixed;inset:0;overflow:hidden;z-index:-1}
+  .sky{position:absolute;inset:0;background:linear-gradient(180deg,var(--sky-top) 0%,var(--sky-bottom) 70%)}
+  .sun{
+    position:absolute;width:220px;height:220px;border-radius:50%;
+    left:var(--sun-x);top:var(--sun-y);transform:translate(-50%,-50%);
+    background:radial-gradient(circle at 50% 50%,var(--sun-color) 0%,var(--sun-color) 38%,transparent 70%);
+    box-shadow:0 0 110px 60px var(--sun-glow);pointer-events:none;
+  }
+  .cloud{position:absolute;pointer-events:none;color:#fff;opacity:.75;filter:drop-shadow(0 6px 14px rgba(0,0,0,.04))}
+  .cloud svg{display:block}
+
+  #topbar{flex:none}
   #topbar.topbar-compact{position:sticky;top:0;z-index:20;background:rgba(255,255,255,.94);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
   #topbar.topbar-compact > .wrap{width:100%;max-width:480px;margin:0 auto;padding-left:22px;padding-right:22px}
   body.mini-open #topbar.topbar-compact > .wrap{max-width:760px}
@@ -47,6 +69,9 @@
   #topbar.topbar-compact #logoutBtn{flex:0 0 auto;padding:7px 12px;white-space:nowrap}
 
   .parent-wrap{max-width:480px;margin:0 auto;padding:38px 22px 70px}
+  body:not(.mini-open) .parent-wrap{flex:1;display:flex;flex-direction:column;justify-content:center}
+  .auth-gate{background:var(--paper);border-radius:24px;padding:32px 26px;box-shadow:0 18px 44px -22px rgba(120,80,60,.35)}
+  .auth-gate .panel{background:transparent;box-shadow:none;padding:0;border-radius:0}
   .section-eyebrow{font-family:var(--hand);font-size:1.15rem;color:var(--sage);font-weight:700;text-align:center}
   .section-title{font-family:var(--display);font-size:1.72rem;margin:8px 0 22px;letter-spacing:-.5px;line-height:1.38;text-align:center}
   .lead{color:var(--ink-soft);font-size:.95rem;text-align:center;margin-bottom:24px}
@@ -84,9 +109,7 @@
   .class-actions{margin-top:14px}
   .extra-invite{margin-top:18px;padding-top:18px;border-top:1px solid var(--line)}
   body.mini-open .parent-wrap{max-width:760px;padding-top:24px}
-  body.mini-open .parent-wrap > .section-eyebrow,
-  body.mini-open .parent-wrap > .section-title,
-  body.mini-open .parent-wrap > .lead{display:none}
+  body.mini-open #authGate{display:none}
   .mini-panel{background:transparent;box-shadow:none;padding:0}
   .mini-hero{min-width:0;margin-bottom:14px;padding:16px;border:1.5px solid var(--line);border-radius:30px;background:var(--paper);box-shadow:0 18px 44px -30px rgba(120,80,60,.5)}
   .parent-home-screen-area{display:flex;justify-content:flex-end;min-width:0;margin:-4px 0 8px}
@@ -390,6 +413,7 @@
     .mini-tab{padding:7px 2px;font-size:.72rem;line-height:1.15}
   }
   @media (min-width:768px){
+    .sun{width:340px;height:340px}
     .mini-summary-grid.has-cards{grid-template-columns:repeat(auto-fit,minmax(220px,1fr));align-items:stretch}
     .mini-summary-grid.has-cards .notice-alert,.mini-summary-grid.has-cards .event-teaser{height:100%}
   }
@@ -401,65 +425,74 @@
 </head>
 <body>
 
+<div class="stage" aria-hidden="true">
+  <div class="sky"></div>
+  <div class="sun"></div>
+  <div class="cloud" style="top:13%;left:70%"><svg width="110" height="46" viewBox="0 0 120 50"><ellipse cx="40" cy="32" rx="34" ry="18" fill="white"/><ellipse cx="72" cy="26" rx="26" ry="20" fill="white"/><ellipse cx="92" cy="34" rx="22" ry="14" fill="white"/></svg></div>
+  <div class="cloud" style="top:38%;left:6%"><svg width="84" height="38" viewBox="0 0 90 40"><ellipse cx="30" cy="26" rx="26" ry="13" fill="white"/><ellipse cx="56" cy="20" rx="20" ry="15" fill="white"/></svg></div>
+</div>
+
 <button type="button" class="btn ghost small" id="logoutBtn" hidden>로그아웃</button>
 
 <main class="parent-wrap">
-  <div class="section-eyebrow">학부모 공간</div>
-  <h1 class="section-title">우리 반 소식을<br>안전하게 확인해요</h1>
-  <p class="lead" id="leadText"></p>
+  <div class="auth-gate" id="authGate">
+    <div class="section-eyebrow">학부모 공간</div>
+    <h1 class="section-title">우리 반 소식을<br>안전하게 확인해요</h1>
+    <p class="lead" id="leadText"></p>
 
-  <section class="panel" id="loadingPanel">
-    <p class="msg">세션을 확인하고 있어요.</p>
-  </section>
+    <section class="panel" id="loadingPanel">
+      <p class="msg">세션을 확인하고 있어요.</p>
+    </section>
 
-  <section class="panel" id="authPanel" hidden>
-    <button type="button" class="btn kakao" id="kakaoLoginBtn">카카오로 3초만에 시작하기</button>
-    <p class="auth-consent">카카오 로그인 시 <a href="/privacy.html" target="_blank" rel="noopener">개인정보처리방침</a>에 따라 정보가 수집·이용됩니다.</p>
-    <div class="msg error" id="authMsg"></div>
-  </section>
+    <section class="panel" id="authPanel" hidden>
+      <button type="button" class="btn kakao" id="kakaoLoginBtn">카카오로 3초만에 시작하기</button>
+      <p class="auth-consent">카카오 로그인 시 <a href="/privacy.html" target="_blank" rel="noopener">개인정보처리방침</a>에 따라 정보가 수집·이용됩니다.</p>
+      <div class="msg error" id="authMsg"></div>
+    </section>
 
-  <section class="panel" id="invitePanel" hidden>
-    <form id="inviteForm">
-      <div class="field">
-        <label for="inviteCode">초대 코드</label>
-        <input type="text" id="inviteCode" required autocomplete="one-time-code" placeholder="선생님이 알려준 초대 코드">
+    <section class="panel" id="invitePanel" hidden>
+      <form id="inviteForm">
+        <div class="field">
+          <label for="inviteCode">초대 코드</label>
+          <input type="text" id="inviteCode" required autocomplete="one-time-code" placeholder="선생님이 알려준 초대 코드">
+        </div>
+        <div class="field">
+          <label for="inviteChildName">아이 이름</label>
+          <input type="text" id="inviteChildName" required autocomplete="off" placeholder="반에 다니는 아이 이름">
+        </div>
+        <button type="submit" class="btn" id="inviteSubmit">연결 신청</button>
+        <div class="msg error" id="inviteMsg"></div>
+      </form>
+    </section>
+
+    <section class="panel" id="pendingPanel" hidden>
+      <div class="result-title">승인 대기 중입니다</div>
+      <p class="result-desc">연결 신청이 접수되었습니다. 선생님 또는 원장님 승인 후 우리 반 미니홈피를 볼 수 있어요.</p>
+      <button type="button" class="btn" id="pendingRecheckBtn">상태 다시 확인</button>
+    </section>
+
+    <section class="panel" id="classesPanel" hidden>
+      <div class="result-title">연결된 반</div>
+      <div class="class-list" id="classList"></div>
+      <div class="extra-invite">
+        <button type="button" class="btn ghost" id="showExtraInviteBtn">다른 반 초대 코드 입력하기</button>
+        <div id="extraInviteBox" hidden style="margin-top:16px">
+          <form id="extraInviteForm">
+            <div class="field">
+              <label for="extraInviteCode">초대 코드</label>
+              <input type="text" id="extraInviteCode" required autocomplete="one-time-code">
+            </div>
+            <div class="field">
+              <label for="extraInviteChildName">아이 이름</label>
+              <input type="text" id="extraInviteChildName" required autocomplete="off">
+            </div>
+            <button type="submit" class="btn" id="extraInviteSubmit">연결 신청</button>
+            <div class="msg error" id="extraInviteMsg"></div>
+          </form>
+        </div>
       </div>
-      <div class="field">
-        <label for="inviteChildName">아이 이름</label>
-        <input type="text" id="inviteChildName" required autocomplete="off" placeholder="반에 다니는 아이 이름">
-      </div>
-      <button type="submit" class="btn" id="inviteSubmit">연결 신청</button>
-      <div class="msg error" id="inviteMsg"></div>
-    </form>
-  </section>
-
-  <section class="panel" id="pendingPanel" hidden>
-    <div class="result-title">승인 대기 중입니다</div>
-    <p class="result-desc">연결 신청이 접수되었습니다. 선생님 또는 원장님 승인 후 우리 반 미니홈피를 볼 수 있어요.</p>
-    <button type="button" class="btn" id="pendingRecheckBtn">상태 다시 확인</button>
-  </section>
-
-  <section class="panel" id="classesPanel" hidden>
-    <div class="result-title">연결된 반</div>
-    <div class="class-list" id="classList"></div>
-    <div class="extra-invite">
-      <button type="button" class="btn ghost" id="showExtraInviteBtn">다른 반 초대 코드 입력하기</button>
-      <div id="extraInviteBox" hidden style="margin-top:16px">
-        <form id="extraInviteForm">
-          <div class="field">
-            <label for="extraInviteCode">초대 코드</label>
-            <input type="text" id="extraInviteCode" required autocomplete="one-time-code">
-          </div>
-          <div class="field">
-            <label for="extraInviteChildName">아이 이름</label>
-            <input type="text" id="extraInviteChildName" required autocomplete="off">
-          </div>
-          <button type="submit" class="btn" id="extraInviteSubmit">연결 신청</button>
-          <div class="msg error" id="extraInviteMsg"></div>
-        </form>
-      </div>
-    </div>
-  </section>
+    </section>
+  </div>
 
   <section class="mini-panel" id="miniPanel" hidden>
     <div id="miniRoot"></div>
