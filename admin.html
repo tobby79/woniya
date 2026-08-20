@@ -135,7 +135,8 @@
   }
   .btn:hover{transform:translateY(-2px)}
   .btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
-  .btn.ghost{background:#fff;color:var(--ink-soft);box-shadow:none;border:1.5px solid #e7dccf;width:auto;min-height:38px;padding:8px 18px;font-size:.86rem}
+  .btn.ghost{background:#fff;color:var(--ink-soft);box-shadow:0 6px 14px -8px rgba(120,80,60,.32);border:1.5px solid transparent;width:auto;min-height:38px;padding:8px 18px;font-size:.86rem}
+  .btn.ghost:hover{box-shadow:0 8px 18px -8px rgba(120,80,60,.42)}
   .btn.class-mini-btn{white-space:nowrap;text-align:center;line-height:1.35;padding-left:10px;padding-right:10px}
   .btn.danger{background:#fff;color:#D9534F;border:1.5px solid #f5c6c4;box-shadow:none}
   .btn.danger:hover{background:#fff5f5}
@@ -390,8 +391,8 @@
   .teacher-assignment-actions .btn.danger{background:transparent;border-color:#efc2c0;color:#c84c49}
   .teacher-assignment-actions .btn.danger:hover{background:#fff5f5}
   .teacher-lifecycle-note{margin:0 0 16px;color:var(--ink-soft);font-size:.9rem;line-height:1.65}
-  .class-teacher-profile-description,.class-teacher-profile-note{color:var(--ink-soft);font-size:.84rem;line-height:1.55}
-  .class-teacher-profile-note{margin-top:6px;padding:10px 12px;border-radius:12px;background:#fff8f5}
+  .class-teacher-profile-description{color:var(--ink-soft);font-size:.84rem;line-height:1.55}
+  .class-teacher-profile-note{margin-top:5px;color:var(--ink-soft);font-size:.78rem;font-weight:400;line-height:1.5}
   .class-teacher-profile-form{margin-top:14px}
   .class-teacher-profile-controls{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:end}
   .class-teacher-profile-controls .field{margin-bottom:0;min-width:0}
