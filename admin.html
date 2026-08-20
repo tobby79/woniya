@@ -84,6 +84,28 @@
 
   .panel{background:var(--paper);border:1px solid rgba(241,233,224,.88);border-radius:22px;padding:26px;box-shadow:var(--shadow-panel)}
 
+  .login-card{
+    position:relative;
+    max-width:440px;margin:0 auto;
+    background:var(--paper);border:1px solid rgba(241,233,224,.88);
+    border-radius:24px;padding:56px 26px 32px;
+    box-shadow:var(--shadow-panel);
+  }
+  .login-card .panel{background:transparent;border:none;box-shadow:none;padding:0}
+  .back-link{
+    position:absolute;top:10px;left:10px;
+    display:inline-flex;align-items:center;gap:6px;
+    padding:8px 14px 8px 10px;
+    border-radius:999px;
+    color:var(--ink-soft);
+    text-decoration:none;
+    transition:background .2s ease,color .2s ease;
+  }
+  .back-link svg{width:22px;height:22px;display:block;flex:none}
+  .back-link span{font-size:.85rem;font-weight:700;line-height:1.2}
+  .back-link:hover{background:rgba(64,55,51,.07);color:var(--ink)}
+  .back-link:focus-visible{outline:3px solid rgba(255,138,107,.32);outline-offset:2px;background:rgba(64,55,51,.07)}
+
   label{display:block;font-size:.86rem;font-weight:700;color:var(--ink-soft);margin-bottom:6px}
   .field{margin-bottom:18px}
   input[type=email],input[type=password],input[type=text],input[type=tel],input[type=number],input[type=time],input[type=color],textarea{
@@ -553,27 +575,32 @@
 
   <!-- 로그인 화면 -->
   <section id="loginView">
-    <div class="section-eyebrow">원장 전용</div>
-    <h1 class="section-title">로그인</h1>
-    <div class="panel">
-      <form id="loginForm">
-        <div class="field">
-          <label for="email">이메일</label>
-          <input type="email" id="email" required autocomplete="username">
-        </div>
-        <div class="field">
-          <label for="password">비밀번호</label>
-          <div class="password-field-wrap">
-            <input type="password" id="password" required autocomplete="current-password">
-            <button type="button" class="password-toggle-btn" id="passwordToggleBtn" aria-label="비밀번호 표시">
-              <svg id="passwordToggleIconShow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-              <svg id="passwordToggleIconHide" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" hidden><path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8a18.5 18.5 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
-            </button>
+    <div class="login-card">
+      <a class="back-link" href="/index.html" aria-label="홈으로 돌아가기">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 6 9 12 15 18"></polyline></svg><span>홈으로</span>
+      </a>
+      <div class="section-eyebrow">원장 전용</div>
+      <h1 class="section-title">우리 원 관리 로그인</h1>
+      <div class="panel">
+        <form id="loginForm">
+          <div class="field">
+            <label for="email">이메일</label>
+            <input type="email" id="email" required autocomplete="username">
           </div>
-        </div>
-        <button type="submit" class="btn">로그인</button>
-        <div class="msg error" id="loginError"></div>
-      </form>
+          <div class="field">
+            <label for="password">비밀번호</label>
+            <div class="password-field-wrap">
+              <input type="password" id="password" required autocomplete="current-password">
+              <button type="button" class="password-toggle-btn" id="passwordToggleBtn" aria-label="비밀번호 표시">
+                <svg id="passwordToggleIconShow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                <svg id="passwordToggleIconHide" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" hidden><path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8a18.5 18.5 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+              </button>
+            </div>
+          </div>
+          <button type="submit" class="btn">로그인</button>
+          <div class="msg error" id="loginError"></div>
+        </form>
+      </div>
     </div>
   </section>
 
