@@ -41,20 +41,24 @@
 
   .topbar{
     position:sticky;top:0;left:0;right:0;z-index:40;
-    padding:12px 0;background:rgba(255,250,243,.92);
-    backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
-    border-bottom:1px solid rgba(234,223,211,.72);
-    box-shadow:0 12px 28px -28px rgba(120,80,60,.42)
+    padding:12px 0;
+    background:linear-gradient(180deg,rgba(255,255,255,.8) 0%,rgba(255,247,241,.68) 100%);
+    backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+    box-shadow:0 12px 24px -18px rgba(219,107,84,.22)
   }
   .topbar-inner{
+    position:relative;min-height:44px;
     max-width:1180px;margin:0 auto;padding:0 24px;
     display:grid;grid-template-columns:minmax(220px,1fr) auto minmax(220px,1fr);
     align-items:center;gap:18px;
   }
-  .topbar-context{text-align:center;min-width:0}
-  .topbar-kicker{display:block;font-size:.72rem;font-weight:900;letter-spacing:.08em;color:var(--sage);line-height:1.1}
-  .topbar-title{display:block;margin-top:2px;font-weight:900;color:var(--ink);font-size:.98rem;line-height:1.25;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .topbar .who{display:flex;align-items:center;justify-content:flex-end;gap:10px;min-width:0;font-size:.85rem;color:var(--ink-soft)}
+  .topbar-context{
+    position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+    text-align:center;min-width:0;
+  }
+  .topbar-kicker{display:block;font-family:var(--hand);font-size:.72rem;font-weight:900;letter-spacing:.08em;color:var(--sage);line-height:1.1}
+  .topbar-title{display:block;margin-top:2px;font-family:var(--display);font-weight:900;color:var(--ink);font-size:.98rem;line-height:1.25;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .topbar .who{grid-column:3;display:flex;align-items:center;justify-content:flex-end;gap:10px;min-width:0;font-size:.85rem;color:var(--ink-soft)}
   .topbar .who #userEmail{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:240px}
   .center-links{display:flex;align-items:center;gap:8px;min-width:0}
   .topbar-link{
@@ -498,8 +502,8 @@
       padding:0 16px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;
     }
     .center-links{order:1;flex:1 1 100%;overflow-x:auto;padding-bottom:2px}
-    .topbar-context{order:0;text-align:left;flex:1 1 auto}
-    .topbar .who{order:0;flex:0 1 auto}
+    .topbar-context{position:static;transform:none;order:0;text-align:left;flex:1 1 auto}
+    .topbar .who{grid-column:auto;order:0;flex:0 1 auto}
     .topbar .who #userEmail{display:none}
     .wrap{padding:28px 18px 60px}
     .section-title{font-size:1.48rem;margin-bottom:18px}
