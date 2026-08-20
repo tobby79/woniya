@@ -358,8 +358,9 @@
   .class-card-head>div:first-child,.class-detail-head>div:first-child{min-width:0;flex:1 1 auto}
   .class-card-title,.class-detail-title{font-weight:800;font-size:1rem;color:var(--ink)}
   .class-detail-title-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-  .class-card-meta,.class-detail-meta,.invite-history-meta{margin-top:4px;font-size:.82rem;color:var(--ink-soft)}
-  .class-card-actions,.class-detail-actions{display:flex;align-items:center;gap:6px;flex:0 0 auto;min-width:max-content;max-width:100%;flex-wrap:nowrap;justify-content:flex-end}
+  .class-card-meta,.class-detail-meta{margin-top:6px;display:flex;flex-wrap:wrap;gap:6px}
+  .invite-history-meta{margin-top:4px;font-size:.82rem;color:var(--ink-soft)}
+  .class-card-actions,.class-detail-actions{display:flex;align-items:center;gap:6px 8px;flex:1 1 auto;min-width:0;max-width:100%;flex-wrap:wrap;justify-content:flex-end}
   .class-card-actions .class-mini-btn,.class-detail-actions .class-mini-btn{flex:0 0 auto}
   .class-detail-actions .btn{width:auto;flex:0 0 auto;white-space:nowrap}
   .class-create-box{display:flex;align-items:flex-end;gap:10px;flex-wrap:wrap;margin:12px 0 18px;padding:14px;background:var(--cream);border:1.5px solid #f1e9e0;border-radius:18px}
@@ -374,6 +375,7 @@
   .status-pill.failed{background:#FCEBEC;color:#A84F58}
   .status-pill.revoked{background:#F2F0EE;color:#7B716A}
   .status-pill.empty{background:#FFF1EA;color:var(--coral-deep)}
+  .meta-chip{display:inline-flex;align-items:center;background:rgba(64,55,51,.06);color:var(--ink-soft);border-radius:99px;padding:3px 10px;font-size:.74rem;font-weight:700;white-space:nowrap}
   .invite-history-list{display:flex;flex-direction:column;gap:10px;margin-top:12px}
   .invite-history-email{font-weight:800;color:var(--ink);word-break:break-all}
   .invite-history-error{margin-top:10px;padding:10px 12px;border-radius:10px;background:#FFF4F3;color:#9A4C50;font-size:.82rem;line-height:1.55}
@@ -3791,7 +3793,7 @@
     var approvedCount = parentEnrollmentsForClass(row.id).filter(function(e){ return e.status === 'approved'; }).length;
     parts.push('앱 연결 ' + approvedCount + '명');
     if (row.status) parts.push('상태 ' + row.status);
-    return parts.join(' · ');
+    return parts.map(function(p){ return '<span class="meta-chip">' + esc(p) + '</span>'; }).join('');
   }
 
   function inviteStatusLabel(status){
@@ -3939,7 +3941,7 @@
       '<div class="class-card-head">' +
         '<div>' +
           '<div class="class-card-title">' + esc(classTitle(row)) + '</div>' +
-          '<div class="class-card-meta">' + esc(classMeta(row) || '반 정보를 확인해 주세요') + '</div>' +
+          '<div class="class-card-meta">' + (classMeta(row) || '<span class="meta-chip">반 정보를 확인해 주세요</span>') + '</div>' +
         '</div>' +
         '<div class="class-card-actions">' + badge + miniManageAction + miniAction + action + parentCodeAction + '</div>' +
       '</div>' +
@@ -4385,9 +4387,9 @@
               '<div class="class-detail-title">' + esc(classTitle(row)) + '</div>' +
               assignmentStatus +
             '</div>' +
-            '<div class="class-detail-meta">' + esc(classMeta(row) || '반 정보를 확인해 주세요') + '</div>' +
+            '<div class="class-detail-meta">' + (classMeta(row) || '<span class="meta-chip">반 정보를 확인해 주세요</span>') + '</div>' +
           '</div>' +
-          '<div class="class-detail-actions">' + action + miniManageAction + miniAction + parentAction + '</div>' +
+          '<div class="class-detail-actions">' + miniManageAction + miniAction + action + parentAction + '</div>' +
         '</div>' +
         assignmentMeta +
         teacherProfileSection +
