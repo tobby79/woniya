@@ -391,9 +391,8 @@
   .teacher-assignment-actions .btn.danger{background:transparent;border-color:#efc2c0;color:#c84c49}
   .teacher-assignment-actions .btn.danger:hover{background:#fff5f5}
   .teacher-lifecycle-note{margin:0 0 16px;color:var(--ink-soft);font-size:.9rem;line-height:1.65}
-  .class-teacher-profile-description{color:var(--ink-soft);font-size:.84rem;line-height:1.55}
-  .class-teacher-profile-note{margin-top:5px;color:var(--ink-soft);font-size:.78rem;font-weight:400;line-height:1.5}
-  .class-teacher-profile-form{margin-top:14px}
+  .class-teacher-profile-description{margin-top:6px;color:var(--ink-soft);font-size:.84rem;line-height:1.55}
+  .class-teacher-profile-form{margin-top:20px}
   .class-teacher-profile-controls{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:end}
   .class-teacher-profile-controls .field{margin-bottom:0;min-width:0}
   .class-teacher-profile-select{
@@ -4128,12 +4127,11 @@
     return '<div class="class-subsection class-teacher-profile-section">' +
       '<div class="class-detail-title">담임 프로필</div>' +
       '<div class="class-teacher-profile-description" id="classTeacherProfileDescription">반 미니홈피 첫 화면에 표시할 선생님 사진과 이름을 선택해 주세요.</div>' +
-      '<div class="class-teacher-profile-note" id="classTeacherProfileAccountNote">담당 교사 계정은 로그인·반 관리 권한이며, 담임 프로필은 미니홈피에 표시되는 사진·이름입니다. 두 설정은 자동으로 연동되지 않습니다.</div>' +
       '<form class="class-teacher-profile-form" data-class-id="' + esc(row.id) + '">' +
         '<div class="class-teacher-profile-controls">' +
           '<div class="field">' +
             '<label for="classTeacherProfileSelect">담임 프로필 카드</label>' +
-            '<select id="classTeacherProfileSelect" class="class-teacher-profile-select" data-class-id="' + esc(row.id) + '" aria-describedby="classTeacherProfileDescription classTeacherProfileAccountNote"' + (disabled ? ' disabled' : '') + '>' + options + '</select>' +
+            '<select id="classTeacherProfileSelect" class="class-teacher-profile-select" data-class-id="' + esc(row.id) + '" aria-describedby="classTeacherProfileDescription"' + (disabled ? ' disabled' : '') + '>' + options + '</select>' +
           '</div>' +
           '<button type="submit" class="btn class-teacher-profile-save"' + (disabled ? ' disabled' : '') + '>' + (isSaving ? '저장 중...' : '담임 프로필 저장') + '</button>' +
         '</div>' +
