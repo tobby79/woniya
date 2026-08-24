@@ -112,6 +112,13 @@
   .back-link:focus-visible{outline:3px solid rgba(255,138,107,.32);outline-offset:2px;background:rgba(64,55,51,.07)}
 
   label{display:block;font-size:.86rem;font-weight:700;color:var(--ink-soft);margin-bottom:6px}
+  .section-label-chip{
+    display:inline-flex;align-items:center;
+    background:rgba(143,168,133,.14);color:var(--sage);
+    border-radius:999px;padding:4px 12px;
+    font-size:.78rem;font-weight:800;
+    margin-bottom:8px;
+  }
   .field{margin-bottom:18px}
   input[type=email],input[type=password],input[type=text],input[type=tel],input[type=number],input[type=time],input[type=color],textarea{
     width:100%;border:1.5px solid var(--line);border-radius:14px;padding:13px 16px;
@@ -4130,7 +4137,7 @@
       '<form class="class-teacher-profile-form" data-class-id="' + esc(row.id) + '">' +
         '<div class="class-teacher-profile-controls">' +
           '<div class="field">' +
-            '<label for="classTeacherProfileSelect">담임 프로필 카드</label>' +
+            '<label for="classTeacherProfileSelect" class="section-label-chip">담임 프로필 카드</label>' +
             '<select id="classTeacherProfileSelect" class="class-teacher-profile-select" data-class-id="' + esc(row.id) + '" aria-describedby="classTeacherProfileDescription"' + (disabled ? ' disabled' : '') + '>' + options + '</select>' +
           '</div>' +
           '<button type="submit" class="btn class-teacher-profile-save"' + (disabled ? ' disabled' : '') + '>' + (isSaving ? '저장 중...' : '담임 프로필 저장') + '</button>' +
@@ -4393,13 +4400,13 @@
         assignmentMeta +
         teacherProfileSection +
         '<div class="class-subsection">' +
-          '<label>선생님 초대 이력</label>' +
+          '<label class="section-label-chip">선생님 초대 이력</label>' +
           (invites.length
             ? '<div class="invite-history-list">' + invites.map(renderInviteHistory).join('') + '</div>'
             : '<div class="no-center" style="padding:18px 0">아직 선생님 초대 이력이 없습니다.</div>') +
         '</div>' +
         '<div class="class-subsection">' +
-          '<label>학부모 초대 코드 이력</label>' +
+          '<label class="section-label-chip">학부모 초대 코드 이력</label>' +
           (parentInvites.length
             ? '<div class="invite-history-list">' + parentInvites.map(renderParentInviteHistory).join('') + '</div>'
             : '<div class="no-center" style="padding:18px 0">아직 발급된 학부모 초대 코드가 없습니다.</div>') +
