@@ -363,6 +363,7 @@
   .class-card{cursor:pointer;transition:border-color .15s ease,background .15s ease}
   .class-card.active{border-color:var(--coral);background:#fff8f5}
   .class-card-head,.class-detail-head,.invite-history-row{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+  .class-detail-head{padding-bottom:18px;border-bottom:1.5px solid rgba(64,55,51,.1);margin-bottom:4px}
   .class-card-head>div:first-child,.class-detail-head>div:first-child{min-width:0;flex:1 1 auto}
   .class-card-title,.class-detail-title{font-weight:800;font-size:1rem;color:var(--ink)}
   .class-detail-title-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
@@ -428,6 +429,8 @@
   .parent-code-value{font-family:var(--display);font-size:1.7rem;font-weight:800;letter-spacing:.08em;color:var(--coral-deep);word-break:break-all}
   .parent-code-note{margin-top:5px;font-size:.82rem;color:var(--ink-soft)}
   .class-subsection{margin-top:20px}
+  .class-subsection:not(.class-teacher-profile-section):not(:last-child){padding-top:20px;border-top:1px solid rgba(64,55,51,.08)}
+  .class-subsection:last-child{margin-top:14px}
   .parent-id{font-size:.82rem;color:var(--ink-soft);word-break:break-all}
   .bus-layout{display:grid;gap:16px}
   .bus-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:16px}
