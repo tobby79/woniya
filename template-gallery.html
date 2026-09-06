@@ -306,7 +306,7 @@
         <div class="csl-field csl-consent">
           <label>
             <input type="checkbox" id="csl-consent" required>
-            상담 신청 처리를 위해 이름·연락처 등 개인정보 수집에 동의합니다.
+            <span>상담 신청 처리를 위해 이름·연락처 등 개인정보 수집에 동의합니다. <a href="/privacy.html" target="_blank" rel="noopener">개인정보처리방침</a></span>
           </label>
         </div>
         <button type="submit" class="btn-big csl-submit">신청하기</button>
@@ -857,6 +857,9 @@ function mapRowToData(row, options = {}){
     isPreviewMode: isPreviewMode,
     canConsult: canConsult
   });
+  const consultationBlockedMessage = (isPreviewMode || isReviewMode || isAdminPreviewMode)
+    ? '미리보기에서는 상담 신청을 접수하지 않습니다.'
+    : '현재는 상담 신청을 접수하지 않습니다.';
   // sunshine 기준 구조 통일: 공지·행사일정 제거 → 메뉴 필터. 하루(#day)·FAQ(#faq) 섹션 유지.
   // 시설 소개/교육프로그램(인페이지 섹션) + 입학안내/오시는 길(새 페이지) 런타임 주입
   (function(){
@@ -1097,19 +1100,19 @@ function mapRowToData(row, options = {}){
   window.__facilityData__ = data.center.facilities;
   window.__programData__ = data.center.programs;
   window.__albumImgs__ = data.album?.items || [];
-  if (isPreviewMode || isReviewMode){
+  if (!data.pageState.canConsult){
     document.addEventListener('click', function(e){
       var action = e.target.closest('#cslOpenBtn, #askConsultBtn');
       if (!action) return;
       e.preventDefault();
       e.stopImmediatePropagation();
-      alert(isReviewMode ? REVIEW_MESSAGE : PREVIEW_MESSAGE);
+      alert(consultationBlockedMessage);
     }, true);
   }
   initInteractions();
   renderInfoSections(data, c, esc, detailQuery, hasAdmissionData, hasDirectionsData);
   setupAskPanel(data.faqs, isPreviewMode, isReviewMode, PREVIEW_MESSAGE, REVIEW_MESSAGE);
-  initConsultationForm(client, c.id, isPreviewMode, isReviewMode, PREVIEW_MESSAGE, REVIEW_MESSAGE);
+  initConsultationForm(client, c.id, data.pageState, consultationBlockedMessage);
 })();
 
 function initInteractions(){
@@ -1430,7 +1433,7 @@ function loadKakaoMap(address, containerId){
   window.__kakaoSDKPromise.then(render).catch(function(){ console.error('[kakao] SDK 로드 실패'); });
 }
 
-function initConsultationForm(client, centerId, isPreviewMode, isReviewMode, PREVIEW_MESSAGE, REVIEW_MESSAGE){
+function initConsultationForm(client, centerId, pageState, blockedMessage){
   var overlay = document.getElementById('cslOverlay');
   var openBtn = document.getElementById('cslOpenBtn');
   var closeBtn = document.getElementById('cslCloseBtn');
@@ -1439,7 +1442,7 @@ function initConsultationForm(client, centerId, isPreviewMode, isReviewMode, PRE
   var formWrap = document.getElementById('cslFormWrap');
   var doneWrap = document.getElementById('cslDoneWrap');
 
-  function openModal(){ if (isPreviewMode || isReviewMode){ alert(isReviewMode ? REVIEW_MESSAGE : PREVIEW_MESSAGE); return; } overlay.classList.add('open'); formWrap.hidden = false; doneWrap.hidden = true; form.reset(); errorEl.textContent = ''; }
+  function openModal(){ if (!pageState || pageState.canConsult !== true){ alert(blockedMessage); return; } overlay.classList.add('open'); formWrap.hidden = false; doneWrap.hidden = true; form.reset(); errorEl.textContent = ''; }
   function closeModal(){ overlay.classList.remove('open'); }
 
   if (openBtn) openBtn.addEventListener('click', openModal);
@@ -1450,8 +1453,8 @@ function initConsultationForm(client, centerId, isPreviewMode, isReviewMode, PRE
   form.addEventListener('submit', async function(e){
     e.preventDefault();
     errorEl.textContent = '';
-    if (isPreviewMode || isReviewMode){
-      alert(isReviewMode ? REVIEW_MESSAGE : PREVIEW_MESSAGE);
+    if (!pageState || pageState.canConsult !== true){
+      errorEl.textContent = blockedMessage;
       return;
     }
     if (!document.getElementById('csl-consent').checked){ errorEl.textContent = '개인정보 수집 동의가 필요해요.'; return; }
@@ -1466,6 +1469,11 @@ function initConsultationForm(client, centerId, isPreviewMode, isReviewMode, PRE
     };
     var submitBtn = form.querySelector('.csl-submit');
     submitBtn.disabled = true;
+    if (!pageState || pageState.canConsult !== true){
+      submitBtn.disabled = false;
+      errorEl.textContent = blockedMessage;
+      return;
+    }
     var { error } = await client.from('consultations').insert(payload);
     submitBtn.disabled = false;
     if (error){ console.error(error); errorEl.textContent = '접수 중 문제가 생겼어요. 다시 시도해주세요.'; return; }
