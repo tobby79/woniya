@@ -531,6 +531,18 @@ function mapRowToData(row, options = {}){
         return true;
       });
   };
+  // day_story는 같은 sort_order의 실제 행도 모두 보존한다.
+  // 동률일 때는 DB 조회 결과의 원래 순서만 유지해 sort_order ASC 의미를 해치지 않는다.
+  const dayStoryRows = media
+    .map((item, index) => ({ item, index }))
+    .filter(entry => entry.item.media_type === 'day_story')
+    .sort((a, b) => {
+      const aOrder = Number(a.item.sort_order);
+      const bOrder = Number(b.item.sort_order);
+      const orderDiff = (Number.isFinite(aOrder) ? aOrder : 0) - (Number.isFinite(bOrder) ? bOrder : 0);
+      return orderDiff || (a.index - b.index);
+    })
+    .map(entry => entry.item);
   const teacherFallbacks = [
     { name: '김햇살 선생님', role: '만 3세 햇살반 담임', message: '아이의 속도에 맞춰 기다려 줄게요.' },
     { name: '이초록 선생님', role: '만 4세 새싹반 담임', message: '매일의 작은 성장을 놓치지 않을게요.' },
@@ -558,6 +570,15 @@ function mapRowToData(row, options = {}){
       facilities: row.facilities || null
     },
     heroPhoto: hero ? hero.photo_url : null,
+    day_story: dayStoryRows.map(m => ({
+      slot: m.slot,
+      time: m.time_label,
+      title: m.title,
+      photo: m.photo_url,
+      photo_alt: m.photo_alt,
+      caption: m.caption,
+      note: m.note
+    })),
     album: { items: byType('album').map(m => ({ label: m.title, photo: m.photo_url })) },
     teachers: { items: teacherItems },
     notices: row.notices || { eyebrow:'', title:'', items:[], more:'' },
@@ -662,12 +683,14 @@ function mapRowToData(row, options = {}){
     const facilities = data.center.facilities;
     const programs = data.center.programs;
     const resolveSignedPath = await signPaths([data.heroPhoto]
+      .concat((data.day_story || []).map(it => it.photo))
       .concat((data.album?.items || []).map(it => it.photo))
       .concat((data.teachers?.items || []).map(tc => tc.photo))
       .concat((facilities?.items || []).map(it => it && it.photo_url))
       .concat((programs?.items || []).map(it => it && it.photo_url))
       .concat(data.center.director ? [data.center.director.photo] : []));
     data.heroPhoto = resolveSignedPath(data.heroPhoto);
+    for (const it of data.day_story || []){ it.photo = resolveSignedPath(it.photo); }
     for (const it of data.album.items){ it.photo = resolveSignedPath(it.photo); }
     for (const tc of data.teachers.items){ tc.photo = resolveSignedPath(tc.photo); }
     ['facilities', 'programs'].forEach(function(key){
@@ -833,27 +856,53 @@ function mapRowToData(row, options = {}){
       </div>`;
   } else { document.getElementById('overviewSec').hidden = true; }
 
-  // 하루 — 갤러리(앨범) 가로 슬라이드 (gallery 고유)
+  // 하루 — day_story 우선 + 레거시 album fallback 가로 갤러리 (gallery 고유)
   const al = data.album;
   const albumItems = al?.items || [];
-  $('day').innerHTML = `
-    <div class="sec-head reveal">
-      <div>
-        <div class="sec-label">Gallery</div>
-        <h2 class="sec-title">우리들의 순간</h2>
+  const dayStoryGalleryItems = (data.day_story || [])
+    .filter(it => hasVisibleText(it.photo))
+    .map(it => {
+      const title = String(it.title || '').trim();
+      const caption = String(it.caption || '').trim();
+      const timeLabel = String(it.time || '').trim();
+      return {
+        photo: String(it.photo).trim(),
+        label: title || caption || timeLabel || '우리들의 순간',
+        alt: String(it.photo_alt || '').trim() || title || caption || '우리 원 하루 이야기 사진'
+      };
+    });
+  // 레거시 draft 호환용 fallback: 표시 가능한 day_story가 없을 때만 album을 사용하며 서로 섞지 않는다.
+  const legacyAlbumGalleryItems = albumItems
+    .filter(it => hasVisibleText(it.photo))
+    .map(it => {
+      const label = String(it.label || '').trim() || '우리들의 순간';
+      return { photo: String(it.photo).trim(), label, alt: label };
+    });
+  const galleryItems = dayStoryGalleryItems.length ? dayStoryGalleryItems : legacyAlbumGalleryItems;
+  if (galleryItems.length) {
+    $('day').hidden = false;
+    $('day').innerHTML = `
+      <div class="sec-head reveal">
+        <div>
+          <div class="sec-label">Gallery</div>
+          <h2 class="sec-title">우리들의 순간</h2>
+        </div>
+        <div class="g-count">${String(galleryItems.length).padStart(2,'0')} 점</div>
       </div>
-      <div class="g-count">${String(albumItems.length).padStart(2,'0')} 점</div>
-    </div>
-    <div class="gallery-rail">${albumItems.map((it,i)=>`
-      <figure class="art">
-        <div class="frame"><img decoding="async" alt="${esc(it.label)}" data-src="${esc(it.photo)}"></div>
-        <figcaption class="meta">
-          <span class="no">${String(i+1).padStart(2,'0')}</span>
-          <span class="cap">${esc(it.label)}</span>
-          <span class="line"></span>
-        </figcaption>
-      </figure>`).join('')}</div>
-    <div class="gallery-hint reveal"><span class="arrow">←</span> 옆으로 넘겨보세요 <span class="arrow">→</span></div>`;
+      <div class="gallery-rail">${galleryItems.map((it,i)=>`
+        <figure class="art">
+          <div class="frame"><img decoding="async" alt="${esc(it.alt)}" data-src="${esc(it.photo)}"></div>
+          <figcaption class="meta">
+            <span class="no">${String(i+1).padStart(2,'0')}</span>
+            <span class="cap">${esc(it.label)}</span>
+            <span class="line"></span>
+          </figcaption>
+        </figure>`).join('')}</div>
+      <div class="gallery-hint reveal"><span class="arrow">←</span> 옆으로 넘겨보세요 <span class="arrow">→</span></div>`;
+  } else {
+    $('day').hidden = true;
+    $('day').innerHTML = '';
+  }
 
   // 우리 원 시설 (배지 + 썸네일 + 모달)
   const fac = data.center.facilities;
