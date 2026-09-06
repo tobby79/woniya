@@ -500,6 +500,19 @@ function hasVisibleText(value){
   return String(value ?? '').trim().length > 0;
 }
 
+function cleanDisplayText(value){
+  if (typeof value !== 'string') return '';
+  var cleaned = value.trim();
+  if (!cleaned || !cleaned.replace(/<br\s*\/?>/gi, '').trim()) return '';
+  return cleaned;
+}
+
+function hasAdmissionDisplayData(admission){
+  if (!admission || typeof admission !== 'object' || Array.isArray(admission)) return false;
+  return ['target','capacity_info','period','process','supplies','notes','deadline_date']
+    .some(function(field){ return Boolean(cleanDisplayText(admission[field])); });
+}
+
 function heroTitleHtml(title, accent, accentClass){
   var titleHtml = escWithBr(title);
   var accentHtml = escWithBr(accent);
@@ -560,8 +573,17 @@ function mapRowToData(row, options = {}){
   const hero = byType('hero')[0] || null;
   return {
     center: {
-      id: row.id, slug: row.slug, name: row.name, theme: row.theme,
-      address: row.address, directions_text: row.directions_text,
+      id: row.id,
+      slug: cleanDisplayText(row.slug),
+      name: row.name,
+      theme: row.theme,
+      status: cleanDisplayText(row.status).toLowerCase(),
+      address: cleanDisplayText(row.address),
+      contactPhone: cleanDisplayText(row.contact_phone),
+      contactNote: cleanDisplayText(row.contact_note),
+      intro_video_url: cleanDisplayText(row.intro_video_url),
+      intro_video_title: cleanDisplayText(row.intro_video_title),
+      directions_text: cleanDisplayText(row.directions_text),
       menu: row.menu || [],
       hero: row.hero || { eyebrow:'', title:'', title_accent:'', subtitle:'' },
       director: row.director || { badge:'', photo:'', photo_alt:'', message:'', sign_label:'', sign_name:'', scroll_cue:'' },
@@ -596,7 +618,6 @@ function mapRowToData(row, options = {}){
   const client = supabase.createClient(cfg.url, cfg.anonKey);
   let isPreviewMode = false;
   let isReviewMode = false;
-  let previewTemplateId = '';
   const PREVIEW_TEMPLATE_IDS = ['sunshine', 'carnival', 'forest', 'gallery'];
   const PREVIEW_MESSAGE = '이것은 템플릿 미리보기입니다. 실제 신청은 접수되지 않습니다.';
 
@@ -604,6 +625,31 @@ function mapRowToData(row, options = {}){
 
   function normalizePreviewId(value){
     return PREVIEW_TEMPLATE_IDS.includes(value) ? value : '';
+  }
+
+  function normalizePageContext(search){
+    const params = new URLSearchParams(search || '');
+    const reviewToken = cleanDisplayText(params.get('review_token'));
+    const slug = reviewToken ? '' : cleanDisplayText(params.get('slug'));
+    const previewCenter = (reviewToken || slug) ? '' : cleanDisplayText(params.get('preview_center'));
+    const preview = (reviewToken || slug || previewCenter)
+      ? ''
+      : normalizePreviewId(cleanDisplayText(params.get('preview')).toLowerCase());
+    return {
+      review_token: reviewToken,
+      slug: slug,
+      preview_center: previewCenter,
+      preview: preview
+    };
+  }
+
+  function buildDetailQuery(context, fallbackSlug){
+    if (context.review_token) return '?review_token=' + encodeURIComponent(context.review_token);
+    if (context.slug) return '?slug=' + encodeURIComponent(context.slug);
+    if (context.preview_center) return '?preview_center=' + encodeURIComponent(context.preview_center);
+    if (context.preview) return '?preview=' + encodeURIComponent(context.preview);
+    const safeFallbackSlug = cleanDisplayText(fallbackSlug);
+    return safeFallbackSlug ? ('?slug=' + encodeURIComponent(safeFallbackSlug)) : '';
   }
 
   function publicTemplateUrl(path){
@@ -705,12 +751,13 @@ function mapRowToData(row, options = {}){
     if (data.center.director){ data.center.director.photo = resolveSignedPath(data.center.director.photo); }
   }
 
+  const pageContext = normalizePageContext(location.search);
+  const reviewToken = pageContext.review_token;
+  const slugParam = pageContext.slug;
+  const previewCenterSlug = pageContext.preview_center;
+  const previewId = pageContext.preview;
+
   try {
-    const params = new URLSearchParams(location.search);
-    const reviewToken = (params.get('review_token') || '').trim();
-    const slugParam = reviewToken ? '' : params.get('slug');
-    const previewCenterSlug = (!reviewToken && !slugParam) ? (params.get('preview_center') || '').trim() : '';
-    const previewId = (reviewToken || slugParam || previewCenterSlug) ? '' : normalizePreviewId(params.get('preview'));
 
     if (reviewToken){
       const reviewRes = await client.rpc('get_center_by_review_token', { p_token: reviewToken });
@@ -729,7 +776,6 @@ function mapRowToData(row, options = {}){
     } else if (previewId){
       // ── 기존: 템플릿 샘플 미리보기 (?preview=gallery 등) — 절대 변경 금지 ──
       isPreviewMode = true;
-      previewTemplateId = previewId;
       data = await loadTemplatePreview(previewId);
     } else if (previewCenterSlug){
       // ── 신규: 관리자 draft 원 미리보기 (?preview_center=slug) ──
@@ -782,29 +828,91 @@ function mapRowToData(row, options = {}){
 
   const $ = (id)=>document.getElementById(id);
   const c = data.center;
+  const detailQuery = buildDetailQuery(pageContext, c.slug);
+  const hasAdmissionData = hasAdmissionDisplayData(data.admission);
+  const hasDirectionsData = Boolean(cleanDisplayText(c.address) || cleanDisplayText(c.directions_text));
+  const hasSectionItems = function(section, fields){
+    return Boolean(section && Array.isArray(section.items) && section.items.some(function(item){
+      return item && fields.some(function(field){ return hasVisibleText(item[field]); });
+    }));
+  };
+  const hasFacilityData = hasSectionItems(c.facilities, ['name','desc','photo_url']);
+  const hasProgramData = hasSectionItems(c.programs, ['name','desc','photo_url']);
+  const hasFaqData = Boolean(data.faqs && Array.isArray(data.faqs.items) && data.faqs.items.some(function(item){
+    return item && hasVisibleText(item.q) && hasVisibleText(item.a);
+  }));
+  const hasDayData = (data.day_story || []).some(function(item){ return hasVisibleText(item.photo); })
+    || (data.album?.items || []).some(function(item){ return hasVisibleText(item.photo); });
+  const canConsult = !isPreviewMode && !isReviewMode && !isAdminPreviewMode
+    && hasVisibleText(c.id) && c.status === 'published';
+  data.pageState = Object.freeze({
+    status: c.status,
+    review_token: reviewToken,
+    preview_center: previewCenterSlug,
+    preview: previewId,
+    slug: slugParam || c.slug,
+    mode: isReviewMode ? 'review' : (isAdminPreviewMode ? 'preview_center' : (isPreviewMode ? 'preview' : 'slug')),
+    isReviewMode: isReviewMode,
+    isAdminPreviewMode: isAdminPreviewMode,
+    isPreviewMode: isPreviewMode,
+    canConsult: canConsult
+  });
   // sunshine 기준 구조 통일: 공지·행사일정 제거 → 메뉴 필터. 하루(#day)·FAQ(#faq) 섹션 유지.
   // 시설 소개/교육프로그램(인페이지 섹션) + 입학안내/오시는 길(새 페이지) 런타임 주입
   (function(){
-    var qs = (isPreviewMode && previewTemplateId)
-      ? ('?preview=' + encodeURIComponent(previewTemplateId))
-      : (c.slug ? ('?slug=' + encodeURIComponent(c.slug)) : '');
+    var classMiniHref = 'parent.html';
+    function menuPathname(href){
+      var value = cleanDisplayText(href);
+      if (!value || value.charAt(0) === '#') return '';
+      try {
+        return new URL(value, location.href).pathname.split('/').pop() || '';
+      } catch (_error) {
+        return value.split(/[?#]/)[0].split('/').pop() || '';
+      }
+    }
+    function isClassMiniDestination(href){
+      var pathname = menuPathname(href);
+      return pathname === 'parent.html' || pathname === 'sample-class-mini.html';
+    }
     c.menu = (c.menu || []).filter(function(m){
-      return m.href !== '#notice' && m.href !== '#schedule';
+      var href = cleanDisplayText(m && m.href);
+      if (!href || href === '#notice' || href === '#schedule') return false;
+      if (isClassMiniDestination(href)) return false;
+      if (/^admissions\.html(?:[?#]|$)/.test(href) || /^directions\.html(?:[?#]|$)/.test(href)) return false;
+      if (href === '#day' && !hasDayData) return false;
+      if (href === '#facilitiesSec' && !hasFacilityData) return false;
+      if (href === '#programSec' && !hasProgramData) return false;
+      if (href === '#faq' && !hasFaqData) return false;
+      if (href.charAt(0) === '#' && !document.getElementById(href.slice(1))) return false;
+      return true;
     });
     var extra = [];
-    extra.push({ href:'#facilitiesSec', label:'시설 소개' });
-    extra.push({ href:'#programSec', label:'교육프로그램' });
-    if (data.admission) extra.push({ href: 'admissions.html' + qs, label: '입학안내' });
-    if ((c.directions_text || '').trim()) extra.push({ href: 'directions.html' + qs, label: '오시는 길' });
-    extra.push({ href: 'parent.html', label: '우리 반 미니홈피' });
-    if (isReviewMode){
-      extra = extra.filter(function(x){
-        return x.href.indexOf('admissions.html') !== 0 && x.href.indexOf('directions.html') !== 0;
-      });
-    }
+    if (hasFacilityData) extra.push({ href:'#facilitiesSec', label:'시설 소개' });
+    if (hasProgramData) extra.push({ href:'#programSec', label:'교육프로그램' });
+    if (detailQuery && hasAdmissionData) extra.push({ href: 'admissions.html' + detailQuery, label: '입학안내' });
+    if (detailQuery && hasDirectionsData) extra.push({ href: 'directions.html' + detailQuery, label: '오시는 길' });
+    extra.push({ href: classMiniHref, label: '우리 반 미니홈피' });
     if (extra.length){
       var m = c.menu.slice();
-      m = m.filter(function(x){ return x.href !== 'parent.html'; });
+      function menuHrefKey(href){
+        var value = cleanDisplayText(href);
+        if (/^admissions\.html(?:[?#]|$)/.test(value)) return 'admissions.html';
+        if (/^directions\.html(?:[?#]|$)/.test(value)) return 'directions.html';
+        return value;
+      }
+      var seenMenuHrefs = new Set();
+      m = m.filter(function(item){
+        var key = menuHrefKey(item && item.href);
+        if (!key || seenMenuHrefs.has(key)) return false;
+        seenMenuHrefs.add(key);
+        return true;
+      });
+      extra = extra.filter(function(item){
+        var key = menuHrefKey(item.href);
+        if (!key || seenMenuHrefs.has(key)) return false;
+        seenMenuHrefs.add(key);
+        return true;
+      });
       var i = m.findIndex(function(x){ return x.cta; });
       if (i < 0) i = m.length;
       c.menu = m.slice(0, i).concat(extra, m.slice(i));
@@ -999,8 +1107,7 @@ function mapRowToData(row, options = {}){
     }, true);
   }
   initInteractions();
-  renderInfoSections(data, c, esc, isPreviewMode, previewTemplateId, isReviewMode);
-  if (isReviewMode) disableReviewDetailLinks();
+  renderInfoSections(data, c, esc, detailQuery, hasAdmissionData, hasDirectionsData);
   setupAskPanel(data.faqs, isPreviewMode, isReviewMode, PREVIEW_MESSAGE, REVIEW_MESSAGE);
   initConsultationForm(client, c.id, isPreviewMode, isReviewMode, PREVIEW_MESSAGE, REVIEW_MESSAGE);
 })();
@@ -1263,23 +1370,12 @@ function initDeferredImages(){
 }
 
 // ── 입학안내(admissions) + 오시는 길(directions) 렌더 (M1) ──
-function disableReviewDetailLinks(){
-  document.querySelectorAll('a[href^="admissions.html"], a[href^="directions.html"]').forEach(function(link){
-    var note = document.createElement('span');
-    note.className = link.className || 'info-link-btn';
-    note.textContent = '검수 모드에서는 별도 페이지 이동이 제한됩니다';
-    link.replaceWith(note);
-  });
-}
-
-function renderInfoSections(data, c, esc, isPreviewMode, previewTemplateId, isReviewMode){
+function renderInfoSections(data, c, esc, detailQuery, hasAdmissionData, hasDirectionsData){
   // M2: 입학안내·오시는 길은 공개형 새 페이지로 분리. 메인에는 요약+이동 버튼만 남긴다.
-  var qs = (isPreviewMode && previewTemplateId)
-    ? ('?preview=' + encodeURIComponent(previewTemplateId))
-    : (c.slug ? ('?slug=' + encodeURIComponent(c.slug)) : '');
+  var qs = detailQuery || '';
   var admSec = document.getElementById('admissionsSec');
   if (admSec){
-    if (!data.admission){ admSec.hidden = true; }
+    if (!qs || !hasAdmissionData){ admSec.hidden = true; }
     else {
       admSec.hidden = false;
       var adm = data.admission;
@@ -1293,7 +1389,7 @@ function renderInfoSections(data, c, esc, isPreviewMode, previewTemplateId, isRe
   }
   var dirSec = document.getElementById('directionsSec');
   if (dirSec){
-    if (!(c.directions_text || '').trim()){ dirSec.hidden = true; }
+    if (!qs || !hasDirectionsData){ dirSec.hidden = true; }
     else {
       dirSec.hidden = false;
       dirSec.innerHTML = '<h2 class="info-title">오시는 길</h2>'
