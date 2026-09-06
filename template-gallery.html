@@ -240,8 +240,25 @@
   .csl-msg.error{margin-top:12px;font-size:.84rem;color:#B0413E;text-align:center}
   .csl-done{text-align:center;font-family:var(--serif);font-size:1.3rem;color:var(--char);padding:36px 0;line-height:1.8}
 
-  footer{text-align:center;padding:40px 28px 50px;color:var(--ink-soft);font-size:.8rem;border-top:1px solid var(--line)}
-  footer .demo-tag{display:inline-block;font-size:.72rem;letter-spacing:2px;text-transform:uppercase;color:var(--ink-soft);margin-bottom:12px}
+  .gallery-footer{padding:52px 28px 58px;border-top:1px solid var(--line);color:var(--ink-soft);text-align:center}
+  .gallery-footer-inner{width:100%;max-width:680px;margin:0 auto}
+  .gallery-footer-tag{margin:0 0 12px;font-size:.68rem;font-weight:600;letter-spacing:2.4px;text-transform:uppercase;color:var(--ink-soft);overflow-wrap:anywhere}
+  .gallery-footer-name{margin:0;font-family:var(--serif);font-size:1.2rem;font-weight:600;line-height:1.55;color:var(--char);word-break:keep-all;overflow-wrap:anywhere}
+  .gallery-footer-copy{max-width:560px;margin:12px auto 0;font-size:.82rem;line-height:1.8;color:var(--char-soft);word-break:keep-all;overflow-wrap:anywhere}
+  .gallery-footer-meta{display:flex;justify-content:center;align-items:center;flex-wrap:wrap;gap:4px 18px;max-width:620px;margin:18px auto 0;font-style:normal;font-size:.82rem;line-height:1.65}
+  .gallery-footer-address,.gallery-footer-phone{min-width:0;word-break:keep-all;overflow-wrap:anywhere}
+  .gallery-footer-meta-label{margin-right:7px;font-size:.68rem;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--ink-soft)}
+  .gallery-footer-phone{display:inline-flex;align-items:center;justify-content:center;min-height:44px}
+  .gallery-footer-phone a{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:8px 2px;color:var(--char);text-decoration:none;text-underline-offset:4px;word-break:break-all;overflow-wrap:anywhere}
+  .gallery-footer-phone a:hover{text-decoration:underline}
+  .gallery-footer-contact-note{max-width:560px;margin:8px auto 0;font-size:.78rem;line-height:1.75;color:var(--ink-soft);word-break:keep-all;overflow-wrap:anywhere}
+  .gallery-footer-links{display:flex;justify-content:center;flex-wrap:wrap;gap:6px 22px;margin-top:18px}
+  .gallery-footer-links a{display:inline-flex;align-items:center;min-height:44px;padding:8px 0;color:var(--char);font-size:.8rem;font-weight:600;text-decoration:none;border-bottom:1px solid var(--line)}
+  .gallery-footer-links a:hover{border-bottom-color:var(--char)}
+  .gallery-footer-powered{margin:20px 0 0;font-size:.68rem;letter-spacing:.7px;color:var(--ink-soft)}
+  .gallery-footer-powered a{color:inherit;text-decoration:none}
+  .gallery-footer-powered a:hover{text-decoration:underline;text-underline-offset:4px}
+  .gallery-footer a:focus-visible{outline:2px solid var(--char);outline-offset:3px}
 
   a:focus-visible,.info-tab:focus-visible{outline:2px solid var(--char);outline-offset:3px}
 
@@ -254,6 +271,10 @@
     .gallery-intro-video-frame::before{inset:4px}
     .gallery-intro-video-play{width:54px;height:54px}
     .gallery-intro-video-play svg{width:22px;height:22px}
+    .gallery-footer{padding:42px 22px 46px}
+    .gallery-footer-meta{flex-direction:column;gap:2px;margin-top:16px}
+    .gallery-footer-address,.gallery-footer-phone{width:100%}
+    .gallery-footer-links{gap:4px 18px;margin-top:14px}
   }
 
   @media (prefers-reduced-motion:reduce){
@@ -287,7 +308,7 @@
 <section class="info-block wrap" id="admissionsSec" hidden></section>
 <section class="info-block wrap" id="directionsSec" hidden></section>
 <section class="finale wrap" id="finale"></section>
-<footer id="footerEl"></footer>
+<footer id="footerEl" class="gallery-footer"></footer>
 
 <div class="float" id="float" hidden><a href="#finale"><span class="dot"></span>입소 상담</a></div>
 
@@ -551,6 +572,88 @@ function hasAdmissionDisplayData(admission){
   if (!admission || typeof admission !== 'object' || Array.isArray(admission)) return false;
   return ['target','capacity_info','period','process','supplies','notes','deadline_date']
     .some(function(field){ return Boolean(cleanDisplayText(admission[field])); });
+}
+
+function buildTelHref(value){
+  var phone = cleanDisplayText(value);
+  if (!phone) return '';
+  var digits = phone.replace(/\D/g, '');
+  if (digits.length < 7) return '';
+  return 'tel:' + (phone.charAt(0) === '+' ? '+' : '') + digits;
+}
+
+function normalizeGalleryFooterText(value){
+  return cleanDisplayText(value).replace(/<br\s*\/?>/gi, ' ').replace(/\s+/g, ' ').toLowerCase();
+}
+
+function isGalleryFooterBrandOnly(value){
+  var normalized = normalizeGalleryFooterText(value);
+  return normalized === '원이야'
+    || normalized === 'powered by 원이야'
+    || normalized === '원이야로 만든';
+}
+
+function renderGalleryFooter(element, options){
+  if (!element) return;
+  var footerData = options.footer && typeof options.footer === 'object' && !Array.isArray(options.footer)
+    ? options.footer
+    : {};
+  var centerName = cleanDisplayText(options.centerName);
+  var address = cleanDisplayText(options.address);
+  var contactPhone = cleanDisplayText(options.contactPhone);
+  var contactPhoneHref = buildTelHref(contactPhone);
+  var contactNote = cleanDisplayText(options.contactNote);
+  var centerNameKey = normalizeGalleryFooterText(centerName);
+  var contactNoteKey = normalizeGalleryFooterText(contactNote);
+  var rawTag = cleanDisplayText(footerData.tag);
+  var rawText = cleanDisplayText(footerData.text);
+  var tag = rawTag
+    && normalizeGalleryFooterText(rawTag) !== centerNameKey
+    && !isGalleryFooterBrandOnly(rawTag)
+    ? rawTag
+    : '';
+  var copy = rawText
+    && normalizeGalleryFooterText(rawText) !== centerNameKey
+    && normalizeGalleryFooterText(rawText) !== contactNoteKey
+    && !isGalleryFooterBrandOnly(rawText)
+    ? rawText
+    : '';
+  var blocks = [];
+
+  if (tag) blocks.push('<p class="gallery-footer-tag">' + esc(tag) + '</p>');
+  if (centerName) blocks.push('<p class="gallery-footer-name">' + esc(centerName) + '</p>');
+  if (copy) blocks.push('<p class="gallery-footer-copy">' + escWithBr(copy) + '</p>');
+
+  var contactParts = [];
+  if (address) {
+    contactParts.push('<span class="gallery-footer-address"><span class="gallery-footer-meta-label">Address</span>' + escWithBr(address) + '</span>');
+  }
+  if (contactPhone) {
+    var phoneContent = contactPhoneHref
+      ? '<a href="' + esc(contactPhoneHref) + '" aria-label="' + esc(contactPhone + '로 전화하기') + '"><span class="gallery-footer-meta-label" aria-hidden="true">Tel</span><span>' + esc(contactPhone) + '</span></a>'
+      : '<span><span class="gallery-footer-meta-label">Tel</span>' + esc(contactPhone) + '</span>';
+    contactParts.push('<span class="gallery-footer-phone">' + phoneContent + '</span>');
+  }
+  if (contactParts.length) {
+    blocks.push('<address class="gallery-footer-meta">' + contactParts.join('') + '</address>');
+  }
+  if (contactNote) {
+    blocks.push('<p class="gallery-footer-contact-note">' + escWithBr(contactNote) + '</p>');
+  }
+
+  var links = [];
+  if (options.detailQuery && options.hasAdmissionData) {
+    links.push('<a href="' + esc('admissions.html' + options.detailQuery) + '">입학안내</a>');
+  }
+  if (options.detailQuery && options.hasDirectionsData) {
+    links.push('<a href="' + esc('directions.html' + options.detailQuery) + '">오시는 길</a>');
+  }
+  if (links.length) {
+    blocks.push('<nav class="gallery-footer-links" aria-label="원 안내">' + links.join('') + '</nav>');
+  }
+
+  blocks.push('<p class="gallery-footer-powered"><a href="index.html">Powered by 원이야</a></p>');
+  element.innerHTML = '<div class="gallery-footer-inner">' + blocks.join('') + '</div>';
 }
 
 function heroTitleHtml(title, accent, accentClass){
@@ -1244,7 +1347,16 @@ function mapRowToData(row, options = {}){
     <p class="reveal">${escWithBr(fin.subtitle)}</p>
     <button type="button" id="cslOpenBtn" class="btn-big reveal">${esc(fin.cta)}</button>`;
 
-  $('footerEl').innerHTML = `<div class="demo-tag">${esc(data.footer?.tag)}</div><div>${escWithBr(data.footer?.text)}</div>`;
+  renderGalleryFooter($('footerEl'), {
+    footer: data.footer,
+    centerName: c.name,
+    address: c.address,
+    contactPhone: c.contactPhone,
+    contactNote: c.contactNote,
+    detailQuery: detailQuery,
+    hasAdmissionData: hasAdmissionData,
+    hasDirectionsData: hasDirectionsData
+  });
   document.title = `원이야 - ${esc(c.name) || '원이야'}`;
 
   window.__directorData__ = c.director;
