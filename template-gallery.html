@@ -1096,6 +1096,21 @@ function mapRowToData(row, options = {}){
     };
   }
 
+  async function signHeroPhoto(data){
+    const heroPath = normalizePhotoPath(data && data.heroPhoto);
+    if (!data || !heroPath) {
+      if (data) data.heroPhoto = '';
+      return;
+    }
+    try {
+      const resolveSignedPath = await signPaths([heroPath]);
+      data.heroPhoto = resolveSignedPath(heroPath);
+    } catch (e) {
+      console.warn('[gallery hero image]', e);
+      data.heroPhoto = isDirectPhotoUrl(heroPath) ? heroPath : '';
+    }
+  }
+
   async function signCenterPhotos(data){
     const facilities = data.center.facilities;
     const programs = data.center.programs;
@@ -1143,7 +1158,6 @@ function mapRowToData(row, options = {}){
       }
       isReviewMode = true;
       data = mapRowToData(reviewRes.data);
-      await signCenterPhotos(data);
     } else if (previewId){
       // ── 기존: 템플릿 샘플 미리보기 (?preview=gallery 등) — 절대 변경 금지 ──
       isPreviewMode = true;
@@ -1165,14 +1179,16 @@ function mapRowToData(row, options = {}){
       }
       isAdminPreviewMode = true;
       data = mapRowToData(previewRes.data);
-      await signCenterPhotos(data);
     } else {
       // ── 기존: 공개 원 조회 (?slug=slug) — 절대 변경 금지 ──
       const slug = slugParam || 'haetsal';
       const { data: row, error } = await client.from('centers').select('*, center_media(*), admissions(*), philosophy, programs, facilities').eq('slug', slug).single();
       if (error) throw error;
       data = mapRowToData(row);
-      await signCenterPhotos(data);
+    }
+
+    if (!isPreviewMode) {
+      await signHeroPhoto(data);
     }
 
     const previewBanner = document.getElementById('previewBanner');
@@ -1187,9 +1203,6 @@ function mapRowToData(row, options = {}){
         previewBanner.textContent = '템플릿 미리보기';
         previewBanner.hidden = !isPreviewMode;
       }
-    }
-    for (let i=0;i<SAMPLE_SPACES.length;i++){
-      if (data.album?.items?.[i]) SAMPLE_SPACES[i].photo = data.album.items[i].photo;
     }
   } catch (e) {
     console.error(e);
@@ -1299,13 +1312,25 @@ function mapRowToData(row, options = {}){
   // 1. 메인 배너
   const h = c.hero;
   $('banner').innerHTML = `
-    <div class="bg ${data.heroPhoto ? '' : 'placeholder'}">${data.heroPhoto ? `<img alt="${esc(c.name)}" src="${esc(data.heroPhoto)}">` : ''}</div>
+    <div class="bg ${data.heroPhoto ? '' : 'placeholder'}">${data.heroPhoto ? `<img alt="${esc(c.name)}" src="${esc(data.heroPhoto)}" loading="eager" fetchpriority="high" decoding="async">` : ''}</div>
     <div class="content">
       <div class="eyebrow reveal">${escWithBr(h.eyebrow)}</div>
       <h1 class="reveal">${heroTitleHtml(h.title, h.title_accent, '')}</h1>
       <p class="reveal">${escWithBr(h.subtitle)}</p>
       <nav class="frame-menu reveal" aria-label="바로가기">${(c.menu||[]).filter(m=>!m.cta).map(m=>`<a class="frame-btn" href="${esc(m.href)}">${esc(m.label)}</a>`).join('')}</nav>
     </div>`;
+
+  try {
+    if (!isPreviewMode) await signCenterPhotos(data);
+  } catch (e) {
+    console.error(e);
+    document.body.innerHTML = '<p style="padding:40px;font-family:sans-serif">원 데이터를 불러오지 못했어요. supabase-config.js를 확인해주세요.</p>';
+    return;
+  }
+
+  for (let i=0;i<SAMPLE_SPACES.length;i++){
+    if (data.album?.items?.[i]) SAMPLE_SPACES[i].photo = data.album.items[i].photo;
+  }
 
   // 원장 인사말 (미리보기 + 모달)
   const d = c.director;
