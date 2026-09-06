@@ -1114,17 +1114,33 @@ function mapRowToData(row, options = {}){
   async function signCenterPhotos(data){
     const facilities = data.center.facilities;
     const programs = data.center.programs;
-    const resolveSignedPath = await signPaths([data.heroPhoto]
-      .concat((data.day_story || []).map(it => it.photo))
-      .concat((data.album?.items || []).map(it => it.photo))
-      .concat((data.teachers?.items || []).map(tc => tc.photo))
-      .concat((facilities?.items || []).map(it => it && it.photo_url))
-      .concat((programs?.items || []).map(it => it && it.photo_url))
-      .concat(data.center.director ? [data.center.director.photo] : []));
+    const albumItems = data.album?.items || [];
+    const facilityItems = facilities?.items || [];
+    const programItems = programs?.items || [];
+    const immediatePaths = [data.heroPhoto]
+      .concat(data.center.director ? [data.center.director.photo] : []);
+
+    if (facilityItems.length) {
+      facilityItems.forEach(function(item, index){
+        const itemPhoto = normalizePhotoPath(item && item.photo_url);
+        const albumFallback = normalizePhotoPath(albumItems[index] && albumItems[index].photo);
+        immediatePaths.push(itemPhoto || albumFallback);
+      });
+    } else if (facilities) {
+      immediatePaths.push.apply(immediatePaths, albumItems.slice(0, 4).map(function(item){ return item && item.photo; }));
+    }
+    programItems.forEach(function(item, index){
+      const albumFallback = albumItems[index + 4] || albumItems[index] || null;
+      const itemPhoto = normalizePhotoPath(item && item.photo_url);
+      immediatePaths.push(itemPhoto || normalizePhotoPath(albumFallback && albumFallback.photo));
+    });
+
+    const immediatePathSet = new Set(immediatePaths.map(normalizePhotoPath).filter(Boolean));
+    const resolveSignedPath = await signPaths(immediatePaths);
     data.heroPhoto = resolveSignedPath(data.heroPhoto);
-    for (const it of data.day_story || []){ it.photo = resolveSignedPath(it.photo); }
-    for (const it of data.album.items){ it.photo = resolveSignedPath(it.photo); }
-    for (const tc of data.teachers.items){ tc.photo = resolveSignedPath(tc.photo); }
+    for (const it of albumItems){
+      if (immediatePathSet.has(normalizePhotoPath(it && it.photo))) it.photo = resolveSignedPath(it.photo);
+    }
     ['facilities', 'programs'].forEach(function(key){
       const section = data.center[key];
       if (!section || !Array.isArray(section.items)) return;
@@ -1400,7 +1416,7 @@ function mapRowToData(row, options = {}){
       </div>
       <div class="gallery-rail">${galleryItems.map((it,i)=>`
         <figure class="art">
-          <div class="frame"><img decoding="async" alt="${esc(it.alt)}" data-src="${esc(it.photo)}"></div>
+          <div class="frame"><img decoding="async" alt="${esc(it.alt)}" data-photo-path="${esc(it.photo)}" data-photo-group="day"></div>
           <figcaption class="meta">
             <span class="no">${String(i+1).padStart(2,'0')}</span>
             <span class="cap">${esc(it.label)}</span>
@@ -1494,7 +1510,7 @@ function mapRowToData(row, options = {}){
     </div>
     <div class="staff-grid">${(t?.items || []).map(tc=>`
       <div class="person reveal">
-        <div class="portrait"><img decoding="async" alt="${esc(tc.name)}" data-src="${esc(tc.photo)}"></div>
+        <div class="portrait"><img decoding="async" alt="${esc(tc.name)}" data-photo-path="${esc(tc.photo)}" data-photo-group="teacher"></div>
         <div class="name">${esc(tc.name)}</div>
         <div class="role">${esc(tc.role)}</div>
         ${hasVisibleText(tc.message) ? `<div class="msg">"${escWithBr(tc.message)}"</div>` : ''}
@@ -1567,14 +1583,14 @@ function mapRowToData(row, options = {}){
       alert(consultationBlockedMessage);
     }, true);
   }
-  initInteractions();
+  initInteractions(signPaths);
   renderInfoSections(data, c, esc, detailQuery, hasAdmissionData, hasDirectionsData);
   setupAskPanel(data.faqs, isPreviewMode, isReviewMode, PREVIEW_MESSAGE, REVIEW_MESSAGE);
   initConsultationForm(client, c.id, data.pageState, consultationBlockedMessage);
 })();
 
-function initInteractions(){
-  initDeferredImages();
+function initInteractions(signPaths){
+  initDeferredImages(signPaths);
 
   // ── 원장 인사말 모달 ──
   (function(){
@@ -1808,23 +1824,73 @@ function setupAskPanel(faqs, isPreviewMode, isReviewMode, PREVIEW_MESSAGE, REVIE
   });
 }
 
-function initDeferredImages(){
-  var imgs = document.querySelectorAll('img[data-src]');
+function initDeferredImages(signPaths){
+  var imgs = document.querySelectorAll('img[data-src], img[data-photo-path]');
   if (!imgs.length) return;
-  function load(img){
+  var groupLoads = new Map();
+
+  function loadPrepared(img){
     if (!img.dataset.src) return;
     img.src = img.dataset.src;
     img.removeAttribute('data-src');
   }
+
+  function groupImages(group){
+    return Array.prototype.filter.call(document.querySelectorAll('img[data-photo-path]'), function(img){
+      return (img.dataset.photoGroup || '') === group;
+    });
+  }
+
+  function loadSignedGroup(group){
+    if (!group || typeof signPaths !== 'function') return Promise.resolve();
+    if (groupLoads.has(group)) return groupLoads.get(group);
+
+    var entries = groupImages(group).map(function(img){
+      return { img:img, path:String(img.dataset.photoPath || '').trim() };
+    }).filter(function(entry){ return entry.path; });
+
+    var loadPromise = (async function(){
+      if (!entries.length) return;
+      var resolveSignedPath;
+      try {
+        resolveSignedPath = await signPaths(entries.map(function(entry){ return entry.path; }));
+      } catch (e) {
+        return;
+      }
+      entries.forEach(function(entry){
+        var img = entry.img;
+        if (!img.isConnected || String(img.dataset.photoPath || '').trim() !== entry.path) return;
+        var src = resolveSignedPath(entry.path);
+        if (!src) return;
+        img.src = src;
+        img.removeAttribute('data-photo-path');
+        img.removeAttribute('data-photo-group');
+      });
+    })();
+
+    groupLoads.set(group, loadPromise);
+    return loadPromise;
+  }
+
+  function load(img){
+    if (img.dataset.src) {
+      loadPrepared(img);
+      return Promise.resolve();
+    }
+    return loadSignedGroup(img.dataset.photoGroup || '');
+  }
+
   if (!('IntersectionObserver' in window)){
-    imgs.forEach(load);
+    imgs.forEach(function(img){ load(img).catch(function(){}); });
     return;
   }
   var observer = new IntersectionObserver(function(entries){
     entries.forEach(function(entry){
       if (!entry.isIntersecting) return;
-      load(entry.target);
-      observer.unobserve(entry.target);
+      var group = entry.target.dataset.photoGroup || '';
+      var targets = group ? groupImages(group) : [entry.target];
+      targets.forEach(function(img){ observer.unobserve(img); });
+      load(entry.target).catch(function(){});
     });
   }, { rootMargin: '200px' });
   imgs.forEach(function(img){ observer.observe(img); });
