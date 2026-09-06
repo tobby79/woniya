@@ -1247,7 +1247,9 @@ function mapRowToData(row, options = {}){
   // sunshine 기준 구조 통일: 공지·행사일정 제거 → 메뉴 필터. 하루(#day)·FAQ(#faq) 섹션 유지.
   // 시설 소개/교육프로그램(인페이지 섹션) + 입학안내/오시는 길(새 페이지) 런타임 주입
   (function(){
-    var classMiniHref = 'parent.html';
+    var classMiniHref = data.pageState.mode === 'preview' && data.pageState.preview === 'gallery'
+      ? 'sample-class-mini.html?from=sample-gallery'
+      : 'parent.html';
     function menuPathname(href){
       var value = cleanDisplayText(href);
       if (!value || value.charAt(0) === '#') return '';
