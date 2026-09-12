@@ -1451,7 +1451,6 @@ function mapRowToData(row, options = {}){
           <div class="sec-label">Gallery</div>
           <h2 class="sec-title">우리들의 순간</h2>
         </div>
-        <div class="g-count">${String(galleryItems.length).padStart(2,'0')} 점</div>
       </div>
       <div class="gallery-rail">${galleryItems.map((it,i)=>`
         <figure class="art">
@@ -1567,6 +1566,18 @@ function mapRowToData(row, options = {}){
   } else { document.getElementById('facilitiesSec').hidden = true; }
 
   // 우리 원 선생님
+  function renderTeacherMessage(value){
+    let message = String(value ?? '').trim();
+    if (!message) return '';
+    const outerQuotePairs = [['"','"'], ["'","'"], ['“','”'], ['‘','’']];
+    for (const pair of outerQuotePairs) {
+      if (message.startsWith(pair[0]) && message.endsWith(pair[1])) {
+        message = message.slice(pair[0].length, -pair[1].length).trim();
+        break;
+      }
+    }
+    return hasVisibleText(message) ? `<div class="msg">“${escWithBr(message)}”</div>` : '';
+  }
   const t = data.teachers;
   $('teachersSec').innerHTML = `
     <div class="sec-head reveal">
@@ -1578,7 +1589,7 @@ function mapRowToData(row, options = {}){
         <div class="portrait"><img decoding="async" alt="${esc(tc.name)}" data-photo-path="${esc(tc.photo)}" data-photo-group="teacher"></div>
         <div class="name">${esc(tc.name)}</div>
         <div class="role">${esc(tc.role)}</div>
-        ${hasVisibleText(tc.message) ? `<div class="msg">"${escWithBr(tc.message)}"</div>` : ''}
+        ${renderTeacherMessage(tc.message)}
       </div>`).join('')}</div>`;
 
   // 교육프로그램 (이미지 카드 + 모달)
