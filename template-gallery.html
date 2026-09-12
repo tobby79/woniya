@@ -1934,26 +1934,36 @@ function initInteractions(signPaths){
     });
   });
 
-  var io = new IntersectionObserver(function(entries){
-    entries.forEach(function(e){ if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target);} });
-  },{threshold:0.12});
+  var supportsIntersectionObserver = typeof window.IntersectionObserver === 'function';
   var revealEls = document.querySelectorAll('.reveal');
-  revealEls.forEach(function(el){ io.observe(el); });
-  requestAnimationFrame(function(){
+  if (supportsIntersectionObserver) {
+    var io = new window.IntersectionObserver(function(entries){
+      entries.forEach(function(e){ if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target);} });
+    },{threshold:0.12});
+    revealEls.forEach(function(el){ io.observe(el); });
+    requestAnimationFrame(function(){
+      revealEls.forEach(function(el){ el.classList.add('in'); });
+    });
+  } else {
     revealEls.forEach(function(el){ el.classList.add('in'); });
-  });
+  }
 
   // 상단바: 스크롤하면 solid (topbar.js가 만든 nav + 별도 menuBtn 둘 다 토글)
   var topbar = document.getElementById('topbar');
   var menuBtnEl = document.getElementById('menuBtn');
   var banner = document.getElementById('banner');
-  var tbio = new IntersectionObserver(function(entries){
-    entries.forEach(function(e){
-      topbar.classList.toggle('solid', !e.isIntersecting);
-      menuBtnEl.classList.toggle('solid', !e.isIntersecting);
-    });
-  },{rootMargin:'-80px 0px 0px 0px',threshold:0});
-  tbio.observe(banner);
+  if (supportsIntersectionObserver) {
+    var tbio = new window.IntersectionObserver(function(entries){
+      entries.forEach(function(e){
+        topbar.classList.toggle('solid', !e.isIntersecting);
+        menuBtnEl.classList.toggle('solid', !e.isIntersecting);
+      });
+    },{rootMargin:'-80px 0px 0px 0px',threshold:0});
+    tbio.observe(banner);
+  } else {
+    topbar.classList.add('solid');
+    menuBtnEl.classList.add('solid');
+  }
 
   // 안내 탭
   var infoTabs = document.querySelectorAll('.info-tab');
@@ -1971,13 +1981,18 @@ function initInteractions(signPaths){
   // 플로팅
   var floatEl=document.getElementById('float');
   var finale=document.getElementById('finale');
-  var bio=new IntersectionObserver(function(entries){
-    entries.forEach(function(e){
-      if(e.target===banner){ if(e.isIntersecting){ floatEl.classList.remove('show'); } else { floatEl.classList.add('show'); } }
-      if(e.target===finale){ if(e.isIntersecting){ floatEl.classList.add('hide'); } else { floatEl.classList.remove('hide'); } }
-    });
-  },{threshold:0.4});
-  bio.observe(banner); bio.observe(finale);
+  if (supportsIntersectionObserver) {
+    var bio=new window.IntersectionObserver(function(entries){
+      entries.forEach(function(e){
+        if(e.target===banner){ if(e.isIntersecting){ floatEl.classList.remove('show'); } else { floatEl.classList.add('show'); } }
+        if(e.target===finale){ if(e.isIntersecting){ floatEl.classList.add('hide'); } else { floatEl.classList.remove('hide'); } }
+      });
+    },{threshold:0.4});
+    bio.observe(banner); bio.observe(finale);
+  } else {
+    floatEl.classList.remove('hide');
+    floatEl.classList.add('show');
+  }
 
   // 메뉴
   var menuBtn=document.getElementById('menuBtn');
