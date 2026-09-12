@@ -180,8 +180,8 @@
   .director{padding-top:90px;padding-bottom:90px;text-align:center}
   .director .quote-mark{font-family:var(--serif);font-size:3.5rem;color:var(--line);line-height:.6;margin-bottom:10px}
   .director .msg{font-family:var(--serif);font-weight:400;font-size:1.5rem;line-height:1.9;color:var(--char);max-width:520px;margin:0 auto;letter-spacing:-.2px;white-space:pre-line}
-  .director .who{display:flex;flex-direction:column;align-items:center;gap:14px;margin-top:36px}
-  .director .who .portrait{width:64px;height:64px;border-radius:50%;overflow:hidden;background:var(--bg-warm)}
+  .director .who{display:flex;flex-direction:column;align-items:center;gap:18px;margin-top:36px}
+  .director .who .portrait{width:256px;height:256px;max-width:70vw;max-height:70vw;aspect-ratio:1/1;border-radius:50%;overflow:hidden;background:var(--bg-warm)}
   .director .who .portrait img{width:100%;height:100%;object-fit:cover;display:block;filter:grayscale(.3)}
   .director .who .name{font-size:.9rem;color:var(--ink-soft);letter-spacing:.5px}
   .director .who .name strong{display:block;font-family:var(--serif);font-weight:600;font-size:1.05rem;color:var(--char);margin-top:2px}
@@ -283,6 +283,7 @@
   a:focus-visible,.info-tab:focus-visible{outline:2px solid var(--char);outline-offset:3px}
 
   @media (max-width:480px){
+    .director .who .portrait{width:176px;height:176px}
     .staff-grid{grid-template-columns:1fr 1fr;gap:20px 16px}
     .art:nth-child(even),.art:nth-child(odd){padding-left:0;padding-right:0}
     .gallery-intro-video{padding-top:24px;padding-bottom:64px}
