@@ -302,8 +302,8 @@
     .reveal{opacity:1;transform:none}
   }
 
-  .preview-banner{position:fixed;top:72px;left:50%;transform:translateX(-50%);z-index:55;background:rgba(38,37,36,.94);color:#fff;border-radius:999px;padding:9px 16px;font-size:.84rem;font-weight:800;box-shadow:0 14px 34px -18px rgba(25,25,25,.5)}
-  .preview-banner[hidden]{display:none}
+  .topbar .topbar-preview-badge{background:rgba(20,20,22,.82);color:#fff;border:1px solid rgba(255,255,255,.45);font-family:var(--body);font-weight:600}
+  .topbar.solid .topbar-preview-badge{background:rgba(43,43,46,.08);color:var(--char);border-color:var(--line)}
 
 </style>
 </head>
@@ -316,7 +316,6 @@
   <span></span><span></span><span></span>
 </button>
 <div class="menu-panel" id="menuPanel"></div>
-<div class="preview-banner" id="previewBanner" hidden>템플릿 미리보기</div>
 <span id="top"></span>
 
 <header class="banner" id="banner"></header>
@@ -1234,19 +1233,6 @@ function mapRowToData(row, options = {}){
       await signHeroPhoto(data);
     }
 
-    const previewBanner = document.getElementById('previewBanner');
-    if (previewBanner) {
-      if (isReviewMode) {
-        previewBanner.textContent = '공개 전 검수용 화면입니다';
-        previewBanner.hidden = false;
-      } else if (isAdminPreviewMode) {
-        previewBanner.textContent = '관리자 미리보기 — 비공개 상태';
-        previewBanner.hidden = false;
-      } else {
-        previewBanner.textContent = '템플릿 미리보기';
-        previewBanner.hidden = !isPreviewMode;
-      }
-    }
   } catch (e) {
     console.error(e);
     document.body.innerHTML = '<p style="padding:40px;font-family:sans-serif">원 데이터를 불러오지 못했어요. supabase-config.js를 확인해주세요.</p>';
@@ -1351,7 +1337,15 @@ function mapRowToData(row, options = {}){
     }
   })();
 
-  const galleryTopbar = WoniyaTopbar.init({ centerName: c.name.replace(/\s*어린이집$/,'') || c.name });
+  const previewLabel = isReviewMode
+    ? '공개 전 검수용 화면입니다'
+    : (isAdminPreviewMode
+      ? '관리자 미리보기 — 비공개 상태'
+      : (isPreviewMode ? '템플릿 미리보기' : ''));
+  const galleryTopbar = WoniyaTopbar.init({
+    centerName: c.name.replace(/\s*어린이집$/,'') || c.name,
+    previewLabel: previewLabel
+  });
   const skipLink = $('skipLink');
   if (galleryTopbar && skipLink && galleryTopbar.parentNode === document.body) {
     document.body.insertBefore(skipLink, galleryTopbar);
