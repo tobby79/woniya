@@ -792,6 +792,41 @@
 
   initializePersonalStart();
 
+  async function loadGallerySampleCard(){
+    try {
+      const { data, error } = await client
+        .from('template_centers')
+        .select('id, template_id, slug, name, region, address, template, status, template_admissions(id)')
+        .eq('template_id', 'gallery')
+        .eq('slug', 'gallery')
+        .eq('status', 'published')
+        .maybeSingle();
+      if (error) throw error;
+      if (!data) return null;
+
+      return {
+        id: 'template-sample:' + data.id,
+        slug: 'sample-gallery',
+        sampleContext: 'gallery',
+        name: data.name || '갤러리아 유치원',
+        region: data.region || null,
+        address: data.address || '',
+        badges: {},
+        tags: ['샘플', '템플릿 미리보기'],
+        director: null,
+        template: 'gallery',
+        status: 'published',
+        card_image: 'generated/platform-images/card/gallery.jpg',
+        admissions: data.template_admissions || [],
+        homeUrl: 'template-gallery.html?preview=gallery',
+        admissionsUrl: 'admissions.html?preview=gallery'
+      };
+    } catch (error) {
+      console.warn('gallery sample load failed', error);
+      return null;
+    }
+  }
+
   let centers = [];
   try {
     if (pageCache.centers) {
@@ -864,6 +899,8 @@
           center.director.photo = pageCache.signedUrls.get(center.director.photo);
         }
       }
+      const gallerySample = await loadGallerySampleCard();
+      if (gallerySample) centers.push(gallerySample);
       pageCache.centers = centers;
     }
   } catch (e) {
@@ -919,8 +956,8 @@
       var distanceText = typeof c.distanceKm === 'number' ? '약 ' + c.distanceKm.toFixed(1) + ' km' : '';
       var metaText = [locationText, distanceText].filter(Boolean).join(' · ');
       var templateFile = TEMPLATE_FILES[c.template] || 'template-sunshine.html';
-      var homeUrl = templateFile + '?slug=' + encodeURIComponent(c.slug);
-      var admissionsUrl = 'admissions.html?slug=' + encodeURIComponent(c.slug);
+      var homeUrl = c.homeUrl || (templateFile + '?slug=' + encodeURIComponent(c.slug));
+      var admissionsUrl = c.admissionsUrl || ('admissions.html?slug=' + encodeURIComponent(c.slug));
       var hasHomeIntro = HOME_INTRO_SLUGS.has(c.slug);
       var introAttr = hasHomeIntro
         ? ' data-center-intro="' + escapeHtml(c.slug) + '" data-center-slug="' + escapeHtml(c.slug) + '"'
