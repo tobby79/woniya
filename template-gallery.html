@@ -100,10 +100,15 @@
   .gallery-rail::-webkit-scrollbar-thumb{background:var(--char-soft)}
   .art{position:relative;flex:0 0 78%;max-width:420px;scroll-snap-align:center}
   .art .frame{overflow:hidden;background:var(--bg-warm);aspect-ratio:4/5}
-  .art .art-lightbox-trigger{display:block;width:100%;border:0;border-radius:0;color:inherit;font:inherit;text-align:inherit;cursor:pointer;-webkit-appearance:none;appearance:none}
+  .art .art-lightbox-trigger{position:relative;display:block;width:100%;border:0;border-radius:0;color:inherit;font:inherit;text-align:inherit;cursor:pointer;-webkit-appearance:none;appearance:none}
   .art .art-lightbox-trigger:focus-visible{outline:3px solid #fff;outline-offset:-6px;box-shadow:inset 0 0 0 8px var(--char)}
+  .art .art-lightbox-trigger[disabled]{opacity:1;cursor:wait}
+  .art .art-lightbox-trigger[data-image-state="error"]{cursor:not-allowed}
+  .art .art-lightbox-trigger[data-image-state="loading"] img,.art .art-lightbox-trigger[data-image-state="error"] img{opacity:.38}
+  .art .art-image-status{position:absolute;top:50%;left:50%;z-index:1;max-width:calc(100% - 32px);transform:translate(-50%,-50%);padding:8px 12px;background:rgba(43,43,46,.88);color:#fff;font-size:.8rem;font-weight:600;line-height:1.45;text-align:center;white-space:nowrap;pointer-events:none}
+  .art .art-image-status[hidden]{display:none}
   .art .frame img{width:100%;height:100%;object-fit:cover;display:block;transition:transform 1.2s cubic-bezier(.2,.7,.3,1)}
-  .art:hover .frame img{transform:scale(1.03)}
+  .art:hover .art-lightbox-trigger:not([disabled]) img{transform:scale(1.03)}
   .art .meta{display:flex;align-items:baseline;gap:14px;margin-top:14px}
   .art .meta .no{font-family:var(--serif);font-size:.9rem;color:var(--ink-soft)}
   .art .meta .cap{font-family:var(--serif);font-size:1.1rem;color:var(--char)}
@@ -1442,7 +1447,7 @@ function mapRowToData(row, options = {}){
       </div>
       <div class="gallery-rail">${galleryItems.map((it,i)=>`
         <figure class="art">
-          <button type="button" class="frame art-lightbox-trigger" data-lightbox-label="${esc(it.label)}" aria-label="${esc(it.label)} 작품 크게 보기"><img decoding="async" alt="${esc(it.alt)}" data-photo-path="${esc(it.photo)}" data-photo-group="day"></button>
+          <button type="button" class="frame art-lightbox-trigger" data-lightbox-label="${esc(it.label)}" data-image-state="loading" aria-label="${esc(it.label)} 작품 크게 보기" aria-busy="true" aria-describedby="artImageStatus${i}" disabled><img decoding="async" alt="${esc(it.alt)}" data-photo-path="${esc(it.photo)}" data-photo-group="day"><span class="art-image-status" id="artImageStatus${i}">이미지 준비 중</span></button>
           <figcaption class="meta">
             <span class="no">${String(i+1).padStart(2,'0')}</span>
             <span class="cap">${esc(it.label)}</span>
@@ -1889,7 +1894,8 @@ function initInteractions(signPaths){
   document.querySelectorAll('.art-lightbox-trigger').forEach(function(trigger){
     var img = trigger.querySelector('img');
     trigger.addEventListener('click', function(){
-      if (!img || !img.hasAttribute('src') || !img.src) return;
+      if (trigger.disabled || trigger.dataset.imageState !== 'ready') return;
+      if (!img || !img.hasAttribute('src') || !img.src || !img.complete || img.naturalWidth <= 0) return;
       if (window.__openLightbox__) window.__openLightbox__(img.src, img.alt, trigger.dataset.lightboxLabel, trigger);
     });
   });
@@ -2106,11 +2112,62 @@ function initDeferredImages(signPaths){
   var imgs = document.querySelectorAll('img[data-src], img[data-photo-path]');
   if (!imgs.length) return;
   var groupLoads = new Map();
+  var boundDayImages = new WeakSet();
+
+  function dayImageParts(img){
+    var trigger = img && img.closest ? img.closest('.art-lightbox-trigger') : null;
+    if (!trigger) return null;
+    return { trigger:trigger, status:trigger.querySelector('.art-image-status') };
+  }
+
+  function setDayImageState(img, state){
+    var parts = dayImageParts(img);
+    if (!parts) return;
+    var trigger = parts.trigger;
+    var status = parts.status;
+    trigger.dataset.imageState = state;
+    if (state === 'ready') {
+      trigger.disabled = false;
+      trigger.removeAttribute('aria-busy');
+      trigger.removeAttribute('aria-describedby');
+      if (status) {
+        status.textContent = '';
+        status.hidden = true;
+      }
+      return;
+    }
+    trigger.disabled = true;
+    trigger.setAttribute('aria-busy', state === 'loading' ? 'true' : 'false');
+    if (status) {
+      status.textContent = state === 'loading' ? '이미지 준비 중' : '이미지를 불러오지 못했습니다';
+      status.hidden = false;
+      if (status.id) trigger.setAttribute('aria-describedby', status.id);
+    }
+  }
+
+  function syncCompletedDayImage(img){
+    if (!dayImageParts(img) || !img.hasAttribute('src') || !img.src || !img.complete) return;
+    setDayImageState(img, img.naturalWidth > 0 ? 'ready' : 'error');
+  }
+
+  function bindDayImageState(img){
+    if (!dayImageParts(img) || boundDayImages.has(img)) return;
+    boundDayImages.add(img);
+    setDayImageState(img, 'loading');
+    img.addEventListener('load', function(){
+      setDayImageState(img, img.hasAttribute('src') && img.src && img.naturalWidth > 0 ? 'ready' : 'error');
+    });
+    img.addEventListener('error', function(){ setDayImageState(img, 'error'); });
+    syncCompletedDayImage(img);
+  }
+
+  imgs.forEach(function(img){ bindDayImageState(img); });
 
   function loadPrepared(img){
     if (!img.dataset.src) return;
     img.src = img.dataset.src;
     img.removeAttribute('data-src');
+    syncCompletedDayImage(img);
   }
 
   function groupImages(group){
@@ -2120,12 +2177,19 @@ function initDeferredImages(signPaths){
   }
 
   function loadSignedGroup(group){
-    if (!group || typeof signPaths !== 'function') return Promise.resolve();
+    if (!group || typeof signPaths !== 'function') {
+      groupImages(group).forEach(function(img){ setDayImageState(img, 'error'); });
+      return Promise.resolve();
+    }
     if (groupLoads.has(group)) return groupLoads.get(group);
 
-    var entries = groupImages(group).map(function(img){
+    var candidates = groupImages(group);
+    var entries = candidates.map(function(img){
       return { img:img, path:String(img.dataset.photoPath || '').trim() };
     }).filter(function(entry){ return entry.path; });
+    candidates.forEach(function(img){
+      if (!String(img.dataset.photoPath || '').trim()) setDayImageState(img, 'error');
+    });
 
     var loadPromise = (async function(){
       if (!entries.length) return;
@@ -2133,16 +2197,25 @@ function initDeferredImages(signPaths){
       try {
         resolveSignedPath = await signPaths(entries.map(function(entry){ return entry.path; }));
       } catch (e) {
+        entries.forEach(function(entry){ setDayImageState(entry.img, 'error'); });
         return;
       }
       entries.forEach(function(entry){
         var img = entry.img;
         if (!img.isConnected || String(img.dataset.photoPath || '').trim() !== entry.path) return;
-        var src = resolveSignedPath(entry.path);
-        if (!src) return;
-        img.src = src;
-        img.removeAttribute('data-photo-path');
-        img.removeAttribute('data-photo-group');
+        var src = typeof resolveSignedPath === 'function' ? resolveSignedPath(entry.path) : '';
+        if (!src) {
+          setDayImageState(img, 'error');
+          return;
+        }
+        try {
+          img.src = src;
+          img.removeAttribute('data-photo-path');
+          img.removeAttribute('data-photo-group');
+          syncCompletedDayImage(img);
+        } catch (e) {
+          setDayImageState(img, 'error');
+        }
       });
     })();
 
@@ -2155,11 +2228,16 @@ function initDeferredImages(signPaths){
       loadPrepared(img);
       return Promise.resolve();
     }
-    return loadSignedGroup(img.dataset.photoGroup || '');
+    var group = img.dataset.photoGroup || '';
+    if (!group) {
+      setDayImageState(img, 'error');
+      return Promise.resolve();
+    }
+    return loadSignedGroup(group);
   }
 
   if (!('IntersectionObserver' in window)){
-    imgs.forEach(function(img){ load(img).catch(function(){}); });
+    imgs.forEach(function(img){ load(img).catch(function(){ setDayImageState(img, 'error'); }); });
     return;
   }
   var observer = new IntersectionObserver(function(entries){
@@ -2168,7 +2246,9 @@ function initDeferredImages(signPaths){
       var group = entry.target.dataset.photoGroup || '';
       var targets = group ? groupImages(group) : [entry.target];
       targets.forEach(function(img){ observer.unobserve(img); });
-      load(entry.target).catch(function(){});
+      load(entry.target).catch(function(){
+        targets.forEach(function(img){ setDayImageState(img, 'error'); });
+      });
     });
   }, { rootMargin: '200px' });
   imgs.forEach(function(img){ observer.observe(img); });
