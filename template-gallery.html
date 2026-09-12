@@ -383,10 +383,10 @@
 </div>
 
 <!-- 원장 인사말 모달 -->
-<div class="info-modal-overlay" id="directorModal">
+<div class="info-modal-overlay" id="directorModal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="directorModalTitle">
   <div class="info-modal-panel">
-    <div class="info-modal-header"><h3 class="info-modal-title">원장 인사말</h3></div>
-    <button class="info-modal-close" id="directorModalClose">×</button>
+    <div class="info-modal-header"><h3 class="info-modal-title" id="directorModalTitle">원장 인사말</h3></div>
+    <button type="button" class="info-modal-close" id="directorModalClose" aria-label="원장 인사말 닫기">×</button>
     <div class="info-modal-body">
       <div class="director-modal-photo" id="directorModalPhoto"></div>
       <p class="info-modal-greeting" id="directorModalMsg"></p>
@@ -397,10 +397,10 @@
 </div>
 
 <!-- 시설 모달 -->
-<div class="info-modal-overlay" id="facilityModal">
+<div class="info-modal-overlay" id="facilityModal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="facilityModalTitle" aria-describedby="facilityIntro">
   <div class="info-modal-panel">
-    <div class="info-modal-header"><h3 class="info-modal-title">우리 원 시설</h3></div>
-    <button class="info-modal-close" id="facilityModalClose">×</button>
+    <div class="info-modal-header"><h3 class="info-modal-title" id="facilityModalTitle">우리 원 시설</h3></div>
+    <button type="button" class="info-modal-close" id="facilityModalClose" aria-label="시설 안내 닫기">×</button>
     <div class="info-modal-body">
       <p class="info-modal-prog-intro" id="facilityIntro"></p>
       <div class="fac-modal-list" id="facilityList"></div>
@@ -409,10 +409,10 @@
 </div>
 
 <!-- 교육프로그램 모달 -->
-<div class="info-modal-overlay" id="programModal">
+<div class="info-modal-overlay" id="programModal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="programModalTitle" aria-describedby="programModalIntro">
   <div class="info-modal-panel">
-    <div class="info-modal-header"><h3 class="info-modal-title">교육프로그램</h3></div>
-    <button class="info-modal-close" id="programModalClose">×</button>
+    <div class="info-modal-header"><h3 class="info-modal-title" id="programModalTitle">교육프로그램</h3></div>
+    <button type="button" class="info-modal-close" id="programModalClose" aria-label="교육 프로그램 닫기">×</button>
     <div class="info-modal-body">
       <p class="info-modal-prog-intro" id="programModalIntro"></p>
       <div id="programModalList"></div>
@@ -488,6 +488,7 @@
   .info-modal-panel{position:relative;width:92vw;max-width:520px;min-height:70vh;max-height:88vh;overflow-y:auto;background:var(--paper);border-radius:8px;box-shadow:0 30px 60px -20px rgba(0,0,0,.45);padding:0}
   .info-modal-header{position:sticky;top:0;z-index:2;background:var(--paper);padding:28px 32px 18px;border-radius:8px 8px 0 0;border-bottom:1px solid var(--line)}
   .info-modal-close{position:absolute;top:22px;right:24px;width:38px;height:38px;border:none;background:var(--bg-warm);border-radius:50%;font-size:1.4rem;color:var(--ink-soft);cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:3}
+  .info-modal-close:focus-visible{outline:3px solid var(--char);outline-offset:3px}
   .info-modal-body{padding:20px 32px 36px}
   .info-modal-title{font-family:var(--serif);font-size:1.45rem;color:var(--char);letter-spacing:-.3px;margin:0}
   .director-modal-photo{width:120px;height:120px;border-radius:50%;margin:0 auto 24px;overflow:hidden;background:var(--bg-warm)}
@@ -1596,13 +1597,111 @@ function mapRowToData(row, options = {}){
 function initInteractions(signPaths){
   initDeferredImages(signPaths);
 
+  function setupInfoModalLifecycle(config){
+    var overlay = document.getElementById(config.overlayId);
+    var panel = overlay && overlay.querySelector('.info-modal-panel');
+    var closeBtn = document.getElementById(config.closeButtonId);
+    var openBtn = document.getElementById(config.openButtonId);
+    var returnFocus = null;
+    var previousBodyOverflow = '';
+    var inertedBackgroundElements = [];
+    if (!overlay || !panel || !closeBtn || !openBtn) return;
+
+    function hasOtherOpenOverlay(){
+      return Array.prototype.some.call(
+        document.querySelectorAll('.info-modal-overlay.open, .lightbox-overlay.open, .ask-modal-overlay.open, .csl-overlay.open'),
+        function(candidate){ return candidate !== overlay; }
+      );
+    }
+
+    function lockBackground(){
+      previousBodyOverflow = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      inertedBackgroundElements = [];
+      Array.prototype.forEach.call(document.body.children, function(element){
+        if (element === overlay || element.tagName === 'SCRIPT' || element.tagName === 'STYLE') return;
+        if (element.hasAttribute('inert')) return;
+        element.setAttribute('inert', '');
+        inertedBackgroundElements.push(element);
+      });
+    }
+
+    function unlockBackground(){
+      document.body.style.overflow = previousBodyOverflow;
+      inertedBackgroundElements.forEach(function(element){
+        if (element.isConnected) element.removeAttribute('inert');
+      });
+      inertedBackgroundElements = [];
+    }
+
+    function getFocusableElements(){
+      return Array.prototype.filter.call(
+        panel.querySelectorAll('button:not([disabled]),a[href],input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])'),
+        function(element){
+          if (element.hidden || element.closest('[hidden],[aria-hidden="true"]')) return false;
+          var style = window.getComputedStyle(element);
+          return style.display !== 'none' && style.visibility !== 'hidden';
+        }
+      );
+    }
+
+    function open(trigger){
+      if (overlay.classList.contains('open') || hasOtherOpenOverlay()) return;
+      if (config.beforeOpen && config.beforeOpen() === false) return;
+      returnFocus = trigger && trigger.isConnected ? trigger : document.activeElement;
+      lockBackground();
+      overlay.classList.add('open');
+      overlay.setAttribute('aria-hidden', 'false');
+      closeBtn.focus({ preventScroll:true });
+    }
+
+    function close(){
+      if (!overlay.classList.contains('open')) return;
+      overlay.classList.remove('open');
+      overlay.setAttribute('aria-hidden', 'true');
+      unlockBackground();
+      if (returnFocus && returnFocus.isConnected) returnFocus.focus({ preventScroll:true });
+      returnFocus = null;
+    }
+
+    openBtn.addEventListener('click', function(event){ open(event.currentTarget); });
+    closeBtn.addEventListener('click', close);
+    overlay.addEventListener('click', function(event){ if (event.target === overlay) close(); });
+    document.addEventListener('keydown', function(event){
+      if (!overlay.classList.contains('open')) return;
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        close();
+        return;
+      }
+      if (event.key !== 'Tab') return;
+      var focusable = getFocusableElements();
+      if (!focusable.length) {
+        event.preventDefault();
+        closeBtn.focus({ preventScroll:true });
+        return;
+      }
+      var first = focusable[0];
+      var last = focusable[focusable.length - 1];
+      if (!overlay.contains(document.activeElement)) {
+        event.preventDefault();
+        first.focus({ preventScroll:true });
+      } else if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus({ preventScroll:true });
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus({ preventScroll:true });
+      }
+    });
+  }
+
   // ── 원장 인사말 모달 ──
-  (function(){
-    var overlay = document.getElementById('directorModal');
-    var closeBtn = document.getElementById('directorModalClose');
-    var openBtn = document.getElementById('directorModalOpenBtn');
-    if (!overlay) return;
-    function open(){
+  setupInfoModalLifecycle({
+    overlayId:'directorModal',
+    closeButtonId:'directorModalClose',
+    openButtonId:'directorModalOpenBtn',
+    beforeOpen:function(){
       var d = window.__directorData__;
       var phil = window.__philosophyData__;
       if (d) {
@@ -1615,25 +1714,19 @@ function initInteractions(signPaths){
       var valEl = document.getElementById('directorModalValues');
       if (phil && mottoEl) { mottoEl.textContent = phil.motto || ''; mottoEl.hidden = !phil.motto; }
       if (phil && valEl) { valEl.innerHTML = (phil.values||[]).map(function(v){ return '<span class="info-modal-value">'+esc(v)+'</span>'; }).join(''); }
-      overlay.classList.add('open');
+      return true;
     }
-    function close(){ overlay.classList.remove('open'); }
-    if (openBtn) openBtn.addEventListener('click', open);
-    closeBtn.addEventListener('click', close);
-    overlay.addEventListener('click', function(e){ if(e.target===overlay) close(); });
-    document.addEventListener('keydown', function(e){ if(e.key==='Escape') close(); });
-  })();
+  });
 
   // ── 시설 모달 ──
-  (function(){
-    var overlay = document.getElementById('facilityModal');
-    var closeBtn = document.getElementById('facilityModalClose');
-    var openBtn = document.getElementById('facilityModalOpenBtn');
-    if (!overlay) return;
-    function open(){
+  setupInfoModalLifecycle({
+    overlayId:'facilityModal',
+    closeButtonId:'facilityModalClose',
+    openButtonId:'facilityModalOpenBtn',
+    beforeOpen:function(){
       var fac = window.__facilityData__;
       var albumImgs = window.__albumImgs__ || [];
-      if (!fac) return;
+      if (!fac) return false;
       document.getElementById('facilityIntro').textContent = fac.intro || '';
       document.getElementById('facilityList').innerHTML = (fac.items||[]).map(function(f, i){
         var img = albumImgs[i] || null;
@@ -1643,25 +1736,19 @@ function initInteractions(signPaths){
           + '<div class="fm-body"><div class="fm-name">'+esc(f.name)+'</div><div class="fm-desc">'+escWithBr(f.desc||'')+'</div></div>'
           + '</div>';
       }).join('');
-      overlay.classList.add('open');
+      return true;
     }
-    function close(){ overlay.classList.remove('open'); }
-    if (openBtn) openBtn.addEventListener('click', open);
-    closeBtn.addEventListener('click', close);
-    overlay.addEventListener('click', function(e){ if(e.target===overlay) close(); });
-    document.addEventListener('keydown', function(e){ if(e.key==='Escape') close(); });
-  })();
+  });
 
   // ── 교육프로그램 모달 ──
-  (function(){
-    var overlay = document.getElementById('programModal');
-    var closeBtn = document.getElementById('programModalClose');
-    var openBtn = document.getElementById('programModalOpenBtn');
-    if (!overlay) return;
-    function open(){
+  setupInfoModalLifecycle({
+    overlayId:'programModal',
+    closeButtonId:'programModalClose',
+    openButtonId:'programModalOpenBtn',
+    beforeOpen:function(){
       var prog = window.__programData__;
       var albumImgs = window.__albumImgs__ || [];
-      if (!prog) return;
+      if (!prog) return false;
       document.getElementById('programModalIntro').textContent = prog.intro || '';
       document.getElementById('programModalList').innerHTML = (prog.items||[]).map(function(it, i){
         var img = albumImgs[i+4] || albumImgs[i] || null;
@@ -1671,14 +1758,9 @@ function initInteractions(signPaths){
           + '<div class="pm-body"><div class="pm-name">'+esc(it.name)+'</div><div class="pm-desc">'+escWithBr(it.desc)+'</div></div>'
           + '</div>';
       }).join('');
-      overlay.classList.add('open');
+      return true;
     }
-    function close(){ overlay.classList.remove('open'); }
-    if (openBtn) openBtn.addEventListener('click', open);
-    closeBtn.addEventListener('click', close);
-    overlay.addEventListener('click', function(e){ if(e.target===overlay) close(); });
-    document.addEventListener('keydown', function(e){ if(e.key==='Escape') close(); });
-  })();
+  });
 
   // ── 라이트박스 ──
   (function(){
