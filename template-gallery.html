@@ -1490,8 +1490,30 @@ function mapRowToData(row, options = {}){
 
     const introVideoButton = introVideoSection.querySelector('.gallery-intro-video-poster');
     let introVideoLoaded = false;
-    introVideoButton.addEventListener('click', function(){
-      if (introVideoLoaded || introVideoSection.querySelector('iframe')) return;
+
+    function focusIntroVideoIframe(iframe){
+      function moveFocus(){
+        if (!iframe || !iframe.isConnected) return;
+        try {
+          iframe.focus({ preventScroll:true });
+        } catch (err) {
+          try { iframe.focus(); } catch (focusErr) {}
+        }
+      }
+      if (typeof window.requestAnimationFrame === 'function') {
+        try { window.requestAnimationFrame(moveFocus); } catch (err) { moveFocus(); }
+      } else {
+        moveFocus();
+      }
+    }
+
+    function playIntroVideo(){
+      const existingIframe = introVideoSection.querySelector('iframe');
+      if (existingIframe) {
+        focusIntroVideoIframe(existingIframe);
+        return;
+      }
+      if (introVideoLoaded) return;
       introVideoLoaded = true;
       try {
         const autoplayUrl = new URL(introVideo.embedUrl);
@@ -1504,11 +1526,15 @@ function mapRowToData(row, options = {}){
         iframe.referrerPolicy = 'strict-origin-when-cross-origin';
         iframe.setAttribute('allow', 'autoplay; encrypted-media; picture-in-picture; fullscreen');
         iframe.setAttribute('allowfullscreen', '');
+        iframe.setAttribute('tabindex', '0');
         introVideoButton.replaceWith(iframe);
+        focusIntroVideoIframe(iframe);
       } catch (err) {
         introVideoLoaded = false;
       }
-    });
+    }
+
+    introVideoButton.addEventListener('click', playIntroVideo);
   }
 
   // 우리 원 시설 (배지 + 썸네일 + 모달)
