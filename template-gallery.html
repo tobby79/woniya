@@ -87,6 +87,8 @@
   .gallery-rail::-webkit-scrollbar-thumb{background:var(--char-soft)}
   .art{position:relative;flex:0 0 78%;max-width:420px;scroll-snap-align:center}
   .art .frame{overflow:hidden;background:var(--bg-warm);aspect-ratio:4/5}
+  .art .art-lightbox-trigger{display:block;width:100%;border:0;border-radius:0;color:inherit;font:inherit;text-align:inherit;cursor:pointer;-webkit-appearance:none;appearance:none}
+  .art .art-lightbox-trigger:focus-visible{outline:3px solid #fff;outline-offset:-6px;box-shadow:inset 0 0 0 8px var(--char)}
   .art .frame img{width:100%;height:100%;object-fit:cover;display:block;transition:transform 1.2s cubic-bezier(.2,.7,.3,1)}
   .art:hover .frame img{transform:scale(1.03)}
   .art .meta{display:flex;align-items:baseline;gap:14px;margin-top:14px}
@@ -419,8 +421,9 @@
 </div>
 
 <!-- 라이트박스 -->
-<div class="lightbox-overlay" id="lightbox">
-  <button class="lightbox-close" id="lightboxClose">×</button>
+<div class="lightbox-overlay" id="lightbox" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="lightboxTitle">
+  <h2 class="lightbox-title" id="lightboxTitle">작품 크게 보기</h2>
+  <button type="button" class="lightbox-close" id="lightboxClose" aria-label="작품 크게 보기 닫기">×</button>
   <img class="lightbox-img" id="lightboxImg" alt="">
   <div class="lightbox-cap" id="lightboxCap"></div>
 </div>
@@ -530,6 +533,7 @@
   /* ── 라이트박스 ── */
   .lightbox-overlay{position:fixed;inset:0;z-index:70;background:rgba(0,0,0,.88);display:none;align-items:center;justify-content:center;padding:20px}
   .lightbox-overlay.open{display:flex}
+  .lightbox-title{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
   .lightbox-img{max-width:min(680px,92vw);max-height:82vh;object-fit:contain;border-radius:8px;display:block}
   .lightbox-close{position:absolute;top:18px;right:18px;width:40px;height:40px;border:none;background:rgba(255,255,255,.15);border-radius:50%;font-size:1.5rem;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center}
   .lightbox-cap{position:absolute;bottom:24px;left:50%;transform:translateX(-50%);color:rgba(255,255,255,.85);font-size:.92rem;white-space:nowrap}
@@ -1416,7 +1420,7 @@ function mapRowToData(row, options = {}){
       </div>
       <div class="gallery-rail">${galleryItems.map((it,i)=>`
         <figure class="art">
-          <div class="frame"><img decoding="async" alt="${esc(it.alt)}" data-photo-path="${esc(it.photo)}" data-photo-group="day"></div>
+          <button type="button" class="frame art-lightbox-trigger" data-lightbox-label="${esc(it.label)}" aria-label="${esc(it.label)} 작품 크게 보기"><img decoding="async" alt="${esc(it.alt)}" data-photo-path="${esc(it.photo)}" data-photo-group="day"></button>
           <figcaption class="meta">
             <span class="no">${String(i+1).padStart(2,'0')}</span>
             <span class="cap">${esc(it.label)}</span>
@@ -1680,19 +1684,95 @@ function initInteractions(signPaths){
   (function(){
     var overlay = document.getElementById('lightbox');
     var closeBtn = document.getElementById('lightboxClose');
+    var title = document.getElementById('lightboxTitle');
     var img = document.getElementById('lightboxImg');
     var cap = document.getElementById('lightboxCap');
+    var returnFocus = null;
+    var previousBodyOverflow = '';
+    var inertedBackgroundElements = [];
     if (!overlay) return;
-    function open(src, alt){
+
+    function hasOtherOpenOverlay(){
+      return !!document.querySelector('.ask-modal-overlay.open, .csl-overlay.open, .info-modal-overlay.open');
+    }
+
+    function lockBackground(){
+      previousBodyOverflow = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      inertedBackgroundElements = [];
+      Array.prototype.forEach.call(document.body.children, function(element){
+        if (element === overlay || element.tagName === 'SCRIPT' || element.tagName === 'STYLE') return;
+        if (element.hasAttribute('inert')) return;
+        element.setAttribute('inert', '');
+        inertedBackgroundElements.push(element);
+      });
+    }
+
+    function unlockBackground(){
+      document.body.style.overflow = previousBodyOverflow;
+      inertedBackgroundElements.forEach(function(element){
+        if (element.isConnected) element.removeAttribute('inert');
+      });
+      inertedBackgroundElements = [];
+    }
+
+    function getFocusableElements(){
+      return Array.prototype.filter.call(
+        overlay.querySelectorAll('button:not([disabled]),a[href],input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])'),
+        function(element){ return !element.hasAttribute('hidden'); }
+      );
+    }
+
+    function open(src, alt, label, trigger){
+      if (!src || overlay.classList.contains('open') || hasOtherOpenOverlay()) return;
+      returnFocus = trigger && trigger.isConnected ? trigger : document.activeElement;
+      title.textContent = (label || alt || '우리 원 하루 이야기') + ' 작품 크게 보기';
       img.src = src; img.alt = alt || '';
       cap.textContent = alt || '';
+      lockBackground();
       overlay.classList.add('open');
+      overlay.setAttribute('aria-hidden', 'false');
+      closeBtn.focus({ preventScroll:true });
     }
-    function close(){ overlay.classList.remove('open'); img.src=''; }
+    function close(){
+      if (!overlay.classList.contains('open')) return;
+      overlay.classList.remove('open');
+      overlay.setAttribute('aria-hidden', 'true');
+      img.removeAttribute('src');
+      unlockBackground();
+      if (returnFocus && returnFocus.isConnected) returnFocus.focus({ preventScroll:true });
+      returnFocus = null;
+    }
     window.__openLightbox__ = open;
     closeBtn.addEventListener('click', close);
     overlay.addEventListener('click', function(e){ if(e.target===overlay) close(); });
-    document.addEventListener('keydown', function(e){ if(e.key==='Escape') close(); });
+    document.addEventListener('keydown', function(e){
+      if (!overlay.classList.contains('open')) return;
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        close();
+        return;
+      }
+      if (e.key !== 'Tab') return;
+      var focusable = getFocusableElements();
+      if (!focusable.length) {
+        e.preventDefault();
+        closeBtn.focus({ preventScroll:true });
+        return;
+      }
+      var first = focusable[0];
+      var last = focusable[focusable.length - 1];
+      if (!overlay.contains(document.activeElement)) {
+        e.preventDefault();
+        first.focus({ preventScroll:true });
+      } else if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus({ preventScroll:true });
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus({ preventScroll:true });
+      }
+    });
   })();
 
   // ── '우리 반' 버튼 → ourclass.html ──
@@ -1702,8 +1782,17 @@ function initInteractions(signPaths){
     location.href = 'ourclass.html';
   });
 
-  // ── 앨범 이미지 라이트박스 연결 ──
-  document.querySelectorAll('.polaroid img, .snap img, .art img, .photo-grid img').forEach(function(img){
+  // ── day_story 작품 라이트박스 연결 ──
+  document.querySelectorAll('.art-lightbox-trigger').forEach(function(trigger){
+    var img = trigger.querySelector('img');
+    trigger.addEventListener('click', function(){
+      if (!img || !img.hasAttribute('src') || !img.src) return;
+      if (window.__openLightbox__) window.__openLightbox__(img.src, img.alt, trigger.dataset.lightboxLabel, trigger);
+    });
+  });
+
+  // ── 기존 비-day_story 앨범 이미지 라이트박스 연결 ──
+  document.querySelectorAll('.polaroid img, .snap img, .photo-grid img').forEach(function(img){
     img.style.cursor = 'pointer';
     img.addEventListener('click', function(){
       if (window.__openLightbox__ && img.src) window.__openLightbox__(img.src, img.alt);
