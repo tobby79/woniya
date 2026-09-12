@@ -36,6 +36,15 @@
     -webkit-font-smoothing:antialiased;
   }
 
+  .skip-link{
+    position:fixed;top:0;left:50%;z-index:1000;
+    transform:translate(-50%,-200%);
+    padding:12px 18px;border:2px solid #fff;border-radius:6px;
+    background:var(--char);color:#fff;font-weight:700;text-decoration:none;
+    box-shadow:0 6px 20px rgba(0,0,0,.35)
+  }
+  .skip-link:focus,.skip-link:focus-visible{transform:translate(-50%,12px);outline:3px solid #fff;outline-offset:3px}
+
   /* ── 상단바: 얇고 미니멀 ── */
   .topbar{position:fixed;top:0;left:0;right:0;z-index:40;padding:18px 0;background:rgba(247,246,243,.0);transition:background .4s ease,box-shadow .4s ease,padding .4s ease}
   .topbar.solid{background:rgba(247,246,243,.92);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);box-shadow:0 1px 0 var(--line);padding:14px 0}
@@ -291,6 +300,8 @@
 </head>
 <body>
 
+<a class="skip-link" id="skipLink" href="#main-content">본문 바로가기</a>
+
 <!-- topbar.js가 nav(brand+홈아이콘+이 메뉴버튼)를 만들어 body 최상단에 삽입 -->
 <button class="menu-btn" id="menuBtn" aria-label="메뉴 열기" aria-expanded="false">
   <span></span><span></span><span></span>
@@ -300,6 +311,7 @@
 <span id="top"></span>
 
 <header class="banner" id="banner"></header>
+<main id="main-content" tabindex="-1">
 <section class="director wrap" id="greeting"></section>
 <section class="overview wrap" id="overviewSec"></section>
 <section class="gallery wrap" id="day"></section>
@@ -310,6 +322,7 @@
 <section class="info-block wrap" id="admissionsSec" hidden></section>
 <section class="info-block wrap" id="directionsSec" hidden></section>
 <section class="finale wrap" id="finale"></section>
+</main>
 <footer id="footerEl" class="gallery-footer"></footer>
 
 <div class="float" id="float" hidden><a href="#finale"><span class="dot"></span>입소 상담</a></div>
@@ -1329,7 +1342,11 @@ function mapRowToData(row, options = {}){
     }
   })();
 
-  WoniyaTopbar.init({ centerName: c.name.replace(/\s*어린이집$/,'') || c.name });
+  const galleryTopbar = WoniyaTopbar.init({ centerName: c.name.replace(/\s*어린이집$/,'') || c.name });
+  const skipLink = $('skipLink');
+  if (galleryTopbar && skipLink && galleryTopbar.parentNode === document.body) {
+    document.body.insertBefore(skipLink, galleryTopbar);
+  }
   $('menuPanel').innerHTML = (c.menu || []).map(m => `<a href="${esc(m.href)}"${m.cta?' class="menu-cta"':''}${m.id?' id="'+m.id+'"':''}>${esc(m.label)}</a>`).join('');
 
   // 1. 메인 배너
