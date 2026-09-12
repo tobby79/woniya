@@ -76,7 +76,7 @@
   .sec-title{font-family:var(--serif);font-weight:600;font-size:1.9rem;color:var(--char);letter-spacing:-.3px;line-height:1.4}
 
   /* ── 1. 메인 배너: 풀스크린 ── */
-  .banner{position:relative;height:100vh;min-height:560px;display:flex;align-items:flex-end;overflow:hidden}
+  .banner{position:relative;height:72vh;height:72svh;min-height:560px;max-height:720px;display:flex;align-items:flex-end;overflow:hidden}
   .banner .bg{position:absolute;inset:0;z-index:0}
   .banner .bg img{width:100%;height:100%;object-fit:cover;display:block}
   .banner .bg::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(20,20,22,.28) 0%,transparent 32%,transparent 50%,rgba(20,20,22,.72) 100%)}
@@ -87,8 +87,18 @@
   .banner p{margin-top:18px;font-size:1.05rem;opacity:.92;max-width:420px;font-weight:300}
   /* 액자형 메뉴 버튼 (gallery 고유 — 모노톤·세련) */
   .banner .frame-menu{display:flex;flex-wrap:wrap;gap:10px;margin-top:26px}
-  .banner .frame-btn{font-size:.84rem;font-weight:600;letter-spacing:.5px;color:#fff;text-decoration:none;padding:10px 16px;border:1px solid rgba(255,255,255,.45);border-radius:8px;background:rgba(255,255,255,.08);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);transition:background .2s ease,border-color .2s ease}
-  .banner .frame-btn:hover{background:rgba(255,255,255,.2);border-color:#fff}
+  .banner .frame-btn{font-size:.84rem;font-weight:600;letter-spacing:.5px;color:var(--char);text-decoration:none;padding:10px 16px;border:1px solid rgba(43,43,46,.18);border-radius:8px;background:rgba(247,246,243,.94);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);transition:none}
+  .banner .frame-btn:hover{background:var(--char);color:#fff;border-color:var(--char)}
+  .banner .frame-btn:focus-visible{outline:3px solid #fff;outline-offset:3px;box-shadow:0 0 0 5px var(--char)}
+  .banner .frame-btn:active{background:var(--char-soft);color:#fff;border-color:var(--char-soft)}
+  .banner .eyebrow.reveal{animation:gallery-hero-enter 620ms cubic-bezier(.2,.7,.3,1) 60ms both}
+  .banner h1.reveal{animation:gallery-hero-enter 620ms cubic-bezier(.2,.7,.3,1) 150ms both}
+  .banner p.reveal{animation:gallery-hero-enter 620ms cubic-bezier(.2,.7,.3,1) 240ms both}
+  .banner .frame-menu.reveal{animation:gallery-hero-enter 620ms cubic-bezier(.2,.7,.3,1) 330ms both}
+  @keyframes gallery-hero-enter{
+    from{opacity:0;transform:translateY(16px)}
+    to{opacity:1;transform:none}
+  }
 
   /* ── 2. 갤러리 (앨범) — 가로 슬라이드 ── */
   .gallery{padding-top:90px;padding-bottom:70px}
@@ -283,6 +293,7 @@
   a:focus-visible,.info-tab:focus-visible{outline:2px solid var(--char);outline-offset:3px}
 
   @media (max-width:480px){
+    .banner{height:65vh;height:65svh;min-height:500px;max-height:620px}
     .director .who .portrait{width:176px;height:176px}
     .staff-grid{grid-template-columns:1fr 1fr;gap:20px 16px}
     .art:nth-child(even),.art:nth-child(odd){padding-left:0;padding-right:0}
@@ -534,7 +545,7 @@
 
   /* ── 원 시설 (배지 + 썸네일 + 모달) ── */
   .facilities{padding-top:70px;padding-bottom:40px}
-  .fac-badges{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin:20px 0 28px}
+  .fac-badges{display:flex;flex-wrap:wrap;gap:10px;justify-content:flex-start;margin:20px 0 28px}
   .fac-badge{font-size:.84rem;font-weight:600;color:var(--char);background:var(--paper);padding:8px 16px;border-radius:30px;border:1px solid var(--line);letter-spacing:.3px}
   .fac-thumb-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
   .fac-thumb{overflow:hidden;aspect-ratio:4/3;background:var(--bg-warm)}
