@@ -1367,7 +1367,7 @@ function mapRowToData(row, options = {}){
     ? '공개 전 검수용 화면입니다'
     : (isAdminPreviewMode
       ? '관리자 미리보기 — 비공개 상태'
-      : (isPreviewMode ? '템플릿 미리보기' : ''));
+      : '');
   const galleryTopbar = WoniyaTopbar.init({
     centerName: c.name.replace(/\s*어린이집$/,'') || c.name,
     previewLabel: previewLabel
