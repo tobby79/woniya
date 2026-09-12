@@ -1602,9 +1602,9 @@ function mapRowToData(row, options = {}){
       <div class="sec-label">Information</div>
       <h2 class="sec-title">자주 묻는 질문</h2>
     </div>
-    ${(f?.items || []).map(it=>`
-      <div class="faq-item reveal"><button class="faq-q" aria-expanded="false">${esc(it.q)}<span class="sign">+</span></button>
-        <div class="faq-a"><p>${escWithBr(it.a)}</p></div></div>`).join('')}`;
+    ${(f?.items || []).map((it,i)=>`
+      <div class="faq-item reveal"><button type="button" class="faq-q" id="faq-question-${i}" aria-expanded="false" aria-controls="faq-answer-${i}">${esc(it.q)}<span class="sign" aria-hidden="true">+</span></button>
+        <div class="faq-a" id="faq-answer-${i}" role="region" aria-labelledby="faq-question-${i}" aria-hidden="true" hidden><p>${escWithBr(it.a)}</p></div></div>`).join('')}`;
 
   // 7. 마무리
   const fin = data.finale || {};
@@ -1645,6 +1645,55 @@ function mapRowToData(row, options = {}){
   setupAskPanel(data.faqs, isPreviewMode, isReviewMode, PREVIEW_MESSAGE, REVIEW_MESSAGE);
   initConsultationForm(client, c.id, data.pageState, consultationBlockedMessage);
 })();
+
+function setGalleryFaqExpanded(item, question, answer, expanded){
+  item.classList.toggle('open', expanded);
+  question.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+
+  function nextFrame(callback){
+    if (typeof window.requestAnimationFrame === 'function') window.requestAnimationFrame(callback);
+    else callback();
+  }
+
+  if (expanded) {
+    answer.hidden = false;
+    answer.removeAttribute('inert');
+    answer.setAttribute('aria-hidden', 'false');
+    answer.style.maxHeight = '0px';
+    nextFrame(function(){
+      if (item.classList.contains('open')) answer.style.maxHeight = answer.scrollHeight + 'px';
+    });
+    return;
+  }
+
+  answer.setAttribute('aria-hidden', 'true');
+  answer.setAttribute('inert', '');
+  answer.style.maxHeight = answer.scrollHeight + 'px';
+
+  function finishHide(){
+    if (item.classList.contains('open')) return;
+    answer.hidden = true;
+    answer.style.maxHeight = '';
+  }
+
+  var reduceMotion = typeof window.matchMedia === 'function'
+    && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (reduceMotion) {
+    answer.style.maxHeight = '0px';
+    finishHide();
+    return;
+  }
+
+  function onTransitionEnd(event){
+    if (event.target !== answer || event.propertyName !== 'max-height') return;
+    answer.removeEventListener('transitionend', onTransitionEnd);
+    finishHide();
+  }
+  answer.addEventListener('transitionend', onTransitionEnd);
+  nextFrame(function(){
+    if (!item.classList.contains('open')) answer.style.maxHeight = '0px';
+  });
+}
 
 function initInteractions(signPaths){
   initDeferredImages(signPaths);
@@ -2011,9 +2060,7 @@ function initInteractions(signPaths){
     var q=item.querySelector('.faq-q');
     var a=item.querySelector('.faq-a');
     q.addEventListener('click',function(){
-      var open=item.classList.toggle('open');
-      q.setAttribute('aria-expanded',open?'true':'false');
-      a.style.maxHeight = open ? (a.scrollHeight+'px') : null;
+      setGalleryFaqExpanded(item, q, a, !item.classList.contains('open'));
     });
   });
 }
@@ -2033,10 +2080,10 @@ function setupAskPanel(faqs, isPreviewMode, isReviewMode, PREVIEW_MESSAGE, REVIE
   function askEsc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(ch){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]; }); }
   function askWithBr(s){ return askEsc(s).replace(/\n/g,'<br>'); }
   var items = (faqs && faqs.items) || [];
-  list.innerHTML = items.map(function(it){
+  list.innerHTML = items.map(function(it, index){
     return '<div class="ask-faq-item">'
-      + '<button type="button" class="ask-faq-q" aria-expanded="false">' + askEsc(it.q) + '</button>'
-      + '<div class="ask-faq-a"><p>' + askWithBr(it.a) + '</p></div>'
+      + '<button type="button" class="ask-faq-q" id="ask-faq-question-' + index + '" aria-expanded="false" aria-controls="ask-faq-answer-' + index + '">' + askEsc(it.q) + '</button>'
+      + '<div class="ask-faq-a" id="ask-faq-answer-' + index + '" role="region" aria-labelledby="ask-faq-question-' + index + '" aria-hidden="true" hidden><p>' + askWithBr(it.a) + '</p></div>'
       + '</div>';
   }).join('');
   if (empty) empty.hidden = items.length > 0;
@@ -2132,9 +2179,7 @@ function setupAskPanel(faqs, isPreviewMode, isReviewMode, PREVIEW_MESSAGE, REVIE
     var q = item.querySelector('.ask-faq-q');
     var a = item.querySelector('.ask-faq-a');
     q.addEventListener('click', function(){
-      var openItem = item.classList.toggle('open');
-      q.setAttribute('aria-expanded', openItem ? 'true' : 'false');
-      a.style.maxHeight = openItem ? (a.scrollHeight + 'px') : null;
+      setGalleryFaqExpanded(item, q, a, !item.classList.contains('open'));
     });
   });
   consultBtn.addEventListener('click', function(){
