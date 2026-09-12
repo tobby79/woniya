@@ -330,12 +330,12 @@
   </div>
 </div>
 
-<div class="csl-overlay" id="cslOverlay">
+<div class="csl-overlay" id="cslOverlay" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="cslTitle" aria-describedby="cslDescription">
   <div class="csl-panel">
     <button type="button" class="csl-close" id="cslCloseBtn" aria-label="닫기">×</button>
     <div id="cslFormWrap">
-      <h3 class="csl-title">입소 상담 신청</h3>
-      <p class="csl-sub">편하게 남겨주시면 연락드릴게요.</p>
+      <h3 class="csl-title" id="cslTitle">입소 상담 신청</h3>
+      <p class="csl-sub" id="cslDescription">편하게 남겨주시면 연락드릴게요.</p>
       <form id="cslForm">
         <div class="csl-field">
           <label for="csl-name">학부모 이름</label>
@@ -373,10 +373,10 @@
           </label>
         </div>
         <button type="submit" class="btn-big csl-submit">신청하기</button>
-        <div class="csl-msg error" id="cslError"></div>
+        <div class="csl-msg error" id="cslError" role="alert" aria-atomic="true"></div>
       </form>
     </div>
-    <div id="cslDoneWrap" hidden>
+    <div id="cslDoneWrap" role="status" aria-live="polite" aria-atomic="true" tabindex="-1" hidden>
       <p class="csl-done">접수되었습니다.<br>곧 연락드리겠습니다.</p>
     </div>
   </div>
@@ -1953,11 +1953,15 @@ function initInteractions(signPaths){
 function setupAskPanel(faqs, isPreviewMode, isReviewMode, PREVIEW_MESSAGE, REVIEW_MESSAGE){
   var fab = document.getElementById('askFab');
   var overlay = document.getElementById('askModal');
+  var panel = overlay && overlay.querySelector('.ask-modal-panel');
   var closeBtn = document.getElementById('askModalClose');
   var list = document.getElementById('askFaqList');
   var empty = document.getElementById('askFaqEmpty');
   var consultBtn = document.getElementById('askConsultBtn');
-  if (!fab || !overlay || !list || !consultBtn) return;
+  var returnFocus = null;
+  var previousBodyOverflow = '';
+  var inertedBackgroundElements = [];
+  if (!fab || !overlay || !panel || !closeBtn || !list || !consultBtn) return;
   function askEsc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(ch){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]; }); }
   function askWithBr(s){ return askEsc(s).replace(/\n/g,'<br>'); }
   var items = (faqs && faqs.items) || [];
@@ -1968,12 +1972,94 @@ function setupAskPanel(faqs, isPreviewMode, isReviewMode, PREVIEW_MESSAGE, REVIE
       + '</div>';
   }).join('');
   if (empty) empty.hidden = items.length > 0;
-  function open(){ overlay.classList.add('open'); overlay.setAttribute('aria-hidden','false'); }
-  function close(){ overlay.classList.remove('open'); overlay.setAttribute('aria-hidden','true'); }
-  fab.addEventListener('click', open);
-  if (closeBtn) closeBtn.addEventListener('click', close);
+
+  function hasOtherOpenOverlay(){
+    return Array.prototype.some.call(
+      document.querySelectorAll('.ask-modal-overlay.open, .csl-overlay.open, .info-modal-overlay.open, .lightbox-overlay.open'),
+      function(candidate){ return candidate !== overlay; }
+    );
+  }
+
+  function lockBackground(){
+    previousBodyOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    inertedBackgroundElements = [];
+    Array.prototype.forEach.call(document.body.children, function(element){
+      if (element === overlay || element.tagName === 'SCRIPT' || element.tagName === 'STYLE') return;
+      if (element.hasAttribute('inert')) return;
+      element.setAttribute('inert', '');
+      inertedBackgroundElements.push(element);
+    });
+  }
+
+  function unlockBackground(){
+    document.body.style.overflow = previousBodyOverflow;
+    inertedBackgroundElements.forEach(function(element){
+      if (element.isConnected) element.removeAttribute('inert');
+    });
+    inertedBackgroundElements = [];
+  }
+
+  function getFocusableElements(){
+    return Array.prototype.filter.call(
+      panel.querySelectorAll('button:not([disabled]),a[href],input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])'),
+      function(element){
+        if (element.hidden || element.closest('[hidden],[aria-hidden="true"]')) return false;
+        var style = window.getComputedStyle(element);
+        return style.display !== 'none' && style.visibility !== 'hidden';
+      }
+    );
+  }
+
+  function open(trigger){
+    if (overlay.classList.contains('open') || hasOtherOpenOverlay()) return;
+    returnFocus = trigger && trigger.isConnected ? trigger : document.activeElement;
+    lockBackground();
+    overlay.classList.add('open');
+    overlay.setAttribute('aria-hidden','false');
+    closeBtn.focus({ preventScroll:true });
+  }
+
+  function close(){
+    if (!overlay.classList.contains('open')) return;
+    overlay.classList.remove('open');
+    overlay.setAttribute('aria-hidden','true');
+    unlockBackground();
+    if (returnFocus && returnFocus.isConnected) returnFocus.focus({ preventScroll:true });
+    returnFocus = null;
+  }
+
+  fab.addEventListener('click', function(event){ open(event.currentTarget); });
+  closeBtn.addEventListener('click', close);
   overlay.addEventListener('click', function(e){ if (e.target === overlay) close(); });
-  document.addEventListener('keydown', function(e){ if (e.key === 'Escape') close(); });
+  document.addEventListener('keydown', function(event){
+    if (!overlay.classList.contains('open')) return;
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      close();
+      return;
+    }
+    if (event.key !== 'Tab') return;
+    var focusable = getFocusableElements();
+    if (!focusable.length) {
+      event.preventDefault();
+      closeBtn.focus({ preventScroll:true });
+      return;
+    }
+    var first = focusable[0];
+    var last = focusable[focusable.length - 1];
+    var activeIndex = focusable.indexOf(document.activeElement);
+    if (!overlay.contains(document.activeElement) || activeIndex === -1) {
+      event.preventDefault();
+      (event.shiftKey ? last : first).focus({ preventScroll:true });
+    } else if (event.shiftKey && document.activeElement === first) {
+      event.preventDefault();
+      last.focus({ preventScroll:true });
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault();
+      first.focus({ preventScroll:true });
+    }
+  });
   list.querySelectorAll('.ask-faq-item').forEach(function(item){
     var q = item.querySelector('.ask-faq-q');
     var a = item.querySelector('.ask-faq-a');
@@ -2130,20 +2216,111 @@ function loadKakaoMap(address, containerId){
 
 function initConsultationForm(client, centerId, pageState, blockedMessage){
   var overlay = document.getElementById('cslOverlay');
+  var panel = overlay && overlay.querySelector('.csl-panel');
   var openBtn = document.getElementById('cslOpenBtn');
   var closeBtn = document.getElementById('cslCloseBtn');
   var form = document.getElementById('cslForm');
   var errorEl = document.getElementById('cslError');
   var formWrap = document.getElementById('cslFormWrap');
   var doneWrap = document.getElementById('cslDoneWrap');
+  var returnFocus = null;
+  var previousBodyOverflow = '';
+  var inertedBackgroundElements = [];
 
-  function openModal(){ if (!pageState || pageState.canConsult !== true){ alert(blockedMessage); return; } overlay.classList.add('open'); formWrap.hidden = false; doneWrap.hidden = true; form.reset(); errorEl.textContent = ''; }
-  function closeModal(){ overlay.classList.remove('open'); }
+  function hasOtherOpenOverlay(){
+    return Array.prototype.some.call(
+      document.querySelectorAll('.csl-overlay.open, .ask-modal-overlay.open, .info-modal-overlay.open, .lightbox-overlay.open'),
+      function(candidate){ return candidate !== overlay; }
+    );
+  }
 
-  if (openBtn) openBtn.addEventListener('click', openModal);
+  function lockBackground(){
+    previousBodyOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    inertedBackgroundElements = [];
+    Array.prototype.forEach.call(document.body.children, function(element){
+      if (element === overlay || element.tagName === 'SCRIPT' || element.tagName === 'STYLE') return;
+      if (element.hasAttribute('inert')) return;
+      element.setAttribute('inert', '');
+      inertedBackgroundElements.push(element);
+    });
+  }
+
+  function unlockBackground(){
+    document.body.style.overflow = previousBodyOverflow;
+    inertedBackgroundElements.forEach(function(element){
+      if (element.isConnected) element.removeAttribute('inert');
+    });
+    inertedBackgroundElements = [];
+  }
+
+  function getFocusableElements(){
+    return Array.prototype.filter.call(
+      panel.querySelectorAll('button:not([disabled]),a[href],input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])'),
+      function(element){
+        if (element.hidden || element.closest('[hidden],[aria-hidden="true"]')) return false;
+        var style = window.getComputedStyle(element);
+        return style.display !== 'none' && style.visibility !== 'hidden';
+      }
+    );
+  }
+
+  function openModal(trigger){
+    if (!pageState || pageState.canConsult !== true){ alert(blockedMessage); return; }
+    if (overlay.classList.contains('open') || hasOtherOpenOverlay()) return;
+    returnFocus = trigger && trigger.isConnected ? trigger : document.activeElement;
+    formWrap.hidden = false;
+    doneWrap.hidden = true;
+    form.reset();
+    errorEl.textContent = '';
+    lockBackground();
+    overlay.classList.add('open');
+    overlay.setAttribute('aria-hidden', 'false');
+    var firstInput = document.getElementById('csl-name');
+    if (firstInput) firstInput.focus({ preventScroll:true });
+    else closeBtn.focus({ preventScroll:true });
+  }
+
+  function closeModal(){
+    if (!overlay.classList.contains('open')) return;
+    overlay.classList.remove('open');
+    overlay.setAttribute('aria-hidden', 'true');
+    unlockBackground();
+    if (returnFocus && returnFocus.isConnected) returnFocus.focus({ preventScroll:true });
+    returnFocus = null;
+  }
+
+  if (openBtn) openBtn.addEventListener('click', function(event){ openModal(event.currentTarget); });
   closeBtn.addEventListener('click', closeModal);
   overlay.addEventListener('click', function(e){ if (e.target === overlay) closeModal(); });
-  document.addEventListener('keydown', function(e){ if (e.key === 'Escape' && overlay.classList.contains('open')) closeModal(); });
+  document.addEventListener('keydown', function(event){
+    if (!overlay.classList.contains('open')) return;
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      closeModal();
+      return;
+    }
+    if (event.key !== 'Tab') return;
+    var focusable = getFocusableElements();
+    if (!focusable.length) {
+      event.preventDefault();
+      closeBtn.focus({ preventScroll:true });
+      return;
+    }
+    var first = focusable[0];
+    var last = focusable[focusable.length - 1];
+    var activeIndex = focusable.indexOf(document.activeElement);
+    if (!overlay.contains(document.activeElement) || activeIndex === -1) {
+      event.preventDefault();
+      (event.shiftKey ? last : first).focus({ preventScroll:true });
+    } else if (event.shiftKey && document.activeElement === first) {
+      event.preventDefault();
+      last.focus({ preventScroll:true });
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault();
+      first.focus({ preventScroll:true });
+    }
+  });
 
   form.addEventListener('submit', async function(e){
     e.preventDefault();
@@ -2174,6 +2351,7 @@ function initConsultationForm(client, centerId, pageState, blockedMessage){
     if (error){ console.error(error); errorEl.textContent = '접수 중 문제가 생겼어요. 다시 시도해주세요.'; return; }
     formWrap.hidden = true;
     doneWrap.hidden = false;
+    if (overlay.classList.contains('open')) doneWrap.focus({ preventScroll:true });
   });
 }
 </script>
